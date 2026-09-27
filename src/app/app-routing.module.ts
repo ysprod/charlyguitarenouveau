@@ -48,6 +48,7 @@ const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'home', component: HomeComponent },
+  
   // Ensemble des routes protégées par AuthGuard
   { path: 'accueil', component: AccueilComponent, canActivate: [AuthGuard] },
   { path: 'fretboard', component: FretboardComponent, canActivate: [AuthGuard] },
