@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Subscription } from 'rxjs';
@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
 })
 export class ContactComponent implements OnInit, OnDestroy {
 
-  contactForm!: FormGroup;
+  contactForm!: UntypedFormGroup;
   isSubmitting = false;
   submitSuccess = false;
   submitError = false;
@@ -22,7 +22,7 @@ export class ContactComponent implements OnInit, OnDestroy {
   private authSubscription!: Subscription;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private db: AngularFireDatabase,
     private afAuth: AngularFireAuth
   ) {}

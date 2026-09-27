@@ -115,5 +115,7 @@
       }
     }
   },
-  "defaultProject": "charlyguitarweb"
+  "cli": {
+    "analytics": false
+  }
 }

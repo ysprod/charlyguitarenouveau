@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, UntypedFormBuilder, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
 
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
@@ -33,7 +33,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  profileForm!: FormGroup;
+  profileForm!: UntypedFormGroup;
 
   selectedFile: File | null = null;
   avatarPreview: string | null = null;
@@ -56,7 +56,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
   userCreatedAt?: number;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private auth: AngularFireAuth,
     private db: AngularFireDatabase,
     private storage: AngularFireStorage,
