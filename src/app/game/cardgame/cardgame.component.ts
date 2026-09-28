@@ -19,6 +19,8 @@ interface Coin {
   symbol: string;
 }
 
+type SoundType = 'flip' | 'match' | 'wrong' | 'victory' | 'defeat';
+
 @Component({
   selector: 'app-cardgame',
   templateUrl: './cardgame.component.html',
@@ -53,6 +55,10 @@ export class CardgameComponent implements OnInit, OnDestroy {
   private readonly PARTICLE_COLORS = ['#6366f1', '#10b981', '#facc15', '#f472b6', '#38bdf8'];
   private readonly COIN_SYMBOLS = ['🪙', '💰', '💎', '⭐', '🍌', '🏆'];
 
+  /* Audio */
+  private audioCtx?: AudioContext;
+    soundEnabled = true;
+
   constructor(
     private dialog: MatDialog,
     private activatedRoute: ActivatedRoute,
@@ -69,12 +75,136 @@ export class CardgameComponent implements OnInit, OnDestroy {
     this.lebonus = queryBonus ? parseInt(queryBonus, 10) : 0;
     this.etapedujeu = queryEtape || "0";
 
+    this.initAudio();
     this.generateDecor();
     this.setupCards();
   }
 
   ngOnDestroy(): void {
-    // Rien à nettoyer
+    // Fermer le contexte audio proprement
+    if (this.audioCtx && this.audioCtx.state !== 'closed') {
+      this.audioCtx.close().catch(() => { /* ignore */ });
+    }
+  }
+
+  /* ============================================================
+     AUDIO — Générateur de sons via Web Audio API
+     ============================================================ */
+  private initAudio(): void {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+
+    if (AudioContextClass) this.audioCtx = new AudioContextClass();
+  }
+
+  /**
+   * Joue un son prédéfini via oscillateurs + gain.
+   * Aucun fichier externe n'est nécessaire.
+   */
+  private playSound(type: SoundType): void {
+    if (!this.soundEnabled || !this.audioCtx) return;
+
+    // Reprise du contexte si suspendu (politique navigateur)
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => { /* ignore */ });
+    }
+
+    const now = this.audioCtx.currentTime;
+
+    switch (type) {
+      case 'flip':
+        // Petit "blip" rapide et discret au retournement
+        this.tone({ freq: 660, type: 'sine', duration: 0.08, volume: 1, now });
+        break;
+
+      case 'match':
+        // Arpège ascendant joyeux quand une paire est trouvée
+        [523.25, 659.25, 783.99].forEach((freq, i) => {
+          this.tone({
+            freq,
+            type: 'triangle',
+            duration: 0.15,
+            volume: 1,
+            now: now + i * 0.08
+          });
+        });
+        break;
+
+      case 'wrong':
+        // Son descendant grave pour signaler l'erreur
+        this.tone({
+          freq: 300,
+          endFreq: 120,
+          type: 'sawtooth',
+          duration: 0.25,
+          volume: 0.2,
+          now
+        });
+        break;
+
+      case 'victory':
+        // Fanfare victorieuse
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          this.tone({
+            freq,
+            type: 'triangle',
+            duration: 0.3,
+            volume: 1,
+            now: now + i * 0.12
+          });
+        });
+        break;
+
+      case 'defeat':
+        this.tone({
+          freq: 220,
+          endFreq: 80,
+          type: 'sawtooth',
+          duration: 0.4,
+          volume:1,
+          now
+        });
+        break;
+    }
+  }
+
+  /**
+   * Générateur de note simple via OscillatorNode + GainNode.
+   */
+  private tone(opts: {
+    freq: number;
+    endFreq?: number;
+    type: OscillatorType;
+    duration: number;
+    volume: number;
+    now: number;
+  }): void {
+    if (!this.audioCtx) return;
+
+    const osc = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+
+    osc.type = opts.type;
+    osc.frequency.setValueAtTime(opts.freq, opts.now);
+
+    if (opts.endFreq !== undefined) {
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(0.01, opts.endFreq),
+        opts.now + opts.duration
+      );
+    }
+
+    // Enveloppe ADSR simplifiée : attaque rapide + release exponentielle
+    gain.gain.setValueAtTime(0.0001, opts.now);
+    gain.gain.exponentialRampToValueAtTime(opts.volume, opts.now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, opts.now + opts.duration);
+
+    osc.connect(gain);
+    gain.connect(this.audioCtx.destination);
+
+    osc.start(opts.now);
+    osc.stop(opts.now + opts.duration + 0.05);
   }
 
   /* ============================================================
@@ -129,6 +259,9 @@ export class CardgameComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // 🔊 Son au clic
+    this.playSound('flip');
+
     this.decrementervie();
     cardInfo.state = 'flipped';
     this.flippedCards.push(cardInfo);
@@ -145,15 +278,20 @@ export class CardgameComponent implements OnInit, OnDestroy {
       const [cardOne, cardTwo] = this.flippedCards;
 
       if (cardOne.imageId === cardTwo.imageId) {
+        // ✅ Paire trouvée
+        this.playSound('match');
         cardOne.state = 'matched';
         cardTwo.state = 'matched';
         this.matchedCount++;
 
         if (this.matchedCount === this.cardImages.length) {
           this.incrementervie();
+          this.playSound('victory');
           this.openVictoryDialog();
         }
       } else {
+        // ❌ Mauvaise paire
+        this.playSound('wrong');
         cardOne.state = 'default';
         cardTwo.state = 'default';
       }
@@ -190,6 +328,11 @@ export class CardgameComponent implements OnInit, OnDestroy {
     this.setupCards();
   }
 
+  /** 🔇 Bouton optionnel pour couper le son */
+  toggleSound(): void {
+    this.soundEnabled = !this.soundEnabled;
+  }
+
   onrecommencer(): void {
     if (this.lavie !== undefined && this.lebonus !== undefined) {
       this.goToPlay(this.lavie, this.lebonus, this.etapedujeu);
@@ -207,10 +350,10 @@ export class CardgameComponent implements OnInit, OnDestroy {
   }
 
   casuffit(): boolean {
-    return this.pointdevies >= 10000;
+    return this.pointdevies >= 10000000;
   }
 
   oncontinue(): boolean {
-    return this.pointdevies < 10000;
+    return this.pointdevies < 10000000;
   }
 }

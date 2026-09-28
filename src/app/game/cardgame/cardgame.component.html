@@ -134,7 +134,12 @@
           </div>
         </div>
       </div>
-
+<!-- 🔊 Bouton son -->
+  <button class="btn-sound" (click)="toggleSound()" type="button"
+          [attr.aria-label]="soundEnabled ? 'Couper le son' : 'Activer le son'">
+    <span class="sound-icon">{{ soundEnabled ? '🔊' : '🔇' }}</span>
+    <span class="sound-label">{{ soundEnabled ? 'Son activé' : 'Son coupé' }}</span>
+  </button><br><br>
       <!-- Règles & Actions -->
       <div class="glass-card info-card">
         <div class="card-header">

@@ -1,122 +1,257 @@
 <div class="live-container">
-  <!-- EN-TÊTE / HERO DE LA PAGE -->
-  <header class="live-hero">
-    <div class="hero-badge">
-      <span class="pulse-dot"></span> EN CE MOMENT
-    </div>
-    <h1 class="hero-title">Espace Live & Sessions Directes</h1>
-    <p class="hero-subtitle">
-      Suivez nos cours en direct, posez vos questions en temps réel et perfectionnez votre jeu de guitare avec Charly.
-    </p>
-  </header>
 
-  <!-- SECTION MAIN LIVE / EN CE MOMENT -->
-  <section class="current-live-section">
-    <div class="live-card highlight-card">
-      <div class="live-media-wrapper">
-        <div class="live-overlay">
-          <span class="live-status-tag">🔴 LIVE MAINTENANT</span>
-          <div class="viewer-count">
-            <span class="icon">👁️</span> 142 spectateurs
-          </div>
-        </div>
-        <!-- Image de présentation ou miniature vidéo -->
-        <img src="assets/academie.jpg" alt="Live Charly Guitare" class="live-thumbnail">
-        
-        <a [routerLink]="['/play']" class="play-btn-overlay" title="Rejoindre le direct">
-          <div class="play-icon-circle">
-            <div class="play-arrow"></div>
-          </div>
-        </a>
+  <!-- ============================================================
+       DÉCOR ANIMÉ EN ARRIÈRE-PLAN
+       ============================================================ -->
+  <div class="bg-decor" aria-hidden="true">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
+    <div class="cyber-grid"></div>
+    <div class="aurora"></div>
+    <div class="particles">
+      <span class="particle"
+            *ngFor="let p of particles"
+            [style.left.%]="p.left"
+            [style.animation-delay.s]="p.delay"
+            [style.animation-duration.s]="p.duration"
+            [style.width.px]="p.size"
+            [style.height.px]="p.size"
+            [style.background]="p.color"
+            [style.box-shadow]="'0 0 12px ' + p.color"></span>
+    </div>
+    <div class="music-notes">
+      <span class="note" *ngFor="let n of notes"
+            [style.left.%]="n.left"
+            [style.animation-delay.s]="n.delay"
+            [style.animation-duration.s]="n.duration">{{ n.symbol }}</span>
+    </div>
+  </div>
+
+  <div class="live-content">
+
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
+    <header class="live-hero">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        <span>EN CE MOMENT · LIVE</span>
       </div>
 
-      <div class="live-details">
-        <div class="live-meta">
-          <span class="category-tag">Masterclass Guitare</span>
-          <span class="time-tag">Commencé il y a 15 min</span>
+      <h1 class="hero-title">
+        <span class="title-top">ESPACE LIVE</span>
+        <span class="title-main">SESSIONS DIRECTES</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Suivez nos cours en direct, posez vos questions en temps réel et
+        perfectionnez votre jeu de guitare avec Charly. 🎸
+      </p>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-value">142</span>
+          <span class="stat-label">Spectateurs</span>
         </div>
-        <h2 class="live-title">Secrets du Coupé-Décalé & Harmonies Avancées à la Guitare</h2>
-        <p class="live-description">
-          Rejoignez Charly en direct pour décortiquer la rythmique, les accords suspendus et les techniques de solos spécifiques au style. Interaction en direct dans le chat !
-        </p>
-        <div class="live-actions">
-          <a [routerLink]="['/play']" class="btn-primary-live">
-            <span>Rejoindre le direct</span>
-            <span class="arrow">→</span>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-value">15 min</span>
+          <span class="stat-label">En cours</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-value">HD</span>
+          <span class="stat-label">Qualité</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         🎥 CARTE VIDÉO ENRICHIE — Freestyle Live
+         ============================================================ -->
+    <section class="video-section">
+      <div class="video-card glass-morphism">
+        <div class="video-header">
+          <span class="live-badge-card">
+            <span class="dot-live"></span>
+            LIVE
+          </span>
+          <h3>Freestyle</h3>
+          <span class="video-tag">🎸 SESSION OUVERTE</span>
+        </div>
+
+        <div class="video-wrapper">
+          <iframe
+            src="https://www.youtube.com/embed/5nQIsWKtMqU?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1"
+            title="Vidéo de présentation Charly Guitare"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <div class="video-footer">
+          <a href="https://www.youtube.com/watch?v=5nQIsWKtMqU"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="yt-link-btn">
+            <span class="icon">▶</span>
+            <span>Regarder sur YouTube</span>
           </a>
-          <button class="btn-secondary-live">Voir les directs en cours d'émission</button>
+          <span class="video-hint">🔊 Son activé automatiquement à l'interaction</span>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- SECTION PROCHAIN DIRECT (PLANIFIÉ) -->
-  <section class="upcoming-section">
-    <div class="section-header">
-      <h2>📅 Prochaines Sessions en Direct</h2>
-      <p>Ne manquez aucun rendez-vous musical. Programmez vos rappels dès maintenant.</p>
-    </div>
+    <!-- ============================================================
+         LIVE MAINTENANT
+         ============================================================ -->
+    <section class="current-live-section">
+      <div class="live-card highlight-card">
+        <div class="live-media-wrapper">
+          <div class="live-overlay">
+            <span class="live-status-tag">
+              <span class="live-dot"></span>
+              LIVE MAINTENANT
+            </span>
+            <div class="viewer-count">
+              <span class="icon">👁️</span>
+              <span>142 spectateurs</span>
+            </div>
+          </div>
+          <img src="assets/academie.jpg" alt="Live Charly Guitare" class="live-thumbnail">
+          <div class="live-shine"></div>
 
-    <div class="upcoming-grid">
-      <!-- Carte 1 -->
-      <div class="upcoming-card">
-        <div class="card-date-badge">
-          <span class="day">DEMAIN</span>
-          <span class="time">19:00 GMT</span>
+          <a [routerLink]="['/play']" class="play-btn-overlay" title="Rejoindre le direct">
+            <div class="play-icon-circle">
+              <div class="play-arrow"></div>
+            </div>
+            <div class="play-rings">
+              <span></span><span></span><span></span>
+            </div>
+          </a>
         </div>
-        <div class="card-content">
-          <span class="badge-topic">Atelier Solfège & Rythme</span>
-          <h3>Accords enrichis et gammes pentatoniques</h3>
-          <p>Une session interactive de 1h30 axée sur l'improvisation et la théorie appliquée à la guitare.</p>
-          <button class="btn-outline">🔔 M'ajouter un rappel</button>
+
+        <div class="live-details">
+          <div class="live-meta">
+            <span class="category-tag">🎼 Masterclass Guitare</span>
+            <span class="time-tag">⏱️ Commencé il y a 15 min</span>
+          </div>
+          <h2 class="live-title">
+            Secrets du Coupé-Décalé & Harmonies Avancées à la Guitare
+          </h2>
+          <p class="live-description">
+            Rejoignez Charly en direct pour décortiquer la rythmique, les accords suspendus
+            et les techniques de solos spécifiques au style. Interaction en direct dans le chat !
+          </p>
+          <div class="live-actions">
+            <a [routerLink]="['/play']" class="btn-primary-live">
+              <span>Rejoindre le direct</span>
+              <span class="arrow">→</span>
+            </a>
+            <button class="btn-secondary-live">
+              📺 Voir les directs en cours d'émission
+            </button>
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- Carte 2 -->
-      <div class="upcoming-card">
-        <div class="card-date-badge">
-          <span class="day">SAMEDI</span>
-          <span class="time">16:30 GMT</span>
-        </div>
-        <div class="card-content">
-          <span class="badge-topic">Session Questions / Réponses</span>
-          <h3>Coaching Privé & Analyse de vos vidéos</h3>
-          <p>Charly analyse les prestations de 5 étudiants tirés au sort et donne des conseils personnalisés.</p>
-          <button class="btn-outline">🔔 M'ajouter un rappel</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION REPLAYS & ARCHIVES -->
-  <section class="replays-section">
-    <div class="section-header">
-      <h2>📚 Replays Récents</h2>
-      <p>Rattrapez les sessions en direct que vous avez manquées.</p>
-    </div>
-
-    <div class="replays-grid">
-      <div class="replay-card">
-        <div class="replay-thumbnail-box">
-          <span class="duration-tag">01:24:10</span>
-          <img src="assets/academie.jpg" alt="Replay Masterclass">
-        </div>
-        <div class="replay-info">
-          <h4>Les secrets de la guitare solo moderne</h4>
-          <span class="replay-date">Diffusé le 12 Septembre</span>
-        </div>
+    <!-- ============================================================
+         PROCHAINES SESSIONS
+         ============================================================ -->
+    <section class="upcoming-section">
+      <div class="section-header">
+        <h2>
+          <span class="section-icon">📅</span>
+          Prochaines Sessions en Direct
+        </h2>
+        <p>Ne manquez aucun rendez-vous musical. Programmez vos rappels dès maintenant.</p>
       </div>
 
-      <div class="replay-card">
-        <div class="replay-thumbnail-box">
-          <span class="duration-tag">58:45</span>
-          <img src="assets/academie.jpg" alt="Replay MAO">
+      <div class="upcoming-grid">
+        <!-- Carte 1 -->
+        <div class="upcoming-card">
+          <div class="card-date-badge">
+            <span class="day">DEMAIN</span>
+            <span class="time">19:00 GMT</span>
+          </div>
+          <div class="card-glow"></div>
+          <div class="card-content">
+            <span class="badge-topic">🎼 Atelier Solfège & Rythme</span>
+            <h3>Accords enrichis et gammes pentatoniques</h3>
+            <p>Une session interactive de 1h30 axée sur l'improvisation et la théorie appliquée à la guitare.</p>
+            <button class="btn-outline">
+              <span>🔔</span>
+              <span>M'ajouter un rappel</span>
+            </button>
+          </div>
         </div>
-        <div class="replay-info">
-          <h4>Introduction à la MAO & Arrangement Guitare</h4>
-          <span class="replay-date">Diffusé le 5 Septembre</span>
+
+        <!-- Carte 2 -->
+        <div class="upcoming-card">
+          <div class="card-date-badge">
+            <span class="day">SAMEDI</span>
+            <span class="time">16:30 GMT</span>
+          </div>
+          <div class="card-glow"></div>
+          <div class="card-content">
+            <span class="badge-topic">💬 Session Questions / Réponses</span>
+            <h3>Coaching Privé & Analyse de vos vidéos</h3>
+            <p>Charly analyse les prestations de 5 étudiants tirés au sort et donne des conseils personnalisés.</p>
+            <button class="btn-outline">
+              <span>🔔</span>
+              <span>M'ajouter un rappel</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <!-- ============================================================
+         REPLAYS
+         ============================================================ -->
+    <section class="replays-section">
+      <div class="section-header">
+        <h2>
+          <span class="section-icon">📚</span>
+          Replays Récents
+        </h2>
+        <p>Rattrapez les sessions en direct que vous avez manquées.</p>
+      </div>
+
+      <div class="replays-grid">
+        <div class="replay-card">
+          <div class="replay-thumbnail-box">
+            <span class="duration-tag">01:24:10</span>
+            <img src="assets/academie.jpg" alt="Replay Masterclass">
+            <div class="replay-shine"></div>
+            <div class="replay-play">
+              <div class="play-arrow"></div>
+            </div>
+          </div>
+          <div class="replay-info">
+            <h4>Les secrets de la guitare solo moderne</h4>
+            <span class="replay-date">📅 Diffusé le 12 Septembre</span>
+          </div>
+        </div>
+
+        <div class="replay-card">
+          <div class="replay-thumbnail-box">
+            <span class="duration-tag">58:45</span>
+            <img src="assets/academie.jpg" alt="Replay MAO">
+            <div class="replay-shine"></div>
+            <div class="replay-play">
+              <div class="play-arrow"></div>
+            </div>
+          </div>
+          <div class="replay-info">
+            <h4>Introduction à la MAO & Arrangement Guitare</h4>
+            <span class="replay-date">📅 Diffusé le 5 Septembre</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
 </div>

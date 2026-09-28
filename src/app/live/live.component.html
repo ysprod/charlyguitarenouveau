@@ -1,40 +1,102 @@
 <div class="live-hub-container">
 
-  <div class="hero-content text-center">
-    <div class="row">
-      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <p><a [routerLink]="['/']" title="5 Charly Guitare">
-            <img src="../assets/live.jpg"> </a></p>
-      </div>
-    </div><br>
-    <p class="hero-description">
-      Suivez les performances en direct, rejoignez les masterclass interactives et réécoutez vos sessions préférées.
-    </p><br>
-  </div>
+  <!-- ============================================================
+       HERO BANNER
+       ============================================================ -->
+  <section class="hero-banner">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-glow"></div>
 
+    <div class="hero-content">
+      <div class="live-badge">
+        <span class="pulse-dot"></span>
+        <span> DIRECT </span>
+      </div>
+
+      <h1 class="hero-title">
+        <span class="title-top">LES LIVES DE</span>
+        <span class="title-main">CHARLY GUITARE</span>
+      </h1>
+
+      <p class="hero-description">
+        Suivez les performances en direct
+        et réécoutez vos sessions préférées. 🎸
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       GRILLE DE CARTES
+       ============================================================ -->
   <section class="grid-section">
     <div class="cards-grid">
 
-      <!-- Live Maintenant -->
-      <div class="live-card highlight-card">
-        <div class="card-status-bar">
-          <span class="live-now-tag">● EN CE MOMENT</span>
+      <!-- 🎥 CARTE VIDÉO ENRICHIE -->
+      <div class="video-card glass-morphism">
+        <div class="video-header">
+          <span class="live-badge-card">
+            <span class="dot-live"></span>
+            LIVE
+          </span>
+          <h3>Freestyle</h3>
+          <span class="video-tag">🎸 SESSION OUVERTE</span>
         </div>
+
+        <div class="video-wrapper">
+          <iframe src="https://www.youtube.com/embed/5nQIsWKtMqU?autoplay=1&rel=0&modestbranding=1"
+            title="Vidéo de présentation Charly Guitare"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <div class="video-footer">
+          <a href="https://www.youtube.com/watch?v=5nQIsWKtMqU" target="_blank" rel="noopener noreferrer"
+            class="yt-link-btn">
+            <span class="icon">▶</span>
+            <span>Regarder sur YouTube</span>
+          </a>
+        </div>
+      </div>
+
+
+
+      <!-- 🎤 CONCERTS -->
+      <div class="live-card">
         <div class="card-content">
-          <div class="card-icon">🔴</div>
-          <h3>LIVE MAINTENANT</h3>
-          <p>Voir les directs en cours d'émission</p>
+          <div class="card-icon-wrap">
+            <span class="card-icon">🎤</span>
+          </div>
+          <h3>CONCERTS</h3>
+          <p>Vivre les grandes performances musicales</p>
         </div>
-        <a routerLink="/encemoment" class="card-action">
-          <span>Accéder au direct</span>
+        <a href="https://www.youtube.com/@CharlyGuitare" class="card-action">
+          <span>Assister au concert</span>
           <span class="arrow">→</span>
         </a>
       </div>
 
-      <!-- Programmés -->
+      <!-- ⏮️ REPLAY -->
       <div class="live-card">
         <div class="card-content">
-          <div class="card-icon">📅</div>
+          <div class="card-icon-wrap">
+            <span class="card-icon">⏮️</span>
+          </div>
+          <h3>REPLAY</h3>
+          <p>Revoir tous les directs et événements terminés</p>
+        </div>
+        <a href="https://www.youtube.com/@CharlyGuitare" class="card-action">
+          <span>Accéder aux archives</span>
+          <span class="arrow">→</span>
+        </a>
+      </div>
+
+      <!-- 📅 PROGRAMMES -->
+      <div class="live-card">
+        <div class="card-content">
+          <div class="card-icon-wrap">
+            <span class="card-icon">📅</span>
+          </div>
           <h3>PROGRAMMES</h3>
           <p>Découvrir les prochains lives à venir</p>
         </div>
@@ -43,59 +105,6 @@
           <span class="arrow">→</span>
         </a>
       </div>
-
-      <!-- Master Class Live -->
-      <div class="live-card">
-        <div class="card-content">
-          <div class="card-icon">🎓</div>
-          <h3>MASTER CLASS LIVE</h3>
-          <p>Participer aux sessions interactives avec les experts</p>
-        </div>
-        <a routerLink="/encemoment" class="card-action">
-          <span>Rejoindre la session</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
-
-      <!-- Cours Live -->
-      <div class="live-card">
-        <div class="card-content">
-          <div class="card-icon">🎸</div>
-          <h3>COURS LIVE</h3>
-          <p>Apprendre en temps réel avec un formateur</p>
-        </div>
-        <a routerLink="/encemoment" class="card-action">
-          <span>S'inscrire au cours</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
-
-      <!-- Concerts -->
-      <div class="live-card">
-        <div class="card-content">
-          <div class="card-icon">🎤</div>
-          <h3>CONCERTS</h3>
-          <p>Vivre les grandes performances musicales</p>
-        </div>
-        <a routerLink="/encemoment" class="card-action">
-          <span>Assister au concert</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
-
-      <!-- Replay -->
-      <div class="live-card">
-        <div class="card-content">
-          <div class="card-icon">⏮️</div>
-          <h3>REPLAY</h3>
-          <p>Revoir tous les directs et événements terminés</p>
-        </div>
-        <a routerLink="/encemoment" class="card-action">
-          <span>Accéder aux archives</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
-
     </div>
   </section>
 </div>

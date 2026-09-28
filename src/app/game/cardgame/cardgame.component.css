@@ -651,3 +651,28 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.btn-sound {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+.btn-sound:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #fff;
+  transform: translateY(-2px);
+}
+.sound-icon { font-size: 1rem; }
