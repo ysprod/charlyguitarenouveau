@@ -15,7 +15,7 @@
     "@angular/common": "^17.3.12",
     "@angular/compiler": "^17.3.12",
     "@angular/core": "^17.3.12",
-    "@angular/fire": "^16.0.0",
+    "@angular/fire": "^17.0.0",
     "@angular/forms": "^17.3.12",
     "@angular/material": "^16.2.14",
     "@angular/platform-browser": "^17.3.12",
@@ -26,7 +26,7 @@
     "firebase": "^10.14.1",
     "firebaseui": "^6.1.0",
     "ngx-cookie-service": "^2.1.0",
-    "rxjs": "~6.6.0",
+    "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"
   },
