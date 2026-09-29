@@ -1,7 +1,7 @@
 import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { AuthService } from './services/auth.service';
 import { Router } from '@angular/router';
-import { MatLegacySnackBar as MatSnackBar } from '@angular/material/legacy-snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { Observable, Subject, of } from 'rxjs';
 import { switchMap, map, takeUntil } from 'rxjs/operators';

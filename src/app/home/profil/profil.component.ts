@@ -7,7 +7,7 @@ import { AngularFireStorage } from '@angular/fire/compat/storage';
 
 import firebase from 'firebase/compat/app';
 
-import { MatLegacySnackBar as MatSnackBar } from '@angular/material/legacy-snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { Observable, Subject, of } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
