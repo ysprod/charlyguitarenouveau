@@ -31,19 +31,19 @@
           <span class="subtitle-accent">de vie.</span>
         </p>
         <div class="hero-actions">
-          <button class="cta-button cta-primary" [routerLink]="['/academie']">
-            <span>Découvrir l'académie</span>
+          <button class="cta-button cta-primary" [routerLink]="['/play']">
+            <span>Jouer à Charly Guitare Hero</span>
             <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </button>
 
-          <button class="cta-button cta-secondary" [routerLink]="['/live']">
+          <button class="cta-button cta-secondary" [routerLink]="['/academie']">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polygon points="5 3 19 12 5 21 5 3" />
             </svg>
-            <span>Voir les vidéos</span>
+            <span>Découvrir l'académie</span>
           </button>
         </div>
       </div>
@@ -65,13 +65,13 @@
           <div class="feature-overlay"></div>
           <span class="feature-tag feature-tag-live">
             <span class="live-dot"></span>
-            Live
+            GAMES
           </span>
         </div>
       </a>
       <div class="feature-content">
         <h3 class="feature-title">Jeux</h3>
-        <p class="feature-desc">Amusez-vous !</p>
+        <p class="feature-desc">Jouez, apprenez, progressez… et surtout, amusez-vous !</p>
         <a [routerLink]="['/play']" class="feature-link">
           <span>Jouer maintenant</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,16 +85,16 @@
     <!-- 🎓 ACADÉMIE -->
     <article class="feature-card">
       <a [routerLink]="['/academie']" class="feature-image-link" title="Découvrir l'Académie">
-        <div class="feature-image-wrapper">
+        <div class="feature-image-wrapper2">
           <img src="assets/academie.jpg" alt="L'Académie Charly Guitare" class="feature-image" loading="lazy" />
           <div class="feature-overlay"></div>
           <span class="feature-tag">Formation</span>
         </div>
       </a>
       <div class="feature-content">
-        <h3 class="feature-title">L'Académie</h3>
+        <h3 class="feature-title">Académie</h3>
         <p class="feature-desc">
-          Une formation complète et structurée pour maîtriser la guitare à votre rythme.
+          Une formation complète pour maîtriser la musique et les arts du spectacle.
         </p>
         <a [routerLink]="['/academie']" class="feature-link">
           <span>En savoir plus</span>
@@ -149,9 +149,9 @@
         </div>
       </a>
       <div class="feature-content">
-        <h3 class="feature-title">Espace Live</h3>
+        <h3 class="feature-title">Videos</h3>
         <p class="feature-desc">
-          Rejoignez-nous en direct pour des sessions interactives et des conseils en temps réel.
+          Rejoignez-nous pour des sessions interactives.
         </p>
         <a [routerLink]="['/live']" class="feature-link">
           <span>Rejoindre le live</span>
@@ -174,7 +174,7 @@
       <div class="feature-content">
         <h3 class="feature-title">Charly Guitare 5D</h3>
         <p class="feature-desc">
-          Exploration des dimensions.
+          Exploration des dimensions de Charly Guitare.
         </p>
         <a [routerLink]="['/game']" class="feature-link">
           <span>En savoir plus</span>

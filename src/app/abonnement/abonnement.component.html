@@ -1,97 +1,285 @@
 <div class="auth-sub-container">
 
-  <div class="hero-content text-center">
-    <div class="row">
-      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <p><a [routerLink]="['/']" title="5 Charly Guitare">
-            <img src="../assets/abonnement.jpg"> </a></p>
-      </div>
-    </div><br>
-    <p class="hero-description">
-      Gérez votre compte, accédez à vos offres exclusives, débloquez les contenus de l'Académie et profitez des jeux
-      Offoland.
-    </p><br>
+  <!-- ============================================================
+       DÉCOR ANIMÉ EN ARRIÈRE-PLAN
+       ============================================================ -->
+  <div class="bg-decor" aria-hidden="true">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
+    <div class="cyber-grid"></div>
+    <div class="aurora"></div>
+
+    <div class="particles">
+      <span class="particle"
+            *ngFor="let p of particles"
+            [style.left.%]="p.left"
+            [style.animation-delay.s]="p.delay"
+            [style.animation-duration.s]="p.duration"
+            [style.width.px]="p.size"
+            [style.height.px]="p.size"
+            [style.background]="p.color"
+            [style.box-shadow]="'0 0 12px ' + p.color"></span>
+    </div>
+
+    <div class="floating-icons">
+      <span class="float-icon" *ngFor="let i of icons"
+            [style.left.%]="i.left"
+            [style.top.%]="i.top"
+            [style.animation-delay.s]="i.delay"
+            [style.animation-duration.s]="i.duration">{{ i.symbol }}</span>
+    </div>
+
+    <div class="rays"></div>
   </div>
 
-  <section class="grid-section">
-    <div class="cards-grid">
-      <!-- S'abonner à l'Académie -->
-      <div class="auth-card">
-        <div class="card-header">
-          <div class="card-icon">🎓</div>
-          <h3>S’abonner à l’Académie</h3>
-        </div>
-        <p class="card-desc">Débloquez l'accès illimité aux formations, cours et ressources.</p>
-        <a routerLink="/subscription/academy" class="card-action">
-          <span>Découvrir l'abonnement</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
+  <div class="auth-content">
 
-      <!-- Choisir une formule -->
-      <div class="auth-card">
-        <div class="card-header">
-          <div class="card-icon">⭐</div>
-          <h3>Choisir une formule</h3>
-        </div>
-        <p class="card-desc">Comparez les différents plans d'abonnement selon vos besoins.</p>
-        <a routerLink="/subscription/plans" class="card-action">
-          <span>Voir les formules</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
+    <header class="hero-banner">
+      <div class="hero-content">
 
-      <!-- Paiement -->
-      <div class="auth-card">
-        <div class="card-header">
-          <div class="card-icon">💳</div>
-          <h3>Paiement</h3>
+        <div class="gold-badge">
+          <span class="badge-dot"></span>
+          <span>ESPACE MEMBRE · ACCÈS EXCLUSIF</span>
         </div>
-        <p class="card-desc">Effectuez vos règlements en toute sécurité via nos moyens de paiement.</p>
-        <a routerLink="/checkout" class="card-action">
-          <span>Espace paiement</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
 
-      <!-- Mes abonnements -->
-      <div class="auth-card">
-        <div class="card-header">
-          <div class="card-icon">📋</div>
-          <h3>Mes abonnements</h3>
-        </div>
-        <p class="card-desc">Consultez l'état de vos abonnements, vos factures et renouvellements.</p>
-        <a routerLink="/account/subscriptions" class="card-action">
-          <span>Gérer mes accès</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
+        <h1 class="hero-title">
+          <span class="title-top">BIENVENUE DANS VOTRE</span>
+          <span class="title-main">ESPACE PRIVILÈGE</span>
+        </h1>
 
-      <!-- Acheter un document -->
-      <div class="auth-card">
-        <div class="card-header">
-          <div class="card-icon">📚</div>
-          <h3>Acheter un document</h3>
-        </div>
-        <p class="card-desc">Obtenez des méthodes, livres numériques et partitions à l'unité.</p>
-        <a routerLink="/documents" class="card-action">
-          <span>Voir le catalogue</span>
-          <span class="arrow">→</span>
-        </a>
-      </div>
+        <p class="hero-description">
+          Gérez votre compte, accédez à vos offres exclusives, débloquez les contenus
+          de l'Académie et profitez des jeux Offoland. 🎸
+        </p>
 
-      <!-- Accéder aux jeux Offoland -->
-      <div class="auth-card">
-        <div class="card-header">
-          <div class="card-icon">🎮</div>
-          <h3>Accéder aux jeux Offoland</h3>
+        <!-- Stats animées -->
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-value">6</span>
+            <span class="stat-label">Services</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat">
+            <span class="stat-value">∞</span>
+            <span class="stat-label">Contenus</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat">
+            <span class="stat-value">24/7</span>
+            <span class="stat-label">Accès</span>
+          </div>
         </div>
-        <p class="card-desc">Profitez des jeux interactifs et des défis ludiques réservés aux membres.</p>
-        <a routerLink="/play" class="card-action">
-          <span>Lancer l'espace jeu</span>
-          <span class="arrow">→</span>
-        </a>
+
       </div>
-    </div>
-  </section>
+    </header>
+
+    <!-- ============================================================
+         GRILLE DE CARTES
+         ============================================================ -->
+    <section class="grid-section">
+      <div class="cards-grid">
+
+        <!-- 🎓 S'ABONNER À L'ACADÉMIE -->
+        <article class="auth-card highlight-card" style="--card-accent: #a855f7;">
+          <div class="card-glow"></div>
+
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <div class="card-icon">🎓</div>
+            </div>
+            <div class="card-title-block">
+              <span class="card-tag">RECOMMANDÉ</span>
+              <h3>S'abonner à l'Académie</h3>
+            </div>
+          </div>
+
+          <p class="card-desc">
+            Débloquez l'accès <strong>illimité</strong> aux formations, cours vidéo
+            et ressources pédagogiques exclusives.
+          </p>
+
+          <ul class="card-features">
+            <li><span class="check">✓</span> Toutes les formations</li>
+            <li><span class="check">✓</span> Nouveaux contenus mensuels</li>
+            <li><span class="check">✓</span> Accès à vie aux replays</li>
+          </ul>
+
+          <a routerLink="/subscription/academy" class="card-action">
+            <span>Découvrir l'abonnement</span>
+            <span class="arrow">→</span>
+          </a>
+        </article>
+
+        <!-- ⭐ CHOISIR UNE FORMULE -->
+        <article class="auth-card" style="--card-accent: #06b6d4;">
+          <div class="card-glow"></div>
+
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <div class="card-icon">⭐</div>
+            </div>
+            <div class="card-title-block">
+              <h3>Choisir une formule</h3>
+            </div>
+          </div>
+
+          <p class="card-desc">
+            Comparez les différents plans d'abonnement et trouvez celui qui
+            correspond à votre rythme d'apprentissage.
+          </p>
+
+          <ul class="card-features">
+            <li><span class="check">✓</span> Plans mensuels & annuels</li>
+            <li><span class="check">✓</span> Sans engagement</li>
+            <li><span class="check">✓</span> Changement à tout moment</li>
+          </ul>
+
+          <a routerLink="/subscription/plans" class="card-action">
+            <span>Voir les formules</span>
+            <span class="arrow">→</span>
+          </a>
+        </article>
+
+        <!-- 💳 PAIEMENT -->
+        <article class="auth-card" style="--card-accent: #22d3ee;">
+          <div class="card-glow"></div>
+
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <div class="card-icon">💳</div>
+            </div>
+            <div class="card-title-block">
+              <h3>Paiement</h3>
+            </div>
+          </div>
+
+          <p class="card-desc">
+            Effectuez vos règlements en toute <strong>sécurité</strong> via nos
+            moyens de paiement chiffrés et certifiés.
+          </p>
+
+          <ul class="card-features">
+            <li><span class="check">✓</span> CB, PayPal, Mobile Money</li>
+            <li><span class="check">✓</span> Transactions sécurisées SSL</li>
+            <li><span class="check">✓</span> Reçus instantanés</li>
+          </ul>
+
+          <a routerLink="/checkout" class="card-action">
+            <span>Espace paiement</span>
+            <span class="arrow">→</span>
+          </a>
+        </article>
+
+        <!-- 📋 MES ABONNEMENTS -->
+        <article class="auth-card" style="--card-accent: #8b5cf6;">
+          <div class="card-glow"></div>
+
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <div class="card-icon">📋</div>
+            </div>
+            <div class="card-title-block">
+              <h3>Mes abonnements</h3>
+            </div>
+          </div>
+
+          <p class="card-desc">
+            Consultez l'état de vos abonnements, vos factures et la date
+            de renouvellement de vos accès.
+          </p>
+
+          <ul class="card-features">
+            <li><span class="check">✓</span> Historique complet</li>
+            <li><span class="check">✓</span> Téléchargement des factures</li>
+            <li><span class="check">✓</span> Renouvellement automatique</li>
+          </ul>
+
+          <a routerLink="/account/subscriptions" class="card-action">
+            <span>Gérer mes accès</span>
+            <span class="arrow">→</span>
+          </a>
+        </article>
+
+        <!-- 📚 ACHETER UN DOCUMENT -->
+        <article class="auth-card" style="--card-accent: #ec4899;">
+          <div class="card-glow"></div>
+
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <div class="card-icon">📚</div>
+            </div>
+            <div class="card-title-block">
+              <h3>Acheter un document</h3>
+            </div>
+          </div>
+
+          <p class="card-desc">
+            Obtenez des méthodes, livres numériques et partitions à l'unité,
+            sans abonnement.
+          </p>
+
+          <ul class="card-features">
+            <li><span class="check">✓</span> Catalogue complet</li>
+            <li><span class="check">✓</span> Téléchargement immédiat</li>
+            <li><span class="check">✓</span> Format PDF & audio</li>
+          </ul>
+
+          <a routerLink="/documents" class="card-action">
+            <span>Voir le catalogue</span>
+            <span class="arrow">→</span>
+          </a>
+        </article>
+
+        <!-- 🎮 JEUX OFFOLAND -->
+        <article class="auth-card" style="--card-accent: #10b981;">
+          <div class="card-glow"></div>
+
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <div class="card-icon">🎮</div>
+            </div>
+            <div class="card-title-block">
+              <span class="card-tag tag-new">NOUVEAU</span>
+              <h3>Accéder aux jeux Offoland</h3>
+            </div>
+          </div>
+
+          <p class="card-desc">
+            Profitez des jeux interactifs et des défis ludiques réservés
+            aux membres de la communauté.
+          </p>
+
+          <ul class="card-features">
+            <li><span class="check">✓</span> Quiz & jeux musicaux</li>
+            <li><span class="check">✓</span> Défis entre membres</li>
+            <li><span class="check">✓</span> Classements & récompenses</li>
+          </ul>
+
+          <a routerLink="/play" class="card-action">
+            <span>Lancer l'espace jeu</span>
+            <span class="arrow">→</span>
+          </a>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="auth-footer">
+      <div class="footer-line"></div>
+      <p class="footer-text">
+        <span class="footer-icon">🔒</span>
+        Paiement 100% sécurisé · Annulation à tout moment
+        <span class="footer-icon">🔒</span>
+      </p>
+      <div class="footer-line"></div>
+    </footer>
+
+  </div>
 </div>
