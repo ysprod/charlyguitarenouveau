@@ -75,10 +75,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "charlyguitarweb:build:production"
+              "buildTarget": "charlyguitarweb:build:production"
             },
             "development": {
-              "browserTarget": "charlyguitarweb:build:development"
+              "buildTarget": "charlyguitarweb:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -86,7 +86,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "charlyguitarweb:build"
+            "buildTarget": "charlyguitarweb:build"
           }
         },
         "test": {
