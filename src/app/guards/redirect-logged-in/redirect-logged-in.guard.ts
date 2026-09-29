@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router, UrlTree } from '@angular/router';
+import { Router, UrlTree } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
@@ -7,7 +7,7 @@ import { map, take } from 'rxjs/operators';
 @Injectable({
   providedIn: 'root'
 })
-export class RedirectLoggedInGuard implements CanActivate {
+export class RedirectLoggedInGuard  {
 
   constructor(private afAuth: AngularFireAuth, private router: Router) {}
 
