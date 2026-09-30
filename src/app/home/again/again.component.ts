@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 
 export interface MembreEquipe {
@@ -12,6 +13,10 @@ export interface MembreEquipe {
 
 @Component({
   selector: 'app-again',
+  standalone: true,
+  imports: [
+    CommonModule
+  ],
   templateUrl: './again.component.html',
   styleUrls: ['./again.component.scss']
 })

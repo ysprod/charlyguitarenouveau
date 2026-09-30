@@ -5,9 +5,12 @@ import {
   Difficulty
 } from '../../models/acoustic-quiz.model';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-acoustic',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './acoustic.component.html',
   styleUrls: ['./acoustic.component.scss']
 })
@@ -141,7 +144,7 @@ export class AcousticComponent implements OnInit {
   selectedDifficulty: Difficulty | 'Toutes' = 'Toutes';
   difficulties: (Difficulty | 'Toutes')[] = ['Toutes', 'Facile', 'Intermédiaire', 'Expert'];
 
-   constructor(private router: Router) { }
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
     this.resetQuiz();
@@ -238,7 +241,7 @@ export class AcousticComponent implements OnInit {
     return '📚';
   }
 
-   goToPlay(): void {
+  goToPlay(): void {
     this.router.navigate(['/play']);
   }
 }

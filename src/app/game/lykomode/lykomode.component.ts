@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -19,6 +20,10 @@ interface RuneSymbol {
 
 @Component({
   selector: 'app-lykomode',
+  standalone: true,
+  imports: [
+    CommonModule
+  ],
   templateUrl: './lykomode.component.html',
   styleUrls: ['./lykomode.component.scss']
 })
@@ -34,7 +39,7 @@ export class LykomodeComponent implements OnInit {
   constructor(
     private readonly router: Router,
     private readonly ngZone: NgZone
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.particles = this.generateParticles(35);

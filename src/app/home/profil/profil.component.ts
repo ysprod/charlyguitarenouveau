@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AbstractControl, UntypedFormBuilder, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
 
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { Observable, Subject, of } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
+import { CommonModule } from '@angular/common';
 
 export interface UserProfile {
   uid: string;
@@ -26,6 +27,11 @@ export interface UserProfile {
 
 @Component({
   selector: 'app-profil',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule
+  ],
   templateUrl: './profil.component.html',
   styleUrls: ['./profil.component.scss']
 })
@@ -61,7 +67,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
     private db: AngularFireDatabase,
     private storage: AngularFireStorage,
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   // =========================================================
   // INITIALISATION

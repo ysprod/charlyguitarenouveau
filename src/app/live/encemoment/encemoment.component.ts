@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, NgZone, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 interface Particle {
   left: number;
@@ -17,17 +19,22 @@ interface MusicNote {
 
 @Component({
   selector: 'app-encemoment',
+  standalone: true,
+  imports: [
+    RouterLink,
+    CommonModule
+  ],
   templateUrl: './encemoment.component.html',
   styleUrls: ['./encemoment.component.scss']
 })
 export class EncemomentComponent implements OnInit {
- particles: Particle[] = [];
+  particles: Particle[] = [];
   notes: MusicNote[] = [];
 
   private readonly COLORS = ['#ff003c', '#facc15', '#a855f7', '#00f2fe', '#00ff88'];
   private readonly SYMBOLS = ['♪', '♫', '♬', '🎵', '🎶', '🎸', '🎤', '🥁'];
 
-  constructor(private readonly ngZone: NgZone) {}
+  constructor(private readonly ngZone: NgZone) { }
 
   ngOnInit(): void {
     this.particles = this.generateParticles(35);

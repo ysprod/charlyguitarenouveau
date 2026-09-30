@@ -2,9 +2,14 @@ import { animate, keyframes, style, transition, trigger } from '@angular/animati
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { GameState } from '../../models/note-game.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-fretboard',
+  standalone: true,
+  imports: [
+    CommonModule
+  ],
   templateUrl: './fretboard.component.html',
   styleUrls: ['./fretboard.component.scss'],
   animations: [
@@ -93,8 +98,8 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   shouldShowNoteLabel(): boolean {
-  return this.difficulty !== 'hardcore';
-}
+    return this.difficulty !== 'hardcore';
+  }
 
   private playSound(type: 'success' | 'error' | 'click' | 'gameover' | 'start'): void {
     if (!this.audioCtx) return;

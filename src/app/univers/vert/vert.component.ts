@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 
 export interface Sirene {
@@ -25,6 +26,10 @@ export interface PhenomeneNaturel {
 
 @Component({
   selector: 'app-vert',
+     standalone: true,
+        imports: [
+    CommonModule
+  ],
   templateUrl: './vert.component.html',
   styleUrls: ['./vert.component.scss']
 })

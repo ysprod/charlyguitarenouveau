@@ -3,6 +3,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CardData } from './CardData';
 import { RdialogComponent } from './rdialog/rdialog.component';
+import { CommonModule } from '@angular/common';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { GamecardComponent } from './gamecard/gamecard.component';
 
 interface Particle {
   left: number;
@@ -23,6 +26,12 @@ type SoundType = 'flip' | 'match' | 'wrong' | 'victory' | 'defeat';
 
 @Component({
   selector: 'app-cardgame',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatGridListModule,
+    GamecardComponent
+  ],
   templateUrl: './cardgame.component.html',
   styleUrls: ['./cardgame.component.css']
 })
@@ -57,13 +66,13 @@ export class CardgameComponent implements OnInit, OnDestroy {
 
   /* Audio */
   private audioCtx?: AudioContext;
-    soundEnabled = true;
+  soundEnabled = true;
 
   constructor(
     private dialog: MatDialog,
     private activatedRoute: ActivatedRoute,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const queryVie = this.activatedRoute.snapshot.queryParamMap.get('vie');
@@ -162,7 +171,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
           endFreq: 80,
           type: 'sawtooth',
           duration: 0.4,
-          volume:1,
+          volume: 1,
           now
         });
         break;

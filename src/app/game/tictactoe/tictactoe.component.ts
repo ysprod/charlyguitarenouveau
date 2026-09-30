@@ -2,9 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TictactoeserviceService } from '../../services/tictactoeservice.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-tictactoe',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './tictactoe.component.html',
   styleUrls: ['./tictactoe.component.css']
 })
@@ -82,7 +85,7 @@ export class TictactoeComponent implements OnInit, OnDestroy {
         osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
         gain.gain.setValueAtTime(0.15, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
-        osc.start(now); 
+        osc.start(now);
         osc.stop(now + 0.06);
         break;
 
@@ -92,7 +95,7 @@ export class TictactoeComponent implements OnInit, OnDestroy {
         osc.frequency.exponentialRampToValueAtTime(110, now + 0.15);
         gain.gain.setValueAtTime(0.1, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-        osc.start(now); 
+        osc.start(now);
         osc.stop(now + 0.15);
         break;
 
@@ -102,12 +105,12 @@ export class TictactoeComponent implements OnInit, OnDestroy {
           const o = this.audioCtx!.createOscillator();
           const g = this.audioCtx!.createGain();
           o.type = 'triangle';
-          o.connect(g); 
+          o.connect(g);
           g.connect(this.audioCtx!.destination);
           o.frequency.setValueAtTime(freq, now + idx * 0.1);
           g.gain.setValueAtTime(0.2, now + idx * 0.1);
           g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.3);
-          o.start(now + idx * 0.1); 
+          o.start(now + idx * 0.1);
           o.stop(now + idx * 0.1 + 0.3);
         });
         break;
@@ -118,7 +121,7 @@ export class TictactoeComponent implements OnInit, OnDestroy {
         osc.frequency.linearRampToValueAtTime(80, now + 0.4);
         gain.gain.setValueAtTime(0.25, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-        osc.start(now); 
+        osc.start(now);
         osc.stop(now + 0.4);
         break;
 
@@ -128,7 +131,7 @@ export class TictactoeComponent implements OnInit, OnDestroy {
         osc.frequency.setValueAtTime(180, now + 0.15);
         gain.gain.setValueAtTime(0.2, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-        osc.start(now); 
+        osc.start(now);
         osc.stop(now + 0.3);
         break;
 
@@ -138,7 +141,7 @@ export class TictactoeComponent implements OnInit, OnDestroy {
         osc.frequency.exponentialRampToValueAtTime(1200, now + 0.5);
         gain.gain.setValueAtTime(0.3, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-        osc.start(now); 
+        osc.start(now);
         osc.stop(now + 0.5);
         break;
     }

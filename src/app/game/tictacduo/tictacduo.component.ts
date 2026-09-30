@@ -2,9 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TictacduoService } from '../../services/tictacduo.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-tictacduo',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './tictacduo.component.html',
   styleUrls: ['./tictacduo.component.css']
 })
@@ -230,8 +233,8 @@ export class TictacduoComponent implements OnInit, OnDestroy {
 
   private changeTurn(): void {
     const current = this.gs.changeTurn();
-    this.messageLyko = current === 1 
-      ? "🎯 Au tour du JOUEUR 2" 
+    this.messageLyko = current === 1
+      ? "🎯 Au tour du JOUEUR 2"
       : "🎯 Au tour du JOUEUR 1";
   }
 

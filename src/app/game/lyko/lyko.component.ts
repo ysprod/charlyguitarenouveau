@@ -1,3 +1,4 @@
+import { CommonModule, DecimalPipe, NgClass } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 
 interface GameStats {
@@ -16,11 +17,16 @@ interface GameStats {
 
 @Component({
   selector: 'app-lyko',
+  standalone: true,
+  imports: [
+    DecimalPipe,
+    NgClass, CommonModule
+  ],
   templateUrl: './lyko.component.html',
   styleUrls: ['./lyko.component.scss']
 })
 export class LykoComponent implements OnInit {
-userProfile = {
+  userProfile = {
     name: 'Charly G',
     avatarUrl: 'assets/images/charly-avatar.jpg'
   };
@@ -54,9 +60,9 @@ userProfile = {
     { id: 'recompenses', label: 'RÉCOMPENSES', sublabel: 'Gagne des bonus', icon: '🎁', color: 'red' }
   ];
 
-  constructor() {}
+  constructor() { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   onPlay(): void {
     console.log('Lancement de la partie !');

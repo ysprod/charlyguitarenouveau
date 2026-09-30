@@ -1,12 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database'; // Import Realtime Database
 import firebase from 'firebase/compat/app';
 import { UserProfile } from '../models/user.model'; // Ajustez le chemin de votre modèle
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-register',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink
+  ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
@@ -24,7 +32,7 @@ export class RegisterComponent implements OnInit {
     private db: AngularFireDatabase, // Injection de Realtime Database
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/academie';
@@ -58,7 +66,7 @@ export class RegisterComponent implements OnInit {
       if (credential.user) {
         // Enregistrer l'utilisateur dans Realtime Database
         await this.saveUserDataInRealtimeDB(credential.user);
-        
+
         // Envoi de l'email de vérification
         await credential.user.sendEmailVerification();
       }

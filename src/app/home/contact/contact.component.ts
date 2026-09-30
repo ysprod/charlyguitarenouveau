@@ -1,11 +1,17 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Subscription } from 'rxjs';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-contact',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule
+  ],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.css']
 })
@@ -25,7 +31,7 @@ export class ContactComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder,
     private db: AngularFireDatabase,
     private afAuth: AngularFireAuth
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     window.scrollTo(0, 0);

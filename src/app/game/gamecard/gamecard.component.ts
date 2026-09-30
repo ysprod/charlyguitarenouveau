@@ -5,6 +5,7 @@ import { CardData } from '../cardgame/CardData';
 
 @Component({
   selector: 'app-gamecard',
+     standalone: true,
   templateUrl: './gamecard.component.html',
   styleUrls: ['./gamecard.component.css'],
   animations: [

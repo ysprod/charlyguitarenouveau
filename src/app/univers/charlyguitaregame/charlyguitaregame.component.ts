@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 export interface Dimension {
   nom: string;
@@ -14,12 +16,16 @@ export interface Dimension {
 
 @Component({
   selector: 'app-charlyguitaregame',
+  standalone: true,
+  imports: [
+    CommonModule, RouterLink
+  ],
   templateUrl: './charlyguitaregame.component.html',
   styleUrls: ['./charlyguitaregame.component.scss']
 })
 export class CharlyguitaregameComponent implements OnInit {
 
-   dimensions: Dimension[] = [
+  dimensions: Dimension[] = [
     {
       nom: 'NOIR',
       couleur: '#1a1a1a',

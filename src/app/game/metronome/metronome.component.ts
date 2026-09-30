@@ -13,9 +13,16 @@ import {
   DifficultyConfig,
   SessionHistory
 } from '../../models/metronome-challenge.model';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-metronome',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './metronome.component.html',
   styleUrls: ['./metronome.component.scss']
 })
@@ -490,8 +497,8 @@ export class MetronomeComponent implements OnInit, OnDestroy {
  * Calcule la hauteur de la barre (0-100%) à partir du décalage en ms.
  * Utilisé dans le template car `Math` n'est pas accessible en Angular.
  */
-getBeatBarHeight(deltaMs: number | null): number {
-  if (deltaMs === null) return 100; // tap manqué → barre pleine
-  return Math.min(100, Math.abs(deltaMs));
-}
+  getBeatBarHeight(deltaMs: number | null): number {
+    if (deltaMs === null) return 100; // tap manqué → barre pleine
+    return Math.min(100, Math.abs(deltaMs));
+  }
 }

@@ -1,13 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';// Import de Realtime Database
 import firebase from 'firebase/compat/app';
 import { UserProfile } from '../models/user.model';
-  // Ajustez le chemin vers votre interface
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+// Ajustez le chemin vers votre interface
 
 @Component({
   selector: 'app-login',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink
+  ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -25,7 +33,7 @@ export class LoginComponent implements OnInit {
     private db: AngularFireDatabase, // Injection de Realtime Database
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/academie';
@@ -42,7 +50,7 @@ export class LoginComponent implements OnInit {
 
     try {
       const credential = await this.afAuth.signInWithEmailAndPassword(this.email, this.password);
-      
+
       if (credential.user) {
         await this.updateUserDataInRealtimeDB(credential.user);
       }
@@ -102,7 +110,7 @@ export class LoginComponent implements OnInit {
    */
   private async updateUserDataInRealtimeDB(user: firebase.User): Promise<void> {
     const userRef = this.db.object<UserProfile>(`users/${user.uid}`);
-    
+
     // Vérifier si l'utilisateur existe déjà dans la base
     const snapshot = await userRef.query.once('value');
     const now = new Date().toISOString();

@@ -1,3 +1,4 @@
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -14,6 +15,10 @@ interface PowerUp {
 
 @Component({
 	selector: 'app-kronos',
+	standalone: true,
+	imports: [
+		DecimalPipe, CommonModule
+	],
 	templateUrl: './kronos.component.html',
 	styleUrls: ['./kronos.component.scss']
 })
@@ -87,7 +92,7 @@ export class KronosComponent implements OnInit {
 	constructor(private activatedRoute: ActivatedRoute, private router: Router) { }
 
 	ngOnInit(): void {
- 		this.lavie = 5000;
+		this.lavie = 5000;
 		this.lebonus = 100;
 		this.etapedujeu = this.activatedRoute.snapshot.queryParamMap.get('etape') || this.etapedujeu;
 

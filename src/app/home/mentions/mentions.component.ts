@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-mentions',
+     standalone: true,
   templateUrl: './mentions.component.html',
   styleUrls: ['./mentions.component.css']
 })

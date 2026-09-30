@@ -1,9 +1,14 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ChordShape, MolkkyGameState, Difficulty } from '../../models/memory-chord.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-memory',
+  standalone: true,
+  imports: [
+    CommonModule
+  ],
   templateUrl: './memory.component.html',
   styleUrls: ['./memory.component.scss']
 })
@@ -16,13 +21,13 @@ export class MemoryComponent implements OnInit, OnDestroy {
     { id: '2', name: 'Am', fullName: 'La mineur', frets: [-1, 0, 2, 2, 1, 0], baseFret: 1, points: 2, difficulty: 'facile', category: 'mineur' },
     { id: '3', name: 'G', fullName: 'Sol Majeur', frets: [3, 2, 0, 0, 0, 3], baseFret: 1, points: 3, difficulty: 'facile', category: 'majeur' },
     { id: '4', name: 'Em', fullName: 'Mi mineur', frets: [0, 2, 2, 0, 0, 0], baseFret: 1, points: 4, difficulty: 'facile', category: 'mineur' },
-    
+
     // === NIVEAU NORMAL ===
     { id: '5', name: 'Dm', fullName: 'Ré mineur', frets: [-1, -1, 0, 2, 3, 1], baseFret: 1, points: 5, difficulty: 'normal', category: 'mineur' },
     { id: '6', name: 'E', fullName: 'Mi Majeur', frets: [0, 2, 2, 1, 0, 0], baseFret: 1, points: 6, difficulty: 'normal', category: 'majeur' },
     { id: '7', name: 'A', fullName: 'La Majeur', frets: [-1, 0, 2, 2, 2, 0], baseFret: 1, points: 7, difficulty: 'normal', category: 'majeur' },
     { id: '8', name: 'D', fullName: 'Ré Majeur', frets: [-1, -1, 0, 2, 3, 2], baseFret: 1, points: 8, difficulty: 'normal', category: 'majeur' },
-    
+
     // === NIVEAU DIFFICILE ===
     { id: '9', name: 'F', fullName: 'Fa Majeur (Barré)', frets: [1, 3, 3, 2, 1, 1], baseFret: 1, points: 9, difficulty: 'difficile', category: 'majeur' },
     { id: '10', name: 'B7', fullName: 'Si 7ème', frets: [-1, 2, 1, 2, 0, 2], baseFret: 1, points: 10, difficulty: 'difficile', category: 'septieme' },
@@ -89,7 +94,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
     this.initAudio();
@@ -204,7 +209,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
 
     // Mélanger et limiter
     const shuffled = [...filtered].sort(() => Math.random() - 0.5).slice(0, config.pinCount);
-    
+
     this.pins = shuffled.map(chord => ({
       chord,
       isDown: false,

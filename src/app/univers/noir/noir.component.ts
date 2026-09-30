@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 
 export interface Divinite {
@@ -19,6 +20,10 @@ export interface Passage {
 
 @Component({
   selector: 'app-noir',
+     standalone: true,
+     imports: [
+    CommonModule
+  ],
   templateUrl: './noir.component.html',
   styleUrls: ['./noir.component.scss']
 })

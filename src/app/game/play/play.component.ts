@@ -1,5 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, HostListener, NgZone, OnDestroy, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 interface Particle {
   left: number;
@@ -29,6 +30,11 @@ interface Filter {
 
 @Component({
   selector: 'app-play',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterLink
+  ],
   templateUrl: './play.component.html',
   styleUrls: ['./play.component.scss']
 })
@@ -227,7 +233,7 @@ export class PlayComponent implements OnInit, OnDestroy {
   onSelectDeDeKronos(): void {
     this.navigateToGame('/kronos', '3');
   }
- 
+
   private navigateToGame(route: string, etape: string): void {
     this.router.navigate([route], {
       queryParams: {

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-accueil',
+     standalone: true,
   templateUrl: './accueil.component.html',
   styleUrls: ['./accueil.component.scss']
 })

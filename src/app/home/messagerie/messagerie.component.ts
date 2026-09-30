@@ -4,12 +4,19 @@ import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Observable, Subject, of, BehaviorSubject, combineLatest } from 'rxjs';
 import { map, switchMap, takeUntil, tap, shareReplay, startWith } from 'rxjs/operators';
 import { MessageReply, UserMessage } from '../../models/user-message.model';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 type FilterStatus = 'all' | 'unread' | 'read' | 'replied';
 type SortMode = 'recent' | 'oldest' | 'unread-first';
 
 @Component({
   selector: 'app-messagerie',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './messagerie.component.html',
   styleUrls: ['./messagerie.component.scss']
 })
@@ -44,7 +51,7 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
   constructor(
     private db: AngularFireDatabase,
     private afAuth: AngularFireAuth
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Flux principal des messages
@@ -162,9 +169,9 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
         const days = Math.floor(hours / 24);
         const avgResponseTime =
           count === 0 ? '—' :
-          days > 0 ? `${days} j` :
-          hours > 0 ? `${hours} h` :
-          `${Math.floor(avgMs / 60000)} min`;
+            days > 0 ? `${days} j` :
+              hours > 0 ? `${hours} h` :
+                `${Math.floor(avgMs / 60000)} min`;
 
         return { total, unread, replied, avgResponseTime };
       }),
@@ -302,6 +309,6 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
     try {
       const el = this.threadBody?.nativeElement;
       if (el) el.scrollTop = el.scrollHeight;
-    } catch {}
+    } catch { }
   }
 }

@@ -1,9 +1,14 @@
 import { trigger, state, style, transition, animate, keyframes } from '@angular/animations';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CardData } from '../CardData';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-gamecard',
+  standalone: true,
+  imports: [
+    CommonModule
+  ],
   templateUrl: './gamecard.component.html',
   styleUrls: ['./gamecard.component.css'],
   animations: [

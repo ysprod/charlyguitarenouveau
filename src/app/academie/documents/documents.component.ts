@@ -1,5 +1,7 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -17,6 +19,8 @@ export interface DocumentItem {
 
 @Component({
   selector: 'app-documents',
+  standalone: true,
+  imports: [RouterLink, CommonModule],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.css']
 })
@@ -33,7 +37,7 @@ export class DocumentsComponent implements OnInit {
     'Supports pédagogiques'
   ];
 
-  constructor(private db: AngularFireDatabase) {}
+  constructor(private db: AngularFireDatabase) { }
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
@@ -62,7 +66,7 @@ export class DocumentsComponent implements OnInit {
         if (category === 'Tous les documents') {
           return docs;
         }
-        
+
         return docs.filter(doc => {
           const typeLower = doc.type.toLowerCase();
           if (category === 'Méthodes') return typeLower.includes('méthode');

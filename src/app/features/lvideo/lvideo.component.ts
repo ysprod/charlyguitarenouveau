@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-lvideo',
+     standalone: true,
   templateUrl: './lvideo.component.html',
   styleUrls: ['./lvideo.component.css']
 })

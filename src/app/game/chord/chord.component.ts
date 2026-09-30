@@ -1,8 +1,12 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { GridBar, SavedGrid, ChordDetail } from 'src/app/models/chord-decoder.model';
- 
+
 @Component({
   selector: 'app-chord',
+  standalone: true,
+  imports: [FormsModule, CommonModule],
   templateUrl: './chord.component.html',
   styleUrls: ['./chord.component.scss']
 })
@@ -36,11 +40,11 @@ export class ChordComponent implements OnInit, OnDestroy {
 
   // ---------- Suggestions ----------
   presets: { name: string; grid: string; key: string }[] = [
-    { name: 'Pop I-V-vi-IV',      grid: '[C] [G] | [Am] [F]',           key: 'C' },
-    { name: 'Blues 12 mesures',   grid: '[C7] | [F7] | [C7] | [G7] |\n[F7] | [C7] | [G7] | [C7]', key: 'C' },
-    { name: 'ii-V-I Jazz',        grid: '[Dm7] [G7] | [Cmaj7]',          key: 'C' },
-    { name: 'Anatole (Rhythm)',   grid: '[Cmaj7] [Am7] | [Dm7] [G7]',    key: 'C' },
-    { name: 'Andalouse',          grid: '[Am] [G] | [F] [E7]',           key: 'A' },
+    { name: 'Pop I-V-vi-IV', grid: '[C] [G] | [Am] [F]', key: 'C' },
+    { name: 'Blues 12 mesures', grid: '[C7] | [F7] | [C7] | [G7] |\n[F7] | [C7] | [G7] | [C7]', key: 'C' },
+    { name: 'ii-V-I Jazz', grid: '[Dm7] [G7] | [Cmaj7]', key: 'C' },
+    { name: 'Anatole (Rhythm)', grid: '[Cmaj7] [Am7] | [Dm7] [G7]', key: 'C' },
+    { name: 'Andalouse', grid: '[Am] [G] | [F] [E7]', key: 'A' },
   ];
 
   savedGrids: SavedGrid[] = [];
@@ -127,22 +131,22 @@ export class ChordComponent implements OnInit, OnDestroy {
     const get = (semi: number) => list[(rootIndex + semi + 12) % 12];
 
     switch (quality) {
-      case 'm': case 'min':       return [root, get(3), get(7)];
-      case '7':                    return [root, get(4), get(7), get(10)];
-      case 'maj7': case 'M7':      return [root, get(4), get(7), get(11)];
-      case 'm7': case 'min7':      return [root, get(3), get(7), get(10)];
-      case 'dim': case '°':        return [root, get(3), get(6)];
-      case 'dim7': case '°7':      return [root, get(3), get(6), get(9)];
-      case 'aug': case '+':        return [root, get(4), get(8)];
-      case 'sus2':                 return [root, get(2), get(7)];
-      case 'sus4':                 return [root, get(5), get(7)];
-      case '6':                    return [root, get(4), get(7), get(9)];
-      case 'm6':                   return [root, get(3), get(7), get(9)];
-      case '9':                    return [root, get(4), get(7), get(10), get(14)];
-      case 'm9':                   return [root, get(3), get(7), get(10), get(14)];
-      case 'add9':                 return [root, get(4), get(7), get(14)];
-      case 'm7b5': case 'ø':       return [root, get(3), get(6), get(10)];
-      default:                     return [root, get(4), get(7)]; // majeur
+      case 'm': case 'min': return [root, get(3), get(7)];
+      case '7': return [root, get(4), get(7), get(10)];
+      case 'maj7': case 'M7': return [root, get(4), get(7), get(11)];
+      case 'm7': case 'min7': return [root, get(3), get(7), get(10)];
+      case 'dim': case '°': return [root, get(3), get(6)];
+      case 'dim7': case '°7': return [root, get(3), get(6), get(9)];
+      case 'aug': case '+': return [root, get(4), get(8)];
+      case 'sus2': return [root, get(2), get(7)];
+      case 'sus4': return [root, get(5), get(7)];
+      case '6': return [root, get(4), get(7), get(9)];
+      case 'm6': return [root, get(3), get(7), get(9)];
+      case '9': return [root, get(4), get(7), get(10), get(14)];
+      case 'm9': return [root, get(3), get(7), get(10), get(14)];
+      case 'add9': return [root, get(4), get(7), get(14)];
+      case 'm7b5': case 'ø': return [root, get(3), get(6), get(10)];
+      default: return [root, get(4), get(7)]; // majeur
     }
   }
 
