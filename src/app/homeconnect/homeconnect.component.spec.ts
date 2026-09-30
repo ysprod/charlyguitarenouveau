@@ -1,20 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { EncemomentComponent } from './encemoment.component';
+import { HomeconnectComponent } from './homeconnect.component';
 
-describe('EncemomentComponent', () => {
-  let component: EncemomentComponent;
-  let fixture: ComponentFixture<EncemomentComponent>;
+describe('HomeconnectComponent', () => {
+  let component: HomeconnectComponent;
+  let fixture: ComponentFixture<HomeconnectComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ EncemomentComponent ]
+      imports: [HomeconnectComponent]
     })
     .compileComponents();
-  });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(EncemomentComponent);
+    fixture = TestBed.createComponent(HomeconnectComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

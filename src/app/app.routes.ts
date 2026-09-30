@@ -30,8 +30,7 @@ import { MentionsComponent } from './home/mentions/mentions.component';
 import { MessagerieComponent } from './home/messagerie/messagerie.component';
 import { PrivacyComponent } from './home/privacy/privacy.component';
 import { ProfilComponent } from './home/profil/profil.component';
-import { EncemomentComponent } from './live/encemoment/encemoment.component';
-import { LiveComponent } from './live/live.component';
+ import { LiveComponent } from './live/live.component';
 import { LoginComponent } from './login/login.component';
 import { OffolandComponent } from './offoland/offoland.component';
 import { RegisterComponent } from './register/register.component';
@@ -192,12 +191,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
 
-  {
-    path: 'encemoment',
-    component: EncemomentComponent,
-    canActivate: [AuthGuard]
-  },
-
+  
   {
     path: 'abonnement',
     component: AbonnementComponent,

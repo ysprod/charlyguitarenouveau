@@ -147,7 +147,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
           endFreq: 120,
           type: 'sawtooth',
           duration: 0.25,
-          volume: 0.2,
+          volume: 1,
           now
         });
         break;

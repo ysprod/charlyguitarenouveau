@@ -1,22 +1,67 @@
 <div class="offoland-app">
-  <!-- CONTENU PRINCIPAL -->
-  <main class="main-content">
 
-    <div class="hero-content text-center">
-      <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <p><a [routerLink]="['/']" title="5 Charly Guitare">
-              <img src="../assets/offoland.jpg"> </a></p>
-        </div>
-      </div><br>
-      <div class="hero-text-block">
-        <h1 class="hero-tagline">« OFFOLAND — Le monde où chaque dimension prend vie. »</h1>
-      </div>
+  <!-- ═══════════════════════════════════════════════════════
+       HERO — PORTAIL VERS OFFOLAND
+       ═══════════════════════════════════════════════════════ -->
+  <section class="hero-section">
+
+    <!-- 🌌 Particules animées -->
+    <div class="particles-bg" aria-hidden="true">
+      @for (p of particles; track p) {
+        <span class="particle"
+              [style.left.%]="p * 4.3 % 100"
+              [style.animation-delay]="p * 0.4 + 's'"
+              [style.animation-duration]="7 + (p % 6) + 's'"></span>
+      }
     </div>
 
-    <app-play></app-play>
-    <app-charlyguitaregame></app-charlyguitaregame>
+    <!-- 🔮 Aura lumineuse -->
+    <div class="hero-aura" aria-hidden="true">
+      <div class="aura aura-1"></div>
+      <div class="aura aura-2"></div>
+      <div class="aura aura-3"></div>
+    </div>
 
+    <!-- 📜 Contenu -->
+    <div class="hero-content">
+
+      <span class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        BIENVENUE DANS LE MULTIVERS
+      </span>
+
+      <h1 class="hero-title">
+        <span class="title-line">OFFO</span><span class="title-line accent">LAND</span>
+      </h1>
+
+      <div class="hero-divider">
+        <span class="line"></span>
+        <span class="icon">🌌</span>
+        <span class="line"></span>
+      </div>
+
+      <p class="hero-tagline">
+        « Le monde où <span class="highlight">chaque dimension</span> prend vie. »
+      </p>
+
+      <p class="hero-subtitle">
+        Un univers unique où musique, jeu et créativité se rencontrent.<br>
+        Explorez les portails, jouez, apprenez, et écrivez votre légende.
+      </p> 
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTIONS ENFANTS
+       ═══════════════════════════════════════════════════════ -->
+  <main class="main-content">
+    <section class="section-wrapper" appReveal>
+      <app-play></app-play>
+    </section>
+
+    <section class="section-wrapper" appReveal>
+      <app-charlyguitaregame></app-charlyguitaregame>
+    </section>
   </main>
 
 </div>
