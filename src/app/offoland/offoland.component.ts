@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { RevealDirective } from '../shared/reveal.directive';
 import { CharlyguitaregameComponent } from '../univers/charlyguitaregame/charlyguitaregame.component';
 import { PlayComponent } from '../game/play/play.component';
@@ -10,7 +9,6 @@ import { PlayComponent } from '../game/play/play.component';
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     RevealDirective,
     CharlyguitaregameComponent,
     PlayComponent
