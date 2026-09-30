@@ -1,35 +1,71 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+
+import { Database, listVal, ref } from '@angular/fire/database';
+
+import { Observable, of } from 'rxjs';
+import { map, shareReplay } from 'rxjs/operators';
 
 export interface DocumentItem {
   key?: string;
   title: string;
   description: string;
-  type: string; // 'Méthode', 'Livre Numérique', 'Partition', 'Support Pédagogique'
-  typeClass: string; // 'type-methode', 'type-livre', 'type-partition', 'type-support'
-  icon: string; // '📙', '📘', '🎼', '📐', '📑', etc.
-  format: string; // '📄 PDF (45 pages)', '🖼️ Image HD / PDF', etc.
-  level: string; // '⚡ Débutant', '⚡ Intermédiaire', '⚡ Avancé', '⚡ Tous niveaux'
+
+  /**
+   * Type du document :
+   * 'Méthode', 'Livre Numérique', 'Partition', 'Support Pédagogique'
+   */
+  type: string;
+
+  /**
+   * Classe CSS associée au type :
+   * 'type-methode', 'type-livre', 'type-partition', 'type-support'
+   */
+  typeClass: string;
+
+  /**
+   * Icône du document :
+   * '📙', '📘', '🎼', '📐', '📑', etc.
+   */
+  icon: string;
+
+  /**
+   * Format du document :
+   * '📄 PDF (45 pages)', '🖼️ Image HD / PDF', etc.
+   */
+  format: string;
+
+  /**
+   * Niveau :
+   * '⚡ Débutant', '⚡ Intermédiaire', '⚡ Avancé', '⚡ Tous niveaux'
+   */
+  level: string;
+
   downloadUrl: string;
 }
 
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [
+    CommonModule,
+    RouterLink
+  ],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.css']
 })
 export class DocumentsComponent implements OnInit {
-  documents$!: Observable<DocumentItem[]>;
-  filteredDocuments$!: Observable<DocumentItem[]>;
-  selectedFilter: string = 'Tous les documents';
 
-  filters: string[] = [
+  private readonly database = inject(Database);
+
+  documents$: Observable<DocumentItem[]> = of([]);
+
+  filteredDocuments$: Observable<DocumentItem[]> = of([]);
+
+  selectedFilter = 'Tous les documents';
+
+  readonly filters: string[] = [
     'Tous les documents',
     'Méthodes',
     'Livres numériques',
@@ -37,45 +73,104 @@ export class DocumentsComponent implements OnInit {
     'Supports pédagogiques'
   ];
 
-  constructor(private db: AngularFireDatabase) { }
-
   ngOnInit(): void {
-    window.scrollTo(0, 0);
+    window.scrollTo({
+      top: 0,
+      behavior: 'auto'
+    });
 
-    // Récupération des documents depuis le nœud 'documents' dans Realtime Database
-    this.documents$ = this.db.list<DocumentItem>('documents').snapshotChanges().pipe(
-      map(changes =>
-        changes.map(c => ({
-          key: c.payload.key || undefined,
-          ...c.payload.val()!
-        }))
-      )
-    );
+    this.loadDocuments();
 
-    this.applyFilter('Tous les documents');
+    this.applyFilter(this.selectedFilter);
   }
 
+  /**
+   * Charge les documents depuis le nœud "documents"
+   * de Firebase Realtime Database.
+   */
+  private loadDocuments(): void {
+    const documentsRef = ref(this.database, 'documents');
+
+    this.documents$ = listVal<DocumentItem>(
+      documentsRef,
+      {
+        keyField: 'key'
+      }
+    ).pipe(
+      map((documents: DocumentItem[]) =>
+        documents.map((document: DocumentItem) => ({
+          ...document,
+          key: document.key
+        }))
+      ),
+      shareReplay({
+        bufferSize: 1,
+        refCount: true
+      })
+    );
+  }
+
+  /**
+   * Change le filtre actif.
+   */
   filterBy(category: string): void {
     this.selectedFilter = category;
     this.applyFilter(category);
   }
 
+  /**
+   * Applique le filtre sélectionné aux documents.
+   */
   private applyFilter(category: string): void {
     this.filteredDocuments$ = this.documents$.pipe(
-      map(docs => {
+      map((documents: DocumentItem[]) => {
         if (category === 'Tous les documents') {
-          return docs;
+          return documents;
         }
 
-        return docs.filter(doc => {
-          const typeLower = doc.type.toLowerCase();
-          if (category === 'Méthodes') return typeLower.includes('méthode');
-          if (category === 'Livres numériques') return typeLower.includes('livre');
-          if (category === 'Partitions') return typeLower.includes('partition');
-          if (category === 'Supports pédagogiques') return typeLower.includes('support');
-          return true;
-        });
+        return documents.filter(
+          (document: DocumentItem) =>
+            this.matchesCategory(document, category)
+        );
       })
     );
   }
+
+  /**
+   * Vérifie si un document appartient à la catégorie sélectionnée.
+   */
+  private matchesCategory(
+    document: DocumentItem,
+    category: string
+  ): boolean {
+    const type = document.type.toLowerCase().trim();
+
+    switch (category) {
+      case 'Méthodes':
+        return type.includes('méthode');
+
+      case 'Livres numériques':
+        return type.includes('livre');
+
+      case 'Partitions':
+        return type.includes('partition');
+
+      case 'Supports pédagogiques':
+        return type.includes('support');
+
+      default:
+        return true;
+    }
+  }
+
+  /**
+   * TrackBy pour optimiser le rendu de la liste.
+   */
+  trackByDocumentKey(
+    index: number,
+    document: DocumentItem
+  ): string {
+    return document.key ?? `document-${index}`;
+  }
 }
+ 

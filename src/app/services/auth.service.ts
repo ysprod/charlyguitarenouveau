@@ -1,29 +1,45 @@
-import { Injectable } from '@angular/core';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
-import firebase from 'firebase/compat/app';
+import { Injectable, inject } from '@angular/core';
+import {
+  Auth,
+  GoogleAuthProvider,
+  User,
+  UserCredential,
+  authState,
+  signInWithPopup,
+  signOut
+} from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // Observable contenant l'état de l'utilisateur (null si déconnecté)
-  user$: Observable<firebase.User | null>;
+  private readonly auth = inject(Auth);
 
-  constructor(private afAuth: AngularFireAuth) {
-    this.user$ = this.afAuth.authState;
+  /**
+   * État courant de l'utilisateur.
+   * Émet null lorsqu'aucun utilisateur n'est connecté.
+   */
+  readonly user$: Observable<User | null> = authState(this.auth);
+
+  /**
+   * Connexion avec Google via une fenêtre popup.
+   */
+  async loginWithGoogle(): Promise<UserCredential> {
+    const provider = new GoogleAuthProvider();
+
+    // Force la sélection du compte Google à chaque clic.
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+
+    return signInWithPopup(this.auth, provider);
   }
 
-  // Connexion via la fenêtre surgissante Google
-  async loginWithGoogle(): Promise<firebase.auth.UserCredential> {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    // Force la sélection du compte Google à chaque clic
-    provider.setCustomParameters({ prompt: 'select_account' });
-    return this.afAuth.signInWithPopup(provider);
-  }
-
-  // Déconnexion
+  /**
+   * Déconnexion de l'utilisateur courant.
+   */
   async logout(): Promise<void> {
-    return this.afAuth.signOut();
+    await signOut(this.auth);
   }
-}
+} 

@@ -1,125 +1,67 @@
-// import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
-// import { AuthService } from './services/auth.service';
-// import { Router } from '@angular/router';
-// import { MatSnackBar } from '@angular/material/snack-bar';
-// import { AngularFireDatabase } from '@angular/fire/compat/database';
-// import { Observable, Subject, of } from 'rxjs';
-// import { switchMap, map, takeUntil } from 'rxjs/operators';
-// import { UserMessage } from './models/user-message.model';
+ 
+import {
+  CommonModule
+} from '@angular/common';
 
-// @Component({
-//   selector: 'app-root',
-//   templateUrl: './app.component.html',
-//   styleUrls: ['./app.component.scss']
-// })
-// export class AppComponent implements OnInit, OnDestroy {
-//   title = 'CHARLY GUITARE';
-//   currentYear: number = new Date().getFullYear();
+import {
+  Component,
+  EnvironmentInjector,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  runInInjectionContext
+} from '@angular/core';
 
-//   isMobileMenuOpen = false;
-//   isScrolled = false;
+import {
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet
+} from '@angular/router';
 
-//   unreadCount$!: Observable<number>;
-//   private destroy$ = new Subject<void>();
+import {
+  MatSnackBar,
+  MatSnackBarModule
+} from '@angular/material/snack-bar';
 
-//   constructor(
-//     public auth: AuthService,
-//     private router: Router,
-//     private snackBar: MatSnackBar,
-//     private db: AngularFireDatabase
-//   ) {}
+import {
+  Database,
+  equalTo,
+  listVal,
+  orderByChild,
+  query,
+  ref
+} from '@angular/fire/database';
 
-//   ngOnInit(): void {
-//     // Calcul du nombre de messages ayant des réponses non lues ou un statut actif
-//     this.unreadCount$ = this.auth.user$.pipe(
-//       takeUntil(this.destroy$),
-//       switchMap(user => {
-//         if (!user) return of(0);
+import {
+  Observable,
+  Subject,
+  of
+} from 'rxjs';
 
-//         return this.db
-//           .list<UserMessage>('messages', ref =>
-//             ref.orderByChild('userId').equalTo(user.uid)
-//           )
-//           .valueChanges()
-//           .pipe(
-//             map(messages => {
-//               // On compte les messages qui ont le statut 'replied' (répondu par l'admin)
-//               return messages.filter(m => m.status === 'replied').length;
-//             })
-//           );
-//       })
-//     );
-//   }
-
-//   ngOnDestroy(): void {
-//     this.destroy$.next();
-//     this.destroy$.complete();
-//   }
-
-//   @HostListener('window:scroll', [])
-//   onWindowScroll() {
-//     this.isScrolled = window.scrollY > 20;
-//   }
-
-//   toggleMobileMenu(): void {
-//     this.isMobileMenuOpen = !this.isMobileMenuOpen;
-//   }
-
-//   closeMobileMenu(): void {
-//     this.isMobileMenuOpen = false;
-//   }
-
-//   onLogout(): void {
-//     this.closeMobileMenu();
-//     this.auth.logout();
-
-//     this.snackBar.open('Déconnexion réussie', 'Fermer', { duration: 3000 });
-//     this.router.navigate(['/home']);
-//   }
-
-//   getInitials(name: string | null | undefined): string {
-//     if (!name) return 'U';
-//     const parts = name.trim().split(' ');
-//     if (parts.length >= 2) {
-//       return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-//     }
-//     return name.substring(0, 2).toUpperCase();
-//   }
-
-//   async onGoogleLogin() {
-//     try {
-//       const result = await this.auth.loginWithGoogle();
-//       if (result.user) {
-//         this.snackBar.open(`Bienvenue ${result.user.displayName} !`, 'Fermer', { duration: 3000 });
-//         this.router.navigate(['/academie']);
-//       }
-//     } catch (error) {
-//       console.error('Erreur lors de la connexion Google :', error);
-//       this.snackBar.open('Échec de la connexion Google', 'Fermer', { duration: 3000 });
-//     }
-//   }
-// }
-
-import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { AngularFireDatabase } from '@angular/fire/compat/database';
-import { Observable, Subject, of } from 'rxjs';
-import { map, switchMap, takeUntil } from 'rxjs/operators';
+import {
+  map,
+  switchMap,
+  takeUntil
+} from 'rxjs/operators';
 
 import { AuthService } from './services/auth.service';
+
 import { UserMessage } from './models/user-message.model';
+
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+
 import { FooterComponent } from './features/footer/footer.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
+
   imports: [
     CommonModule,
+
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
@@ -127,72 +69,109 @@ import { FooterComponent } from './features/footer/footer.component';
     MatIconModule,
     MatMenuModule,
     MatDividerModule,
+    MatSnackBarModule,
 
     FooterComponent
   ],
+
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, OnDestroy {
 
   title = 'CHARLY GUITARE';
+
   currentYear = new Date().getFullYear();
 
   isMobileMenuOpen = false;
+
   isScrolled = false;
 
-  unreadCount$!: Observable<number>;
+  unreadCount$: Observable<number> = of(0);
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(
-    public auth: AuthService,
-    private router: Router,
-    private snackBar: MatSnackBar,
-    private db: AngularFireDatabase
+    public readonly auth: AuthService,
+    private readonly router: Router,
+    private readonly snackBar: MatSnackBar,
+    private readonly database: Database,
+    private readonly environmentInjector: EnvironmentInjector
   ) {}
 
   ngOnInit(): void {
+
     this.unreadCount$ = this.auth.user$.pipe(
+
       takeUntil(this.destroy$),
+
       switchMap(user => {
+
         if (!user) {
           return of(0);
         }
 
-        return this.db
-          .list<UserMessage>('messages', ref =>
-            ref.orderByChild('userId').equalTo(user.uid)
-          )
-          .valueChanges()
-          .pipe(
-            map(messages =>
-              messages.filter(message => message.status === 'replied').length
-            )
-          );
+        return runInInjectionContext(
+          this.environmentInjector,
+          () => {
+
+            const messagesRef = ref(
+              this.database,
+              'messages'
+            );
+
+            const messagesQuery = query(
+              messagesRef,
+              orderByChild('userId'),
+              equalTo(user.uid)
+            );
+
+            return listVal<UserMessage>(
+              messagesQuery
+            ).pipe(
+
+              map(messages =>
+                messages.filter(
+                  message =>
+                    message.status === 'replied'
+                ).length
+              )
+
+            );
+          }
+        );
       })
+
     );
   }
 
   ngOnDestroy(): void {
+
     this.destroy$.next();
+
     this.destroy$.complete();
   }
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    this.isScrolled = window.scrollY > 20;
+
+    this.isScrolled =
+      window.scrollY > 20;
   }
 
   toggleMobileMenu(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+
+    this.isMobileMenuOpen =
+      !this.isMobileMenuOpen;
   }
 
   closeMobileMenu(): void {
+
     this.isMobileMenuOpen = false;
   }
 
   onLogout(): void {
+
     this.closeMobileMenu();
 
     this.auth.logout();
@@ -200,40 +179,62 @@ export class AppComponent implements OnInit, OnDestroy {
     this.snackBar.open(
       'Déconnexion réussie',
       'Fermer',
-      { duration: 3000 }
+      {
+        duration: 3000
+      }
     );
 
-    this.router.navigate(['/home']);
+    void this.router.navigate(['/home']);
   }
 
-  getInitials(name: string | null | undefined): string {
+  getInitials(
+    name: string | null | undefined
+  ): string {
+
     if (!name) {
       return 'U';
     }
 
-    const parts = name.trim().split(' ');
+    const parts = name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
 
     if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+
+      return `${parts[0][0]}${parts[1][0]}`
+        .toUpperCase();
     }
 
-    return name.substring(0, 2).toUpperCase();
+    return name
+      .substring(0, 2)
+      .toUpperCase();
   }
 
   async onGoogleLogin(): Promise<void> {
+
     try {
-      const result = await this.auth.loginWithGoogle();
+
+      const result =
+        await this.auth.loginWithGoogle();
 
       if (result.user) {
+
         this.snackBar.open(
-          `Bienvenue ${result.user.displayName} !`,
+          `Bienvenue ${result.user.displayName ?? ''} !`,
           'Fermer',
-          { duration: 3000 }
+          {
+            duration: 3000
+          }
         );
 
-        await this.router.navigate(['/academie']);
+        await this.router.navigate([
+          '/academie'
+        ]);
       }
+
     } catch (error) {
+
       console.error(
         'Erreur lors de la connexion Google :',
         error
@@ -242,8 +243,10 @@ export class AppComponent implements OnInit, OnDestroy {
       this.snackBar.open(
         'Échec de la connexion Google',
         'Fermer',
-        { duration: 3000 }
+        {
+          duration: 3000
+        }
       );
     }
   }
-}
+} 

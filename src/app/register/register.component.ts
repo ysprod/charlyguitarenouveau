@@ -1,11 +1,54 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { AngularFireDatabase } from '@angular/fire/compat/database'; // Import Realtime Database
-import firebase from 'firebase/compat/app';
-import { UserProfile } from '../models/user.model'; // Ajustez le chemin de votre modèle
+import {
+  Component,
+  EnvironmentInjector,
+  OnInit,
+  inject,
+  runInInjectionContext
+} from '@angular/core';
+
+import {
+  ActivatedRoute,
+  Router,
+  RouterLink
+} from '@angular/router';
+
+import {
+  Auth,
+  GoogleAuthProvider,
+  User,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signInWithPopup
+} from '@angular/fire/auth';
+
+import {
+  Database,
+  get,
+  ref,
+  set,
+  update
+} from '@angular/fire/database';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
+import { UserProfile } from '../models/user.model';
+
+interface RealtimeUserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+  role: 'user';
+  createdAt: string;
+  lastLogin: string;
+  disabled: boolean;
+}
+
+interface FirebaseAuthError {
+  code?: string;
+  message?: string;
+}
 
 @Component({
   selector: 'app-register',
@@ -19,28 +62,53 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./register.component.css']
 })
 export class RegisterComponent implements OnInit {
+
   email = '';
   password = '';
   confirmPassword = '';
+
   errorMessage = '';
+
   loading = false;
   showPassword = false;
+
   returnUrl = '/academie';
 
-  constructor(
-    private afAuth: AngularFireAuth,
-    private db: AngularFireDatabase, // Injection de Realtime Database
-    private router: Router,
-    private route: ActivatedRoute
-  ) { }
+  private readonly auth = inject(Auth);
+  private readonly database = inject(Database);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly environmentInjector = inject(EnvironmentInjector);
 
   ngOnInit(): void {
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/academie';
+    const returnUrl =
+      this.route.snapshot.queryParamMap.get('returnUrl');
+
+    /*
+     * On accepte uniquement une URL interne à l'application.
+     * Cela évite une redirection externe via ?returnUrl=https://...
+     */
+    if (
+      returnUrl &&
+      returnUrl.startsWith('/') &&
+      !returnUrl.startsWith('//')
+    ) {
+      this.returnUrl = returnUrl;
+    } else {
+      this.returnUrl = '/academie';
+    }
   }
 
   async handleSubmit(): Promise<void> {
     if (!this.email || !this.password || !this.confirmPassword) {
       this.errorMessage = 'Veuillez remplir tous les champs.';
+      return;
+    }
+
+    const email = this.email.trim();
+
+    if (!this.isValidEmail(email)) {
+      this.errorMessage = 'Adresse e-mail invalide.';
       return;
     }
 
@@ -50,7 +118,8 @@ export class RegisterComponent implements OnInit {
     }
 
     if (this.password.length < 6) {
-      this.errorMessage = 'Le mot de passe doit contenir au moins 6 caractères.';
+      this.errorMessage =
+        'Le mot de passe doit contenir au moins 6 caractères.';
       return;
     }
 
@@ -58,23 +127,31 @@ export class RegisterComponent implements OnInit {
     this.errorMessage = '';
 
     try {
-      const credential = await this.afAuth.createUserWithEmailAndPassword(
-        this.email,
-        this.password
+      const credential = await runInInjectionContext(
+        this.environmentInjector,
+        () =>
+          createUserWithEmailAndPassword(
+            this.auth,
+            email,
+            this.password
+          )
       );
 
-      if (credential.user) {
-        // Enregistrer l'utilisateur dans Realtime Database
-        await this.saveUserDataInRealtimeDB(credential.user);
+      const user = credential.user;
 
-        // Envoi de l'email de vérification
-        await credential.user.sendEmailVerification();
+      if (user) {
+        await this.saveUserDataInRealtimeDB(user);
+
+        await runInInjectionContext(
+          this.environmentInjector,
+          () => sendEmailVerification(user)
+        );
       }
 
-      // Redirection vers l'espace demandé
       await this.router.navigateByUrl(this.returnUrl);
-    } catch (error: any) {
-      this.errorMessage = this.getFrenchErrorMessage(error.code);
+
+    } catch (error: unknown) {
+      this.errorMessage = this.getFrenchErrorMessage(error);
     } finally {
       this.loading = false;
     }
@@ -85,19 +162,34 @@ export class RegisterComponent implements OnInit {
     this.errorMessage = '';
 
     try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      const credential = await this.afAuth.signInWithPopup(provider);
+      const provider = new GoogleAuthProvider();
 
-      if (credential.user) {
-        // Enregistrer ou mettre à jour dans Realtime Database
-        await this.saveUserDataInRealtimeDB(credential.user);
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      const credential = await runInInjectionContext(
+        this.environmentInjector,
+        () =>
+          signInWithPopup(
+            this.auth,
+            provider
+          )
+      );
+
+      const user = credential.user;
+
+      if (user) {
+        await this.saveUserDataInRealtimeDB(user);
       }
 
       await this.router.navigateByUrl(this.returnUrl);
-    } catch (error: any) {
-      if (error.code !== 'auth/popup-closed-by-user') {
-        this.errorMessage = this.getFrenchErrorMessage(error.code);
+
+    } catch (error: unknown) {
+      const code = this.getFirebaseErrorCode(error);
+
+      if (code !== 'auth/popup-closed-by-user') {
+        this.errorMessage = this.getFrenchErrorMessage(error);
       }
     } finally {
       this.loading = false;
@@ -105,49 +197,144 @@ export class RegisterComponent implements OnInit {
   }
 
   /**
-   * Enregistre ou met à jour le profil utilisateur sous la clé 'users/{uid}'
+   * Enregistre ou met à jour le profil utilisateur
+   * sous la clé users/{uid} dans Firebase Realtime Database.
    */
-  private async saveUserDataInRealtimeDB(user: firebase.User): Promise<void> {
-    const userRef = this.db.object<UserProfile>(`users/${user.uid}`);
-    const snapshot = await userRef.query.once('value');
+  private async saveUserDataInRealtimeDB(
+    user: User
+  ): Promise<void> {
+
+    const userRef = ref(
+      this.database,
+      `users/${user.uid}`
+    );
+
+    const snapshot = await runInInjectionContext(
+      this.environmentInjector,
+      () => get(userRef)
+    );
+
     const now = new Date().toISOString();
 
-    if (snapshot.exists()) {
-      // Si le profil existe déjà (cas de Google Auth s'il s'était déjà connecté)
-      await userRef.update({
-        lastLogin: now,
-        email: user.email || '',
-        displayName: user.displayName || user.email?.split('@')[0] || ''
-      });
-    } else {
-      // Nouveau compte : création complète
-      const newUser: UserProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || user.email?.split('@')[0] || '',
-        photoURL: user.photoURL || '',
-        role: 'user', // Rôle par défaut
-        createdAt: now,
-        lastLogin: now,
-        disabled: false
-      };
+    const email = user.email ?? '';
 
-      await userRef.set(newUser);
+    const displayName =
+      user.displayName ??
+      email.split('@')[0] ??
+      '';
+
+    const photoURL = user.photoURL ?? '';
+
+    if (snapshot.exists()) {
+
+      /*
+       * Le profil existe déjà.
+       *
+       * Cas typique :
+       * - utilisateur Google déjà connu ;
+       * - reconnexion d'un utilisateur existant.
+       */
+      await runInInjectionContext(
+        this.environmentInjector,
+        () =>
+          update(userRef, {
+            lastLogin: now,
+            email,
+            displayName,
+            photoURL
+          })
+      );
+
+      return;
     }
+
+    /*
+     * Nouveau profil utilisateur.
+     */
+    const newUser: RealtimeUserProfile = {
+      uid: user.uid,
+      email,
+      displayName,
+      photoURL,
+      role: 'user',
+      createdAt: now,
+      lastLogin: now,
+      disabled: false
+    };
+
+    await runInInjectionContext(
+      this.environmentInjector,
+      () => set(userRef, newUser)
+    );
   }
 
-  private getFrenchErrorMessage(code: string): string {
+  private isValidEmail(email: string): boolean {
+    const emailPattern =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    return emailPattern.test(email);
+  }
+
+  private getFirebaseErrorCode(
+    error: unknown
+  ): string {
+
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error
+    ) {
+      const firebaseError =
+        error as FirebaseAuthError;
+
+      return firebaseError.code ?? '';
+    }
+
+    return '';
+  }
+
+  private getFrenchErrorMessage(
+    error: unknown
+  ): string {
+
+    const code = this.getFirebaseErrorCode(error);
+
     switch (code) {
+
       case 'auth/email-already-in-use':
         return 'Cette adresse e-mail est déjà utilisée par un autre compte.';
+
       case 'auth/weak-password':
         return 'Le mot de passe doit contenir au moins 6 caractères.';
+
       case 'auth/invalid-email':
         return 'Adresse e-mail invalide.';
+
       case 'auth/network-request-failed':
-        return 'Problème de connexion réseau. Vérifiez votre internet.';
+        return 'Problème de connexion réseau. Vérifiez votre connexion internet.';
+
+      case 'auth/popup-closed-by-user':
+        return '';
+
+      case 'auth/popup-blocked':
+        return 'La fenêtre de connexion Google a été bloquée par votre navigateur.';
+
+      case 'auth/cancelled-popup-request':
+        return 'La connexion Google a été annulée.';
+
+      case 'auth/operation-not-allowed':
+        return 'Cette méthode de connexion n’est pas activée dans Firebase.';
+
+      case 'auth/too-many-requests':
+        return 'Trop de tentatives. Veuillez patienter quelques instants avant de réessayer.';
+
       default:
-        return 'Une erreur est survenue lors de l\'inscription.';
+        console.error(
+          'Erreur Firebase lors de l’inscription :',
+          error
+        );
+
+        return 'Une erreur est survenue lors de l’inscription.';
     }
   }
-}
+} 

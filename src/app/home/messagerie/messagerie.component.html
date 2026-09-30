@@ -174,7 +174,7 @@
           <!-- Réponses -->
           <ng-container *ngIf="getRepliesArray(selectedMessage.replies) as replies">
             <div
-              *ngFor="let reply of replies; trackBy: trackByKey"
+              *ngFor="let reply of replies; trackBy: trackByReplyKey"
               class="chat-bubble"
               [class.admin-bubble]="reply.senderRole === 'admin'"
               [class.user-bubble]="reply.senderRole === 'user'"

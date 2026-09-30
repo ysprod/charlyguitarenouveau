@@ -1,14 +1,81 @@
-import { Component, OnDestroy, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
-import { AngularFireDatabase } from '@angular/fire/compat/database';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { Observable, Subject, of, BehaviorSubject, combineLatest } from 'rxjs';
-import { map, switchMap, takeUntil, tap, shareReplay, startWith } from 'rxjs/operators';
-import { MessageReply, UserMessage } from '../../models/user-message.model';
+
+import {
+  AfterViewChecked,
+  Component,
+  ElementRef,
+  EnvironmentInjector,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  inject,
+  runInInjectionContext
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-type FilterStatus = 'all' | 'unread' | 'read' | 'replied';
-type SortMode = 'recent' | 'oldest' | 'unread-first';
+import {
+  Auth,
+  User,
+  authState
+} from '@angular/fire/auth';
+
+import {
+  Database,
+  equalTo,
+  listVal,
+  orderByChild,
+  push,
+  query,
+  ref,
+  update
+} from '@angular/fire/database';
+
+import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+  combineLatest,
+  of
+} from 'rxjs';
+
+import {
+  map,
+  shareReplay,
+  startWith,
+  switchMap,
+  takeUntil,
+  tap
+} from 'rxjs/operators';
+
+import {
+  MessageReply,
+  UserMessage
+} from '../../models/user-message.model';
+
+type FilterStatus =
+  | 'all'
+  | 'unread'
+  | 'read'
+  | 'replied';
+
+type SortMode =
+  | 'recent'
+  | 'oldest'
+  | 'unread-first';
+
+interface MessageFilters {
+  search: string;
+  status: FilterStatus;
+  sort: SortMode;
+}
+
+interface MessageStats {
+  total: number;
+  unread: number;
+  replied: number;
+  avgResponseTime: string;
+}
 
 @Component({
   selector: 'app-messagerie',
@@ -20,295 +87,861 @@ type SortMode = 'recent' | 'oldest' | 'unread-first';
   templateUrl: './messagerie.component.html',
   styleUrls: ['./messagerie.component.scss']
 })
-export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class MessagerieComponent
+  implements OnInit, OnDestroy, AfterViewChecked {
 
-  // 👁️ Référence pour auto-scroll
-  @ViewChild('threadBody') threadBody?: ElementRef<HTMLDivElement>;
+  @ViewChild('threadBody')
+  threadBody?: ElementRef<HTMLDivElement>;
 
   messages$!: Observable<UserMessage[]>;
+
   filteredMessages$!: Observable<UserMessage[]>;
-  currentUser: any = null;
 
-  private destroy$ = new Subject<void>();
-  private scrollNeeded = false;
+  currentUser: User | null = null;
 
-  // 🔍 Filtres & recherche
-  searchTerm = '';
-  activeFilter: FilterStatus = 'all';
-  sortMode: SortMode = 'recent';
-  private filter$ = new BehaviorSubject<{ search: string; status: FilterStatus; sort: SortMode }>({
-    search: '', status: 'all', sort: 'recent'
-  });
-
-  // 💬 Sélection & réponse
   selectedMessage: UserMessage | null = null;
+
   replyText = '';
+
   isSending = false;
 
-  // ✨ Statistiques
-  stats$!: Observable<{ total: number; unread: number; replied: number; avgResponseTime: string }>;
+  searchTerm = '';
 
-  constructor(
-    private db: AngularFireDatabase,
-    private afAuth: AngularFireAuth
-  ) { }
+  activeFilter: FilterStatus = 'all';
+
+  sortMode: SortMode = 'recent';
+
+  stats$!: Observable<MessageStats>;
+
+  private readonly auth = inject(Auth);
+
+  private readonly database = inject(Database);
+
+  private readonly environmentInjector =
+    inject(EnvironmentInjector);
+
+  private readonly destroy$ =
+    new Subject<void>();
+
+  private readonly filter$ =
+    new BehaviorSubject<MessageFilters>({
+      search: '',
+      status: 'all',
+      sort: 'recent'
+    });
+
+  private scrollNeeded = false;
 
   ngOnInit(): void {
-    // Flux principal des messages
-    this.messages$ = this.afAuth.authState.pipe(
-      takeUntil(this.destroy$),
-      switchMap(user => {
-        if (!user) return of([]);
-        this.currentUser = user;
+    this.initializeMessages();
+    this.initializeFilteredMessages();
+    this.initializeStats();
+  }
 
-        return this.db
-          .list<UserMessage>('messages', ref =>
-            ref.orderByChild('userId').equalTo(user.uid)
-          )
-          .snapshotChanges()
-          .pipe(
-            map(changes =>
-              changes
-                .map(c => ({
-                  key: c.payload.key || undefined,
-                  ...(c.payload.val() as Omit<UserMessage, 'key'>)
-                }))
-                .sort((a, b) => {
-                  const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                  const db_ = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                  return db_ - da;
-                })
-            ),
-            tap(list => {
-              // Sync thread sélectionné
-              if (this.selectedMessage) {
-                const updated = list.find(m => m.key === this.selectedMessage?.key);
-                if (updated) {
-                  const hasNewReply =
-                    this.getRepliesArray(updated.replies).length !==
-                    this.getRepliesArray(this.selectedMessage.replies).length;
+  /**
+   * Flux principal des messages
+   * appartenant à l'utilisateur connecté.
+   */
+  private initializeMessages(): void {
 
-                  this.selectedMessage = updated;
-                  if (hasNewReply) this.scrollNeeded = true;
-                }
+    this.messages$ = runInInjectionContext(
+      this.environmentInjector,
+      () =>
+        authState(this.auth).pipe(
+
+          takeUntil(this.destroy$),
+
+          switchMap((user: User | null) => {
+
+            this.currentUser = user;
+
+            if (!user) {
+              this.selectedMessage = null;
+
+              return of([]);
+            }
+
+            const messagesRef =
+              ref(
+                this.database,
+                'messages'
+              );
+
+            const messagesQuery =
+              query(
+                messagesRef,
+                orderByChild('userId'),
+                equalTo(user.uid)
+              );
+
+            return listVal<UserMessage>(
+              messagesQuery,
+              {
+                keyField: 'key'
               }
-            }),
-            shareReplay({ bufferSize: 1, refCount: true })
-          );
-      })
-    );
+            ).pipe(
 
-    // Flux filtré & trié
-    this.filteredMessages$ = combineLatest([
-      this.messages$,
-      this.filter$
-    ]).pipe(
-      map(([messages, f]) => {
-        let result = [...messages];
+              map((messages) =>
+                this.sortByRecent(messages)
+              ),
 
-        // Recherche
-        if (f.search.trim()) {
-          const q = f.search.toLowerCase();
-          result = result.filter(m =>
-            (m.subject?.toLowerCase().includes(q)) ||
-            (m.message?.toLowerCase().includes(q))
-          );
-        }
-
-        // Filtre statut
-        if (f.status !== 'all') {
-          result = result.filter(m => m.status === f.status);
-        }
-
-        // Tri
-        switch (f.sort) {
-          case 'oldest':
-            result.sort((a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              tap((messages) => {
+                this.syncSelectedMessage(
+                  messages
+                );
+              })
             );
-            break;
-          case 'unread-first':
-            result.sort((a, b) => {
-              const rank = (s: string) => (s === 'unread' ? 0 : s === 'replied' ? 1 : 2);
-              const diff = rank(a.status) - rank(b.status);
-              if (diff !== 0) return diff;
-              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
-            break;
-          default:
-            result.sort((a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-        }
+          }),
 
-        return result;
-      })
-    );
-
-    // Statistiques
-    this.stats$ = this.messages$.pipe(
-      map(messages => {
-        const total = messages.length;
-        const unread = messages.filter(m => m.status === 'unread').length;
-        const replied = messages.filter(m => m.status === 'replied').length;
-
-        // Temps de réponse moyen
-        let totalMs = 0, count = 0;
-        messages.forEach(m => {
-          const replies = this.getRepliesArray(m.replies).filter(r => r.senderRole === 'admin');
-          if (replies.length && m.createdAt) {
-            const first = new Date(replies[0].createdAt).getTime();
-            const start = new Date(m.createdAt).getTime();
-            totalMs += first - start;
-            count++;
-          }
-        });
-
-        const avgMs = count ? totalMs / count : 0;
-        const hours = Math.floor(avgMs / 3600000);
-        const days = Math.floor(hours / 24);
-        const avgResponseTime =
-          count === 0 ? '—' :
-            days > 0 ? `${days} j` :
-              hours > 0 ? `${hours} h` :
-                `${Math.floor(avgMs / 60000)} min`;
-
-        return { total, unread, replied, avgResponseTime };
-      }),
-      startWith({ total: 0, unread: 0, replied: 0, avgResponseTime: '—' })
+          shareReplay({
+            bufferSize: 1,
+            refCount: true
+          })
+        )
     );
   }
 
+  /**
+   * Flux filtré et trié.
+   */
+  private initializeFilteredMessages(): void {
+
+    this.filteredMessages$ =
+      combineLatest([
+        this.messages$,
+        this.filter$
+      ]).pipe(
+
+        map(([messages, filters]) => {
+
+          let result = [...messages];
+
+          const search =
+            filters.search
+              .trim()
+              .toLowerCase();
+
+          if (search) {
+
+            result = result.filter(
+              (message) => {
+
+                const subject =
+                  message.subject
+                    ?.toLowerCase() ?? '';
+
+                const content =
+                  message.message
+                    .toLowerCase();
+
+                return (
+                  subject.includes(search) ||
+                  content.includes(search)
+                );
+              }
+            );
+          }
+
+          if (
+            filters.status !== 'all'
+          ) {
+
+            result = result.filter(
+              (message) =>
+                message.status ===
+                filters.status
+            );
+          }
+
+          return this.sortMessages(
+            result,
+            filters.sort
+          );
+        })
+      );
+  }
+
+  /**
+   * Statistiques.
+   */
+  private initializeStats(): void {
+
+    this.stats$ =
+      this.messages$.pipe(
+
+        map((messages): MessageStats => {
+
+          const total =
+            messages.length;
+
+          const unread =
+            messages.filter(
+              (message) =>
+                message.status ===
+                'unread'
+            ).length;
+
+          const replied =
+            messages.filter(
+              (message) =>
+                message.status ===
+                'replied'
+            ).length;
+
+          let totalResponseTimeMs = 0;
+
+          let responseCount = 0;
+
+          messages.forEach(
+            (message) => {
+
+              const replies =
+                this.getRepliesArray(
+                  message.replies
+                );
+
+              const firstAdminReply =
+                replies.find(
+                  (reply) =>
+                    reply.senderRole ===
+                    'admin'
+                );
+
+              if (
+                firstAdminReply &&
+                message.createdAt
+              ) {
+
+                const messageTime =
+                  this.getTimestamp(
+                    message.createdAt
+                  );
+
+                const replyTime =
+                  this.getTimestamp(
+                    firstAdminReply.createdAt
+                  );
+
+                const responseTime =
+                  replyTime -
+                  messageTime;
+
+                if (responseTime >= 0) {
+
+                  totalResponseTimeMs +=
+                    responseTime;
+
+                  responseCount++;
+                }
+              }
+            }
+          );
+
+          const average =
+            responseCount > 0
+              ? totalResponseTimeMs /
+              responseCount
+              : 0;
+
+          return {
+            total,
+            unread,
+            replied,
+            avgResponseTime:
+              this.formatResponseTime(
+                average
+              )
+          };
+        }),
+
+        startWith({
+          total: 0,
+          unread: 0,
+          replied: 0,
+          avgResponseTime: '—'
+        })
+      );
+  }
+
   ngAfterViewChecked(): void {
-    if (this.scrollNeeded && this.threadBody) {
+
+    if (
+      this.scrollNeeded &&
+      this.threadBody
+    ) {
+
       this.scrollToBottom();
+
       this.scrollNeeded = false;
     }
   }
 
   ngOnDestroy(): void {
+
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  // 🔍 Filtres
-  updateSearch(value: string): void {
-    this.filter$.next({ ...this.filter$.value, search: value });
+  /**
+   * Recherche.
+   */
+  updateSearch(
+    value: string
+  ): void {
+
+    this.searchTerm = value;
+
+    this.filter$.next({
+      ...this.filter$.value,
+      search: value
+    });
   }
 
-  setFilter(status: FilterStatus): void {
+  /**
+   * Filtre par statut.
+   */
+  setFilter(
+    status: FilterStatus
+  ): void {
+
     this.activeFilter = status;
-    this.filter$.next({ ...this.filter$.value, status });
+
+    this.filter$.next({
+      ...this.filter$.value,
+      status
+    });
   }
 
-  setSort(sort: SortMode): void {
+  /**
+   * Tri.
+   */
+  setSort(
+    sort: SortMode
+  ): void {
+
     this.sortMode = sort;
-    this.filter$.next({ ...this.filter$.value, sort });
+
+    this.filter$.next({
+      ...this.filter$.value,
+      sort
+    });
   }
 
-  // 💬 Actions
-  selectMessage(msg: UserMessage): void {
-    this.selectedMessage = msg;
+  /**
+   * Sélection d'un message.
+   */
+  selectMessage(
+    message: UserMessage
+  ): void {
+
+    this.selectedMessage =
+      message;
+
     this.replyText = '';
+
     this.scrollNeeded = true;
   }
 
+  /**
+   * Fermeture du thread.
+   */
   closeThread(): void {
+
     this.selectedMessage = null;
+
     this.replyText = '';
   }
 
-  getRepliesArray(replies: any): MessageReply[] {
-    if (!replies) return [];
-    if (Array.isArray(replies)) return replies;
-    return Object.keys(replies)
-      .map(key => ({ key, ...replies[key] }))
-      .sort((a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  /**
+   * Convertit les réponses Firebase
+   * en tableau typé.
+   */
+  getRepliesArray(
+    replies:
+      | Record<string, MessageReply>
+      | MessageReply[]
+      | undefined
+  ): MessageReply[] {
+
+    if (!replies) {
+      return [];
+    }
+
+    if (Array.isArray(replies)) {
+
+      return [...replies].sort(
+        (a, b) =>
+          this.getTimestamp(
+            a.createdAt
+          ) -
+          this.getTimestamp(
+            b.createdAt
+          )
+      );
+    }
+
+    return Object.entries(replies)
+      .map(
+        ([key, reply]) => ({
+          ...reply,
+          key
+        })
+      )
+      .sort(
+        (a, b) =>
+          this.getTimestamp(
+            a.createdAt
+          ) -
+          this.getTimestamp(
+            b.createdAt
+          )
       );
   }
 
+  /**
+   * Envoie une réponse.
+   */
   async sendReply(): Promise<void> {
-    if (!this.selectedMessage?.key || !this.replyText.trim() || !this.currentUser) return;
+
+    const message =
+      this.selectedMessage;
+
+    const user =
+      this.currentUser;
+
+    const content =
+      this.replyText.trim();
+
+    if (
+      !message?.key ||
+      !content ||
+      !user
+    ) {
+      return;
+    }
 
     this.isSending = true;
+
     try {
+
+      const now =
+        new Date().toISOString();
+
       const replyData: MessageReply = {
-        senderId: this.currentUser.uid,
+        senderId: user.uid,
         senderRole: 'user',
-        senderName: this.currentUser.displayName || 'Vous',
-        message: this.replyText.trim(),
-        createdAt: new Date().toISOString()
+        senderName:
+          user.displayName ??
+          'Vous',
+        message: content,
+        createdAt: now
       };
 
-      await this.db
-        .list(`messages/${this.selectedMessage.key}/replies`)
-        .push(replyData);
+      await runInInjectionContext(
+        this.environmentInjector,
+        async () => {
 
-      await this.db
-        .object(`messages/${this.selectedMessage.key}`)
-        .update({ status: 'unread', updatedAt: new Date().toISOString() });
+          const repliesRef =
+            ref(
+              this.database,
+              `messages/${message.key}/replies`
+            );
+
+          await push(
+            repliesRef,
+            replyData
+          );
+
+          const messageRef =
+            ref(
+              this.database,
+              `messages/${message.key}`
+            );
+
+          await update(
+            messageRef,
+            {
+              status: 'unread',
+              updatedAt: now
+            }
+          );
+        }
+      );
 
       this.replyText = '';
+
       this.scrollNeeded = true;
+
     } catch (error) {
-      console.error('Erreur envoi réponse :', error);
-      alert('Impossible d\'envoyer le message. Veuillez réessayer.');
+
+      console.error(
+        'Erreur lors de l’envoi de la réponse :',
+        error
+      );
+
+      window.alert(
+        'Impossible d’envoyer le message. Veuillez réessayer.'
+      );
+
     } finally {
+
       this.isSending = false;
     }
   }
 
-  // 🎨 Helpers UI
-  getStatusBadgeClass(status: string): string {
+  /**
+   * Classe CSS du statut.
+   */
+  getStatusBadgeClass(
+    status: string | undefined
+  ): string {
+
     switch (status) {
-      case 'replied': return 'badge-replied';
-      case 'read': return 'badge-read';
-      case 'archived': return 'badge-archived';
-      default: return 'badge-unread';
+
+      case 'replied':
+        return 'badge-replied';
+
+      case 'read':
+        return 'badge-read';
+
+      case 'archived':
+        return 'badge-archived';
+
+      default:
+        return 'badge-unread';
     }
   }
 
-  getStatusLabel(status: string): string {
+  /**
+   * Libellé du statut.
+   */
+  getStatusLabel(
+    status: string | undefined
+  ): string {
+
     switch (status) {
-      case 'replied': return 'Répondu';
-      case 'read': return 'Lu par l\'équipe';
-      case 'archived': return 'Archivé';
-      default: return 'En attente';
+
+      case 'replied':
+        return 'Répondu';
+
+      case 'read':
+        return 'Lu par l’équipe';
+
+      case 'archived':
+        return 'Archivé';
+
+      default:
+        return 'En attente';
     }
   }
 
-  getStatusIcon(status: string): string {
+  /**
+   * Icône du statut.
+   */
+  getStatusIcon(
+    status: string | undefined
+  ): string {
+
     switch (status) {
-      case 'replied': return '✓✓';
-      case 'read': return '✓';
-      case 'archived': return '📦';
-      default: return '●';
+
+      case 'replied':
+        return '✓✓';
+
+      case 'read':
+        return '✓';
+
+      case 'archived':
+        return '📦';
+
+      default:
+        return '●';
     }
   }
 
-  getCategoryIcon(cat?: string): string {
-    switch (cat) {
-      case 'technique': return '🛠️';
-      case 'abonnement': return '💳';
-      case 'contenu': return '🎬';
-      default: return '💬';
+  /**
+   * Icône de catégorie.
+   */
+  getCategoryIcon(
+    category?: string
+  ): string {
+
+    switch (category) {
+
+      case 'technique':
+        return '🛠️';
+
+      case 'abonnement':
+        return '💳';
+
+      case 'contenu':
+        return '🎬';
+
+      default:
+        return '💬';
     }
   }
 
-  getInitials(name?: string): string {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  /**
+   * Initiales utilisateur.
+   */
+  getInitials(
+    name?: string | null
+  ): string {
+
+    if (!name?.trim()) {
+      return '?';
+    }
+
+    return name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(
+        (part) =>
+          part.charAt(0)
+      )
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
   }
 
-  trackByKey(index: number, item: any): string {
-    return item.key || index.toString();
+  /**
+   * TrackBy pour les listes Angular.
+   */
+  trackByKey(
+    index: number,
+    item: UserMessage
+  ): string {
+
+    return item.key ??
+      index.toString();
   }
 
+  /** * TrackBy pour les réponses. */
+   trackByReplyKey(index: number, item: MessageReply): string { return item.key ?? index.toString(); }
+
+  /**
+   * Tri du plus récent au plus ancien.
+   */
+  private sortByRecent(
+    messages: UserMessage[]
+  ): UserMessage[] {
+
+    return [...messages].sort(
+      (a, b) =>
+        this.getTimestamp(
+          b.createdAt
+        ) -
+        this.getTimestamp(
+          a.createdAt
+        )
+    );
+  }
+
+  /**
+   * Tri selon le mode choisi.
+   */
+  private sortMessages(
+    messages: UserMessage[],
+    mode: SortMode
+  ): UserMessage[] {
+
+    const result =
+      [...messages];
+
+    switch (mode) {
+
+      case 'oldest':
+
+        return result.sort(
+          (a, b) =>
+            this.getTimestamp(
+              a.createdAt
+            ) -
+            this.getTimestamp(
+              b.createdAt
+            )
+        );
+
+      case 'unread-first':
+
+        return result.sort(
+          (a, b) => {
+
+            const rankA =
+              this.getStatusRank(
+                a.status
+              );
+
+            const rankB =
+              this.getStatusRank(
+                b.status
+              );
+
+            if (
+              rankA !== rankB
+            ) {
+              return rankA - rankB;
+            }
+
+            return (
+              this.getTimestamp(
+                b.createdAt
+              ) -
+              this.getTimestamp(
+                a.createdAt
+              )
+            );
+          }
+        );
+
+      case 'recent':
+      default:
+
+        return result.sort(
+          (a, b) =>
+            this.getTimestamp(
+              b.createdAt
+            ) -
+            this.getTimestamp(
+              a.createdAt
+            )
+        );
+    }
+  }
+
+  /**
+   * Priorité des statuts.
+   */
+  private getStatusRank(
+    status: UserMessage['status']
+  ): number {
+
+    switch (status) {
+
+      case 'unread':
+        return 0;
+
+      case 'replied':
+        return 1;
+
+      case 'read':
+        return 2;
+
+      case 'archived':
+        return 3;
+    }
+  }
+
+  /**
+   * Synchronise le message sélectionné
+   * avec les données Firebase.
+   */
+  private syncSelectedMessage(
+    messages: UserMessage[]
+  ): void {
+
+    const selected =
+      this.selectedMessage;
+
+    if (!selected?.key) {
+      return;
+    }
+
+    const updated =
+      messages.find(
+        (message) =>
+          message.key ===
+          selected.key
+      );
+
+    if (!updated) {
+      return;
+    }
+
+    const previousReplies =
+      this.getRepliesArray(
+        selected.replies
+      );
+
+    const updatedReplies =
+      this.getRepliesArray(
+        updated.replies
+      );
+
+    const hasNewReply =
+      updatedReplies.length >
+      previousReplies.length;
+
+    this.selectedMessage =
+      updated;
+
+    if (hasNewReply) {
+      this.scrollNeeded = true;
+    }
+  }
+
+  /**
+   * Timestamp robuste.
+   */
+  private getTimestamp(
+    value: string
+  ): number {
+
+    const timestamp =
+      new Date(value).getTime();
+
+    return Number.isNaN(timestamp)
+      ? 0
+      : timestamp;
+  }
+
+  /**
+   * Format du temps de réponse.
+   */
+  private formatResponseTime(
+    milliseconds: number
+  ): string {
+
+    if (milliseconds <= 0) {
+      return '—';
+    }
+
+    const minutes =
+      Math.floor(
+        milliseconds / 60000
+      );
+
+    const hours =
+      Math.floor(minutes / 60);
+
+    const days =
+      Math.floor(hours / 24);
+
+    if (days > 0) {
+      return `${days} j`;
+    }
+
+    if (hours > 0) {
+      return `${hours} h`;
+    }
+
+    return `${minutes} min`;
+  }
+
+  /**
+   * Scroll vers le dernier message.
+   */
   private scrollToBottom(): void {
-    try {
-      const el = this.threadBody?.nativeElement;
-      if (el) el.scrollTop = el.scrollHeight;
-    } catch { }
+
+    const element =
+      this.threadBody?.nativeElement;
+
+    if (!element) {
+      return;
+    }
+
+    element.scrollTop =
+      element.scrollHeight;
   }
-}
+} 
