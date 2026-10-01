@@ -49,9 +49,7 @@ $c-text-dim: #a8a4c8;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5rem 1rem 4rem;
   overflow: hidden;
-  border-radius: 0 0 40px 40px;
   margin-bottom: 4rem;
 
   // 🌌 PARTICULES
@@ -460,7 +458,6 @@ $c-text-dim: #a8a4c8;
   .offoland-app { padding: 0 1rem 2rem; }
 
   .hero-section {
-    min-height: 85vh;
     padding: 3rem 1rem;
     border-radius: 0 0 24px 24px;
 
