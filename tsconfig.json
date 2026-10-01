@@ -12,6 +12,7 @@
         "node_modules/@firebase/auth-compat"
       ]
     },
+    "esModuleInterop": true,
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -19,9 +20,8 @@
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "declaration": false,
-    "downlevelIteration": true,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "ES2022",
     "module": "es2020",
