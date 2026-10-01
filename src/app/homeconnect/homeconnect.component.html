@@ -6,7 +6,7 @@
 
   <section class="features-section">
     <article class="feature-card" appReveal>
-      <a routerLink="/play" class="feature-image-link" title="Accéder aux jeux">
+      <a routerLink="/offoland" class="feature-image-link" title="Accéder aux jeux">
         <div class="feature-image-wrapper2">
           <img src="assets/jeuxnouveau.jpg" alt="Espace Jeux" class="feature-image" loading="lazy" />
           <div class="feature-overlay"></div>
@@ -29,60 +29,40 @@
       </div>
     </article>
 
-    <!-- 🎓 ACADÉMIE -->
-    <article class="feature-card" appReveal>
-      <a routerLink="/academie" class="feature-image-link" title="Découvrir l'Académie">
-        <div class="feature-image-wrapper2">
-          <img src="assets/academie.jpg" alt="L'Académie Charly Guitare" class="feature-image" loading="lazy" />
-          <div class="feature-overlay"></div>
-          <span class="feature-tag">Formation</span>
-        </div>
-      </a>
-      <div class="feature-content">
-        <h3 class="feature-title">Académie</h3>
-        <p class="feature-desc">
-          Une formation complète pour maîtriser la musique et les arts du spectacle.
-        </p>
-        <a routerLink="/academie" class="feature-link">
-          <span>En savoir plus</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </a>
-      </div>
-    </article>
-
-    <!-- 💎 ESSENTIEL -->
-    <article class="feature-card feature-card-accent" appReveal>
-      <a routerLink="/academie" class="feature-image-link" title="Découvrir la Collection l'Essentiel">
-        <div class="feature-image-wrapper2">
-          <img src="assets/essentiel.jpg" alt="Collection l'Essentiel" class="feature-image" loading="lazy" />
-          <div class="feature-overlay"></div>
-          <span class="feature-tag feature-tag-gold">Best-seller</span>
-        </div>
-      </a>
-      <div class="feature-content">
-        <h3 class="feature-title">Collection l'Essentiel</h3>
-        <p class="feature-desc">
-          Les fondamentaux des instruments de musique
-        </p>
-        <a routerLink="/academie" class="feature-link feature-link-gold">
-          <span>Acheter</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </a>
-      </div>
-    </article>
-
   </section>
+
+
+  <app-documents></app-documents>
+
+
 
   <!-- ═══════════════════════════════════════════════════════
          UNIVERS — RANGÉE 2
          ═══════════════════════════════════════════════════════ -->
   <section class="features-section">
+    <!-- 👑 ABONNEMENT PREMIUM -->
+    <article class="feature-card feature-card-accent" appReveal>
+      <a routerLink="/abonnement" class="feature-image-link" title="Découvrir l'Abonnement Premium">
+        <div class="feature-image-wrapper">
+          <img src="assets/abonnement.jpg" alt="Abonnement Charly Guitare" class="feature-image" loading="lazy" />
+          <div class="feature-overlay"></div>
+          <span class="feature-tag feature-tag-gold">Premium</span>
+        </div>
+      </a>
+      <div class="feature-content">
+        <h3 class="feature-title">Abonnement Premium</h3>
+        <p class="feature-desc">
+          Accédez à toutes les ressources, vidéos exclusives et supports pédagogiques.
+        </p>
+        <a routerLink="/abonnement" class="feature-link feature-link-gold">
+          <span>S'abonner</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </div>
+    </article>
 
     <!-- 🔴 LIVE -->
     <article class="feature-card" appReveal>
@@ -103,54 +83,6 @@
         </p>
         <a routerLink="/live" class="feature-link">
           <span>Rejoindre le live</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </a>
-      </div>
-    </article>
-
-    <!-- 🌌 CHARLY GUITARE 5D -->
-    <article class="feature-card" appReveal>
-      <a routerLink="/game" class="feature-image-link" title="Explorer Charly Guitare 5D">
-        <div class="feature-image-wrapper2">
-          <img src="assets/cinqd.jpg" alt="Charly Guitare 5D" class="feature-image" loading="lazy" />
-          <div class="feature-overlay"></div>
-          <span class="feature-tag feature-tag-new">Nouveau</span>
-        </div>
-      </a>
-      <div class="feature-content">
-        <h3 class="feature-title">Charly Guitare 5D</h3>
-        <p class="feature-desc">
-          Exploration des dimensions de Charly Guitare.
-        </p>
-        <a routerLink="/game" class="feature-link">
-          <span>En savoir plus</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </a>
-      </div>
-    </article>
-
-    <!-- 👑 ABONNEMENT PREMIUM -->
-    <article class="feature-card feature-card-accent" appReveal>
-      <a routerLink="/abonnement" class="feature-image-link" title="Découvrir l'Abonnement Premium">
-        <div class="feature-image-wrapper">
-          <img src="assets/abonnement.jpg" alt="Abonnement Charly Guitare" class="feature-image" loading="lazy" />
-          <div class="feature-overlay"></div>
-          <span class="feature-tag feature-tag-gold">Premium</span>
-        </div>
-      </a>
-      <div class="feature-content">
-        <h3 class="feature-title">Abonnement Premium</h3>
-        <p class="feature-desc">
-          Accédez à toutes les ressources, vidéos exclusives et supports pédagogiques.
-        </p>
-        <a routerLink="/abonnement" class="feature-link feature-link-gold">
-          <span>S'abonner</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />

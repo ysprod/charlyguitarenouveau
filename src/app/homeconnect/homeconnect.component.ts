@@ -5,6 +5,7 @@ import { Auth, authState, signOut, User } from '@angular/fire/auth';
 import { RouterLink } from '@angular/router';
 import { RevealDirective } from '../shared/reveal.directive';
 import { map } from 'rxjs';
+import { DocumentsComponent } from '../academie/documents/documents.component';
 
 @Component({
   selector: 'app-homeconnect',
@@ -12,6 +13,7 @@ import { map } from 'rxjs';
     CommonModule,
     RouterLink,
     RevealDirective,
+    DocumentsComponent
   ],
   templateUrl: './homeconnect.component.html',
   styleUrl: './homeconnect.component.scss'
