@@ -1,0 +1,143 @@
+<div class="nos-offres">
+
+  <!-- ═══════════════════════════════════════════════════════
+       HERO — NOS OFFRES
+       ═══════════════════════════════════════════════════════ -->
+  <section class="hero-offres" @heroEnter>
+
+    <div class="hero-bg" aria-hidden="true">
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-orb hero-orb-3"></div>
+    </div>
+
+    <div class="hero-content">
+      <span class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        CHOISIS TON PACK PÉDAGOGIQUE
+      </span>
+
+      <h1 class="hero-title">
+        <span class="title-line">Nos Offres</span>
+        <span class="title-line title-gradient">Pédagogiques</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Quatre parcours pour apprendre la guitare à ton rythme,
+        dans l'esprit d'Offoland : <strong>progresser</strong>,
+        <strong>transmettre</strong>, <strong>s'épanouir</strong>.
+      </p>
+
+      <!-- Sélecteur de catégorie -->
+      <nav class="category-nav" aria-label="Catégories de packs">
+        @for (cat of categories; track cat.id) {
+          <button
+            class="category-tab"
+            [class.active]="activeCategory() === cat.id"
+            [style.--tab-color]="cat.accentColor"
+            (click)="selectCategory(cat.id)"
+            type="button">
+            <span class="tab-icon">{{ cat.icon }}</span>
+            <span class="tab-label">{{ cat.title | slice:5 }}</span>
+          </button>
+        }
+      </nav>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       PACKS — CATÉGORIE ACTIVE
+       ═══════════════════════════════════════════════════════ -->
+  @if (currentCategory(); as category) {
+    <section class="packs-section"
+             [style.--accent]="category.accentColor"
+             @fadeInUp>
+
+      <!-- En-tête de catégorie -->
+      <header class="category-header">
+        <div class="category-icon">{{ category.icon }}</div>
+        <div class="category-info">
+          <h2 class="category-title">{{ category.title }}</h2>
+          <p class="category-subtitle">{{ category.subtitle }}</p>
+          <p class="category-objective">
+            <span class="objective-label">Objectif :</span>
+            {{ category.objective }}
+          </p>
+        </div>
+      </header>
+
+      <!-- Grille des 3 packs -->
+      <div class="packs-grid" @staggerPacks>
+        @for (pack of category.packs; track pack.id) {
+          <article class="pack-card"
+                   [class.highlight]="pack.highlight"
+                   [class.premium]="pack.premium"
+                   [class.hovered]="hoveredPack() === pack.id"
+                   (mouseenter)="onPackHover(pack.id)"
+                   (mouseleave)="onPackHover(null)">
+
+            <!-- Glow décoratif -->
+            <div class="pack-glow" aria-hidden="true"></div>
+
+            <!-- Badge -->
+            @if (pack.badge) {
+              <div class="pack-badge" [class]="'badge-' + pack.badgeColor">
+                {{ pack.badge }}
+              </div>
+            }
+
+            <!-- En-tête du pack -->
+            <header class="pack-header">
+              <h3 class="pack-name">{{ pack.name }}</h3>
+
+              <div class="pack-price">
+                <span class="price-amount">{{ formatPrice(pack.price) }}</span>
+                <span class="price-unit">{{ pack.priceUnit }}</span>
+              </div>
+
+              <div class="pack-meta">
+                <span class="pack-session">⏱ {{ pack.session }}</span>
+                <span class="pack-duration">{{ pack.duration }}</span>
+              </div>
+            </header>
+
+            <!-- Séparateur -->
+            <div class="pack-divider"></div>
+
+            <!-- Fonctionnalités -->
+            <ul class="pack-features">
+              @for (feature of pack.features; track feature) {
+                <li class="feature-item">
+                  <span class="feature-check">✓</span>
+                  <span class="feature-text">{{ feature }}</span>
+                </li>
+              }
+            </ul>
+
+            <!-- CTA -->
+            <footer class="pack-footer">
+              <a class="pack-cta"
+                 [routerLink]="['/contact']"
+                 [queryParams]="{ pack: pack.id }">
+                <span>Choisir ce pack</span>
+                <span class="cta-arrow">→</span>
+              </a>
+            </footer>
+
+          </article>
+        }
+      </div>
+
+      <!-- Info de contact -->
+      <div class="contact-info">
+        <span class="contact-icon">📩</span>
+        <div class="contact-text">
+          <strong>Inscriptions 2026-2027 ouvertes</strong>
+          <span>Contacte-nous pour réserver ta place ou poser tes questions.</span>
+        </div>
+      </div>
+
+    </section>
+  } 
+
+</div>

@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sparkline {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sparkline-line {
+  filter: drop-shadow(0 0 4px currentColor);
+  animation: drawLine 1.5s ease-out;
+}
+
+.sparkline-area {
+  animation: fadeIn 1.2s ease-out;
+}
+
+.sparkline-dot {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes drawLine {
+  from { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+  to { stroke-dasharray: 1000; stroke-dashoffset: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { r: 3; opacity: 1; }
+  50% { r: 5; opacity: 0.6; }
+}

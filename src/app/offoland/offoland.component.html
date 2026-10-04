@@ -1,11 +1,22 @@
 <div class="offoland-app">
 
   <!-- ═══════════════════════════════════════════════════════
-       HERO — PORTAIL VERS OFFOLAND
+       HERO — LE PORTAIL D'OFFOLAND
        ═══════════════════════════════════════════════════════ -->
   <section class="hero-section">
 
-    <!-- 🌌 Particules animées -->
+    <!-- 🌌 Sept couleurs primordiales en auras tournantes -->
+    <div class="hero-aura" aria-hidden="true">
+      <div class="aura aura-do"></div>   <!-- Blanc  -->
+      <div class="aura aura-re"></div>   <!-- Rouge  -->
+      <div class="aura aura-mi"></div>   <!-- Vert   -->
+      <div class="aura aura-fa"></div>   <!-- Bleu   -->
+      <div class="aura aura-sol"></div>  <!-- Noir   -->
+      <div class="aura aura-la"></div>   <!-- Pourpre -->
+      <div class="aura aura-si"></div>   <!-- Violet -->
+    </div>
+
+    <!-- ✨ Particules : poussière du Premier Souffle -->
     <div class="particles-bg" aria-hidden="true">
       @for (p of particles; track p) {
         <span class="particle"
@@ -15,26 +26,103 @@
       }
     </div>
 
-    <!-- 🔮 Aura lumineuse -->
-    <div class="hero-aura" aria-hidden="true">
-      <div class="aura aura-1"></div>
-      <div class="aura aura-2"></div>
-      <div class="aura aura-3"></div>
+    <!-- 🥁 Battement du Premier Tambour -->
+    <div class="premier-tambour" aria-hidden="true">
+      <span class="pulse-ring ring-1"></span>
+      <span class="pulse-ring ring-2"></span>
+      <span class="pulse-ring ring-3"></span>
     </div>
 
-    <!-- 📜 Contenu -->
+    <!-- 📜 Contenu sacré -->
     <div class="hero-content">
 
-      <span class="hero-eyebrow">
-        <span class="eyebrow-dot"></span>
-       OFFOLAND
-      </span> 
+      <!-- 🌟 Titre principal -->
+      <div class="hero-title-block">
+        <span class="hero-eyebrow">
+          <span class="eyebrow-dot"></span>
+          LE CONSORTIUM DES SEPT DIMENSIONS
+        </span>
 
+        <h1 class="hero-title">
+          <span class="hero-title-line hero-title-gold">OFFOLAND</span>
+        </h1>
+
+        <p class="hero-motto">
+          « Celui qui découvrira l'harmonie des Sept Dimensions
+          connaîtra <strong>Offolomou</strong>. »
+        </p>
+      </div>
+
+      <!-- 🎵 Mélodie des Origines (La m – Ré m – Fa M – Sol M) -->
+      <div class="melodie-origines" aria-hidden="true">
+        <span class="note" style="--note-color: #A0A0C0">La m</span>
+        <span class="note-sep">·</span>
+        <span class="note" style="--note-color: #FF6B6B">Ré m</span>
+        <span class="note-sep">·</span>
+        <span class="note" style="--note-color: #FFD700">Fa M</span>
+        <span class="note-sep">·</span>
+        <span class="note" style="--note-color: #00FF88">Sol M</span>
+      </div>
+
+      <!-- 🌈 Divider sacré -->
       <div class="hero-divider">
         <span class="line"></span>
-        <span class="icon">🌌</span>
+        <span class="icon">🥁</span>
         <span class="line"></span>
-      </div> 
+      </div>
+
+      <!-- 🏦 Portails vers les modules -->
+      <div class="portails-grid">
+
+        <a class="portail-btn portail-economie" [routerLink]="['/finance']">
+          <span class="portail-glow"></span>
+          <span class="portail-icon">🏦</span>
+          <span class="portail-label">ÉCONOMIE</span>
+          <span class="portail-sub">Offo Money · BCO · Marché</span>
+        </a>
+
+        <a class="portail-btn portail-banque" [routerLink]="['/bco']">
+          <span class="portail-glow"></span>
+          <span class="portail-icon">⚖️</span>
+          <span class="portail-label">BANQUE CENTRALE</span>
+          <span class="portail-sub">Masse monétaire · Réserves</span>
+        </a>
+
+      </div>
+
+    </div>
+
+    <!-- 🪶 Indication de scroll -->
+    <div class="scroll-indicator" aria-hidden="true">
+      <span class="scroll-mouse"></span>
+      <span class="scroll-label">Descendre dans le royaume</span>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LES TROIS DIVINITÉS — Bandeau sacré
+       ═══════════════════════════════════════════════════════ -->
+  <section class="divinites-section" appReveal>
+    <div class="divinite-card divinite-eau">
+      <div class="divinite-symbol">💧</div>
+      <h3>Offomiji</h3>
+      <p class="divinite-role">Gardienne des Eaux</p>
+      <p class="divinite-enseignement">« Rien ne guérit sans être d'abord reconnu. »</p>
+    </div>
+
+    <div class="divinite-card divinite-amour">
+      <div class="divinite-symbol">🥁</div>
+      <h3>Offocolo</h3>
+      <p class="divinite-role">Roi de l'Amour</p>
+      <p class="divinite-enseignement">« Celui qui marche avec les autres va plus loin. »</p>
+    </div>
+
+    <div class="divinite-card divinite-portails">
+      <div class="divinite-symbol">🗝️</div>
+      <h3>Offowa</h3>
+      <p class="divinite-role">Gardienne des Portails</p>
+      <p class="divinite-enseignement">« Le portail révèle le moment où chacun est prêt. »</p>
     </div>
   </section>
 

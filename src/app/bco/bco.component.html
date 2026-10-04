@@ -1,0 +1,209 @@
+<div class="bco-page">
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="bco-header" @fadeInUp>
+    <div class="header-left">
+      <div class="bco-emblem">🏦</div>
+      <div class="header-titles">
+        <h1>Banque Centrale d'Offoland</h1>
+        <p class="header-sub">
+          <span class="live-dot"></span>
+          Régulateur monétaire
+        </p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="status-chip" [class.active]="isEmitting()">
+        <span class="status-dot"></span>
+        {{ isEmitting() ? 'Émission en cours…' : 'Système stable' }}
+      </div>
+      <div class="supply-mini">
+        <span class="supply-mini-label">Masse</span>
+        <span class="supply-mini-value">{{ formatNumber(totalSupply()) }} OFO</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== KPIs ==================== -->
+  <section class="kpi-section" @staggerKpis>
+    <div class="kpi-card"
+         *ngFor="let kpi of kpis(); trackBy: trackByKpi; let i = index"
+         [style.--kpi-color]="kpi.color"
+         [class.active]="activeKpi() === kpi.id"
+         (mouseenter)="onKpiHover(kpi.id)"
+         (mouseleave)="onKpiHover(null)">
+
+      <div class="kpi-header">
+        <span class="kpi-label">{{ kpi.label }}</span>
+        <span class="kpi-trend" [class]="trendClass(kpi.trend)">
+          {{ kpi.trend > 0 ? '▲' : kpi.trend < 0 ? '▼' : '●' }}
+          {{ formatTrend(kpi.trend) }}
+        </span>
+      </div>
+
+      <div class="kpi-value">
+        <span class="kpi-number">{{ formatNumber(kpi.value) }}</span>
+        <span class="kpi-unit">{{ kpi.unit }}</span>
+      </div>
+
+      <div class="kpi-sparkline">
+        <app-sparkline
+          [data]="kpi.history"
+          [color]="kpi.color"
+          [width]="240"
+          [height]="50">
+        </app-sparkline>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== JUGES DE SANTÉ ==================== -->
+  <section class="gauges-section" @fadeInUp>
+    <div class="section-title-row">
+      <h2>Indicateurs de santé monétaire</h2>
+      <span class="section-hint">Évaluation temps réel de l'équilibre d'Offoland</span>
+    </div>
+
+    <div class="gauges-grid">
+      <div class="gauge-card">
+        <app-gauge
+          [value]="stabilityScore()"
+          label="Stabilité économique"
+          unit="%"
+          colorFrom="#00FF88"
+          colorTo="#00D4FF">
+        </app-gauge>
+        <p class="gauge-desc">
+          Combine l'inflation et le ratio de réserves pour évaluer la solidité du système.
+        </p>
+      </div>
+
+      <div class="gauge-card">
+        <app-gauge
+          [value]="liquidityScore()"
+          label="Liquidité en circulation"
+          unit="%"
+          colorFrom="#00D4FF"
+          colorTo="#B266FF">
+        </app-gauge>
+        <p class="gauge-desc">
+          Part de la masse monétaire activement utilisée par les voyageurs.
+        </p>
+      </div>
+
+      <div class="gauge-card">
+        <app-gauge
+          [value]="reserveRatio()"
+          label="Ratio de réserves"
+          unit="%"
+          colorFrom="#FFD700"
+          colorTo="#FF8C00">
+        </app-gauge>
+        <p class="gauge-desc">
+          Couverture des OFO émis par les réserves virtuelles de la BCO.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ACTIONS BCO ==================== -->
+  <section class="actions-section" @staggerActions>
+    <div class="section-title-row">
+      <h2>Politique monétaire</h2>
+      <span class="section-hint">Chaque action modifie l'équilibre des Sept Dimensions</span>
+    </div>
+
+    <div class="actions-grid">
+      <button class="action-card"
+              *ngFor="let action of actions; trackBy: trackByAction; let i = index"
+              [style.--action-color]="action.color"
+              [class.triggered]="selectedAction() === action.id"
+              (click)="triggerAction(action)"
+              type="button">
+
+        <div class="action-icon">{{ action.icon }}</div>
+        <div class="action-body">
+          <h3>{{ action.label }}</h3>
+          <p>{{ action.description }}</p>
+          <div class="action-impact">
+            <span class="impact-label">Impact</span>
+            <span class="impact-value">{{ action.impact }}</span>
+          </div>
+        </div>
+        <div class="action-arrow">→</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- ==================== TAUX DE CHANGE ==================== -->
+  <section class="rates-section" @fadeInUp>
+    <div class="section-title-row">
+      <h2>Taux de change officiels</h2>
+      <span class="section-hint">Valeur fixée par la BCO face aux monnaies réelles</span>
+    </div>
+
+    <div class="rates-grid">
+      <div class="rate-card"
+           *ngFor="let r of exchangeRates(); trackBy: trackByCode"
+           [style.--rate-color]="r.color">
+        <div class="rate-flag">{{ r.flag }}</div>
+        <div class="rate-info">
+          <div class="rate-code">{{ r.code }}</div>
+          <div class="rate-name">{{ r.name }}</div>
+        </div>
+        <div class="rate-value">
+          <span class="rate-number">{{ formatRate(r.rate) }}</span>
+          <span class="rate-unit">OFO</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rate-formula">
+      <span class="formula-tag">Formule</span>
+      <code>1 OFO = {{ formatRate(ofoToEur()) }} EUR · {{ formatRate(ofoToUsd()) }} USD · 1.00 XOF</code>
+    </div>
+  </section>
+
+  <!-- ==================== ÉVÉNEMENTS RÉCENTS ==================== -->
+  <section class="events-section" @fadeInUp>
+    <div class="section-title-row">
+      <h2>Journal monétaire</h2>
+      <span class="section-hint">10 dernières opérations de la BCO</span>
+    </div>
+
+    <div class="events-list">
+      <div class="event-row"
+           *ngFor="let event of events(); trackBy: trackByEvent"
+           @eventSlide
+           [style.--event-color]="eventColor(event.type)">
+
+        <div class="event-icon">{{ eventIcon(event.type) }}</div>
+
+        <div class="event-main">
+          <div class="event-title">{{ event.title }}</div>
+          <div class="event-time">{{ timeAgo(event.date) }}</div>
+        </div>
+
+        <div class="event-amount">{{ eventAmountLabel(event) }}</div>
+
+        <div class="event-status" [class]="event.status">
+          {{ event.status === 'active' ? 'Active' : event.status === 'pending' ? 'En attente' : 'Archivée' }}
+        </div>
+      </div>
+
+      <div class="events-empty" *ngIf="events().length === 0">
+        Aucune opération enregistrée
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PIED DE PAGE ==================== -->
+  <footer class="bco-footer">
+    <div class="footer-note">
+      ⚖️ <strong>Rappel juridique</strong> — La BCO est une simulation virtuelle interne à Offoland.
+      Les OFO ne constituent pas une monnaie légale au sens de la BCEAO.
+    </div>
+  </footer>
+
+</div>

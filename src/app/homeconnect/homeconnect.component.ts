@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { RevealDirective } from '../shared/reveal.directive';
 import { map } from 'rxjs';
 import { DocumentsComponent } from '../academie/documents/documents.component';
+import { OffresComponent } from '../offres/offres.component';
 
 @Component({
   selector: 'app-homeconnect',
@@ -13,7 +14,8 @@ import { DocumentsComponent } from '../academie/documents/documents.component';
     CommonModule,
     RouterLink,
     RevealDirective,
-    DocumentsComponent
+    DocumentsComponent,
+    OffresComponent,
   ],
   templateUrl: './homeconnect.component.html',
   styleUrl: './homeconnect.component.scss'

@@ -30,7 +30,7 @@ import { MentionsComponent } from './home/mentions/mentions.component';
 import { MessagerieComponent } from './home/messagerie/messagerie.component';
 import { PrivacyComponent } from './home/privacy/privacy.component';
 import { ProfilComponent } from './home/profil/profil.component';
- import { LiveComponent } from './live/live.component';
+import { LiveComponent } from './live/live.component';
 import { LoginComponent } from './login/login.component';
 import { OffolandComponent } from './offoland/offoland.component';
 import { RegisterComponent } from './register/register.component';
@@ -40,8 +40,11 @@ import { CharlyguitaregameComponent } from './univers/charlyguitaregame/charlygu
 import { NoirComponent } from './univers/noir/noir.component';
 import { RougeComponent } from './univers/rouge/rouge.component';
 import { VertComponent } from './univers/vert/vert.component';
+import { FinanceComponent } from './offoland/finance/finance.component';
+import { BcoComponent } from './bco/bco.component';
+import { OffresComponent } from './offres/offres.component';
 
- 
+
 
 export const routes: Routes = [
   {
@@ -191,10 +194,28 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
 
-  
+
   {
     path: 'abonnement',
     component: AbonnementComponent,
+    canActivate: [AuthGuard]
+  },
+
+  {
+    path: 'finance',
+    component: FinanceComponent,
+    canActivate: [AuthGuard]
+  },
+
+  {
+    path: 'bco',
+    component: BcoComponent,
+    canActivate: [AuthGuard]
+  },
+
+  {
+    path: 'offres',
+    component: OffresComponent,
     canActivate: [AuthGuard]
   },
 
