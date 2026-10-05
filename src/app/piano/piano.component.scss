@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   CHARLY GUITARE HERO - STYLES WAHOU
+   CHARLY PIANO HERO - STYLES WAHOU
    ═══════════════════════════════════════════════════════ */
 
 :host {
@@ -11,7 +11,7 @@
   overflow-x: hidden;
 }
 
-.fret-game-container {
+.piano-game-container {
   position: relative;
   width: 100%;
   min-height: 100vh;
@@ -60,7 +60,6 @@
   width: 500px; height: 500px;
   background: #7c3aed;
   top: -150px; left: -100px;
-  animation-delay: 0s;
 }
 
 .bg-glow-2 {
@@ -140,7 +139,7 @@
 }
 
 .star-power-active {
-  .game-hud, .fretboard-wrapper, .game-top-bar, .lives-bar {
+  .game-hud, .piano-wrapper, .game-top-bar, .lives-bar {
     filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
   }
 }
@@ -205,7 +204,7 @@
 
     .icon {
       font-size: 1.8rem;
-      animation: guitarBob 2s ease-in-out infinite;
+      animation: pianoBob 2s ease-in-out infinite;
     }
 
     h1 {
@@ -249,7 +248,7 @@
   }
 }
 
-@keyframes guitarBob {
+@keyframes pianoBob {
   0%, 100% { transform: rotate(-5deg) translateY(0); }
   50% { transform: rotate(5deg) translateY(-3px); }
 }
@@ -568,9 +567,7 @@
     transition: filter 0.3s;
   }
 
-  &.charging {
-    opacity: 0.7;
-  }
+  &.charging { opacity: 0.7; }
 
   &.ready {
     cursor: pointer;
@@ -888,30 +885,30 @@
   100% { box-shadow: 0 0 50px var(--chord-color), 0 0 100px var(--chord-color); }
 }
 
-/* ═══════════ FRETBOARD ═══════════ */
-.fretboard-wrapper {
+/* ═══════════ PIANO ═══════════ */
+.piano-wrapper {
   position: relative;
   z-index: 10;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto 20px;
   padding: 0 16px;
 }
 
-.fretboard-3d {
-  perspective: 1200px;
+.piano-3d {
+  perspective: 1500px;
 }
 
-.fretboard {
+.piano {
   position: relative;
   background: linear-gradient(180deg, #1a0f2e 0%, #0f0820 50%, #1a0f2e 100%);
-  border: 2px solid rgba(124, 58, 237, 0.5);
+  border: 3px solid rgba(124, 58, 237, 0.5);
   border-radius: 20px;
   padding: 20px 16px;
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.7),
     0 0 80px rgba(124, 58, 237, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transform: rotateX(2deg);
+  transform: rotateX(3deg);
   transition: transform 0.3s ease;
 
   &:hover {
@@ -919,198 +916,194 @@
   }
 }
 
-.fret-markers {
-  position: absolute;
-  top: 50%; left: 60px; right: 16px;
-  height: 0;
+/* Touches blanches */
+.white-keys {
+  position: relative;
   display: flex;
-  justify-content: space-around;
-  pointer-events: none;
+  gap: 4px;
+  height: 240px;
   z-index: 1;
-
-  .marker {
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(251, 191, 36, 0.4), transparent);
-    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
-    transform: translateY(-50%);
-
-    &.fret-3 { margin-left: 8%; }
-    &.fret-5 { margin-left: 16%; }
-    &.fret-7 { margin-left: 8%; }
-    &.fret-9 { margin-left: 8%; }
-    &.fret-12 {
-      margin-left: 8%;
-      width: 20px; height: 20px;
-      background: radial-gradient(circle, rgba(251, 191, 36, 0.7), transparent);
-      box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
-    }
-  }
 }
 
-.frets-header {
-  display: grid;
-  grid-template-columns: 50px repeat(13, 1fr);
-  gap: 4px;
-  margin-bottom: 12px;
-
-  .fret-num {
-    text-align: center;
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: #6b5b8a;
-    letter-spacing: 1px;
-    padding: 4px 0;
-    border-radius: 6px;
-    background: rgba(124, 58, 237, 0.1);
-
-    &.open-string {
-      color: #fbbf24;
-      background: rgba(251, 191, 36, 0.15);
-    }
-  }
-}
-
-.strings-container {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.guitar-string {
+.white-key {
   position: relative;
-  display: grid;
-  grid-template-columns: 50px repeat(13, 1fr);
-  gap: 4px;
-  align-items: center;
-
-  .string-line {
-    position: absolute;
-    left: 50px;
-    right: 0;
-    top: 50%;
-    height: 2px;
-    background: linear-gradient(90deg,
-      var(--string-color),
-      color-mix(in srgb, var(--string-color) 60%, white),
-      var(--string-color));
-    border-radius: 2px;
-    transform: translateY(-50%);
-    box-shadow: 0 0 8px var(--string-color);
-    opacity: 0.6;
-    pointer-events: none;
-  }
-}
-
-.fret-node {
-  position: relative;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex: 1;
+  background: linear-gradient(180deg, #ffffff 0%, #f0f0f5 60%, #e0e0ea 100%);
+  border-radius: 0 0 8px 8px;
   cursor: pointer;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-  z-index: 2;
+  transition: all 0.1s ease;
+  box-shadow:
+    inset 0 -8px 12px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 
-  .fret-wire {
+  .key-top {
     position: absolute;
-    left: -2px;
-    top: 0; bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, rgba(200, 200, 220, 0.3), rgba(150, 150, 180, 0.5), rgba(200, 200, 220, 0.3));
-    border-radius: 2px;
-    pointer-events: none;
+    inset: 0;
+    border-radius: 0 0 8px 8px;
+    background: linear-gradient(180deg, transparent 70%, rgba(0, 0, 0, 0.1));
   }
 
-  .touch-point {
-    position: relative;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(30, 20, 50, 0.9), rgba(15, 10, 30, 0.95));
-    border: 2px solid rgba(124, 58, 237, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    overflow: hidden;
+  .note-label {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: #333;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
 
-    .touch-ring {
-      position: absolute;
-      inset: -2px;
-      border-radius: 50%;
-      border: 2px solid var(--string-color);
-      opacity: 0;
-      transition: opacity 0.2s;
-      box-shadow: 0 0 15px var(--string-color);
-    }
-
-    .note-label {
-      font-size: 0.7rem;
-      font-weight: 900;
-      color: #a78bfa;
-      letter-spacing: 0.5px;
-      transition: all 0.2s ease;
-      text-shadow: 0 0 8px currentColor;
-    }
+  .key-glow {
+    position: absolute;
+    inset: 0;
+    background: var(--key-color, #fff);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
   }
 
   &:hover {
-    .touch-point {
-      transform: scale(1.15);
-      border-color: var(--string-color);
-      box-shadow: 0 0 25px var(--string-color);
-      background: radial-gradient(circle, rgba(124, 58, 237, 0.3), rgba(15, 10, 30, 0.95));
-
-      .touch-ring { opacity: 1; }
-      .note-label { color: #fff; }
-    }
+    background: linear-gradient(180deg, #ffffff 0%, #f5f5fa 60%, #d8d8e5 100%);
+    transform: translateY(2px);
+    box-shadow:
+      inset 0 -8px 12px rgba(0, 0, 0, 0.2),
+      0 2px 6px rgba(0, 0, 0, 0.5),
+      0 0 20px var(--key-color, #fff);
   }
 
-  &:active .touch-point {
-    transform: scale(0.95);
+  &:active {
+    transform: translateY(6px);
+    box-shadow:
+      inset 0 -4px 8px rgba(0, 0, 0, 0.3),
+      0 1px 3px rgba(0, 0, 0, 0.5);
   }
 
   &.correct {
-    .touch-point {
-      background: radial-gradient(circle, #10b981, #059669);
-      border-color: #6ee7b7;
-      box-shadow: 0 0 40px #10b981, 0 0 80px rgba(16, 185, 129, 0.5);
-      animation: correctPop 0.5s ease-out;
+    background: linear-gradient(180deg, #6ee7b7 0%, #10b981 100%);
+    animation: keyCorrect 0.5s ease-out;
 
-      .note-label { color: #fff; font-size: 1rem; }
-    }
+    .note-label { color: #fff; font-size: 0.95rem; }
+    .key-glow { opacity: 0.3; }
   }
 
-  &.hit {
-    .touch-point {
-      animation: hitFlash 0.7s ease-out;
-    }
+  &.hit .key-glow {
+    animation: hitFlash 0.7s ease-out;
   }
 
-  &.star-power-node {
-    .touch-point {
-      border-color: rgba(251, 191, 36, 0.5);
-      box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
-    }
+  &.star-power-key {
+    box-shadow:
+      inset 0 -8px 12px rgba(0, 0, 0, 0.15),
+      0 4px 8px rgba(0, 0, 0, 0.5),
+      0 0 25px rgba(251, 191, 36, 0.5);
   }
 }
 
-@keyframes correctPop {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.4); }
-  100% { transform: scale(1.15); }
+@keyframes keyCorrect {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(8px) scale(1.05); }
+  100% { transform: translateY(4px) scale(1); }
 }
 
 @keyframes hitFlash {
   0% {
-    box-shadow: 0 0 0 0 var(--string-color);
-    background: radial-gradient(circle, #fff, var(--string-color));
+    background: radial-gradient(circle at 50% 100%, #fff, transparent 70%);
+    opacity: 1;
   }
   100% {
-    box-shadow: 0 0 0 30px transparent;
-    background: radial-gradient(circle, rgba(30, 20, 50, 0.9), rgba(15, 10, 30, 0.95));
+    background: radial-gradient(circle at 50% 100%, transparent, transparent 70%);
+    opacity: 0;
+  }
+}
+
+/* Touches noires */
+.black-keys {
+  position: absolute;
+  top: 20px;
+  left: 16px;
+  right: 16px;
+  height: 150px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.black-key {
+  position: absolute;
+  top: 0;
+  width: 4.2%;
+  height: 100%;
+  background: linear-gradient(180deg, #2a2a3a 0%, #1a1a25 60%, #0a0a15 100%);
+  border-radius: 0 0 6px 6px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.1s ease;
+  box-shadow:
+    inset 0 -6px 10px rgba(0, 0, 0, 0.8),
+    0 6px 12px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  .key-top {
+    position: absolute;
+    inset: 0;
+    border-radius: 0 0 6px 6px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 30%);
+  }
+
+  .note-label {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: #aaa;
+    letter-spacing: 0.5px;
+  }
+
+  .key-glow {
+    position: absolute;
+    inset: 0;
+    background: var(--key-color, #fff);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  &:hover {
+    background: linear-gradient(180deg, #3a3a4a 0%, #2a2a35 60%, #1a1a25 100%);
+    transform: translateY(2px);
+    box-shadow:
+      inset 0 -6px 10px rgba(0, 0, 0, 0.8),
+      0 3px 8px rgba(0, 0, 0, 0.9),
+      0 0 15px var(--key-color, #fff);
+  }
+
+  &:active {
+    transform: translateY(5px);
+    box-shadow:
+      inset 0 -3px 6px rgba(0, 0, 0, 0.9),
+      0 2px 4px rgba(0, 0, 0, 0.9);
+  }
+
+  &.correct {
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+
+    .note-label { color: #fff; }
+    .key-glow { opacity: 0.4; }
+  }
+
+  &.hit .key-glow {
+    animation: hitFlash 0.7s ease-out;
+  }
+
+  &.star-power-key {
+    box-shadow:
+      inset 0 -6px 10px rgba(0, 0, 0, 0.8),
+      0 6px 12px rgba(0, 0, 0, 0.9),
+      0 0 20px rgba(251, 191, 36, 0.5);
   }
 }
 
@@ -1138,7 +1131,7 @@
   }
 }
 
-/* ═══════════ LIVES ═══════════ */
+/* ═══════════ VIES ═══════════ */
 .lives-bar {
   position: relative;
   z-index: 10;
@@ -1228,7 +1221,7 @@
   .modal-icon {
     font-size: 4rem;
     margin-bottom: 12px;
-    animation: guitarBob 2s ease-in-out infinite;
+    animation: pianoBob 2s ease-in-out infinite;
     filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.6));
   }
 
@@ -1477,28 +1470,26 @@
 /* ═══════════ RESPONSIVE ═══════════ */
 @media (max-width: 900px) {
   .game-top-bar .logo-zone h1 { font-size: 0.9rem; }
-  .fret-node { height: 40px; }
-  .touch-point { width: 32px; height: 32px; }
-  .note-label { font-size: 0.6rem; }
+  .white-keys { height: 180px; }
+  .black-keys { height: 110px; }
+  .note-label { font-size: 0.65rem; }
   .target-note { font-size: 2.2rem; }
   .melody-banner { padding: 20px 30px; }
   .melody-icon { font-size: 2.5rem; }
 }
 
 @media (max-width: 600px) {
-  .fret-game-container { padding: 70px 8px 30px; }
+  .piano-game-container { padding: 70px 8px 30px; }
   .game-hud { gap: 12px; padding: 12px 8px; }
   .hud-box { padding: 8px 14px; min-width: 80px; }
   .hud-box .value { font-size: 1.2rem; }
   .target-card { padding: 10px 20px; }
   .target-note { font-size: 1.8rem; letter-spacing: 3px; }
-  .fretboard { padding: 12px 8px; }
-  .frets-header { grid-template-columns: 30px repeat(13, 1fr); }
-  .guitar-string { grid-template-columns: 30px repeat(13, 1fr); }
-  .fret-num { font-size: 0.5rem; }
-  .fret-node { height: 32px; }
-  .touch-point { width: 26px; height: 26px; }
-  .note-label { font-size: 0.5rem; }
+  .piano { padding: 12px 8px; }
+  .white-keys { height: 140px; gap: 2px; }
+  .black-keys { height: 85px; top: 12px; left: 8px; right: 8px; }
+  .black-key { width: 3.8%; }
+  .note-label { font-size: 0.55rem; }
   .star-power-container { flex-direction: column; gap: 8px; }
   .star-power-btn { width: 100%; justify-content: center; }
   .difficulty-buttons { grid-template-columns: 1fr; }

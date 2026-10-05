@@ -11,10 +11,14 @@ interface MelodyChord {
   bassNote: string;
 }
 
-interface GuitarString {
+interface PianoKey {
   index: number;
-  name: string;
-  baseMidi: number;
+  note: string;          // ex: "C4"
+  frenchNote: string;    // ex: "DO"
+  octave: number;
+  isBlack: boolean;
+  position: number;      // position en % sur le clavier
+  width: number;         // largeur relative
 }
 
 interface Particle {
@@ -26,22 +30,12 @@ interface Particle {
   rotation: number;
 }
 
-interface NoteHighway {
-  id: number;
-  note: string;
-  stringIdx: number;
-  fretIdx: number;
-  progress: number;
-  hit: boolean;
-  missed: boolean;
-}
-
 @Component({
-  selector: 'app-fretboard',
+  selector: 'app-piano',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './fretboard.component.html',
-  styleUrls: ['./fretboard.component.scss'],
+  templateUrl: './piano.component.html',
+  styleUrls: ['./piano.component.scss'],
   animations: [
     trigger('feedbackAnim', [
       transition(':enter', [
@@ -91,29 +85,69 @@ interface NoteHighway {
     ])
   ]
 })
-export class FretboardComponent implements OnInit, OnDestroy {
+export class PianoComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
-  // Accordage standard
-  readonly strings: GuitarString[] = [
-    { index: 1, name: 'E', baseMidi: 64 },
-    { index: 2, name: 'B', baseMidi: 59 },
-    { index: 3, name: 'G', baseMidi: 55 },
-    { index: 4, name: 'D', baseMidi: 50 },
-    { index: 5, name: 'A', baseMidi: 45 },
-    { index: 6, name: 'E', baseMidi: 40 }
+  // ═══════════════════════════════════════════════════════
+  // CLAVIER DE PIANO — 2 octaves (C3 à C5)
+  // ═══════════════════════════════════════════════════════
+  readonly pianoKeys: PianoKey[] = [
+    // Octave 3
+    { index: 0,  note: 'C3',  frenchNote: 'DO',  octave: 3, isBlack: false, position: 0,    width: 100 / 15 },
+    { index: 1,  note: 'C#3', frenchNote: 'DO#', octave: 3, isBlack: true,  position: 0.6,  width: 100 / 25 },
+    { index: 2,  note: 'D3',  frenchNote: 'RÉ',  octave: 3, isBlack: false, position: 6.6,  width: 100 / 15 },
+    { index: 3,  note: 'D#3', frenchNote: 'RÉ#', octave: 3, isBlack: true,  position: 12.6, width: 100 / 25 },
+    { index: 4,  note: 'E3',  frenchNote: 'MI',  octave: 3, isBlack: false, position: 13.3, width: 100 / 15 },
+    { index: 5,  note: 'F3',  frenchNote: 'FA',  octave: 3, isBlack: false, position: 20,   width: 100 / 15 },
+    { index: 6,  note: 'F#3', frenchNote: 'FA#', octave: 3, isBlack: true,  position: 26,   width: 100 / 25 },
+    { index: 7,  note: 'G3',  frenchNote: 'SOL', octave: 3, isBlack: false, position: 26.6, width: 100 / 15 },
+    { index: 8,  note: 'G#3', frenchNote: 'SOL#',octave: 3, isBlack: true,  position: 32.6, width: 100 / 25 },
+    { index: 9,  note: 'A3',  frenchNote: 'LA',  octave: 3, isBlack: false, position: 33.3, width: 100 / 15 },
+    { index: 10, note: 'A#3', frenchNote: 'LA#', octave: 3, isBlack: true,  position: 39.3, width: 100 / 25 },
+    { index: 11, note: 'B3',  frenchNote: 'SI',  octave: 3, isBlack: false, position: 40,   width: 100 / 15 },
+    // Octave 4
+    { index: 12, note: 'C4',  frenchNote: 'DO',  octave: 4, isBlack: false, position: 46.6, width: 100 / 15 },
+    { index: 13, note: 'C#4', frenchNote: 'DO#', octave: 4, isBlack: true,  position: 53,   width: 100 / 25 },
+    { index: 14, note: 'D4',  frenchNote: 'RÉ',  octave: 4, isBlack: false, position: 53.3, width: 100 / 15 },
+    { index: 15, note: 'D#4', frenchNote: 'RÉ#', octave: 4, isBlack: true,  position: 59.3, width: 100 / 25 },
+    { index: 16, note: 'E4',  frenchNote: 'MI',  octave: 4, isBlack: false, position: 60,   width: 100 / 15 },
+    { index: 17, note: 'F4',  frenchNote: 'FA',  octave: 4, isBlack: false, position: 66.6, width: 100 / 15 },
+    { index: 18, note: 'F#4', frenchNote: 'FA#', octave: 4, isBlack: true,  position: 73,   width: 100 / 25 },
+    { index: 19, note: 'G4',  frenchNote: 'SOL', octave: 4, isBlack: false, position: 73.3, width: 100 / 15 },
+    { index: 20, note: 'G#4', frenchNote: 'SOL#',octave: 4, isBlack: true,  position: 79.3, width: 100 / 25 },
+    { index: 21, note: 'A4',  frenchNote: 'LA',  octave: 4, isBlack: false, position: 80,   width: 100 / 15 },
+    { index: 22, note: 'A#4', frenchNote: 'LA#', octave: 4, isBlack: true,  position: 86,   width: 100 / 25 },
+    { index: 23, note: 'B4',  frenchNote: 'SI',  octave: 4, isBlack: false, position: 86.6, width: 100 / 15 },
+    // Fin : C5
+    { index: 24, note: 'C5',  frenchNote: 'DO',  octave: 5, isBlack: false, position: 93.3, width: 100 / 15 }
   ];
 
-  readonly notesList = ['DO', 'RÉ', 'MI', 'FA', 'SOL', 'LA', 'SI'];
-  readonly frets = Array.from({ length: 13 }, (_, i) => i);
-  readonly stringColors = ['#FF3366', '#FFD700', '#00D4FF', '#FF6B35', '#B266FF', '#00FF88'];
+  // Notes blanches uniquement pour le jeu (DO RÉ MI FA SOL LA SI)
+  readonly whiteNotesList = ['DO', 'RÉ', 'MI', 'FA', 'SOL', 'LA', 'SI'];
+
+  // Couleurs par note (chromesthésie pour aider le joueur)
+  readonly noteColors: Record<string, string> = {
+    'DO': '#FF3366',   // Rouge
+    'DO#': '#FF3366',
+    'RÉ': '#FFD700',   // Or
+    'RÉ#': '#FFD700',
+    'MI': '#00D4FF',   // Cyan
+    'FA': '#FF6B35',   // Orange
+    'FA#': '#FF6B35',
+    'SOL': '#00FF88',  // Vert
+    'SOL#': '#00FF88',
+    'LA': '#B266FF',   // Violet
+    'LA#': '#B266FF',
+    'SI': '#FF8CC8'    // Rose
+  };
 
   // Signals de base
   score = signal<number>(0);
   combo = signal<number>(0);
   maxCombo = signal<number>(0);
-  lives = signal<number>(7);
+  lives = signal<number>(3);
   targetNote = signal<string>('');
+  targetOctave = signal<number>(4);
   timeLeft = signal<number>(200);
   isPlaying = signal<boolean>(false);
   isGameOver = signal<boolean>(false);
@@ -156,9 +190,8 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
   // Particules
   particles = signal<Particle[]>([]);
-  correctFretIndex = signal<number>(-1);
-  correctStringIndex = signal<number>(-1);
-  hitEffects = signal<{ id: number; stringIdx: number; fretIdx: number }[]>([]);
+  correctKeyIndex = signal<number>(-1);
+  hitEffects = signal<{ id: number; keyIndex: number }[]>([]);
 
   // Mélodie des Origines
   melodyPlaying = signal<boolean>(false);
@@ -167,15 +200,11 @@ export class FretboardComponent implements OnInit, OnDestroy {
   melodyChordFrench = signal<string>('');
   melodyChordColor = signal<string>('#FFD700');
 
-  // Note Highway (défilement style Guitar Hero)
-  noteHighwayActive = signal<boolean>(false);
-  highwayNotes = signal<NoteHighway[]>([]);
-
   readonly melodieOrigines: MelodyChord[] = [
     { name: 'Am', frenchName: 'La mineur', color: '#B266FF', notes: ['A3', 'C4', 'E4'], bassNote: 'A2' },
     { name: 'Dm', frenchName: 'Ré mineur', color: '#00D4FF', notes: ['D4', 'F4', 'A4'], bassNote: 'D3' },
-    { name: 'F', frenchName: 'Fa majeur', color: '#FFD700', notes: ['F4', 'A4', 'C5'], bassNote: 'F3' },
-    { name: 'G', frenchName: 'Sol majeur', color: '#00FF88', notes: ['G4', 'B4', 'D5'], bassNote: 'G3' }
+    { name: 'F',  frenchName: 'Fa majeur', color: '#FFD700', notes: ['F4', 'A4', 'C5'], bassNote: 'F3' },
+    { name: 'G',  frenchName: 'Sol majeur', color: '#00FF88', notes: ['G4', 'B4', 'D5'], bassNote: 'G3' }
   ];
 
   private timerInterval: any;
@@ -190,10 +219,11 @@ export class FretboardComponent implements OnInit, OnDestroy {
   private audioCtx?: AudioContext;
   private audioBuffers: Map<string, AudioBuffer> = new Map();
   private isAudioReady = false;
-  private readonly guitarBasePath = 'assets/audio/guitar-acoustic/';
-  private readonly guitarSamples: Record<string, string> = {
-    'E2': 'E2.ogg', 'A2': 'A2.ogg', 'D3': 'D3.ogg',
-    'G3': 'G3.ogg', 'B3': 'B3.ogg', 'E4': 'E4.ogg'
+  private readonly pianoBasePath = 'assets/audio/piano/';
+  private readonly pianoSamples: Record<string, string> = {
+    'C3': 'C3.ogg', 'D#3': 'Ds3.ogg', 'F#3': 'Fs3.ogg', 'A3': 'A3.ogg',
+    'C4': 'C4.ogg', 'D#4': 'Ds4.ogg', 'F#4': 'Fs4.ogg', 'A4': 'A4.ogg',
+    'C5': 'C5.ogg'
   };
 
   private readonly noteToMidiOffset: Record<string, number> = {
@@ -201,7 +231,6 @@ export class FretboardComponent implements OnInit, OnDestroy {
     'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
   };
 
-  // Effet pour combo flash
   constructor() {
     effect(() => {
       const c = this.combo();
@@ -218,7 +247,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   /* ═══════════════════════════════════════════════════════
-     MOTEUR AUDIO AMÉLIORÉ
+     MOTEUR AUDIO
      ═══════════════════════════════════════════════════════ */
   private initAudioContext(): void {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -229,9 +258,9 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
   private async preloadSamples(): Promise<void> {
     if (!this.audioCtx) return;
-    const promises = Object.entries(this.guitarSamples).map(async ([note, file]) => {
+    const promises = Object.entries(this.pianoSamples).map(async ([note, file]) => {
       try {
-        const response = await fetch(this.guitarBasePath + file);
+        const response = await fetch(this.pianoBasePath + file);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await this.audioCtx!.decodeAudioData(arrayBuffer);
@@ -329,53 +358,53 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   nextRound(): void {
-    const randomIndex = Math.floor(Math.random() * this.notesList.length);
-    this.targetNote.set(this.notesList[randomIndex]);
-    this.correctFretIndex.set(-1);
-    this.correctStringIndex.set(-1);
+    // Choisir une note dans la plage C4 → C5 (octave centrale) pour rester simple
+    const randomIndex = Math.floor(Math.random() * this.whiteNotesList.length);
+    this.targetNote.set(this.whiteNotesList[randomIndex]);
+    // Octave 4 (sauf DO qui peut être C4 ou C5 — ici on force C4 pour simplifier)
+    this.targetOctave.set(4);
+    this.correctKeyIndex.set(-1);
     this.startTimer();
   }
 
-  onFretClick(stringIdx: number, fretIdx: number): void {
+  onKeyClick(key: PianoKey): void {
     if (!this.isPlaying()) return;
 
-    const clickedNoteName = this.getNoteAt(stringIdx, fretIdx);
-    const toneNote = this.getToneNoteForFret(stringIdx, fretIdx);
+    this.playNoteWithTransposition(key.note, 1.0, 0.85);
 
-    this.playNoteWithTransposition(toneNote, 0.9);
+    // Correspondance : la note française ET l'octave doivent matcher
+    const targetFullNote = this.targetNote() + this.targetOctave();
+    const keyFullNote = key.frenchNote + key.octave;
 
-    if (clickedNoteName === this.targetNote()) {
-      this.handleSuccess(fretIdx, stringIdx);
+    // Tolérance : DO4, DO5, RÉ4, MI4, FA4, SOL4, LA4, SI4
+    // On accepte l'octave 4 pour toutes les notes
+    if (key.frenchNote === this.targetNote() && key.octave === this.targetOctave()) {
+      this.handleSuccess(key.index);
     } else {
       this.handleMiss(false);
     }
   }
 
-  handleSuccess(fretIdx: number, stringIdx: number): void {
+  handleSuccess(keyIndex: number): void {
     this.combo.update(c => c + 1);
     this.streak.update(s => s + 1);
     this.notesHit.update(n => n + 1);
     if (this.combo() > this.maxCombo()) this.maxCombo.set(this.combo());
 
-    // Points
     const starPowerBonus = this.isStarPowerActive() ? 2 : 1;
     const perfectBonus = this.timeLeft() > this.maxTime * 0.7 ? 1.5 : 1;
     const basePoints = Math.round(100 * this.multiplier() * starPowerBonus * perfectBonus);
     this.score.update(s => s + basePoints);
 
-    // Star Power
     if (!this.isStarPowerActive()) {
       this.starPowerGauge.update(g => Math.min(100, g + 12));
     }
 
-    // Effets visuels
-    this.correctFretIndex.set(fretIdx);
-    this.correctStringIndex.set(stringIdx);
-    this.triggerParticles(stringIdx, fretIdx);
-    this.triggerHitEffect(stringIdx, fretIdx);
+    this.correctKeyIndex.set(keyIndex);
+    this.triggerParticles(keyIndex);
+    this.triggerHitEffect(keyIndex);
     this.playNoteWithTransposition('C5', 0.3, 0.4);
 
-    // Feedback
     const isPerfect = this.timeLeft() > this.maxTime * 0.75;
     const comboText = this.effectiveMultiplier() > 1 ? ` x${this.effectiveMultiplier()}` : '';
     if (isPerfect) {
@@ -385,12 +414,11 @@ export class FretboardComponent implements OnInit, OnDestroy {
       this.showFeedback(`BIEN ! +${basePoints}${comboText}`, 'success');
     }
 
-    // Mélodie
+    // 🎼 MÉLODIE DES ORIGINES à chaque 7 notes
     if (this.combo() > 0 && this.combo() % 7 === 0) {
       this.playMelodieDesOrigines();
     }
 
-    // Screen shake sur gros combo
     if (this.combo() > 0 && this.combo() % 10 === 0) {
       this.triggerScreenShake();
     }
@@ -487,40 +515,26 @@ export class FretboardComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      CALCUL DES NOTES
      ═══════════════════════════════════════════════════════ */
-  getNoteAt(stringIndex: number, fret: number): string {
-    const noteSequence = ['DO', 'DO#', 'RÉ', 'RÉ#', 'MI', 'FA', 'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'];
-    const str = this.strings.find(s => s.index === stringIndex);
-    if (!str) return '';
-    const midi = str.baseMidi + fret;
-    return noteSequence[midi % 12].replace('#', '');
+  getKeyColor(key: PianoKey): string {
+    return this.noteColors[key.frenchNote] || '#FFFFFF';
   }
 
-  private getToneNoteForFret(stringIndex: number, fret: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const str = this.strings.find(s => s.index === stringIndex);
-    if (!str) return 'C4';
-    const midi = str.baseMidi + fret;
-    const octave = Math.floor(midi / 12) - 1;
-    return `${noteNames[midi % 12]}${octave}`;
-  }
-
-  getStringColor(stringIdx: number): string {
-    return this.stringColors[stringIdx - 1] || '#FFFFFF';
-  }
-
-  isHit(stringIdx: number, fretIdx: number): boolean {
-    return this.hitEffects().some(e => e.stringIdx === stringIdx && e.fretIdx === fretIdx);
+  isHit(keyIndex: number): boolean {
+    return this.hitEffects().some(e => e.keyIndex === keyIndex);
   }
 
   /* ═══════════════════════════════════════════════════════
      EFFETS VISUELS
      ═══════════════════════════════════════════════════════ */
-  triggerParticles(stringIdx: number, fretIdx: number): void {
+  triggerParticles(keyIndex: number): void {
+    const key = this.pianoKeys.find(k => k.index === keyIndex);
+    if (!key) return;
+
     const newParticles: Particle[] = Array.from({ length: 16 }, () => ({
       id: this.particleId++,
-      x: (fretIdx / 12) * 100,
-      y: ((stringIdx - 1) / 6) * 100,
-      color: this.getStringColor(stringIdx),
+      x: key.position + key.width / 2,
+      y: key.isBlack ? 30 : 60,
+      color: this.getKeyColor(key),
       size: Math.random() * 8 + 4,
       rotation: Math.random() * 360
     }));
@@ -530,9 +544,9 @@ export class FretboardComponent implements OnInit, OnDestroy {
     }, 1200);
   }
 
-  triggerHitEffect(stringIdx: number, fretIdx: number): void {
+  triggerHitEffect(keyIndex: number): void {
     const id = this.effectId++;
-    this.hitEffects.update(e => [...e, { id, stringIdx, fretIdx }]);
+    this.hitEffects.update(e => [...e, { id, keyIndex }]);
     setTimeout(() => {
       this.hitEffects.update(e => e.filter(x => x.id !== id));
     }, 700);
@@ -643,14 +657,14 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   private loadHighScore(): void {
-    const saved = localStorage.getItem('fretboard_highscore');
+    const saved = localStorage.getItem('pianohero_highscore');
     if (saved) this.highScore.set(parseInt(saved, 10));
   }
 
   private saveHighScore(): void {
     if (this.score() > this.highScore()) {
       this.highScore.set(this.score());
-      localStorage.setItem('fretboard_highscore', this.score().toString());
+      localStorage.setItem('pianohero_highscore', this.score().toString());
     }
   }
 
@@ -671,6 +685,15 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
   isStarFilled(i: number): boolean {
     return this.starPowerGauge() >= (i + 1) * 10;
+  }
+
+  // Notes blanches uniquement pour le rendu
+  get whiteKeys(): PianoKey[] {
+    return this.pianoKeys.filter(k => !k.isBlack);
+  }
+
+  get blackKeys(): PianoKey[] {
+    return this.pianoKeys.filter(k => k.isBlack);
   }
 
   goToPlay(): void {

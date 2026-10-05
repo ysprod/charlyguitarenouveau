@@ -43,6 +43,7 @@ import { VertComponent } from './univers/vert/vert.component';
 import { FinanceComponent } from './offoland/finance/finance.component';
 import { BcoComponent } from './bco/bco.component';
 import { OffresComponent } from './offres/offres.component';
+import { PianoComponent } from './piano/piano.component';
 
 
 
@@ -216,6 +217,12 @@ export const routes: Routes = [
   {
     path: 'offres',
     component: OffresComponent,
+    canActivate: [AuthGuard]
+  },
+
+    {
+    path: 'piano',
+    component: PianoComponent,
     canActivate: [AuthGuard]
   },
 
