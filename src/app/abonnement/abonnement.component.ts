@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { OffresComponent } from '../offres/offres.component';
+import { OffresComponent } from './offres/offres.component';
 
 @Component({
   selector: 'app-abonnement',

@@ -17,8 +17,9 @@ import {
   stagger,
   state
 } from '@angular/animations';
-import { SparklineComponent } from '../shared/sparkline/sparkline.component';
-import { GaugeComponent } from '../shared/gauge/gauge.component';
+import { GaugeComponent } from 'src/app/shared/gauge/gauge.component';
+import { SparklineComponent } from 'src/app/shared/sparkline/sparkline.component';
+ 
 
 /* ============================================================
    INTERFACES

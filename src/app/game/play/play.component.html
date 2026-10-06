@@ -1,8 +1,6 @@
 <div class="game-dashboard-container">
 
-  <!-- ============================================================
-       DÉCOR ANIMÉ EN ARRIÈRE-PLAN
-       ============================================================ -->
+  <!-- DÉCOR ANIMÉ -->
   <div class="bg-decor" aria-hidden="true">
     <div class="glow glow-1"></div>
     <div class="glow glow-2"></div>
@@ -12,7 +10,6 @@
     <div class="cyber-grid"></div>
     <div class="aurora"></div>
 
-    <!-- Particules montantes -->
     <div class="particles">
       @for (p of particles; track $index) {
         <span class="particle"
@@ -24,10 +21,8 @@
       }
     </div>
 
-    <!-- Rayons lumineux -->
     <div class="rays"></div>
 
-    <!-- Notes de musique flottantes -->
     <div class="music-notes">
       @for (n of musicNotes; track $index) {
         <span class="note"
@@ -40,9 +35,7 @@
 
   <div class="main-game-area">
 
-    <!-- ============================================================
-         HERO HEADER
-         ============================================================ -->
+    <!-- HERO HEADER -->
     <header class="hero-header">
       <div class="hero-badge">
         <span class="badge-dot"></span>
@@ -50,13 +43,11 @@
       </div>
     </header>
 
-    <!-- ============================================================
-         BARRE DE FILTRES
-         ============================================================ -->
+    <!-- FILTRES -->
     <div class="filter-bar">
       @for (f of filters; track f.id) {
         <button class="filter-chip"
-                [class.active]="selectedFilter === f.id"
+                [class.active]="selectedFilter() === f.id"
                 (click)="selectFilter(f.id)"
                 [attr.aria-label]="'Filtrer : ' + f.label">
           <span class="chip-icon">{{ f.icon }}</span>
@@ -65,9 +56,7 @@
       }
     </div>
 
-    <!-- ============================================================
-         GRILLE DE JEUX
-         ============================================================ -->
+    <!-- GRILLE DE JEUX -->
     <section class="games-selector-section">
       <div class="game-buttons-grid">
 
@@ -239,18 +228,39 @@
           <span class="corner corner-br"></span>
         </button>
 
-        <!-- 🎹 PIANO -->
+        <!-- 🎹 PIANO HERO -->
         <button type="button"
                 class="btn-game btn-piano"
                 data-category="tools"
                 (click)="onSelectPiano()"
-                aria-label="Lancer le Piano virtuel">
+                aria-label="Lancer le Piano Hero">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">🎹</span>
           <span class="btn-content">
             <span class="btn-tag tag-tool">OUTIL</span>
-            <span class="btn-text">PIANO</span>
+            <span class="btn-text">JEU DE PIANO</span>
+            <span class="btn-sub">Piano Hero</span>
+          </span>
+          <span class="btn-arrow">→</span>
+          <span class="corner corner-tl"></span>
+          <span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span>
+          <span class="corner corner-br"></span>
+        </button>
+
+        <!-- 🎹 PIANO VIRTUEL -->
+        <button type="button"
+                class="btn-game btn-pianovirtuel"
+                data-category="tools"
+                (click)="onSelectPianovirtuel()"
+                aria-label="Lancer le Piano Virtuel">
+          <span class="btn-glow"></span>
+          <span class="btn-border-anim"></span>
+          <span class="btn-icon">🎹</span>
+          <span class="btn-content">
+            <span class="btn-tag tag-tool">OUTIL</span>
+            <span class="btn-text">APPRENDRE LE PIANO</span>
             <span class="btn-sub">Piano Virtuel</span>
           </span>
           <span class="btn-arrow">→</span>
@@ -262,14 +272,25 @@
 
       </div>
 
-      <!-- Message si aucun résultat -->
-      @if (visibleGameCount === 0) {
+      <!-- EMPTY STATE -->
+      @if (visibleGameCount() === 0) {
         <div class="empty-state">
           <span class="empty-icon">🎸</span>
           <p>Aucun jeu dans cette catégorie pour le moment...</p>
         </div>
       }
     </section>
+
+    <!-- FOOTER -->
+    <footer class="dashboard-footer">
+      <div class="footer-line"></div>
+      <span class="footer-text">
+        <span class="footer-icon">♪</span>
+        Charly Guitare Studio — Jouez, apprenez, progressez
+        <span class="footer-icon">♫</span>
+      </span>
+      <div class="footer-line"></div>
+    </footer>
 
   </div>
 </div>

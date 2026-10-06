@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CHARLY PIANO STUDIO — THEME PREMIUM (SCSS refactorisé)
+   CHARLY PIANO STUDIO — THEME PREMIUM
    ========================================================================== */
 :host {
   --cyan: #00f2fe;
@@ -24,7 +24,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   user-select: none;
 }
 
@@ -52,7 +52,7 @@
     opacity: 0.35;
     animation: floatGlow 14s ease-in-out infinite alternate;
 
-    &.bg-glow-1 { top: -15%; left: 8%;  width: 520px; height: 520px; background: var(--violet); }
+    &.bg-glow-1 { top: -15%; left: 8%; width: 520px; height: 520px; background: var(--violet); }
     &.bg-glow-2 { bottom: -10%; right: 6%; width: 560px; height: 560px; background: var(--pink); animation-delay: -5s; }
   }
 
@@ -70,7 +70,7 @@
   z-index: 2;
 }
 
-/* ─── Barre supérieure ───────────────────────────────────── */
+/* ─── Barre supérieure ──────────────────────────────────── */
 .game-top-bar {
   position: relative;
   z-index: 10;
@@ -140,17 +140,10 @@
     transform: translateY(-1px);
   }
 
-  &.print-btn {
-    background: linear-gradient(135deg, rgba(0,242,254,0.18), rgba(121,40,202,0.18));
-    border-color: rgba(0,242,254,0.5);
-    color: var(--cyan);
-    &:hover { box-shadow: 0 0 18px rgba(0,242,254,0.45); }
-  }
-
   &.active { color: var(--pink); border-color: var(--pink); }
 }
 
-/* ─── Workstation ────────────────────────────────────────── */
+/* ─── Workstation ───────────────────────────────────────── */
 .workstation-panel {
   position: relative;
   z-index: 10;
@@ -159,6 +152,7 @@
   gap: 1rem;
   padding: 0 2rem;
   margin-top: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .widget-card {
@@ -379,117 +373,7 @@
   }
 }
 
-/* ─── Partition ──────────────────────────────────────────── */
-.sheet-music-wrapper {
-  position: relative;
-  z-index: 10;
-  margin: 1rem 2rem;
-  background: linear-gradient(180deg, rgba(15,13,30,0.85), rgba(8,7,18,0.85));
-  border: 1px solid var(--border-soft);
-  border-radius: 16px;
-  padding: 1rem 1.4rem 0.5rem;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
-
-  .sheet-header-print {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.4rem;
-
-    .print-title {
-      font-weight: 800;
-      font-size: 0.95rem;
-      letter-spacing: 1px;
-      background: linear-gradient(90deg, #fff, var(--cyan));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .print-meta {
-      font-size: 0.72rem;
-      color: #7e88a3;
-      letter-spacing: 1px;
-    }
-
-    .btn-clear-sheet {
-      padding: 0.3rem 0.8rem;
-      background: transparent;
-      border: 1px solid var(--border-soft);
-      border-radius: 6px;
-      color: #8890a8;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      cursor: pointer;
-      transition: all 0.2s;
-
-      &:hover { color: var(--pink); border-color: var(--pink); }
-    }
-  }
-
-  .grand-staff-container { width: 100%; overflow-x: auto; }
-
-  .grand-staff-svg {
-    width: 100%;
-    height: auto;
-    max-height: 230px;
-    display: block;
-
-    .staff-line { stroke: rgba(255,255,255,0.45); stroke-width: 1.2; }
-    .middle-line { stroke: rgba(255,255,255,0.12); stroke-width: 1; stroke-dasharray: 4 4; }
-    .barline { stroke: rgba(255,255,255,0.28); stroke-width: 1.2; }
-    .barline-end { stroke: #fff; stroke-width: 2.5; }
-    .brace-bar { stroke: #fff; stroke-width: 3; }
-    .brace-line { stroke: #fff; stroke-width: 2.2; }
-
-    .clef-svg { font-size: 40px; fill: #fff; }
-    .bass-clef { font-size: 32px; }
-
-    .time-sig {
-      font-family: 'Times New Roman', serif;
-      font-size: 22px;
-      font-weight: 900;
-      fill: #fff;
-    }
-
-    .note-item {
-      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .note-head {
-      fill: var(--cyan);
-      stroke: #fff;
-      stroke-width: 1;
-      filter: url(#noteGlow);
-      transition: all 0.2s;
-
-      &.hollow { fill: transparent; stroke: var(--cyan); stroke-width: 1.6; filter: none; }
-    }
-
-    .note-stem { stroke: var(--cyan); stroke-width: 2; }
-    .note-flag { stroke: var(--cyan); stroke-width: 2.5; stroke-linecap: round; }
-
-    .sharp-symbol {
-      fill: var(--pink);
-      font-size: 16px;
-      font-weight: 900;
-      filter: drop-shadow(0 0 4px rgba(255,0,128,0.7));
-    }
-
-    .ledger-line { stroke: var(--cyan); stroke-width: 2; }
-
-    .note-label-fr {
-      fill: #8890a8;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-  }
-}
-
-/* ─── Clavier ────────────────────────────────────────────── */
+/* ─── Clavier ───────────────────────────────────────────── */
 .piano-wrapper {
   --key-width: 60px;
   --key-height: 200px;
@@ -498,10 +382,16 @@
   position: relative;
   z-index: 10;
   width: 100%;
-  padding: 1.5rem 0 0;
+  margin-top: 0;
+  padding: 0.5rem 0 1.5rem;
   overflow: hidden;
 
   &.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(0.6); }
+
+  /* Sur grands écrans uniquement : on pousse le piano en bas */
+  @media (min-width: 1024px) and (min-height: 800px) {
+    margin-top: auto;
+  }
 }
 
 .piano-scroll {
@@ -682,7 +572,7 @@
   }
 }
 
-/* ─── Responsive ─────────────────────────────────────────── */
+/* ─── Responsive ────────────────────────────────────────── */
 @media (min-width: 768px) {
   .piano-wrapper { --key-width: 68px; --key-height: 220px; }
 }
@@ -694,11 +584,10 @@
   .piano-wrapper { --key-width: 54px; --key-height: 180px; }
   .game-top-bar { padding: 0.7rem 1rem; }
   .game-top-bar .logo-zone h1 { font-size: 1.15rem; letter-spacing: 2px; }
-  .workstation-panel, .sheet-music-wrapper { padding-left: 1rem; padding-right: 1rem; }
-  .sheet-music-wrapper { margin: 1rem 0.5rem; }
+  .workstation-panel { padding-left: 1rem; padding-right: 1rem; }
 }
 
-/* ─── Keyframes ──────────────────────────────────────────── */
+/* ─── Keyframes ─────────────────────────────────────────── */
 @keyframes floatGlow {
   0%   { transform: translate(0, 0) scale(1); }
   100% { transform: translate(28px, 38px) scale(1.08); }
@@ -706,52 +595,4 @@
 @keyframes recPulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255,0,128,0.6); }
   50%      { box-shadow: 0 0 0 10px rgba(255,0,128,0); }
-}
-
-/* ─── Impression ─────────────────────────────────────────── */
-@media print {
-  :host { --bg-deep: #fff; }
-
-  .piano-game-container { background: #fff !important; color: #000 !important; min-height: auto; }
-
-  .animated-background,
-  .particle-canvas,
-  .game-top-bar,
-  .workstation-panel,
-  .piano-wrapper,
-  .no-print {
-    display: none !important;
-  }
-
-  .sheet-music-wrapper {
-    margin: 0 !important;
-    padding: 20px !important;
-    background: #fff !important;
-    border: none !important;
-    box-shadow: none !important;
-
-    .print-title { color: #000 !important; -webkit-text-fill-color: #000; background: none; }
-    .print-meta { color: #333 !important; }
-
-    .grand-staff-svg {
-      line, path { stroke: #000 !important; }
-      .staff-line, .barline { stroke: #000 !important; }
-      .middle-line { stroke: #999 !important; }
-
-      .clef-svg, .time-sig { fill: #000 !important; }
-
-      .note-head {
-        fill: #000 !important;
-        stroke: #000 !important;
-        filter: none !important;
-
-        &.hollow { fill: #fff !important; stroke: #000 !important; }
-      }
-
-      .note-stem, .note-flag { stroke: #000 !important; }
-      .sharp-symbol { fill: #000 !important; filter: none !important; }
-      .ledger-line { stroke: #000 !important; }
-      .note-label-fr { fill: #333 !important; }
-    }
-  }
 }

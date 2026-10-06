@@ -1,6 +1,10 @@
 /* ============================================================
    GLOBAL
    ============================================================ */
+:host {
+  display: block;
+}
+
 .game-dashboard-container {
   position: relative;
   min-height: 100vh;
@@ -22,7 +26,6 @@
   overflow: hidden;
 }
 
-/* Halos lumineux */
 .glow {
   position: absolute;
   border-radius: 50%;
@@ -31,6 +34,7 @@
   transition: transform 0.6s ease-out;
   will-change: transform;
 }
+
 .glow-1 { width: 500px; height: 500px; background: radial-gradient(circle, #00f2fe 0%, transparent 70%); top: -150px; left: -150px; animation: floatA 14s ease-in-out infinite; }
 .glow-2 { width: 600px; height: 600px; background: radial-gradient(circle, #ff007f 0%, transparent 70%); bottom: -200px; right: -200px; animation: floatB 18s ease-in-out infinite; }
 .glow-3 { width: 400px; height: 400px; background: radial-gradient(circle, #7c3aed 0%, transparent 70%); top: 40%; left: 45%; animation: floatC 20s ease-in-out infinite; }
@@ -40,7 +44,6 @@
 @keyframes floatB { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-70px, 50px) scale(1.2); } }
 @keyframes floatC { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-30%,-60%) scale(1.25); } }
 
-/* Grille cyber */
 .cyber-grid {
   position: absolute;
   inset: 0;
@@ -59,7 +62,6 @@
   to { background-position: 0 60px; }
 }
 
-/* Aurora */
 .aurora {
   position: absolute;
   inset: 0;
@@ -74,7 +76,6 @@
   to { opacity: 1; transform: scale(1.1); }
 }
 
-/* Particules */
 .particles { position: absolute; inset: 0; }
 .particle {
   position: absolute;
@@ -91,7 +92,6 @@
   100% { transform: translateY(-110vh) scale(1); opacity: 0; }
 }
 
-/* Rayons */
 .rays {
   position: absolute;
   top: -50%; left: 50%;
@@ -108,7 +108,6 @@
 }
 @keyframes raysRotate { to { transform: translateX(-50%) rotate(360deg); } }
 
-/* Notes de musique flottantes */
 .music-notes { position: absolute; inset: 0; }
 .note {
   position: absolute;
@@ -185,81 +184,6 @@
   50% { transform: translateY(-4px); }
 }
 
-.hero-title {
-  font-size: clamp(2.2rem, 5vw, 4rem);
-  font-weight: 900;
-  line-height: 1.05;
-  margin: 0 0 1.25rem;
-  letter-spacing: -1px;
-}
-.title-line {
-  display: block;
-  color: #fff;
-  opacity: 0.55;
-  font-size: 0.55em;
-  letter-spacing: 6px;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-.title-glow {
-  display: block;
-  background: linear-gradient(135deg, #00f2fe 0%, #7c3aed 50%, #ff007f 100%);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradientShift 5s ease infinite;
-  filter: drop-shadow(0 0 40px rgba(0, 242, 254, 0.5));
-}
-@keyframes gradientShift {
-  0%,100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.hero-subtitle {
-  color: #aaa;
-  font-size: 1.05rem;
-  line-height: 1.7;
-  max-width: 640px;
-  margin: 0 auto 2rem;
-}
-
-/* Stats */
-.hero-stats {
-  display: inline-flex;
-  align-items: center;
-  gap: 2rem;
-  padding: 1rem 2rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 20px;
-  backdrop-filter: blur(15px);
-}
-.hero-stat { text-align: center; }
-.hero-stat-value {
-  display: block;
-  font-size: 1.6rem;
-  font-weight: 900;
-  background: linear-gradient(135deg, #00f2fe, #7c3aed);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  line-height: 1;
-}
-.hero-stat-label {
-  display: block;
-  font-size: 0.7rem;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #777;
-  margin-top: 0.35rem;
-}
-.hero-stat-divider {
-  width: 1px;
-  height: 30px;
-  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.2), transparent);
-}
-
 /* ============================================================
    BARRE DE FILTRES
    ============================================================ */
@@ -286,15 +210,17 @@
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   font-family: inherit;
-}
-.filter-chip .chip-icon { font-size: 1rem; }
-.filter-chip:hover,
-.filter-chip.active {
-  background: linear-gradient(135deg, rgba(0,242,254,0.2), rgba(124,58,237,0.2));
-  border-color: #00f2fe;
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,242,254,0.3), 0 0 15px rgba(0,242,254,0.4);
+
+  .chip-icon { font-size: 1rem; }
+
+  &:hover,
+  &.active {
+    background: linear-gradient(135deg, rgba(0,242,254,0.2), rgba(124,58,237,0.2));
+    border-color: #00f2fe;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,242,254,0.3), 0 0 15px rgba(0,242,254,0.4);
+  }
 }
 
 /* ============================================================
@@ -336,6 +262,24 @@
   will-change: transform;
   font-family: inherit;
   text-align: left;
+
+  &:hover {
+    border-color: var(--btn-color, #00f2fe);
+    box-shadow:
+      0 20px 40px rgba(0,0,0,0.5),
+      0 0 30px var(--btn-color, #00f2fe),
+      inset 0 0 30px rgba(255,255,255,0.05);
+
+    .btn-glow { opacity: 0.25; }
+    .btn-border-anim { opacity: 1; }
+    .btn-icon {
+      transform: rotate(-8deg) scale(1.15);
+      box-shadow: 0 0 25px var(--btn-color, #00f2fe);
+    }
+    .btn-text { text-shadow: 0 0 12px var(--btn-color, #00f2fe); }
+    .btn-arrow { transform: translateX(8px); opacity: 1; }
+    .corner { opacity: 1; width: 20px; height: 20px; }
+  }
 }
 
 .btn-glow {
@@ -348,11 +292,8 @@
   pointer-events: none;
   mix-blend-mode: screen;
 }
-.btn-game:hover .btn-glow { opacity: 0.25; }
 
-/* ============================================================
-   BORDURE ANIMÉE — CONIC GRADIENT MASQUÉ
-   ============================================================ */
+/* Bordure animée conic gradient masquée */
 .btn-border-anim {
   position: absolute;
   inset: -1px;
@@ -362,7 +303,6 @@
     transparent 0deg,
     var(--btn-color, #00f2fe) 40deg,
     transparent 90deg);
-  /* Masque pour ne garder QUE la bordure (1px) */
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -376,8 +316,6 @@
   animation: borderSpin 3s linear infinite;
   pointer-events: none;
 }
-
-.btn-game:hover .btn-border-anim { opacity: 1; }
 
 @keyframes borderSpin {
   to {
@@ -400,7 +338,6 @@
 .corner-tr { top: 8px; right: 8px; border-top: 2px solid; border-right: 2px solid; border-top-right-radius: 6px; }
 .corner-bl { bottom: 8px; left: 8px; border-bottom: 2px solid; border-left: 2px solid; border-bottom-left-radius: 6px; }
 .corner-br { bottom: 8px; right: 8px; border-bottom: 2px solid; border-right: 2px solid; border-bottom-right-radius: 6px; }
-.btn-game:hover .corner { opacity: 1; width: 20px; height: 20px; }
 
 /* Icône */
 .btn-icon {
@@ -415,10 +352,6 @@
   border: 1px solid rgba(255,255,255,0.1);
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   box-shadow: 0 0 20px rgba(0,0,0,0.4);
-}
-.btn-game:hover .btn-icon {
-  transform: rotate(-8deg) scale(1.15);
-  box-shadow: 0 0 25px var(--btn-color, #00f2fe);
 }
 
 /* Contenu */
@@ -435,7 +368,6 @@
   text-transform: uppercase;
 }
 .tag-new   { background: linear-gradient(135deg, #00ff88, #00b894); color: #000; }
-.tag-ia    { background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; }
 .tag-quiz  { background: linear-gradient(135deg, #00f2fe, #0284c7); color: #000; }
 .tag-speed { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
 .tag-tool  { background: linear-gradient(135deg, #22d3ee, #0891b2); color: #000; }
@@ -453,9 +385,7 @@
   margin-bottom: 3px;
   transition: text-shadow 0.3s ease;
 }
-.btn-game:hover .btn-text {
-  text-shadow: 0 0 12px var(--btn-color, #00f2fe);
-}
+
 .btn-sub {
   display: block;
   font-size: 0.78rem;
@@ -470,27 +400,19 @@
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   opacity: 0.6;
 }
-.btn-game:hover .btn-arrow { transform: translateX(8px); opacity: 1; }
-
-.btn-game:hover {
-  border-color: var(--btn-color, #00f2fe);
-  box-shadow:
-    0 20px 40px rgba(0,0,0,0.5),
-    0 0 30px var(--btn-color, #00f2fe),
-    inset 0 0 30px rgba(255,255,255,0.05);
-}
 
 /* Couleurs par jeu */
-.btn-lyko      { --btn-color: #a855f7; }
-.btn-duo       { --btn-color: #f472b6; }
-.btn-fretboard { --btn-color: #00f2fe; }
-.btn-molkky    { --btn-color: #ffb800; }
-.btn-quiz      { --btn-color: #00ff88; }
-.btn-simulator { --btn-color: #7c3aed; }
-.btn-metronome { --btn-color: #fbbf24; }
-.btn-boubouni  { --btn-color: #ef4444; }
-.btn-kronos    { --btn-color: #06b6d4; }
-.btn-piano     { --btn-color: #22d3ee; }
+.btn-lyko         { --btn-color: #a855f7; }
+.btn-duo          { --btn-color: #f472b6; }
+.btn-fretboard    { --btn-color: #00f2fe; }
+.btn-molkky       { --btn-color: #ffb800; }
+.btn-quiz         { --btn-color: #00ff88; }
+.btn-simulator    { --btn-color: #7c3aed; }
+.btn-metronome    { --btn-color: #fbbf24; }
+.btn-boubouni     { --btn-color: #ef4444; }
+.btn-kronos       { --btn-color: #06b6d4; }
+.btn-piano        { --btn-color: #22d3ee; }
+.btn-pianovirtuel { --btn-color: #14b8a6; }
 
 /* Shimmer sur Lyko Duo */
 .btn-duo::before {
@@ -560,9 +482,6 @@
    ============================================================ */
 @media (max-width: 768px) {
   .main-game-area { padding: 2rem 1rem 3rem; }
-  .hero-title { font-size: 2rem; }
-  .hero-stats { flex-direction: column; gap: 1rem; padding: 1rem; }
-  .hero-stat-divider { width: 40px; height: 1px; }
   .game-buttons-grid { grid-template-columns: 1fr; gap: 1rem; }
   .btn-icon { width: 50px; height: 50px; font-size: 1.5rem; }
   .btn-text { font-size: 0.9rem; }

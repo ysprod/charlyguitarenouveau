@@ -3,7 +3,6 @@ import { Routes } from '@angular/router';
 import { AbonnementComponent } from './abonnement/abonnement.component';
 import { AcademieComponent } from './academie/academie.component';
 import { DocumentsComponent } from './academie/documents/documents.component';
-import { BcoComponent } from './bco/bco.component';
 import { AcousticComponent } from './game/acoustic/acoustic.component';
 import { CardgameComponent } from './game/cardgame/cardgame.component';
 import { ChordComponent } from './game/chord/chord.component';
@@ -29,8 +28,8 @@ import { LiveComponent } from './live/live.component';
 import { LoginComponent } from './login/login.component';
 import { FinanceComponent } from './offoland/finance/finance.component';
 import { OffolandComponent } from './offoland/offoland.component';
-import { OffresComponent } from './offres/offres.component';
-import { PianoComponent } from './piano/piano.component';
+import { OffresComponent } from './abonnement/offres/offres.component';
+import { PianoComponent } from './game/piano/piano.component';
 import { RegisterComponent } from './register/register.component';
 import { BlancComponent } from './univers/blanc/blanc.component';
 import { BleuComponent } from './univers/bleu/bleu.component';
@@ -38,9 +37,8 @@ import { CharlyguitaregameComponent } from './univers/charlyguitaregame/charlygu
 import { NoirComponent } from './univers/noir/noir.component';
 import { RougeComponent } from './univers/rouge/rouge.component';
 import { VertComponent } from './univers/vert/vert.component';
-import { PianovirtuelComponent } from './pianovirtuel/pianovirtuel.component';
-
-
+import { BcoComponent } from './offoland/bco/bco.component';
+import { PianovirtuelComponent } from './game/pianovirtuel/pianovirtuel.component';
 
 export const routes: Routes = [
   {
@@ -172,7 +170,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
 
-   {
+  {
     path: 'pianovirtuel',
     component: PianovirtuelComponent,
     canActivate: [AuthGuard]

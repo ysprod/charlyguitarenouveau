@@ -1,6 +1,13 @@
-// src/app/features/play/play.component.ts
-
-import { Component, NgZone, OnDestroy, OnInit, ElementRef, inject } from '@angular/core';
+import {
+  Component,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  ElementRef,
+  inject,
+  ChangeDetectionStrategy,
+  signal,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 interface Particle {
@@ -28,12 +35,13 @@ interface Filter {
   standalone: true,
   imports: [RouterLink],
   templateUrl: './play.component.html',
-  styleUrls: ['./play.component.scss']
+  styleUrls: ['./play.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
-private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
+  private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
 
   /* ═══════════════════════════════════════════════════════
      DONNÉES DÉCORATIVES
@@ -42,18 +50,18 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
   musicNotes: MusicNote[] = [];
 
   readonly filters: Filter[] = [
-    { id: 'all',      label: 'Tous',       icon: '🎮' },
-    { id: 'multi',    label: 'Multi',      icon: '👥' },
-    { id: 'music',    label: 'Musique',    icon: '🎵' },
-    { id: 'quiz',     label: 'Quiz',       icon: '🧠' },
-    { id: 'learning', label: 'Apprendre',  icon: '📚' },
-    { id: 'tools',    label: 'Outils',     icon: '🛠️' }
+    { id: 'all',      label: 'Tous',      icon: '🎮' },
+    { id: 'multi',    label: 'Multi',     icon: '👥' },
+    { id: 'music',    label: 'Musique',   icon: '🎵' },
+    { id: 'quiz',     label: 'Quiz',      icon: '🧠' },
+    { id: 'learning', label: 'Apprendre', icon: '📚' },
+    { id: 'tools',    label: 'Outils',    icon: '🛠️' },
   ];
 
-  selectedFilter = 'all';
-  visibleGameCount = 0;
+  readonly selectedFilter = signal<string>('all');
+  readonly visibleGameCount = signal<number>(0);
 
-  private readonly MUSIC_SYMBOLS = ['♪', '♫', '♬', '♩', '🎵', '🎶', '🎸'] as const;
+  private readonly MUSIC_SYMBOLS = ['♪', '♫', '♬', '♩', '🎵', '🎶', '🎸'];
 
   /* ═══════════════════════════════════════════════════════
      RÉFÉRENCES DOM ET LISTENERS
@@ -71,16 +79,13 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
      LIFECYCLE
      ═══════════════════════════════════════════════════════ */
   ngOnInit(): void {
-    // Décor généré une seule fois
     this.particles = this.generateParticles(45);
     this.musicNotes = this.generateMusicNotes(12);
 
-    // On sort de la zone Angular pour tous les listeners "haut débit"
     this.ngZone.runOutsideAngular(() => {
-      // Attendre le rendu DOM
       setTimeout(() => {
         this.cacheDomElements();
-        this.visibleGameCount = this.gameCards.length;
+        this.visibleGameCount.set(this.gameCards.length);
         this.initTiltEffect();
         this.initParallax();
       }, 0);
@@ -88,20 +93,17 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
   }
 
   ngOnDestroy(): void {
-    // Cleanup tilt
     this.tiltHandlers.forEach((handlers, card) => {
       card.removeEventListener('mousemove', handlers.move);
       card.removeEventListener('mouseleave', handlers.leave);
     });
     this.tiltHandlers.clear();
 
-    // Cleanup parallax
     if (this.mouseMoveHandler) {
       document.removeEventListener('mousemove', this.mouseMoveHandler);
       this.mouseMoveHandler = undefined;
     }
 
-    // Cleanup RAF
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
@@ -119,7 +121,7 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
       left: Math.random() * 100,
       delay: Math.random() * 8,
       duration: 6 + Math.random() * 8,
-      size: 2 + Math.random() * 4
+      size: 2 + Math.random() * 4,
     }));
   }
 
@@ -130,7 +132,7 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
       duration: 10 + Math.random() * 10,
       symbol: this.MUSIC_SYMBOLS[
         Math.floor(Math.random() * this.MUSIC_SYMBOLS.length)
-      ]
+      ],
     }));
   }
 
@@ -171,11 +173,11 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
   }
 
   /* ═══════════════════════════════════════════════════════
-     PARALLAX HALOS (listener manuel hors zone Angular)
+     PARALLAX HALOS
      ═══════════════════════════════════════════════════════ */
   private initParallax(): void {
     this.mouseMoveHandler = (e: MouseEvent) => {
-      if (this.rafId !== null) return; // throttle RAF
+      if (this.rafId !== null) return;
 
       this.rafId = requestAnimationFrame(() => {
         const x = (e.clientX / window.innerWidth - 0.5) * 20;
@@ -197,9 +199,18 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
      FILTRAGE
      ═══════════════════════════════════════════════════════ */
   selectFilter(id: string): void {
-    if (this.selectedFilter === id) return;
-    this.selectedFilter = id;
+    if (this.selectedFilter() === id) return;
+    this.selectedFilter.set(id);
 
+    // Si le DOM n'est pas encore caché, on le fait au prochain tick
+    if (this.gameCards.length === 0) {
+      setTimeout(() => this.applyFilter(id), 0);
+      return;
+    }
+    this.applyFilter(id);
+  }
+
+  private applyFilter(id: string): void {
     let visible = 0;
     const filter = id === 'all' ? null : id;
 
@@ -212,21 +223,17 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
       if (show) {
         visible++;
         card.style.animation = 'none';
-        void card.offsetWidth; // reflow pour relancer l'anim
+        void card.offsetWidth;
         card.style.animation = 'cardPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both';
       }
     });
 
-    this.visibleGameCount = visible;
+    this.visibleGameCount.set(visible);
   }
 
   /* ═══════════════════════════════════════════════════════
      NAVIGATION
      ═══════════════════════════════════════════════════════ */
-  onSelectLyko(): void {
-    this.navigateToGame('/tictac', '1');
-  }
-
   onSelectLykoduo(): void {
     this.navigateToGame('/lykomode', '1');
   }
@@ -239,11 +246,12 @@ private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
     this.navigateToGame('/kronos', '3');
   }
 
-  /**
-   * Navigation vers le Piano (composant standalone).
-   */
   onSelectPiano(): void {
     this.router.navigate(['/piano']);
+  }
+
+  onSelectPianovirtuel(): void {
+    this.router.navigate(['/pianovirtuel']);
   }
 
   private navigateToGame(route: string, etape: string): void {

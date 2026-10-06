@@ -22,9 +22,8 @@ import {
   Particle,
   HitEffect,
   GameDifficulty,
-  FeedbackType,
-  GameMode
-} from '../models/piano.model';
+  FeedbackType
+} from '../../models/piano.model';
 
 @Component({
   selector: 'app-piano',
@@ -87,12 +86,6 @@ export class PianoComponent implements OnInit, OnDestroy {
 
   private readonly keyboardScrollRef =
     viewChild<ElementRef<HTMLDivElement>>('keyboardScroll');
-
-  // ═══════════════════════════════════════════════════════
-  // MODE DE JEU
-  // ═══════════════════════════════════════════════════════
-  readonly gameMode = signal<GameMode>('challenge');
-  readonly isFreeMode = computed(() => this.gameMode() === 'free');
 
   // ═══════════════════════════════════════════════════════
   // CLAVIER (C3 → C5)
@@ -303,9 +296,8 @@ export class PianoComponent implements OnInit, OnDestroy {
     return `${note}${octStr}`;
   });
 
-  /** Highlight uniquement en mode défi, jamais en mode libre. */
   readonly shouldHighlightTarget = computed(() =>
-    !this.isFreeMode() && this.isPlaying() && !this.melodyPlaying()
+    this.isPlaying() && !this.melodyPlaying()
   );
 
   constructor() {
@@ -490,14 +482,6 @@ export class PianoComponent implements OnInit, OnDestroy {
     void this.ensureAudioContextRunning();
     this.playNoteWithTransposition(key.note, 1.2, 0.9);
 
-    // ═══ MODE LIBRE : on joue, point final. Aucune validation. ═══
-    if (this.isFreeMode()) {
-      this.triggerParticles(key.index);
-      this.triggerHitEffect(key.index);
-      return;
-    }
-
-    // ═══ MODE DÉFI : validation classique ═══
     if (this.isPlaying()) {
       const sameNote = key.frenchNote === this.targetNote();
       const sameOctave = key.octave === this.targetOctave();
@@ -529,7 +513,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   // ═══════════════════════════════════════════════════════
-  // COMBO VERROUILLÉ
+  // COMBO
   // ═══════════════════════════════════════════════════════
   private incrementCombo(): void {
     this._combo.update(c => c + 1);
@@ -584,14 +568,9 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   // ═══════════════════════════════════════════════════════
-  // DÉMARRAGE / MODES
+  // DÉMARRAGE
   // ═══════════════════════════════════════════════════════
-  /**
-   * Lance une partie en MODE DÉFI (facile/normal/hardcore).
-   * Reset complet + timer + vies + note cible.
-   */
   async startChallenge(): Promise<void> {
-    this.gameMode.set('challenge');
     await this.ensureAudioContextRunning();
     this.stopMelody();
     this.playUiSound('start');
@@ -612,69 +591,30 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.nextRound();
   }
 
-  /**
-   * Lance le MODE LIBRE : piano autonome, sans enjeu.
-   * Pas de timer, pas de vies, pas de cible, pas de combo.
-   */
-  async startFreeMode(): Promise<void> {
-    this.gameMode.set('free');
-    await this.ensureAudioContextRunning();
-    this.stopMelody();
-    this.playUiSound('start');
-
-    // Reset minimal : on n'active aucun système de jeu.
-    this.score.set(0);
-    this.resetComboForNewGame();
-    this.maxCombo.set(0);
-    this.lives.set(999);
-    this.starPowerGauge.set(0);
-    this.isStarPowerActive.set(false);
-    this.isPlaying.set(true);
-    this.isGameOver.set(false);
-    this.notesHit.set(0);
-    this.notesMissed.set(0);
-    this.streak.set(0);
-    this.lastTargetKey = '';
-    this.targetNote.set('');
-
-    // Arrêt du timer éventuellement en cours
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.timerInterval = undefined;
-    }
-  }
-
-  /**
-   * Retour au menu principal (depuis n'importe quel mode).
-   */
   quitToMenu(): void {
     if (this.timerInterval) clearInterval(this.timerInterval);
     if (this.starPowerInterval) clearInterval(this.starPowerInterval);
     this.stopMelody();
     this.isPlaying.set(false);
     this.isGameOver.set(false);
-    this.gameMode.set('challenge');
     this.targetNote.set('');
   }
 
   // ═══════════════════════════════════════════════════════
-  // TIMER & ROUNDS (uniquement en mode défi)
+  // TIMER & ROUNDS
   // ═══════════════════════════════════════════════════════
   private startTimer(): void {
-    if (this.isFreeMode()) return;
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timeLeft.set(this.maxTime);
 
     this.timerInterval = setInterval(() => {
-      if (!this.isPlaying() || this.isFreeMode()) return;
+      if (!this.isPlaying()) return;
       this.timeLeft.update(t => t - this.getTimeMultiplier());
       if (this.timeLeft() <= 0) this.handleMiss(true);
     }, 100);
   }
 
   private nextRound(): void {
-    if (this.isFreeMode()) return;
-
     const pool = this.getNotePool();
 
     const filtered = pool.filter(p =>
@@ -694,8 +634,6 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   private handleSuccess(keyIndex: number): void {
-    if (this.isFreeMode()) return;
-
     this.incrementCombo();
     this.streak.update(s => s + 1);
     this.notesHit.update(n => n + 1);
@@ -730,8 +668,6 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   private handleMiss(isTimeout: boolean): void {
-    if (this.isFreeMode()) return;
-
     this.streak.set(0);
     this.notesMissed.update(n => n + 1);
     this.lives.update(l => l - 1);
@@ -748,7 +684,6 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   activateStarPower(): void {
-    if (this.isFreeMode()) return;
     if (this.starPowerGauge() < 100 || this.isStarPowerActive()) return;
 
     this.isStarPowerActive.set(true);
@@ -777,7 +712,6 @@ export class PianoComponent implements OnInit, OnDestroy {
   private melodyTimeoutIds: ReturnType<typeof setTimeout>[] = [];
 
   private async playMelodieDesOrigines(): Promise<void> {
-    if (this.isFreeMode()) return;
     if (this.isMelodyPlaying || !this.isAudioReady) return;
     await this.ensureAudioContextRunning();
 

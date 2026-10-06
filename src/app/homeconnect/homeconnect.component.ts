@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { RevealDirective } from '../shared/reveal.directive';
 import { map } from 'rxjs';
 import { DocumentsComponent } from '../academie/documents/documents.component';
-import { OffresComponent } from '../offres/offres.component';
+import { OffresComponent } from '../abonnement/offres/offres.component';
 
 @Component({
   selector: 'app-homeconnect',
