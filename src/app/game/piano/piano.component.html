@@ -178,9 +178,11 @@
                    [class.star-power-key]="isStarPowerActive()"
                    [style.--key-color]="keyColorsByIndex()[key.index]"
                    (pointerdown)="onPointerDown(key, $event)"
+                   (pointerenter)="onPointerEnter(key, $event)"
                    (pointermove)="onPointerMove($event)"
                    (pointerup)="onPointerUp(key, $event)"
-                   (pointercancel)="onPointerCancel(key, $event)">
+                   (pointercancel)="onPointerCancel(key, $event)"
+                   (contextmenu)="$event.preventDefault()">
                 <div class="key-top"></div>
                 @if (shouldShowNoteLabel()) {
                   <span class="note-label">{{ key.frenchNote }}</span>
@@ -203,9 +205,11 @@
                    [style.--white-index]="key.whiteIndex"
                    [style.--key-color]="keyColorsByIndex()[key.index]"
                    (pointerdown)="onPointerDown(key, $event)"
+                   (pointerenter)="onPointerEnter(key, $event)"
                    (pointermove)="onPointerMove($event)"
                    (pointerup)="onPointerUp(key, $event)"
-                   (pointercancel)="onPointerCancel(key, $event)">
+                   (pointercancel)="onPointerCancel(key, $event)"
+                   (contextmenu)="$event.preventDefault()">
                 <div class="key-top"></div>
                 @if (shouldShowNoteLabel()) {
                   <span class="note-label">{{ key.frenchNote }}</span>
@@ -256,7 +260,6 @@
             Choisis ta <strong>difficulté</strong> et lance le défi !
           </p>
 
-          <!-- ═══════ DIFFICULTÉS ═══════ -->
           <div class="difficulty-selector">
             <span class="selector-label">DIFFICULTÉ :</span>
             <div class="difficulty-buttons">

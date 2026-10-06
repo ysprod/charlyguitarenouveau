@@ -580,8 +580,8 @@
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: transform 60ms ease, box-shadow 60ms ease, background 60ms ease;
+  touch-action: none;
+  transition: transform 40ms ease, box-shadow 40ms ease, background 40ms ease;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -614,7 +614,7 @@
     background: radial-gradient(ellipse at center bottom, var(--key-color, #fff) 0%, transparent 70%);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 120ms ease;
+    transition: opacity 80ms ease;
   }
 
   &:hover {
@@ -690,12 +690,12 @@
   pointer-events: auto;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  touch-action: none;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   padding-bottom: 10px;
-  transition: transform 60ms ease, box-shadow 60ms ease;
+  transition: transform 40ms ease, box-shadow 40ms ease;
   overflow: hidden;
 
   .key-top {
@@ -724,7 +724,7 @@
     background: radial-gradient(ellipse at center bottom, var(--key-color, #fff) 0%, transparent 70%);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 120ms ease;
+    transition: opacity 80ms ease;
   }
 
   &.pressed {

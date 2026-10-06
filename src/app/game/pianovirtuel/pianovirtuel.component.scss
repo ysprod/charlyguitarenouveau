@@ -179,6 +179,49 @@
   }
 }
 
+/* Sélecteur d'instrument */
+.instrument-card {
+  grid-column: 1 / -1;
+
+  .instrument-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .btn-instrument {
+    padding: 0.65rem 0.9rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-soft);
+    color: #fff;
+    border-radius: 10px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+      background: rgba(0,242,254,0.12);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    &.active {
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      border-color: var(--cyan);
+      color: #000;
+      box-shadow: 0 0 18px rgba(0,242,254,0.4);
+    }
+  }
+}
+
 /* Métronome */
 .metronome-card {
   .metronome-body {
@@ -388,26 +431,95 @@
 
   &.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(0.6); }
 
-  /* Sur grands écrans uniquement : on pousse le piano en bas */
   @media (min-width: 1024px) and (min-height: 800px) {
     margin-top: auto;
   }
+
+  /* Flèches de scroll cliquables */
+  .scroll-hint {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--cyan);
+    background: rgba(5, 4, 10, 0.75);
+    border: 1px solid var(--cyan);
+    border-radius: 50%;
+    text-shadow: 0 0 12px var(--cyan);
+    box-shadow: 0 0 18px rgba(0, 242, 254, 0.4);
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover {
+      background: var(--cyan);
+      color: #000;
+      transform: translateY(-50%) scale(1.12);
+      box-shadow: 0 0 25px var(--cyan);
+    }
+
+    &:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    &.scroll-hint-left  { left: 12px; }
+    &.scroll-hint-right { right: 12px; }
+
+    /* Cache la flèche gauche en début, droite en fin */
+    &.hidden { opacity: 0; pointer-events: none; }
+  }
 }
 
+/* Zone de scroll horizontale avec drag manuel */
 .piano-scroll {
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0,242,254,0.4) transparent;
+  scrollbar-color: rgba(0, 242, 254, 0.5) transparent;
   overscroll-behavior-x: contain;
   touch-action: pan-x;
+  padding: 0 1rem;
+  cursor: grab;
+  user-select: none;
 
-  &::-webkit-scrollbar { height: 8px; }
+  &.dragging {
+    cursor: grabbing;
+    scroll-behavior: auto; /* pas de smooth pendant le drag */
+  }
+
+  &::-webkit-scrollbar { height: 10px; }
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+  }
   &::-webkit-scrollbar-thumb {
-    background: rgba(0,242,254,0.4);
-    border-radius: 4px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet));
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, var(--cyan), var(--pink));
+  }
+
+  > .piano {
+    margin: 0 auto 0.5rem;
+    width: max-content;
+  }
+
+  @media (max-width: 1400px) {
+    > .piano {
+      margin-left: 0;
+      margin-right: 0;
+    }
   }
 }
 
@@ -420,7 +532,6 @@
   box-shadow:
     0 25px 60px rgba(0,0,0,0.85),
     inset 0 -3px 0 rgba(0, 242, 254, 0.15);
-  margin: 0 auto 0.5rem;
 }
 
 /* Touches blanches */
@@ -443,8 +554,8 @@
     inset 0 2px 2px rgba(255,255,255,0.9),
     0 4px 6px rgba(0,0,0,0.4);
   cursor: pointer;
-  touch-action: manipulation;
-  transition: transform 60ms ease, box-shadow 60ms ease, background 60ms ease;
+  touch-action: none;
+  transition: transform 40ms ease, box-shadow 40ms ease, background 40ms ease;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -452,6 +563,7 @@
   padding-bottom: 14px;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 
   .key-top {
     position: absolute;
@@ -478,7 +590,7 @@
     background: radial-gradient(ellipse at center bottom, var(--cyan) 0%, transparent 70%);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 120ms ease;
+    transition: opacity 80ms ease;
   }
 
   &:hover {
@@ -524,14 +636,15 @@
     inset 0 2px 1px rgba(255,255,255,0.08);
   cursor: pointer;
   pointer-events: auto;
-  touch-action: manipulation;
+  touch-action: none;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   padding-bottom: 10px;
-  transition: transform 60ms ease, box-shadow 60ms ease;
+  transition: transform 40ms ease, box-shadow 40ms ease;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 
   .key-top {
     position: absolute;
@@ -559,7 +672,7 @@
     background: radial-gradient(ellipse at center bottom, var(--pink) 0%, transparent 70%);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 120ms ease;
+    transition: opacity 80ms ease;
   }
 
   &.pressed {
@@ -578,13 +691,20 @@
 }
 @media (min-width: 1200px) {
   .piano-wrapper { --key-width: 76px; --key-height: 240px; }
-  .piano-scroll { display: flex; justify-content: center; }
 }
 @media (max-width: 480px) {
   .piano-wrapper { --key-width: 54px; --key-height: 180px; }
   .game-top-bar { padding: 0.7rem 1rem; }
   .game-top-bar .logo-zone h1 { font-size: 1.15rem; letter-spacing: 2px; }
   .workstation-panel { padding-left: 1rem; padding-right: 1rem; }
+  .instrument-card .instrument-body {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+  .piano-wrapper .scroll-hint {
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
+  }
 }
 
 /* ─── Keyframes ─────────────────────────────────────────── */

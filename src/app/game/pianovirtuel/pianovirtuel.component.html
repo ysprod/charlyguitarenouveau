@@ -31,6 +31,23 @@
 
   <!-- Workstation -->
   <section class="workstation-panel">
+    <!-- Sélecteur d'instrument -->
+    <div class="widget-card instrument-card">
+      <div class="widget-header">
+        <span class="widget-title">INSTRUMENT</span>
+      </div>
+      <div class="instrument-body">
+        @for (inst of instruments; track inst.type) {
+          <button type="button"
+            class="btn-instrument"
+            [class.active]="audio.instrument() === inst.type"
+            (click)="selectInstrument(inst.type)">
+            {{ inst.label }}
+          </button>
+        }
+      </div>
+    </div>
+
     <!-- Métronome -->
     <div class="widget-card metronome-card">
       <div class="widget-header">
@@ -93,12 +110,25 @@
 
   <!-- Clavier -->
   <div class="piano-wrapper" [class.disabled]="!audio.isReady()">
-    <div class="piano-scroll">
+    <div class="piano-scroll"
+         #pianoScroll
+         [class.dragging]="isDragging()"
+         (wheel)="onWheel($event)"
+         (pointerdown)="onScrollPointerDown($event)"
+         (pointermove)="onScrollPointerMove($event)"
+         (pointerup)="onScrollPointerUp($event)"
+         (pointercancel)="onScrollPointerUp($event)"
+         (pointerleave)="onScrollPointerUp($event)">
+
       <div class="piano">
         <div class="white-keys">
           @for (key of whiteKeys(); track key.index) {
-            <div class="white-key" [class.pressed]="isPressed(key.note)" (pointerdown)="onPointerDown(key, $event)"
-              (pointerup)="onPointerUp($event)" (pointercancel)="onPointerCancel($event)">
+            <div class="white-key" [class.pressed]="isPressed(key.note)"
+              (pointerdown)="onPointerDown(key, $event)"
+              (pointerenter)="onPointerEnter(key, $event)"
+              (pointerup)="onPointerUp($event)"
+              (pointercancel)="onPointerCancel($event)"
+              (contextmenu)="$event.preventDefault()">
               <div class="key-top"></div>
               <span class="note-label">{{ key.frenchNote }}</span>
               <div class="key-glow"></div>
@@ -107,9 +137,13 @@
         </div>
         <div class="black-keys">
           @for (key of blackKeys(); track key.index) {
-            <div class="black-key" [style.--white-index]="key.whiteIndex" [class.pressed]="isPressed(key.note)"
-              (pointerdown)="onPointerDown(key, $event)" (pointerup)="onPointerUp($event)"
-              (pointercancel)="onPointerCancel($event)">
+            <div class="black-key" [style.--white-index]="key.whiteIndex"
+              [class.pressed]="isPressed(key.note)"
+              (pointerdown)="onPointerDown(key, $event)"
+              (pointerenter)="onPointerEnter(key, $event)"
+              (pointerup)="onPointerUp($event)"
+              (pointercancel)="onPointerCancel($event)"
+              (contextmenu)="$event.preventDefault()">
               <div class="key-top"></div>
               <span class="note-label">{{ key.frenchNote }}</span>
               <div class="key-glow"></div>
@@ -118,5 +152,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Flèches de scroll cliquables -->
+    <button type="button"
+            class="scroll-hint scroll-hint-left"
+            (click)="scrollByAmount(-1)"
+            aria-label="Défiler vers la gauche">‹</button>
+    <button type="button"
+            class="scroll-hint scroll-hint-right"
+            (click)="scrollByAmount(1)"
+            aria-label="Défiler vers la droite">›</button>
   </div>
 </div>

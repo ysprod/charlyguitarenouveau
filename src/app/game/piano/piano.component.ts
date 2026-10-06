@@ -1,29 +1,17 @@
 // src/app/features/piano/piano.component.ts
 
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  signal,
-  computed,
-  inject,
-  effect,
-  ChangeDetectionStrategy,
-  ElementRef,
-  viewChild
+  Component, OnInit, OnDestroy, signal, computed, inject, effect,
+  ChangeDetectionStrategy, ElementRef, viewChild
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   trigger, transition, style, animate, keyframes, state
 } from '@angular/animations';
 import {
-  PianoKey,
-  MelodyChord,
-  Particle,
-  HitEffect,
-  GameDifficulty,
-  FeedbackType
+  PianoKey, MelodyChord, Particle, HitEffect, GameDifficulty, FeedbackType
 } from '../../models/piano.model';
+import { PianoAudioService, InstrumentType } from '../../services/piano-audio.service';
 
 @Component({
   selector: 'app-piano',
@@ -83,6 +71,8 @@ import {
 })
 export class PianoComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
+  /** ✅ Service de synthèse audio — aucun fichier sample */
+  private readonly audio = inject(PianoAudioService);
 
   private readonly keyboardScrollRef =
     viewChild<ElementRef<HTMLDivElement>>('keyboardScroll');
@@ -227,6 +217,14 @@ export class PianoComponent implements OnInit, OnDestroy {
     '🌙 RÊVE 🌙'
   ];
 
+  /** Instrument utilisé pour chaque mélodie */
+  readonly melodyInstruments: InstrumentType[] = [
+    'strings',
+    'bells',
+    'trumpet',
+    'flute',
+  ];
+
   private melodyProgressionIndex = 0;
 
   readonly currentMelodyProgression = computed<MelodyChord[]>(() => {
@@ -247,21 +245,6 @@ export class PianoComponent implements OnInit, OnDestroy {
   private particleId = 0;
   private effectId = 0;
   private lastTargetKey = '';
-
-  private audioCtx?: AudioContext;
-  private readonly audioBuffers = new Map<string, AudioBuffer>();
-  private isAudioReady = false;
-  private readonly pianoBasePath = 'assets/audio/piano/';
-  private readonly pianoSamples: Record<string, string> = {
-    'C3': 'C3.ogg', 'D#3': 'Ds3.ogg', 'F#3': 'Fs3.ogg', 'A3': 'A3.ogg',
-    'C4': 'C4.ogg', 'D#4': 'Ds4.ogg', 'F#4': 'Fs4.ogg', 'A4': 'A4.ogg',
-    'C5': 'C5.ogg'
-  };
-
-  private readonly noteToMidiOffset: Record<string, number> = {
-    'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5,
-    'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
-  };
 
   readonly keyColorsByIndex = computed<Record<number, string>>(() => {
     const map: Record<number, string> = {};
@@ -310,8 +293,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.initAudioContext();
-    void this.preloadSamples();
+    void this.audio.init();
     this.loadHighScore();
   }
 
@@ -321,10 +303,7 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.timeouts.forEach(id => clearTimeout(id));
     this.timeouts.clear();
     this.stopMelody();
-    this.audioBuffers.clear();
-    if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      void this.audioCtx.close();
-    }
+    this.audio.allNotesOff();
   }
 
   private schedule(fn: () => void, delayMs: number): void {
@@ -336,92 +315,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   // ═══════════════════════════════════════════════════════
-  // AUDIO
-  // ═══════════════════════════════════════════════════════
-  private initAudioContext(): void {
-    const Ctor = window.AudioContext
-      ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (Ctor) this.audioCtx = new Ctor();
-  }
-
-  private async preloadSamples(): Promise<void> {
-    if (!this.audioCtx) return;
-    const entries = Object.entries(this.pianoSamples);
-    await Promise.all(entries.map(async ([note, file]) => {
-      try {
-        const res = await fetch(this.pianoBasePath + file);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const buf = await res.arrayBuffer();
-        const decoded = await this.audioCtx!.decodeAudioData(buf);
-        this.audioBuffers.set(note, decoded);
-      } catch (err) {
-        console.warn(`[Audio] Impossible de charger ${file}:`, err);
-      }
-    }));
-    this.isAudioReady = this.audioBuffers.size > 0;
-  }
-
-  private async ensureAudioContextRunning(): Promise<void> {
-    if (this.audioCtx?.state === 'suspended') {
-      await this.audioCtx.resume();
-    }
-  }
-
-  private noteToMidiIndex(note: string): number {
-    const match = note.match(/^([A-G]#?)(\d+)$/);
-    if (!match) return 60;
-    const [, pitch, oct] = match;
-    return (parseInt(oct, 10) + 1) * 12 + (this.noteToMidiOffset[pitch] ?? 0);
-  }
-
-  private playNoteWithTransposition(
-    toneNote: string,
-    duration = 1.0,
-    volume = 0.85,
-    delaySeconds = 0
-  ): void {
-    if (!this.audioCtx || !this.isAudioReady) return;
-
-    const targetMidi = this.noteToMidiIndex(toneNote);
-
-    let closestNote: string | null = null;
-    let closestBuffer: AudioBuffer | null = null;
-    let closestDistance = Infinity;
-
-    for (const [note, buffer] of this.audioBuffers) {
-      const d = Math.abs(this.noteToMidiIndex(note) - targetMidi);
-      if (d < closestDistance) {
-        closestDistance = d;
-        closestNote = note;
-        closestBuffer = buffer;
-      }
-    }
-
-    if (!closestNote || !closestBuffer) return;
-
-    const sampleMidi = this.noteToMidiIndex(closestNote);
-    const playbackRate = Math.pow(2, (targetMidi - sampleMidi) / 12);
-
-    const source = this.audioCtx.createBufferSource();
-    source.buffer = closestBuffer;
-    source.playbackRate.value = playbackRate;
-
-    const gain = this.audioCtx.createGain();
-    const startTime = this.audioCtx.currentTime + delaySeconds;
-
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(volume, startTime + 0.005);
-    gain.gain.setValueAtTime(volume, startTime + Math.max(0.05, duration - 0.15));
-    gain.gain.linearRampToValueAtTime(0, startTime + duration);
-
-    source.connect(gain);
-    gain.connect(this.audioCtx.destination);
-    source.start(startTime);
-    source.stop(startTime + duration + 0.05);
-  }
-
-  // ═══════════════════════════════════════════════════════
-  // POINTER / TACTILE
+  // POINTER / TACTILE (avec glissando tactile)
   // ═══════════════════════════════════════════════════════
   private readonly activePointer = new Map<number, {
     keyIndex: number;
@@ -433,8 +327,8 @@ export class PianoComponent implements OnInit, OnDestroy {
   private readonly TAP_THRESHOLD_PX = 8;
 
   onPointerDown(key: PianoKey, event: PointerEvent): void {
-    const target = event.currentTarget as HTMLElement;
-    target.setPointerCapture(event.pointerId);
+    event.preventDefault();
+    void this.audio.unlock();
 
     this.activePointer.set(event.pointerId, {
       keyIndex: key.index,
@@ -448,6 +342,28 @@ export class PianoComponent implements OnInit, OnDestroy {
       next.add(key.index);
       return next;
     });
+
+    this.audio.noteOn(key.note, 0.9);
+  }
+
+  /** Glissando : le doigt passe d'une touche à l'autre. */
+  onPointerEnter(key: PianoKey, event: PointerEvent): void {
+    if (!this.activePointer.has(event.pointerId)) return;
+    const info = this.activePointer.get(event.pointerId)!;
+    if (info.keyIndex === key.index) return;
+
+    const prevKey = this.pianoKeys.find(k => k.index === info.keyIndex);
+    if (prevKey) this.audio.noteOff(prevKey.note);
+
+    this.activeKeyIndexes.update(set => {
+      const next = new Set(set);
+      next.delete(info.keyIndex);
+      next.add(key.index);
+      return next;
+    });
+
+    info.keyIndex = key.index;
+    this.audio.noteOn(key.note, 0.9);
   }
 
   onPointerMove(event: PointerEvent): void {
@@ -459,11 +375,6 @@ export class PianoComponent implements OnInit, OnDestroy {
 
     if (!info.moved && (dx > this.TAP_THRESHOLD_PX || dy > this.TAP_THRESHOLD_PX)) {
       info.moved = true;
-      this.activeKeyIndexes.update(set => {
-        const next = new Set(set);
-        next.delete(info.keyIndex);
-        return next;
-      });
     }
   }
 
@@ -477,10 +388,9 @@ export class PianoComponent implements OnInit, OnDestroy {
       return next;
     });
 
-    if (!info || info.moved) return;
+    this.audio.noteOff(key.note);
 
-    void this.ensureAudioContextRunning();
-    this.playNoteWithTransposition(key.note, 1.2, 0.9);
+    if (!info || info.moved) return;
 
     if (this.isPlaying()) {
       const sameNote = key.frenchNote === this.targetNote();
@@ -502,6 +412,7 @@ export class PianoComponent implements OnInit, OnDestroy {
       next.delete(key.index);
       return next;
     });
+    this.audio.noteOff(key.note);
   }
 
   isKeyPressed(keyIndex: number): boolean {
@@ -571,9 +482,9 @@ export class PianoComponent implements OnInit, OnDestroy {
   // DÉMARRAGE
   // ═══════════════════════════════════════════════════════
   async startChallenge(): Promise<void> {
-    await this.ensureAudioContextRunning();
+    await this.audio.unlock();
+    this.audio.setInstrument('piano');
     this.stopMelody();
-    this.playUiSound('start');
 
     this.score.set(0);
     this.resetComboForNewGame();
@@ -661,7 +572,7 @@ export class PianoComponent implements OnInit, OnDestroy {
       this.showFeedback(`BIEN ! +${basePoints}${comboText}`, 'success');
     }
 
-    if (this.combo() > 0 && this.combo() % 12 === 0) this.playMelodieDesOrigines();
+    if (this.combo() > 0 && this.combo() % 12 === 0) void this.playMelodieDesOrigines();
     if (this.combo() > 0 && this.combo() % 10 === 0) this.triggerScreenShake();
 
     this.nextRound();
@@ -692,6 +603,16 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.showFeedback('⚡ STAR POWER ACTIVÉ ! ⚡', 'perfect');
     this.triggerScreenShake();
 
+    // Fanfare de trompette
+    this.audio.setInstrument('trumpet');
+    this.schedule(() => {
+      ['C4', 'E4', 'G4', 'C5'].forEach((n) => {
+        this.audio.playNoteFor(n, 0.8, 0.7);
+      });
+    }, 0);
+
+    this.schedule(() => this.audio.setInstrument('piano'), 1500);
+
     if (this.starPowerInterval) clearInterval(this.starPowerInterval);
 
     this.starPowerInterval = setInterval(() => {
@@ -707,22 +628,26 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   // ═══════════════════════════════════════════════════════
-  // MÉLODIE DES ORIGINES
+  // MÉLODIE DES ORIGINES — instruments tournants
   // ═══════════════════════════════════════════════════════
   private melodyTimeoutIds: ReturnType<typeof setTimeout>[] = [];
 
   private async playMelodieDesOrigines(): Promise<void> {
-    if (this.isMelodyPlaying || !this.isAudioReady) return;
-    await this.ensureAudioContextRunning();
+    if (this.isMelodyPlaying) return;
+    await this.audio.unlock();
 
     const progression = this.melodyProgressions[this.melodyProgressionIndex];
     const title = this.melodyTitles[this.melodyProgressionIndex];
+    const instrument = this.melodyInstruments[this.melodyProgressionIndex];
+
     this.melodyProgressionIndex =
       (this.melodyProgressionIndex + 1) % this.melodyProgressions.length;
 
     this.isMelodyPlaying = true;
     this.melodyPlaying.set(true);
     this.melodyCurrentTitle.set(title);
+
+    this.audio.setInstrument(instrument);
 
     const chordSpacing = 1.2;
     this.showFeedback(title, 'perfect');
@@ -735,18 +660,19 @@ export class PianoComponent implements OnInit, OnDestroy {
         this.melodyChordName.set(chord.name);
         this.melodyChordFrench.set(chord.frenchName);
         this.melodyChordColor.set(chord.color);
+
+        this.audio.playNoteFor(chord.bassNote, 1.4, 0.6);
+        chord.notes.forEach((note, nIdx) => {
+          setTimeout(() => this.audio.playNoteFor(note, 1.1, 0.5), nIdx * 40);
+        });
       }, delay * 1000);
       this.melodyTimeoutIds.push(t);
-
-      this.playNoteWithTransposition(chord.bassNote, 1.4, 0.6, delay);
-      chord.notes.forEach((note, nIdx) => {
-        this.playNoteWithTransposition(note, 1.1, 0.5, delay + nIdx * 0.04);
-      });
     });
 
     const total = progression.length * chordSpacing + 1.2;
     const endT = setTimeout(() => {
       this.stopMelody();
+      this.audio.setInstrument('piano');
       this.showFeedback('🌟 BRAVO ! 🌟', 'perfect');
     }, total * 1000);
     this.melodyTimeoutIds.push(endT);
@@ -822,20 +748,31 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   // ═══════════════════════════════════════════════════════
-  // AUDIO UI
+  // AUDIO UI (sons courts synthétisés)
   // ═══════════════════════════════════════════════════════
+  private uiAudioCtx: AudioContext | null = null;
+
+  private getUiCtx(): AudioContext | null {
+    if (this.uiAudioCtx) return this.uiAudioCtx;
+    const Ctor = window.AudioContext
+      ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (Ctor) this.uiAudioCtx = new Ctor();
+    return this.uiAudioCtx;
+  }
+
   private playUiSound(
     type: 'click' | 'error' | 'gameover' | 'start' | 'perfect' | 'starpower'
   ): void {
-    if (!this.audioCtx) return;
-    if (this.audioCtx.state === 'suspended') void this.audioCtx.resume();
-    const now = this.audioCtx.currentTime;
+    const ctx = this.getUiCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') void ctx.resume();
+    const now = ctx.currentTime;
 
     if (type === 'error') {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'sawtooth';
-      osc.connect(gain); gain.connect(this.audioCtx.destination);
+      osc.connect(gain); gain.connect(ctx.destination);
       osc.frequency.setValueAtTime(180, now);
       osc.frequency.linearRampToValueAtTime(70, now + 0.25);
       gain.gain.setValueAtTime(0.2, now);
@@ -843,10 +780,10 @@ export class PianoComponent implements OnInit, OnDestroy {
       osc.start(now); osc.stop(now + 0.25);
     } else if (type === 'start') {
       [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-        const o = this.audioCtx!.createOscillator();
-        const g = this.audioCtx!.createGain();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
         o.type = 'triangle';
-        o.connect(g); g.connect(this.audioCtx!.destination);
+        o.connect(g); g.connect(ctx.destination);
         o.frequency.setValueAtTime(freq, now + idx * 0.06);
         g.gain.setValueAtTime(0.15, now + idx * 0.06);
         g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.25);
@@ -854,10 +791,10 @@ export class PianoComponent implements OnInit, OnDestroy {
       });
     } else if (type === 'perfect') {
       [1046.50, 1318.51, 1567.98].forEach((freq, idx) => {
-        const o = this.audioCtx!.createOscillator();
-        const g = this.audioCtx!.createGain();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
         o.type = 'sine';
-        o.connect(g); g.connect(this.audioCtx!.destination);
+        o.connect(g); g.connect(ctx.destination);
         o.frequency.setValueAtTime(freq, now + idx * 0.04);
         g.gain.setValueAtTime(0.1, now + idx * 0.04);
         g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.2);
@@ -865,10 +802,10 @@ export class PianoComponent implements OnInit, OnDestroy {
       });
     } else if (type === 'starpower') {
       [392, 523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-        const o = this.audioCtx!.createOscillator();
-        const g = this.audioCtx!.createGain();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
         o.type = 'square';
-        o.connect(g); g.connect(this.audioCtx!.destination);
+        o.connect(g); g.connect(ctx.destination);
         o.frequency.setValueAtTime(freq, now + idx * 0.05);
         g.gain.setValueAtTime(0.08, now + idx * 0.05);
         g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.3);

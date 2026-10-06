@@ -6,9 +6,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PianoAudioService } from 'src/app/services/piano-audio.service';
+import { PianoAudioService, InstrumentType } from 'src/app/services/piano-audio.service';
 import { PianoKey } from 'src/app/models/piano.model';
- 
 
 const AZERTY_MAP: Record<string, string> = {
   q: 'C3', s: 'C#3', d: 'D3', f: 'D#3', g: 'E3',
@@ -82,11 +81,27 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly audio = inject(PianoAudioService);
 
   @ViewChild('particleCanvas') particleCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('pianoScroll') pianoScroll?: ElementRef<HTMLDivElement>;
+
   private ctxCanvas: CanvasRenderingContext2D | null = null;
   private animFrameId: number | null = null;
   private particles: Particle[] = [];
   private canvasWidth = 0;
   private canvasHeight = 0;
+
+  // ── INSTRUMENTS (10 timbres) ──────────────────────────────
+  readonly instruments: { type: InstrumentType; label: string }[] = [
+    { type: 'piano',       label: '🎹 Piano' },
+    { type: 'organ',       label: '⛪ Orgue' },
+    { type: 'strings',     label: '🎻 Cordes' },
+    { type: 'harpsichord', label: '🎼 Clavecin' },
+    { type: 'synth',       label: '🎛 Synthé' },
+    { type: 'trumpet',     label: '🎺 Trompette' },
+    { type: 'eguitar',     label: '🎸 Guitare élec.' },
+    { type: 'bells',       label: '🔔 Cloches' },
+    { type: 'flute',       label: '🪈 Flûte' },
+    { type: 'sax',         label: '🎷 Saxophone' },
+  ];
 
   // ── CLAVIER ───────────────────────────────────────────────
   readonly pianoKeys: PianoKey[] = PIANO_KEYS_DATA;
@@ -116,8 +131,15 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly keyboardPressed = new Set<string>();
   private audioUnlocked = false;
 
+  // ── DRAG-SCROLL ───────────────────────────────────────────
+  readonly isDragging = signal<boolean>(false);
+  private dragStartX = 0;
+  private dragStartScrollLeft = 0;
+  private dragPointerId: number | null = null;
+  private dragMoved = false;
+  private readonly DRAG_THRESHOLD_PX = 6;
+
   constructor() {
-    // Effect centralisé : réagit à la fois à l'état actif ET au BPM
     effect(() => {
       const active = this.isMetronomeActive();
       const bpm = this.bpm();
@@ -149,6 +171,75 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
       void this.audioCtx.close();
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // DRAG-SCROLL MANUEL DU CLAVIER
+  // ═══════════════════════════════════════════════════════════
+  onScrollPointerDown(event: PointerEvent): void {
+    // On ne démarre le drag QUE si la cible est le conteneur (pas une touche)
+    const target = event.target as HTMLElement;
+    if (target.closest('.white-key, .black-key')) return;
+
+    const el = this.pianoScroll?.nativeElement;
+    if (!el) return;
+
+    this.dragPointerId = event.pointerId;
+    this.dragStartX = event.clientX;
+    this.dragStartScrollLeft = el.scrollLeft;
+    this.dragMoved = false;
+    this.isDragging.set(true);
+
+    el.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  onScrollPointerMove(event: PointerEvent): void {
+    if (this.dragPointerId !== event.pointerId) return;
+    const el = this.pianoScroll?.nativeElement;
+    if (!el) return;
+
+    const dx = event.clientX - this.dragStartX;
+    if (!this.dragMoved && Math.abs(dx) > this.DRAG_THRESHOLD_PX) {
+      this.dragMoved = true;
+    }
+    el.scrollLeft = this.dragStartScrollLeft - dx;
+  }
+
+  onScrollPointerUp(event: PointerEvent): void {
+    if (this.dragPointerId !== event.pointerId) return;
+    const el = this.pianoScroll?.nativeElement;
+    if (el?.hasPointerCapture(event.pointerId)) {
+      el.releasePointerCapture(event.pointerId);
+    }
+    this.dragPointerId = null;
+    this.isDragging.set(false);
+  }
+
+  /** Molette : défile horizontalement (utile avec souris). */
+  onWheel(event: WheelEvent): void {
+    const el = this.pianoScroll?.nativeElement;
+    if (!el) return;
+    // Si l'utilisateur scrolle verticalement, on convertit en horizontal
+    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+      el.scrollLeft += event.deltaY;
+      event.preventDefault();
+    }
+  }
+
+  /** Flèches latérales : défile d'une largeur d'écran. */
+  scrollByAmount(direction: -1 | 1): void {
+    const el = this.pianoScroll?.nativeElement;
+    if (!el) return;
+    const amount = el.clientWidth * 0.7 * direction;
+    el.scrollBy({ left: amount, behavior: 'smooth' });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // INSTRUMENTS
+  // ═══════════════════════════════════════════════════════════
+  selectInstrument(type: InstrumentType): void {
+    this.audio.setInstrument(type);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -236,7 +327,6 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   updateBpm(delta: number): void {
-    // L'effect() du constructeur redémarre automatiquement la boucle
     this.bpm.update(b => Math.min(240, Math.max(40, b + delta)));
   }
 
@@ -380,17 +470,36 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // ÉVÉNEMENTS CLAVIER / POINTER
+  // ÉVÉNEMENTS CLAVIER / POINTER (avec glissando tactile)
   // ═══════════════════════════════════════════════════════════
   onPointerDown(key: PianoKey, event: PointerEvent): void {
     if (!this.audioUnlocked) {
       this.audioUnlocked = true;
       void this.audio.unlock();
     }
+    event.preventDefault();
+    event.stopPropagation();
     this.triggerKeyParticles(event);
     this.audio.noteOn(key.note);
     this.pointerToNote.set(event.pointerId, key.note);
-    (event.currentTarget as HTMLElement)?.setPointerCapture?.(event.pointerId);
+    this.markPressed(key.note, true);
+    this.captureNoteStart(key.note);
+  }
+
+  /** Glissando : le doigt passe d'une touche à l'autre sans relâcher. */
+  onPointerEnter(key: PianoKey, event: PointerEvent): void {
+    if (!this.pointerToNote.has(event.pointerId)) return;
+    const previousNote = this.pointerToNote.get(event.pointerId);
+    if (previousNote === key.note) return;
+
+    if (previousNote) {
+      this.audio.noteOff(previousNote);
+      this.markPressed(previousNote, false);
+      this.captureNoteEnd(previousNote);
+    }
+
+    this.audio.noteOn(key.note);
+    this.pointerToNote.set(event.pointerId, key.note);
     this.markPressed(key.note, true);
     this.captureNoteStart(key.note);
   }
@@ -405,6 +514,13 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onPointerCancel(event: PointerEvent): void {
+    this.onPointerUp(event);
+  }
+
+  /** Rattrape les pointerup qui arrivent en dehors d'une touche */
+  @HostListener('window:pointerup', ['$event'])
+  @HostListener('window:pointercancel', ['$event'])
+  onGlobalPointerUp(event: PointerEvent): void {
     this.onPointerUp(event);
   }
 
