@@ -1,15 +1,9 @@
 import { Routes } from '@angular/router';
 
-import { AuthGuard } from './guards/auth/auth.guard';
 import { AbonnementComponent } from './abonnement/abonnement.component';
 import { AcademieComponent } from './academie/academie.component';
-import { AnnoncesComponent } from './academie/annonces/annonces.component';
-import { ApprendreComponent } from './academie/apprendre/apprendre.component';
-import { BoutiqueComponent } from './academie/boutique/boutique.component';
-import { CoursprivesComponent } from './academie/coursprives/coursprives.component';
 import { DocumentsComponent } from './academie/documents/documents.component';
-import { EvenementsComponent } from './academie/evenements/evenements.component';
-import { MasterclassComponent } from './academie/masterclass/masterclass.component';
+import { BcoComponent } from './bco/bco.component';
 import { AcousticComponent } from './game/acoustic/acoustic.component';
 import { CardgameComponent } from './game/cardgame/cardgame.component';
 import { ChordComponent } from './game/chord/chord.component';
@@ -22,6 +16,7 @@ import { MetronomeComponent } from './game/metronome/metronome.component';
 import { PlayComponent } from './game/play/play.component';
 import { TictacduoComponent } from './game/tictacduo/tictacduo.component';
 import { TictactoeComponent } from './game/tictactoe/tictactoe.component';
+import { AuthGuard } from './guards/auth/auth.guard';
 import { AccueilComponent } from './home/accueil/accueil.component';
 import { AgainComponent } from './home/again/again.component';
 import { ContactComponent } from './home/contact/contact.component';
@@ -32,7 +27,10 @@ import { PrivacyComponent } from './home/privacy/privacy.component';
 import { ProfilComponent } from './home/profil/profil.component';
 import { LiveComponent } from './live/live.component';
 import { LoginComponent } from './login/login.component';
+import { FinanceComponent } from './offoland/finance/finance.component';
 import { OffolandComponent } from './offoland/offoland.component';
+import { OffresComponent } from './offres/offres.component';
+import { PianoComponent } from './piano/piano.component';
 import { RegisterComponent } from './register/register.component';
 import { BlancComponent } from './univers/blanc/blanc.component';
 import { BleuComponent } from './univers/bleu/bleu.component';
@@ -40,10 +38,7 @@ import { CharlyguitaregameComponent } from './univers/charlyguitaregame/charlygu
 import { NoirComponent } from './univers/noir/noir.component';
 import { RougeComponent } from './univers/rouge/rouge.component';
 import { VertComponent } from './univers/vert/vert.component';
-import { FinanceComponent } from './offoland/finance/finance.component';
-import { BcoComponent } from './bco/bco.component';
-import { OffresComponent } from './offres/offres.component';
-import { PianoComponent } from './piano/piano.component';
+import { PianovirtuelComponent } from './pianovirtuel/pianovirtuel.component';
 
 
 
@@ -154,47 +149,10 @@ export const routes: Routes = [
   },
 
   {
-    path: 'coursprives',
-    component: CoursprivesComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
     path: 'documents',
     component: DocumentsComponent,
     canActivate: [AuthGuard]
   },
-
-  {
-    path: 'evenements',
-    component: EvenementsComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'annonces',
-    component: AnnoncesComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'boutique',
-    component: BoutiqueComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'master',
-    component: MasterclassComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'apprendre',
-    component: ApprendreComponent,
-    canActivate: [AuthGuard]
-  },
-
 
   {
     path: 'abonnement',
@@ -214,13 +172,19 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
 
+   {
+    path: 'pianovirtuel',
+    component: PianovirtuelComponent,
+    canActivate: [AuthGuard]
+  },
+
   {
     path: 'offres',
     component: OffresComponent,
     canActivate: [AuthGuard]
   },
 
-    {
+  {
     path: 'piano',
     component: PianoComponent,
     canActivate: [AuthGuard]

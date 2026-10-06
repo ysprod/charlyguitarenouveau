@@ -1,5 +1,6 @@
-import { CommonModule } from '@angular/common';
-import { Component, HostListener, NgZone, OnDestroy, OnInit } from '@angular/core';
+// src/app/features/play/play.component.ts
+
+import { Component, NgZone, OnDestroy, OnInit, ElementRef, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 interface Particle {
@@ -7,12 +8,6 @@ interface Particle {
   delay: number;
   duration: number;
   size: number;
-}
-
-interface Star {
-  top: number;
-  left: number;
-  delay: number;
 }
 
 interface MusicNote {
@@ -31,94 +26,100 @@ interface Filter {
 @Component({
   selector: 'app-play',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink
-  ],
+  imports: [RouterLink],
   templateUrl: './play.component.html',
   styleUrls: ['./play.component.scss']
 })
 export class PlayComponent implements OnInit, OnDestroy {
-  particles: Particle[] = [];
-  stars: Star[] = [];
-  musicNotes: MusicNote[] = [];
-  readonly filters: Filter[] = [
-    { id: 'all', label: 'Tous', icon: '🎮' },
-    { id: 'multi', label: 'Multi', icon: '👥' },
-    { id: 'music', label: 'Musique', icon: '🎵' },
-    { id: 'quiz', label: 'Quiz', icon: '🧠' },
-    { id: 'learning', label: 'Apprendre', icon: '📚' },
-    { id: 'tools', label: 'Outils', icon: '🛠️' }
-  ];
-  selectedFilter = 'all';
-  visibleGameCount = 9;
-  maxvies: number = 10;
-  pointdebonus: number = 0;
+  private readonly router = inject(Router);
+  private readonly ngZone = inject(NgZone);
+private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
 
-  /* ----- Constantes ----- */
+  /* ═══════════════════════════════════════════════════════
+     DONNÉES DÉCORATIVES
+     ═══════════════════════════════════════════════════════ */
+  particles: Particle[] = [];
+  musicNotes: MusicNote[] = [];
+
+  readonly filters: Filter[] = [
+    { id: 'all',      label: 'Tous',       icon: '🎮' },
+    { id: 'multi',    label: 'Multi',      icon: '👥' },
+    { id: 'music',    label: 'Musique',    icon: '🎵' },
+    { id: 'quiz',     label: 'Quiz',       icon: '🧠' },
+    { id: 'learning', label: 'Apprendre',  icon: '📚' },
+    { id: 'tools',    label: 'Outils',     icon: '🛠️' }
+  ];
+
+  selectedFilter = 'all';
+  visibleGameCount = 0;
+
   private readonly MUSIC_SYMBOLS = ['♪', '♫', '♬', '♩', '🎵', '🎶', '🎸'] as const;
+
+  /* ═══════════════════════════════════════════════════════
+     RÉFÉRENCES DOM ET LISTENERS
+     ═══════════════════════════════════════════════════════ */
   private gameCards: HTMLElement[] = [];
   private glowElements: HTMLElement[] = [];
-  private tiltHandlers = new Map<HTMLElement, { move: (e: MouseEvent) => void; leave: () => void }>();
+  private tiltHandlers = new Map<HTMLElement, {
+    move: (e: MouseEvent) => void;
+    leave: () => void;
+  }>();
+  private mouseMoveHandler?: (e: MouseEvent) => void;
   private rafId: number | null = null;
 
-  constructor(
-    private readonly router: Router,
-    private readonly ngZone: NgZone
-  ) { }
-
-  /* ============================================================
+  /* ═══════════════════════════════════════════════════════
      LIFECYCLE
-     ============================================================ */
+     ═══════════════════════════════════════════════════════ */
   ngOnInit(): void {
-    this.router.routeReuseStrategy.shouldReuseRoute = () => false;
-
-    // Génération des éléments décoratifs
+    // Décor généré une seule fois
     this.particles = this.generateParticles(45);
-    this.stars = this.generateStars(70);
     this.musicNotes = this.generateMusicNotes(12);
 
-    // Attendre le rendu DOM pour attacher les listeners
+    // On sort de la zone Angular pour tous les listeners "haut débit"
     this.ngZone.runOutsideAngular(() => {
+      // Attendre le rendu DOM
       setTimeout(() => {
         this.cacheDomElements();
+        this.visibleGameCount = this.gameCards.length;
         this.initTiltEffect();
+        this.initParallax();
       }, 0);
     });
   }
 
   ngOnDestroy(): void {
-    // Nettoyage des listeners tilt
+    // Cleanup tilt
     this.tiltHandlers.forEach((handlers, card) => {
       card.removeEventListener('mousemove', handlers.move);
       card.removeEventListener('mouseleave', handlers.leave);
     });
     this.tiltHandlers.clear();
-    this.gameCards = [];
-    this.glowElements = [];
 
+    // Cleanup parallax
+    if (this.mouseMoveHandler) {
+      document.removeEventListener('mousemove', this.mouseMoveHandler);
+      this.mouseMoveHandler = undefined;
+    }
+
+    // Cleanup RAF
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
+
+    this.gameCards = [];
+    this.glowElements = [];
   }
 
-  /* ============================================================
-     GÉNÉRATION DÉCOR (pures, pas de mutation)
-     ============================================================ */
+  /* ═══════════════════════════════════════════════════════
+     GÉNÉRATION DÉCOR
+     ═══════════════════════════════════════════════════════ */
   private generateParticles(count: number): Particle[] {
     return Array.from({ length: count }, () => ({
       left: Math.random() * 100,
       delay: Math.random() * 8,
       duration: 6 + Math.random() * 8,
       size: 2 + Math.random() * 4
-    }));
-  }
-
-  private generateStars(count: number): Star[] {
-    return Array.from({ length: count }, () => ({
-      top: Math.random() * 100,
-      left: Math.random() * 100,
-      delay: Math.random() * 3
     }));
   }
 
@@ -133,63 +134,68 @@ export class PlayComponent implements OnInit, OnDestroy {
     }));
   }
 
-  /* ============================================================
+  /* ═══════════════════════════════════════════════════════
      CACHE DOM
-     ============================================================ */
+     ═══════════════════════════════════════════════════════ */
   private cacheDomElements(): void {
-    this.gameCards = Array.from(document.querySelectorAll<HTMLElement>('.btn-game'));
-    this.glowElements = Array.from(document.querySelectorAll<HTMLElement>('.glow'));
+    this.gameCards = Array.from(
+      this.hostEl.nativeElement.querySelectorAll<HTMLElement>('.btn-game')
+    );
+    this.glowElements = Array.from(
+      this.hostEl.nativeElement.querySelectorAll<HTMLElement>('.glow')
+    );
   }
 
-  /* ============================================================
-     EFFET TILT 3D (hors zone Angular pour la perf)
-     ============================================================ */
+  /* ═══════════════════════════════════════════════════════
+     EFFET TILT 3D
+     ═══════════════════════════════════════════════════════ */
   private initTiltEffect(): void {
-    this.ngZone.runOutsideAngular(() => {
-      this.gameCards.forEach(card => {
-        const move = (e: MouseEvent) => {
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const centerX = rect.width / 2;
-          const centerY = rect.height / 2;
-          const rotateX = ((y - centerY) / centerY) * -6;
-          const rotateY = ((x - centerX) / centerX) * 6;
-          card.style.transform =
-            `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px) scale(1.02)`;
-        };
-        const leave = () => { card.style.transform = ''; };
+    this.gameCards.forEach(card => {
+      const move = (e: MouseEvent) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -6;
+        const rotateY = ((x - centerX) / centerX) * 6;
+        card.style.transform =
+          `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px) scale(1.02)`;
+      };
+      const leave = () => { card.style.transform = ''; };
 
-        card.addEventListener('mousemove', move);
-        card.addEventListener('mouseleave', leave);
-        this.tiltHandlers.set(card, { move, leave });
-      });
+      card.addEventListener('mousemove', move);
+      card.addEventListener('mouseleave', leave);
+      this.tiltHandlers.set(card, { move, leave });
     });
   }
 
-  /* ============================================================
-     PARALLAXE HALOS (throttle via requestAnimationFrame)
-     ============================================================ */
-  @HostListener('document:mousemove', ['$event'])
-  onMouseMove(e: MouseEvent): void {
-    if (this.rafId !== null) return; // throttle
+  /* ═══════════════════════════════════════════════════════
+     PARALLAX HALOS (listener manuel hors zone Angular)
+     ═══════════════════════════════════════════════════════ */
+  private initParallax(): void {
+    this.mouseMoveHandler = (e: MouseEvent) => {
+      if (this.rafId !== null) return; // throttle RAF
 
-    this.rafId = requestAnimationFrame(() => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 20;
-      const y = (e.clientY / window.innerHeight - 0.5) * 20;
+      this.rafId = requestAnimationFrame(() => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 20;
+        const y = (e.clientY / window.innerHeight - 0.5) * 20;
 
-      this.glowElements.forEach((glow, i) => {
-        const factor = (i + 1) * 0.4;
-        glow.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+        this.glowElements.forEach((glow, i) => {
+          const factor = (i + 1) * 0.4;
+          glow.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+        });
+
+        this.rafId = null;
       });
+    };
 
-      this.rafId = null;
-    });
+    document.addEventListener('mousemove', this.mouseMoveHandler, { passive: true });
   }
 
-  /* ============================================================
-     FILTRAGE DES JEUX (optimisé)
-     ============================================================ */
+  /* ═══════════════════════════════════════════════════════
+     FILTRAGE
+     ═══════════════════════════════════════════════════════ */
   selectFilter(id: string): void {
     if (this.selectedFilter === id) return;
     this.selectedFilter = id;
@@ -206,8 +212,7 @@ export class PlayComponent implements OnInit, OnDestroy {
       if (show) {
         visible++;
         card.style.animation = 'none';
-        // Force reflow pour relancer l'animation d'apparition
-        void card.offsetWidth;
+        void card.offsetWidth; // reflow pour relancer l'anim
         card.style.animation = 'cardPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both';
       }
     });
@@ -215,9 +220,9 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.visibleGameCount = visible;
   }
 
-  /* ============================================================
-     NAVIGATION (DRY)
-     ============================================================ */
+  /* ═══════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════ */
   onSelectLyko(): void {
     this.navigateToGame('/tictac', '1');
   }
@@ -234,11 +239,14 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.navigateToGame('/kronos', '3');
   }
 
+  /**
+   * Navigation vers le Piano (composant standalone).
+   */
+  onSelectPiano(): void {
+    this.router.navigate(['/piano']);
+  }
+
   private navigateToGame(route: string, etape: string): void {
-    this.router.navigate([route], {
-      queryParams: {
-        etape
-      }
-    });
+    this.router.navigate([route], { queryParams: { etape } });
   }
 }

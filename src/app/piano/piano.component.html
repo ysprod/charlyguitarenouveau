@@ -1,7 +1,8 @@
 <div class="piano-game-container"
      [class.star-power-active]="isStarPowerActive()"
      [class.screen-shake]="screenShake()"
-     [class.melody-mode]="melodyPlaying()">
+     [class.melody-mode]="melodyPlaying()"
+     [class.free-mode]="isFreeMode()">
 
   <!-- ═══════════ FOND ANIMÉ ═══════════ -->
   <div class="animated-background">
@@ -16,41 +17,76 @@
     }
   </div>
 
-  <!-- ═══════════ HUD ═══════════ -->
-  <header class="game-hud">
-    <div class="hud-box score-box">
-      <span class="label">SCORE</span>
-      <span class="value">{{ score() }}</span>
-      <div class="score-glow"></div>
+  <!-- ═══════════ BARRE SUPÉRIEURE ═══════════ -->
+  <header class="game-top-bar">
+    <button class="btn-back" (click)="goToPlay()">
+      <span class="material-icons">arrow_back</span>
+      <span>RETOUR</span>
+    </button>
+    <div class="logo-zone">
+      <span class="icon">🎹</span>
+      <h1>CHARLY PIANO HERO</h1>
+      <div class="logo-glow"></div>
     </div>
-
-    @if (isPlaying()) {
-      <div class="target-card" [@starPowerPulse]="isStarPowerActive() ? 'active' : 'inactive'">
-        <div class="target-rings">
-          <div class="ring ring-1"></div>
-          <div class="ring ring-2"></div>
-          <div class="ring ring-3"></div>
-        </div>
-        <span class="sub-text">JOUE LA NOTE :</span>
-        <h2 class="target-note pulse-target">{{ targetNote() }}</h2>
-        <div class="target-glow"></div>
+    @if (highScore() > 0 && !isFreeMode()) {
+      <div class="high-score-badge">
+        <span class="trophy">🏆</span>
+        <span>RECORD : {{ highScore() }}</span>
       </div>
     }
-
-    <div class="hud-box combo-box"
-         [class.multiplier-active]="multiplier() > 1"
-         [class.multiplier-max]="multiplier() >= 5"
-         [@comboFlash]="comboFlashKey()">
-      <span class="label">COMBO</span>
-      <span class="value">x{{ effectiveMultiplier() }}</span>
-      @if (multiplier() > 1) {
-        <div class="combo-fire">🔥</div>
-      }
-    </div>
   </header>
 
-  <!-- ═══════════ STAR POWER ═══════════ -->
-  @if (isPlaying()) {
+  <!-- ═══════════ HUD (masqué en mode libre) ═══════════ -->
+  @if (!isFreeMode()) {
+    <header class="game-hud">
+      <div class="hud-box score-box">
+        <span class="label">SCORE</span>
+        <span class="value">{{ score() }}</span>
+        <div class="score-glow"></div>
+      </div>
+
+      @if (isPlaying()) {
+        <div class="target-card" [@starPowerPulse]="isStarPowerActive() ? 'active' : 'inactive'">
+          <div class="target-rings">
+            <div class="ring ring-1"></div>
+            <div class="ring ring-2"></div>
+            <div class="ring ring-3"></div>
+          </div>
+          <span class="sub-text">JOUE LA NOTE :</span>
+          <h2 class="target-note pulse-target">{{ targetNoteDisplay() }}</h2>
+          <div class="target-glow"></div>
+        </div>
+      }
+
+      <div class="hud-box combo-box"
+           [class.multiplier-active]="multiplier() > 1"
+           [class.multiplier-max]="multiplier() >= 5"
+           [@comboFlash]="comboFlashKey()">
+        <span class="label">COMBO</span>
+        <span class="value">x{{ effectiveMultiplier() }}</span>
+        @if (multiplier() > 1) {
+          <div class="combo-fire">🔥</div>
+        }
+      </div>
+    </header>
+  }
+
+  <!-- ═══════════ BANNIÈRE MODE LIBRE ═══════════ -->
+  @if (isFreeMode()) {
+    <div class="free-mode-banner">
+      <span class="free-icon">🎹</span>
+      <div class="free-text">
+        <h2>MODE LIBRE</h2>
+        <p>Joue pour le plaisir — aucune règle, aucun score</p>
+      </div>
+      <button class="free-quit-btn" (click)="quitToMenu()">
+        <span>MENU</span>
+      </button>
+    </div>
+  }
+
+  <!-- ═══════════ STAR POWER & TIMER (masqués en mode libre) ═══════════ -->
+  @if (isPlaying() && !isFreeMode()) {
     <div class="star-power-container" [class.ready]="starPowerGauge() >= 100">
       <div class="star-power-track">
         <div class="star-power-bar" [style.width.%]="starPowerGauge()">
@@ -92,8 +128,8 @@
     </div>
   }
 
-  <!-- ═══════════ FEEDBACK ═══════════ -->
-  @if (feedbackMessage()) {
+  <!-- ═══════════ FEEDBACK (masqué en mode libre) ═══════════ -->
+  @if (feedbackMessage() && !isFreeMode()) {
     <div class="feedback-overlay" [@feedbackAnim] [attr.data-key]="feedbackKey()">
       <div class="feedback-burst"></div>
       <span class="feedback-badge"
@@ -105,8 +141,8 @@
     </div>
   }
 
-  <!-- ═══════════ MÉLODIE DES ORIGINES ═══════════ -->
-  @if (melodyPlaying()) {
+  <!-- ═══════════ MÉLODIE DES ORIGINES (masquée en mode libre) ═══════════ -->
+  @if (melodyPlaying() && !isFreeMode()) {
     <div class="melody-overlay" [@melodyBanner] [style.--melody-color]="melodyChordColor()">
       <div class="melody-aura"></div>
       <div class="melody-particles">
@@ -117,7 +153,7 @@
       <div class="melody-banner">
         <span class="melody-icon">🎼</span>
         <div class="melody-titles">
-          <h3 class="melody-title">FÉLICITATIONS !</h3>
+          <h3 class="melody-title">{{ melodyCurrentTitle() }}</h3>
           <p class="melody-subtitle">
             @if (melodyChordName()) {
               <span class="melody-chord" [style.color]="melodyChordColor()">{{ melodyChordName() }}</span>
@@ -129,7 +165,7 @@
         </div>
       </div>
       <div class="melody-progression">
-        @for (chord of melodieOrigines; track chord.name; let i = $index) {
+        @for (chord of currentMelodyProgression(); track chord.name; let i = $index) {
           <div class="melody-chord-dot"
                [class.active]="melodyChordIndex() === i"
                [class.past]="melodyChordIndex() > i"
@@ -142,22 +178,28 @@
     </div>
   }
 
-  <!-- ═══════════ CLAVIER DE PIANO ═══════════ -->
+  <!-- ═══════════ CLAVIER DE PIANO (toujours visible en jeu) ═══════════ -->
   @if (isPlaying()) {
     <div class="piano-wrapper">
-      <div class="piano-3d">
+      <div class="piano-scroll" #keyboardScroll>
         <div class="piano">
           <!-- Touches blanches -->
           <div class="white-keys">
-            @for (key of whiteKeys; track key.index) {
+            @for (key of whiteKeys(); track key.index) {
               <div class="white-key"
+                   [attr.data-key-index]="key.index"
                    [class.correct]="correctKeyIndex() === key.index"
                    [class.hit]="isHit(key.index)"
+                   [class.pressed]="isKeyPressed(key.index)"
+                   [class.target]="isTargetKey(key.index)"
                    [class.star-power-key]="isStarPowerActive()"
-                   [style.--key-color]="getKeyColor(key)"
-                   (click)="onKeyClick(key)">
+                   [style.--key-color]="keyColorsByIndex()[key.index]"
+                   (pointerdown)="onPointerDown(key, $event)"
+                   (pointermove)="onPointerMove($event)"
+                   (pointerup)="onPointerUp(key, $event)"
+                   (pointercancel)="onPointerCancel(key, $event)">
                 <div class="key-top"></div>
-                @if (shouldShowNoteLabel()) {
+                @if (shouldShowNoteLabel() || isFreeMode()) {
                   <span class="note-label">{{ key.frenchNote }}</span>
                 }
                 <div class="key-glow"></div>
@@ -165,18 +207,24 @@
             }
           </div>
 
-          <!-- Touches noires (positionnées en absolu) -->
+          <!-- Touches noires -->
           <div class="black-keys">
-            @for (key of blackKeys; track key.index) {
+            @for (key of blackKeys(); track key.index) {
               <div class="black-key"
+                   [attr.data-key-index]="key.index"
                    [class.correct]="correctKeyIndex() === key.index"
                    [class.hit]="isHit(key.index)"
+                   [class.pressed]="isKeyPressed(key.index)"
+                   [class.target]="isTargetKey(key.index)"
                    [class.star-power-key]="isStarPowerActive()"
-                   [style.left.%]="key.position + key.width * 0.7"
-                   [style.--key-color]="getKeyColor(key)"
-                   (click)="onKeyClick(key)">
+                   [style.--white-index]="key.whiteIndex"
+                   [style.--key-color]="keyColorsByIndex()[key.index]"
+                   (pointerdown)="onPointerDown(key, $event)"
+                   (pointermove)="onPointerMove($event)"
+                   (pointerup)="onPointerUp(key, $event)"
+                   (pointercancel)="onPointerCancel(key, $event)">
                 <div class="key-top"></div>
-                @if (shouldShowNoteLabel()) {
+                @if (shouldShowNoteLabel() || isFreeMode()) {
                   <span class="note-label">{{ key.frenchNote }}</span>
                 }
                 <div class="key-glow"></div>
@@ -187,8 +235,8 @@
           <!-- Particules -->
           @for (p of particles(); track p.id) {
             <div class="particle"
-                 [style.left.%]="p.x"
-                 [style.top.%]="p.y"
+                 [style.left.px]="p.x"
+                 [style.top.px]="p.y"
                  [style.background]="p.color"
                  [style.width.px]="p.size"
                  [style.height.px]="p.size"
@@ -199,8 +247,8 @@
     </div>
   }
 
-  <!-- ═══════════ VIES ═══════════ -->
-  @if (isPlaying()) {
+  <!-- ═══════════ VIES (masquées en mode libre) ═══════════ -->
+  @if (isPlaying() && !isFreeMode()) {
     <div class="lives-bar">
       @for (heart of [1,2,3,4,5]; track $index; let i = $index) {
         <span class="heart"
@@ -209,25 +257,6 @@
       }
     </div>
   }
-
-  <!-- ═══════════ BARRE SUPÉRIEURE ═══════════ -->
-  <header class="game-top-bar">
-    <button class="btn-back" (click)="goToPlay()">
-      <span class="material-icons">arrow_back</span>
-      <span>RETOUR</span>
-    </button>
-    <div class="logo-zone">
-      <span class="icon">🎹</span>
-      <h1>CHARLY PIANO HERO</h1>
-      <div class="logo-glow"></div>
-    </div>
-    @if (highScore() > 0) {
-      <div class="high-score-badge">
-        <span class="trophy">🏆</span>
-        <span>RECORD : {{ highScore() }}</span>
-      </div>
-    }
-  </header>
 
   <!-- ═══════════ ACCUEIL & GAME OVER ═══════════ -->
   @if (!isPlaying()) {
@@ -241,10 +270,26 @@
           <div class="modal-icon">🎹</div>
           <h1>CHARLY PIANO HERO</h1>
           <p class="modal-description">
-            Enchaîne <strong>7 bonnes notes</strong> d'affilée pour débloquer la
-            <strong>Mélodie des Origines</strong> et remplis ton <strong>Star Power</strong> !
+            Choisis ton mode : <strong>défi</strong> pour la compétition,
+            <strong>libre</strong> pour le plaisir de jouer.
           </p>
 
+          <!-- ═══════ MODE LIBRE ═══════ -->
+          <button class="mode-card free-mode-card"
+                  (click)="startFreeMode()">
+            <div class="mode-icon">🎹</div>
+            <div class="mode-info">
+              <span class="mode-name">MODE LIBRE</span>
+              <span class="mode-desc">Joue toutes les notes, aucun enjeu</span>
+            </div>
+            <span class="mode-arrow">→</span>
+          </button>
+
+          <div class="modal-divider">
+            <span>OU LANCE UN DÉFI</span>
+          </div>
+
+          <!-- ═══════ DIFFICULTÉS ═══════ -->
           <div class="difficulty-selector">
             <span class="selector-label">DIFFICULTÉ :</span>
             <div class="difficulty-buttons">
@@ -274,7 +319,7 @@
 
           <div class="modal-actions-horizontal">
             <button class="btn-secondary" (click)="goToPlay()">RETOUR</button>
-            <button class="btn-start" (click)="startGame()">
+            <button class="btn-start" (click)="startChallenge()">
               <span class="btn-glow"></span>
               <span>LANCER LE DÉFI</span>
             </button>
@@ -310,7 +355,7 @@
             <div class="new-record">🎉 NOUVEAU RECORD ! 🎉</div>
           }
           <div class="modal-actions">
-            <button class="btn-start" (click)="startGame()">
+            <button class="btn-start" (click)="startChallenge()">
               <span class="btn-glow"></span>
               <span>RÉESSAYER</span>
             </button>

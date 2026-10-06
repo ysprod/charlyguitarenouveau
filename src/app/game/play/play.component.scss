@@ -91,21 +91,6 @@
   100% { transform: translateY(-110vh) scale(1); opacity: 0; }
 }
 
-/* Étoiles */
-.stars { position: absolute; inset: 0; }
-.star {
-  position: absolute;
-  width: 2px; height: 2px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #fff;
-  animation: twinkle 3s ease-in-out infinite;
-}
-@keyframes twinkle {
-  0%,100% { opacity: 0.2; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.4); }
-}
-
 /* Rayons */
 .rays {
   position: absolute;
@@ -365,6 +350,9 @@
 }
 .btn-game:hover .btn-glow { opacity: 0.25; }
 
+/* ============================================================
+   BORDURE ANIMÉE — CONIC GRADIENT MASQUÉ
+   ============================================================ */
 .btn-border-anim {
   position: absolute;
   inset: -1px;
@@ -374,24 +362,30 @@
     transparent 0deg,
     var(--btn-color, #00f2fe) 40deg,
     transparent 90deg);
+  /* Masque pour ne garder QUE la bordure (1px) */
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
-  mask:var(--btn-color);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   mask-composite: exclude;
   opacity: 0;
   transition: opacity 0.3s ease;
   animation: borderSpin 3s linear infinite;
   pointer-events: none;
 }
+
 .btn-game:hover .btn-border-anim { opacity: 1; }
 
 @keyframes borderSpin {
-  to { background: conic-gradient(from 360deg,
-    transparent 0deg,
-    var(--btn-color, #00f2fe) 40deg,
-    transparent 90deg); }
+  to {
+    background: conic-gradient(from 360deg,
+      transparent 0deg,
+      var(--btn-color, #00f2fe) 40deg,
+      transparent 90deg);
+  }
 }
 
 /* Coins HUD */
@@ -496,6 +490,7 @@
 .btn-metronome { --btn-color: #fbbf24; }
 .btn-boubouni  { --btn-color: #ef4444; }
 .btn-kronos    { --btn-color: #06b6d4; }
+.btn-piano     { --btn-color: #22d3ee; }
 
 /* Shimmer sur Lyko Duo */
 .btn-duo::before {

@@ -1,0 +1,227 @@
+<div class="piano-game-container">
+  <canvas #particleCanvas class="particle-canvas"></canvas>
+
+  <!-- Fond animé -->
+  <div class="animated-background" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-scanlines"></div>
+  </div>
+
+  <!-- Barre supérieure -->
+  <header class="game-top-bar">
+    <button class="btn-action" (click)="goBack()">
+      <span class="material-icons">arrow_back</span>
+      <span>RETOUR</span>
+    </button>
+
+    <div class="logo-zone">
+      <span class="logo-icon">🎹</span>
+      <h1>CHARLY&nbsp;PIANO</h1>
+      <div class="logo-glow"></div>
+    </div>
+
+    <div class="right-actions">
+      <button class="btn-action print-btn" (click)="printSheet()" title="Exporter en PDF">
+        <span class="material-icons">print</span>
+        <span>PDF</span>
+      </button>
+      <button class="btn-action" (click)="toggleMute()" [class.active]="audio.isMuted()">
+        <span class="material-icons">{{ audio.isMuted() ? 'volume_off' : 'volume_up' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Workstation -->
+  <section class="workstation-panel">
+    <!-- Métronome -->
+    <div class="widget-card metronome-card">
+      <div class="widget-header">
+        <span class="widget-title">MÉTRONOME</span>
+        <button class="btn-toggle" [class.on]="isMetronomeActive()" (click)="toggleMetronome()">
+          {{ isMetronomeActive() ? 'STOP' : 'LANCER' }}
+        </button>
+      </div>
+      <div class="metronome-body">
+        <div class="bpm-controls">
+          <button (click)="updateBpm(-5)">−5</button>
+          <span class="bpm-value">{{ bpm() }}<small>BPM</small></span>
+          <button (click)="updateBpm(+5)">+5</button>
+        </div>
+        <div class="beat-indicators">
+          @for (i of [1,2,3,4]; track i) {
+          <span class="beat-dot" [class.active]="metronomeBeat() === i" [class.first]="i === 1"></span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Enregistreur : 1 seul slot -->
+    <div class="widget-card recorder-card">
+      <div class="widget-header">
+        <span class="widget-title">ENREGISTREMENT</span>
+        <button class="btn-rec" [class.recording]="isRecording()" (click)="toggleRecording()">
+          <span class="rec-dot"></span>
+          {{ isRecording() ? 'ENREGISTRE…' : 'ENREGISTRER' }}
+        </button>
+      </div>
+      <div class="recorder-body">
+        @if (!isRecording() && recordedNotes().length > 0 && !savedSong()) {
+        <button class="btn-save" (click)="saveCurrentRecording()">
+          💾 SAUVEGARDER LA SESSION
+        </button>
+        }
+
+        @if (savedSong(); as song) {
+        <div class="song-item">
+          <div class="song-info">
+            <span class="song-name">{{ song.title }}</span>
+            <span class="song-meta">{{ song.date }} · {{ song.notes.length }} notes</span>
+          </div>
+          <div class="song-actions">
+            <button class="btn-icon play" (click)="playSavedSong()" [disabled]="isPlayingBack()" title="Lire">
+              ▶
+            </button>
+            <button class="btn-icon del" (click)="deleteSavedSong()" title="Effacer">
+              🗑
+            </button>
+          </div>
+        </div>
+        } @else if (!isRecording()) {
+        <p class="recorder-hint">Enregistrez puis sauvegardez votre composition (1 seul slot disponible).</p>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Partition professionnelle -->
+  <section class="sheet-music-wrapper printable-sheet">
+    <div class="sheet-header-print">
+      <div class="print-titles">
+        <div class="print-title">Partition — Charly Piano Studio</div>
+        <div class="print-meta">Tempo : {{ bpm() }} BPM · Mesure : 4/4</div>
+      </div>
+      <button class="btn-clear-sheet no-print" (click)="clearSheet()">Effacer</button>
+    </div>
+
+    <div class="grand-staff-container">
+      <svg class="grand-staff-svg" viewBox="0 0 1000 210" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="noteGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- Accolade -->
+        <path d="M 45 46 L 45 166" class="brace-bar" />
+        <path d="M 40 46 C 30 70, 30 90, 42 106 C 30 122, 30 142, 40 166" fill="none" class="brace-line" />
+
+        <!-- Portée SOL -->
+        <g class="treble-staff-group">
+          <line x1="45" y1="46" x2="980" y2="46" class="staff-line" />
+          <line x1="45" y1="58" x2="980" y2="58" class="staff-line" />
+          <line x1="45" y1="70" x2="980" y2="70" class="staff-line" />
+          <line x1="45" y1="82" x2="980" y2="82" class="staff-line" />
+          <line x1="45" y1="94" x2="980" y2="94" class="staff-line" />
+          <text x="52" y="88" class="clef-svg treble-clef">🎼</text>
+          <text x="94" y="68" class="time-sig">4</text>
+          <text x="94" y="90" class="time-sig">4</text>
+        </g>
+
+        <!-- Ligne médiane -->
+        <line x1="45" y1="106" x2="980" y2="106" class="middle-line" />
+
+        <!-- Portée FA -->
+        <g class="bass-staff-group">
+          <line x1="45" y1="118" x2="980" y2="118" class="staff-line" />
+          <line x1="45" y1="130" x2="980" y2="130" class="staff-line" />
+          <line x1="45" y1="142" x2="980" y2="142" class="staff-line" />
+          <line x1="45" y1="154" x2="980" y2="154" class="staff-line" />
+          <line x1="45" y1="166" x2="980" y2="166" class="staff-line" />
+          <text x="54" y="148" class="clef-svg bass-clef">𝄢</text>
+          <text x="94" y="140" class="time-sig">4</text>
+          <text x="94" y="162" class="time-sig">4</text>
+        </g>
+
+        <!-- Barres de mesure -->
+        <line x1="330" y1="46" x2="330" y2="166" class="barline" />
+        <line x1="550" y1="46" x2="550" y2="166" class="barline" />
+        <line x1="770" y1="46" x2="770" y2="166" class="barline" />
+        <line x1="980" y1="46" x2="980" y2="166" class="barline-end" />
+
+        <!-- Notes -->
+        <g class="rendered-notes-group">
+          @for (item of activeSheetNotes(); track item.id; let idx = $index) {
+          <g class="note-item" [attr.transform]="'translate(' + (150 + idx * 52) + ', 0)'">
+            @if (item.hasLedgerLine && item.ledgerY) {
+            <line x1="-10" [attr.y1]="item.ledgerY" x2="10" [attr.y2]="item.ledgerY" class="ledger-line" />
+            }
+
+            @if (item.isSharp) {
+            <text x="-17" [attr.y]="item.y + 5" class="sharp-symbol">♯</text>
+            }
+
+            <!-- Tête de note : pleine (noire/croche) ou vide (blanche/ronde) -->
+            <ellipse cx="0" [attr.cy]="item.y" rx="6.5" ry="4.8" [attr.transform]="'rotate(-20 0 ' + item.y + ')'"
+              class="note-head" [class.hollow]="!item.filled" />
+
+            <!-- Hampe -->
+            @if (item.stemDirection === 'up') {
+            <line x1="5.8" [attr.y1]="item.y" x2="5.8" [attr.y2]="item.y - 30" class="note-stem" />
+            } @else {
+            <line x1="-5.8" [attr.y1]="item.y" x2="-5.8" [attr.y2]="item.y + 30" class="note-stem" />
+            }
+
+            <!-- Crochet (croche) -->
+            @if (item.hasFlag) {
+            @if (item.stemDirection === 'up') {
+            <path [attr.d]="'M 5.8 ' + (item.y - 30) + ' q 10 6 8 16'" class="note-flag" fill="none" />
+            } @else {
+            <path [attr.d]="'M -5.8 ' + (item.y + 30) + ' q -10 -6 -8 -16'" class="note-flag" fill="none" />
+            }
+            }
+
+            <text x="0" y="200" text-anchor="middle" class="note-label-fr">
+              {{ frenchPitch(item.pitch) }}{{ item.isSharp ? '♯' : '' }}{{ item.octave }}
+            </text>
+          </g>
+          }
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Clavier -->
+  <div class="piano-wrapper" [class.disabled]="!audio.isReady()">
+    <div class="piano-scroll">
+      <div class="piano">
+        <div class="white-keys">
+          @for (key of whiteKeys(); track key.index) {
+          <div class="white-key" [class.pressed]="isPressed(key.note)" (pointerdown)="onPointerDown(key, $event)"
+            (pointerup)="onPointerUp($event)" (pointercancel)="onPointerCancel($event)">
+            <div class="key-top"></div>
+            <span class="note-label">{{ key.frenchNote }}</span>
+            <div class="key-glow"></div>
+          </div>
+          }
+        </div>
+        <div class="black-keys">
+          @for (key of blackKeys(); track key.index) {
+          <div class="black-key" [style.--white-index]="key.whiteIndex" [class.pressed]="isPressed(key.note)"
+            (pointerdown)="onPointerDown(key, $event)" (pointerup)="onPointerUp($event)"
+            (pointercancel)="onPointerCancel($event)">
+            <div class="key-top"></div>
+            <span class="note-label">{{ key.frenchNote }}</span>
+            <div class="key-glow"></div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

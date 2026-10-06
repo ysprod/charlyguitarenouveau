@@ -1,20 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AnnoncesComponent } from './annonces.component';
+import { PianovirtuelComponent } from './pianovirtuel.component';
 
-describe('AnnoncesComponent', () => {
-  let component: AnnoncesComponent;
-  let fixture: ComponentFixture<AnnoncesComponent>;
+describe('PianovirtuelComponent', () => {
+  let component: PianovirtuelComponent;
+  let fixture: ComponentFixture<PianovirtuelComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AnnoncesComponent ]
+      imports: [PianovirtuelComponent]
     })
     .compileComponents();
-  });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(AnnoncesComponent);
+    fixture = TestBed.createComponent(PianovirtuelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

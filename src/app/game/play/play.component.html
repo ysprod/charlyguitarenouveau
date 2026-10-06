@@ -14,19 +14,27 @@
 
     <!-- Particules montantes -->
     <div class="particles">
-      <span class="particle" *ngFor="let p of particles" [style.left.%]="p.left" [style.animation-delay.s]="p.delay"
-        [style.animation-duration.s]="p.duration" [style.width.px]="p.size" [style.height.px]="p.size"></span>
+      @for (p of particles; track $index) {
+        <span class="particle"
+              [style.left.%]="p.left"
+              [style.animation-delay.s]="p.delay"
+              [style.animation-duration.s]="p.duration"
+              [style.width.px]="p.size"
+              [style.height.px]="p.size"></span>
+      }
     </div>
-
-
 
     <!-- Rayons lumineux -->
     <div class="rays"></div>
 
     <!-- Notes de musique flottantes -->
     <div class="music-notes">
-      <span class="note" *ngFor="let n of musicNotes" [style.left.%]="n.left" [style.animation-delay.s]="n.delay"
-        [style.animation-duration.s]="n.duration">{{ n.symbol }}</span>
+      @for (n of musicNotes; track $index) {
+        <span class="note"
+              [style.left.%]="n.left"
+              [style.animation-delay.s]="n.delay"
+              [style.animation-duration.s]="n.duration">{{ n.symbol }}</span>
+      }
     </div>
   </div>
 
@@ -46,11 +54,15 @@
          BARRE DE FILTRES
          ============================================================ -->
     <div class="filter-bar">
-      <button class="filter-chip" *ngFor="let f of filters" [class.active]="selectedFilter === f.id"
-        (click)="selectFilter(f.id)">
-        <span class="chip-icon">{{ f.icon }}</span>
-        <span class="chip-label">{{ f.label }}</span>
-      </button>
+      @for (f of filters; track f.id) {
+        <button class="filter-chip"
+                [class.active]="selectedFilter === f.id"
+                (click)="selectFilter(f.id)"
+                [attr.aria-label]="'Filtrer : ' + f.label">
+          <span class="chip-icon">{{ f.icon }}</span>
+          <span class="chip-label">{{ f.label }}</span>
+        </button>
+      }
     </div>
 
     <!-- ============================================================
@@ -60,7 +72,11 @@
       <div class="game-buttons-grid">
 
         <!-- 🐵 LYKO DUEL -->
-        <button type="button" class="btn-game btn-lyko btn-duo" data-category="multi" (click)="onSelectLykoduo()">
+        <button type="button"
+                class="btn-game btn-lyko btn-duo"
+                data-category="multi"
+                (click)="onSelectLykoduo()"
+                aria-label="Lancer Lyko le Sage">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">🐵</span>
@@ -74,11 +90,14 @@
           <span class="corner corner-tr"></span>
           <span class="corner corner-bl"></span>
           <span class="corner corner-br"></span>
-        </button>      
+        </button>
 
         <!-- 🎸 CHARLY GUITARE HERO -->
-        <a [routerLink]="['/fretboard']" class="btn-game btn-fretboard" data-category="music"
-          title="Chasse au Fretboard">
+        <a [routerLink]="['/fretboard']"
+           class="btn-game btn-fretboard"
+           data-category="music"
+           title="Chasse au Fretboard"
+           aria-label="Lancer Charly Guitare Hero">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">🎸</span>
@@ -95,7 +114,11 @@
         </a>
 
         <!-- 🪵 MÉTHODE CHARLY GUITARE -->
-        <a [routerLink]="['/memory']" class="btn-game btn-molkky" data-category="learning" title="Mölkky des Accords">
+        <a [routerLink]="['/memory']"
+           class="btn-game btn-molkky"
+           data-category="learning"
+           title="Mölkky des Accords"
+           aria-label="Lancer la Méthode Charly Guitare">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">🪵</span>
@@ -112,8 +135,11 @@
         </a>
 
         <!-- 🔊 QUIZ ACOUSTIQUE -->
-        <a [routerLink]="['/acoustic']" class="btn-game btn-quiz" data-category="quiz"
-          title="Quiz Acoustique & Lutherie">
+        <a [routerLink]="['/acoustic']"
+           class="btn-game btn-quiz"
+           data-category="quiz"
+           title="Quiz Acoustique & Lutherie"
+           aria-label="Lancer le Quiz Acoustique">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">🔊</span>
@@ -130,8 +156,11 @@
         </a>
 
         <!-- 🎼 SIMULATEUR -->
-        <a [routerLink]="['/chord']" class="btn-game btn-simulator" data-category="tools"
-          title="Décodeur & Simulateur de Grille">
+        <a [routerLink]="['/chord']"
+           class="btn-game btn-simulator"
+           data-category="tools"
+           title="Décodeur & Simulateur de Grille"
+           aria-label="Lancer le Simulateur">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">🎼</span>
@@ -148,7 +177,11 @@
         </a>
 
         <!-- ⏱️ DÉFI MÉTRONOME -->
-        <a [routerLink]="['/metronome']" class="btn-game btn-metronome" data-category="music" title="Défi Métronome">
+        <a [routerLink]="['/metronome']"
+           class="btn-game btn-metronome"
+           data-category="music"
+           title="Défi Métronome"
+           aria-label="Lancer le Défi Métronome">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">⏱️</span>
@@ -165,7 +198,11 @@
         </a>
 
         <!-- 🃏 BOUBOUNI -->
-        <button type="button" class="btn-game btn-boubouni" data-category="multi" (click)="onSelectBoubouni()">
+        <button type="button"
+                class="btn-game btn-boubouni"
+                data-category="multi"
+                (click)="onSelectBoubouni()"
+                aria-label="Lancer Boubouni">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">🃏</span>
@@ -182,7 +219,11 @@
         </button>
 
         <!-- ⏳ DÉ DE KRONOS -->
-        <button type="button" class="btn-game btn-kronos" data-category="multi" (click)="onSelectDeDeKronos()">
+        <button type="button"
+                class="btn-game btn-kronos"
+                data-category="multi"
+                (click)="onSelectDeDeKronos()"
+                aria-label="Lancer le Dé de Kronos">
           <span class="btn-glow"></span>
           <span class="btn-border-anim"></span>
           <span class="btn-icon">⏳</span>
@@ -198,13 +239,36 @@
           <span class="corner corner-br"></span>
         </button>
 
+        <!-- 🎹 PIANO -->
+        <button type="button"
+                class="btn-game btn-piano"
+                data-category="tools"
+                (click)="onSelectPiano()"
+                aria-label="Lancer le Piano virtuel">
+          <span class="btn-glow"></span>
+          <span class="btn-border-anim"></span>
+          <span class="btn-icon">🎹</span>
+          <span class="btn-content">
+            <span class="btn-tag tag-tool">OUTIL</span>
+            <span class="btn-text">PIANO</span>
+            <span class="btn-sub">Piano Virtuel</span>
+          </span>
+          <span class="btn-arrow">→</span>
+          <span class="corner corner-tl"></span>
+          <span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span>
+          <span class="corner corner-br"></span>
+        </button>
+
       </div>
 
       <!-- Message si aucun résultat -->
-      <div class="empty-state" *ngIf="visibleGameCount === 0">
-        <span class="empty-icon">🎸</span>
-        <p>Aucun jeu dans cette catégorie pour le moment...</p>
-      </div>
+      @if (visibleGameCount === 0) {
+        <div class="empty-state">
+          <span class="empty-icon">🎸</span>
+          <p>Aucun jeu dans cette catégorie pour le moment...</p>
+        </div>
+      }
     </section>
 
   </div>
