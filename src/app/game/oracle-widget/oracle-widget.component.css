@@ -11,10 +11,10 @@
   --neon-yellow: #fbbf24;
   --gold: #ffd700;
 
-  /* Fallbacks pour color-mix() (Safari < 16.4) */
-  --dim-soft: rgba(168, 85, 247, 0.12);
-  --dim-mid: rgba(168, 85, 247, 0.25);
-  --dim-strong: rgba(168, 85, 247, 0.5);
+  /* Fallbacks pour color-mix() — suivent --dim-color si supporté */
+  --dim-soft: color-mix(in srgb, var(--dim-color, #a855f7) 12%, transparent);
+  --dim-mid: color-mix(in srgb, var(--dim-color, #a855f7) 25%, transparent);
+  --dim-strong: color-mix(in srgb, var(--dim-color, #a855f7) 50%, transparent);
 }
 
 /* ═══════════ CARTE PRINCIPALE ═══════════ */
@@ -179,6 +179,42 @@
     color: #1a1a1a;
     box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
   }
+}
+
+/* ═══════════ ALERTE MICRO ═══════════ */
+.mic-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(239, 68, 68, 0.1));
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  border-left: 4px solid #fbbf24;
+  border-radius: 10px;
+  color: #fde68a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  position: relative;
+  z-index: 2;
+  animation: micAlertIn 0.5s ease-out;
+}
+
+.mic-alert-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.7));
+}
+
+.mic-alert-text strong {
+  color: #fff;
+  font-weight: 800;
+}
+
+@keyframes micAlertIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ═══════════ BARRES DE PROGRESSION ═══════════ */
@@ -1092,6 +1128,13 @@
   }
 }
 
+/* ═══════════ DÉTAILS DIMENSION ═══════════ */
+.dimension-details {
+  margin-top: 1rem;
+  position: relative;
+  z-index: 2;
+}
+
 /* ═══════════ LEVEL UP FLASH ═══════════ */
 .levelup-flash {
   position: fixed;
@@ -1207,10 +1250,4 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-.dimension-details {
-  margin-top: 1rem;
-  position: relative;
-  z-index: 2;
 }

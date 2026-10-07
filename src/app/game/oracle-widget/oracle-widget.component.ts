@@ -4,8 +4,8 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { OracleGameService } from '../services/oracle-game.service';
-import { ParticleService } from '../services/particle.service';
+import { OracleGameService } from '../../services/oracle-game.service';
+import { ParticleService } from '../../services/particle.service';
 
 @Component({
   selector: 'app-oracle-widget',

@@ -3,10 +3,11 @@ import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Auth, authState, signOut, User } from '@angular/fire/auth';
 import { RouterLink } from '@angular/router';
-import { RevealDirective } from '../shared/reveal.directive';
+import { RevealDirective } from '../../shared/reveal.directive';
 import { map } from 'rxjs';
-import { DocumentsComponent } from '../academie/documents/documents.component';
-import { OffresComponent } from '../abonnement/offres/offres.component';
+import { DocumentsComponent } from '../../academie/documents/documents.component';
+import { OffresComponent } from '../../offres/offres.component';
+import { PlayComponent } from 'src/app/game/play/play.component';
 
 @Component({
   selector: 'app-homeconnect',
@@ -16,6 +17,7 @@ import { OffresComponent } from '../abonnement/offres/offres.component';
     RevealDirective,
     DocumentsComponent,
     OffresComponent,
+    PlayComponent
   ],
   templateUrl: './homeconnect.component.html',
   styleUrl: './homeconnect.component.scss'

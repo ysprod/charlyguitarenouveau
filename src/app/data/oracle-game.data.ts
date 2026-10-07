@@ -2,6 +2,9 @@
    TYPES ET DONNÉES STATIQUES D'OFFOLAND
    ═══════════════════════════════════════════════════════ */
 
+export type MicrophonePermission =
+  | 'granted' | 'denied' | 'prompt' | 'unsupported';
+
 export interface Dimension {
   id: number;
   name: string;
@@ -272,7 +275,7 @@ export const QUESTS: readonly Quest[] = [
     description: 'Devant le dernier portail, Offosi pose une seule question. Quelle est la septième note, celle de l\'Accomplissement ?',
     acceptedAnswers: ['si', 'b', 'la note si'],
     xpReward: 100,
-    hint: 'C\'est la note qui mène à Offolomou, le Don de Dieu révélé.',
+    hint: 'C\'est la note qui mène à Offolomou, le Don de Dieu révélé',
     icon: '💎',
     difficulty: 'expert',
     lore: '« La destinée ne se reçoit pas ; elle se construit pas à pas. » — Offosi'

@@ -1,6 +1,8 @@
 <div class="method-container">
 
-  <!-- HEADER ÉPIQUE -->
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER ÉPIQUE
+       ═══════════════════════════════════════════════════════ -->
   <header class="method-header">
     <h1 class="title-glow">DIMENSIONS</h1>
     <h2 class="title-sub">CHARLY GUITARE</h2>
@@ -10,9 +12,16 @@
       <span class="icon">🎸</span>
       <span class="line"></span>
     </div>
+
+    <p class="header-intro">
+      Les Sept Dimensions d'Offoland — chacune gardée par un Sage, portée par une note,
+      révélée par une couleur.
+    </p>
   </header>
 
-  <!-- GRILLE DES DIMENSIONS -->
+  <!-- ═══════════════════════════════════════════════════════
+       GRILLE DES 7 DIMENSIONS
+       ═══════════════════════════════════════════════════════ -->
   <main class="dimensions-grid">
     <a *ngFor="let dim of dimensions; let i = index"
        [routerLink]="[dim.route]"
@@ -20,7 +29,7 @@
        [style.--accent]="dim.couleur"
        [style.--accent-light]="dim.couleurSecondaire"
        [style.animation-delay]="(i * 0.15) + 's'"
-       [attr.title]="'Dimension ' + dim.nom + ' - ' + dim.sage">
+       [attr.title]="'Dimension ' + dim.nom + ' — ' + dim.sage">
 
       <!-- Halo lumineux -->
       <div class="card-halo"></div>

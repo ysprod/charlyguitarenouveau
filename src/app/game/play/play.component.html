@@ -1,18 +1,20 @@
 <div class="game-dashboard-container">
 
- 
-
   <div class="main-game-area">
 
-    <!-- HERO HEADER -->
+    <!-- ═══════════════════════════════════════════════════════
+         HERO HEADER
+         ═══════════════════════════════════════════════════════ -->
     <header class="hero-header">
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        <span>CHARY GUITARE · GAMES</span>
+      <span>APPRENDRE EN JOUANT</span>
       </div>
     </header>
 
-    <!-- FILTRES -->
+    <!-- ═══════════════════════════════════════════════════════
+         FILTRES
+         ═══════════════════════════════════════════════════════ -->
     <div class="filter-bar">
       @for (f of filters; track f.id) {
         <button class="filter-chip"
@@ -25,7 +27,9 @@
       }
     </div>
 
-    <!-- GRILLE DE JEUX -->
+    <!-- ═══════════════════════════════════════════════════════
+         GRILLE DE JEUX
+         ═══════════════════════════════════════════════════════ -->
     <section class="games-selector-section">
       <div class="game-buttons-grid">
 
@@ -50,7 +54,7 @@
           <span class="corner corner-br"></span>
         </button>
 
-   <!-- 🐵 LYKO DUEL -->
+        <!-- 🐵 LYKO DUEL -->
         <button type="button"
                 class="btn-game btn-lyko btn-duo"
                 data-category="multi"
@@ -70,8 +74,8 @@
           <span class="corner corner-bl"></span>
           <span class="corner corner-br"></span>
         </button>
-        
-        <!-- 🎸 GUITARE LIVE (NOUVEAU) -->
+
+        <!-- 🎸 GUITARE LIVE -->
         <a [routerLink]="['/guitar-live']"
            class="btn-game btn-guitarlive"
            data-category="live"
@@ -91,8 +95,6 @@
           <span class="corner corner-bl"></span>
           <span class="corner corner-br"></span>
         </a>
-
-     
 
         <!-- 🎸 CHARLY GUITARE HERO -->
         <a [routerLink]="['/fretboard']"
@@ -285,7 +287,9 @@
 
       </div>
 
-      <!-- EMPTY STATE -->
+      <!-- ═══════════════════════════════════════════════════════
+           EMPTY STATE
+           ═══════════════════════════════════════════════════════ -->
       @if (visibleGameCount() === 0) {
         <div class="empty-state">
           <span class="empty-icon">🎸</span>
@@ -293,17 +297,6 @@
         </div>
       }
     </section>
-
-    <!-- FOOTER -->
-    <footer class="dashboard-footer">
-      <div class="footer-line"></div>
-      <span class="footer-text">
-        <span class="footer-icon">♪</span>
-        Charly Guitare Studio — Jouez, apprenez, progressez
-        <span class="footer-icon">♫</span>
-      </span>
-      <div class="footer-line"></div>
-    </footer>
 
   </div>
 </div>

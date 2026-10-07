@@ -24,6 +24,7 @@ import type {
   Quest,
   Achievement,
   RecognitionError,
+  MicrophonePermission,
 } from '../data/oracle-game.data';
 
 export type {
@@ -31,6 +32,7 @@ export type {
   Quest,
   Achievement,
   RecognitionError,
+  MicrophonePermission,
 } from '../data/oracle-game.data';
 
 
@@ -86,11 +88,14 @@ export class OracleGameService {
   readonly currentQuestIndex = signal<number>(0);
   readonly unlockedAchievements = signal<string[]>([]);
 
-  /* Ré-exposition des signaux vocaux (utilisés dans les templates) */
+  /* Ré-exposition des signaux vocaux */
   readonly isSpeaking = this.voice.isSpeaking;
   readonly isListening = this.voice.isListening;
   readonly isSupported = this.voice.isSupported;
   readonly lastError = this.voice.lastError;
+
+  /* Permission micro (état initialisé au démarrage) */
+  readonly microphonePermission = signal<MicrophonePermission | 'unknown'>('unknown');
 
   readonly currentQuest = computed<Quest | null>(
     () => QUESTS[this.currentQuestIndex()] ?? null
@@ -130,6 +135,32 @@ export class OracleGameService {
     this.restoreFromStorage();
     this.registerPersistence();
     this.registerQuestAnnouncer();
+    this.checkMicrophoneOnStartup();
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     VÉRIFICATION MICRO AU DÉMARRAGE
+     ═══════════════════════════════════════════════════════ */
+  private async checkMicrophoneOnStartup(): Promise<void> {
+    const state = await this.voice.checkMicrophonePermission();
+    this.microphonePermission.set(state);
+
+    // Si le micro est OK, aucune annonce spéciale — l'utilisateur peut parler.
+    if (state === 'granted' || state === 'prompt') return;
+
+    // Délai : laisse le temps à l'annonce de quête de se terminer
+    // (registerQuestAnnouncer déclenche un setTimeout à 500ms + le speak lui-même)
+    setTimeout(async () => {
+      const message =
+        state === 'denied'
+          ? `Attention, offolandais ! Ton micro est bloqué par le navigateur. ` +
+            `Tu ne peux pas me parler directement. Utilise la saisie texte ci-dessous, ` +
+            `ou autorise le micro dans les réglages du navigateur.`
+          : `Ton navigateur ne supporte pas la reconnaissance vocale. ` +
+            `Utilise la saisie texte ci-dessous pour me répondre.`;
+
+      await this.speak(message);
+    }, 3500);
   }
 
   /* ═══════════════════════════════════════════════════════

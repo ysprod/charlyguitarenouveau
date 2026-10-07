@@ -4,9 +4,9 @@
 
   <div class="footer-container">
 
-    <!-- ============================================
+    <!-- ═══════════════════════════════════════════
          COLONNE 1 : IDENTITÉ & MARQUE
-         ============================================ -->
+         ═══════════════════════════════════════════ -->
     <div class="footer-brand">
       <a routerLink="/" class="brand-logo">
         <div class="logo-icon-wrapper">
@@ -26,42 +26,30 @@
 
       <!-- Réseaux Sociaux -->
       <div class="social-links">
-        <a
-          href="https://www.youtube.com/@CharlyGuitare"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="YouTube"
-          class="social-link social-youtube"
-        >
+        <a href="https://www.youtube.com/@CharlyGuitare"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="YouTube" class="social-link social-youtube">
           <img src="assets/youtube.png" alt="" class="social-img">
           <span class="social-tooltip">YouTube</span>
         </a>
-        <a
-          href="https://facebook.com/charlyguitare2020"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Facebook"
-          class="social-link social-facebook"
-        >
+        <a href="https://facebook.com/charlyguitare2020"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Facebook" class="social-link social-facebook">
           <img src="assets/facebook.png" alt="" class="social-img">
           <span class="social-tooltip">Facebook</span>
         </a>
-        <a
-          href="https://www.instagram.com/charlyguitare"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Instagram"
-          class="social-link social-instagram"
-        >
+        <a href="https://www.instagram.com/charlyguitare"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Instagram" class="social-link social-instagram">
           <img src="assets/instagram.png" alt="" class="social-img">
           <span class="social-tooltip">Instagram</span>
         </a>
       </div>
     </div>
 
-    <!-- ============================================
+    <!-- ═══════════════════════════════════════════
          COLONNE 2 : NAVIGATION
-         ============================================ -->
+         ═══════════════════════════════════════════ -->
     <div class="footer-column">
       <h4 class="column-title">
         <span class="title-dot"></span>
@@ -87,9 +75,9 @@
       </nav>
     </div>
 
-    <!-- ============================================
+    <!-- ═══════════════════════════════════════════
          COLONNE 3 : DÉCOUVRIR
-         ============================================ -->
+         ═══════════════════════════════════════════ -->
     <div class="footer-column">
       <h4 class="column-title">
         <span class="title-dot"></span>
@@ -115,8 +103,12 @@
       </nav>
     </div>
 
-    
- <div class="footer-bottom">
+  </div><!-- /.footer-container -->
+
+  <!-- ═══════════════════════════════════════════════
+       BARRE INFÉRIEURE
+       ═══════════════════════════════════════════════ -->
+  <div class="footer-bottom">
     <div class="bottom-container">
       <p class="copyright">
         &copy; {{ currentYear }}
@@ -131,23 +123,14 @@
         <a [routerLink]="['/privacy']">Confidentialité</a>
       </div>
 
-      <!-- Bouton retour en haut -->
-      <button
-        class="back-to-top"
-        (click)="scrollToTop()"
-        aria-label="Retour en haut"
-        title="Retour en haut"
-      >
+      <button class="back-to-top"
+              (click)="scrollToTop()"
+              aria-label="Retour en haut"
+              title="Retour en haut">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="18 15 12 9 6 15"/>
         </svg>
       </button>
     </div>
   </div>
-  </div>
-
-  <!-- ============================================
-       BARRE INFÉRIEURE
-       ============================================ -->
- 
 </footer>

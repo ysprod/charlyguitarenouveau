@@ -26,16 +26,21 @@ export interface Dimension {
 export class CharlyguitaregameComponent implements OnInit {
 
   dimensions: Dimension[] = [
+    /* ═══════════════════════════════════════════════════════
+       ORDRE SACRÉ DES 7 DIMENSIONS (selon la Bible d'Offoland)
+       Do → Ré → Mi → Fa → Sol → La → Si
+       ═══════════════════════════════════════════════════════ */
+
     {
-      nom: 'NOIR',
-      couleur: '#1a1a1a',
-      couleurSecondaire: '#4a4a4a',
-      symbole: '🖤',
-      note: 'Sol',
-      sage: 'Offosol',
-      description: 'La Dimension de l\'Épreuve',
-      image: 'assets/noir.jpg',
-      route: '/noir'
+      nom: 'BLANC',
+      couleur: '#f8fafc',
+      couleurSecondaire: '#cbd5e1',
+      symbole: '✨',
+      note: 'Do',
+      sage: 'Offodo',
+      description: 'La Dimension du Commencement',
+      image: 'assets/blanc.jpg',
+      route: '/blanc'
     },
     {
       nom: 'ROUGE',
@@ -60,17 +65,6 @@ export class CharlyguitaregameComponent implements OnInit {
       route: '/vert'
     },
     {
-      nom: 'BLANC',
-      couleur: '#f8fafc',
-      couleurSecondaire: '#cbd5e1',
-      symbole: '✨',
-      note: 'Do',
-      sage: 'Offodo',
-      description: 'La Dimension du Commencement',
-      image: 'assets/blanc.jpg',
-      route: '/blanc'
-    },
-    {
       nom: 'BLEU',
       couleur: '#3b82f6',
       couleurSecondaire: '#60a5fa',
@@ -80,7 +74,45 @@ export class CharlyguitaregameComponent implements OnInit {
       description: 'La Dimension de la Connaissance',
       image: 'assets/bleu.jpg',
       route: '/bleu'
-    }
+    },
+    {
+      nom: 'NOIR',
+      couleur: '#1a1a1a',
+      couleurSecondaire: '#4a4a4a',
+      symbole: '🖤',
+      note: 'Sol',
+      sage: 'Offosol',
+      description: 'La Dimension de l\'Épreuve',
+      image: 'assets/noir.jpg',
+      route: '/noir'
+    },
+
+    /* ═══════════════════════════════════════════════════════
+       NOUVELLES DIMENSIONS
+       ═══════════════════════════════════════════════════════ */
+
+    {
+      nom: 'POURPRE',
+      couleur: '#9333ea',
+      couleurSecondaire: '#c084fc',
+      symbole: '👁️',
+      note: 'La',
+      sage: 'Offola',
+      description: 'La Dimension de la Vision',
+      image: 'assets/pourpre.jpg',
+      route: '/pourpre'
+    },   
+    {
+  nom: 'JAUNE',
+  couleur: '#eab308',
+  couleurSecondaire: '#fde047',
+  symbole: '👑',
+  note: 'Si',
+  sage: 'Offosi',
+  description: 'La Dimension de l\'Accomplissement',
+  image: 'assets/jaune.jpg',
+  route: '/violet'
+}
   ];
 
   constructor() { }

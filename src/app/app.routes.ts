@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 
-import { AbonnementComponent } from './abonnement/abonnement.component';
 import { AcademieComponent } from './academie/academie.component';
 import { DocumentsComponent } from './academie/documents/documents.component';
 import { AcousticComponent } from './game/acoustic/acoustic.component';
@@ -28,7 +27,7 @@ import { LiveComponent } from './live/live.component';
 import { LoginComponent } from './login/login.component';
 import { FinanceComponent } from './offoland/finance/finance.component';
 import { OffolandComponent } from './offoland/offoland.component';
-import { OffresComponent } from './abonnement/offres/offres.component';
+import { OffresComponent } from './offres/offres.component';
 import { PianoComponent } from './game/piano/piano.component';
 import { RegisterComponent } from './register/register.component';
 import { BlancComponent } from './univers/blanc/blanc.component';
@@ -39,8 +38,10 @@ import { RougeComponent } from './univers/rouge/rouge.component';
 import { VertComponent } from './univers/vert/vert.component';
 import { BcoComponent } from './offoland/bco/bco.component';
 import { PianovirtuelComponent } from './game/pianovirtuel/pianovirtuel.component';
-import { GuitarLiveComponent } from './guitar-live/guitar-live.component';
- import { OracleWidgetComponent } from './oracle-widget/oracle-widget.component';
+import { GuitarLiveComponent } from './game/guitar-live/guitar-live.component';
+import { OracleWidgetComponent } from './game/oracle-widget/oracle-widget.component';
+import { PourpreComponent } from './univers/pourpre/pourpre.component';
+import { VioletComponent } from './univers/violet/violet.component';
 
 export const routes: Routes = [
   {
@@ -72,7 +73,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
 
-   
+
 
   {
     path: 'memory',
@@ -172,7 +173,7 @@ export const routes: Routes = [
 
   {
     path: 'abonnement',
-    component: AbonnementComponent,
+    component: OffresComponent,
     canActivate: [AuthGuard]
   },
 
@@ -191,6 +192,18 @@ export const routes: Routes = [
   {
     path: 'pianovirtuel',
     component: PianovirtuelComponent,
+    canActivate: [AuthGuard]
+  },
+
+  {
+    path: 'pourpre',
+    component: PourpreComponent,
+    canActivate: [AuthGuard]
+  },
+  
+  {
+    path: 'violet',
+    component: VioletComponent,
     canActivate: [AuthGuard]
   },
 

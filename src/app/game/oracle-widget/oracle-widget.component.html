@@ -36,6 +36,20 @@
     </div>
   </header>
 
+  <!-- Bannière alerte micro -->
+  @if (game.microphonePermission() === 'denied' || game.microphonePermission() === 'unsupported') {
+  <div class="mic-alert" role="alert">
+    <span class="mic-alert-icon">🎤</span>
+    <span class="mic-alert-text">
+      @if (game.microphonePermission() === 'denied') {
+        Micro bloqué — utilise la <strong>saisie texte</strong> pour parler à Offowa.
+      } @else {
+        Micro non supporté par ton navigateur — utilise la <strong>saisie texte</strong>.
+      }
+    </span>
+  </div>
+  }
+
   <!-- Barre de progression XP -->
   <div class="progress-container" role="progressbar" [attr.aria-valuenow]="game.xpProgress()" aria-valuemin="0"
     aria-valuemax="100">
@@ -211,7 +225,6 @@
   <!-- ═══════════ DÉTAILS DE LA DIMENSION ACTIVE ═══════════ -->
   @if (quest && dimension && !game.gameCompleted()) {
   <div class="dimension-details">
-    <!-- En-tête dimension -->
     <div class="dimension-header">
       <div class="dimension-badge" [style.background]="dimension.colorHex">
         <span class="dim-roman">Dimension {{ dimension.id }}</span>
@@ -222,7 +235,6 @@
       </div>
     </div>
 
-    <!-- Infos Sage / Totem / Instrument -->
     <div class="dimension-infos">
       <div class="info-item">
         <span class="info-emoji">🧙</span>
@@ -241,7 +253,6 @@
       </div>
     </div>
 
-    <!-- Épreuve -->
     <div class="trial-line">
       <span class="trial-label">Épreuve :</span>
       <span class="trial-text">{{ dimension.trial }}</span>

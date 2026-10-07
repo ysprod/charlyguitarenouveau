@@ -1,47 +1,24 @@
 <div class="landing-page">
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION HEADER PRINCIPAL
+       ═══════════════════════════════════════════════════════ -->
   <section class="section-header">
     <h2 class="section-title">OFFOLOMOU ECOSYSTEME ACADEMIE</h2>
     <p class="section-desc">Jeux, formations, lives et expériences immersives — tout au même endroit.</p>
   </section>
-  <app-offres></app-offres>
-
-  <section class="features-section">
-    <article class="feature-card" appReveal>
-      <a routerLink="/offoland" class="feature-image-link" title="Accéder aux jeux">
-        <div class="feature-image-wrapper2">
-          <img src="assets/jeuxnouveau.jpg" alt="Espace Jeux" class="feature-image" loading="lazy" />
-          <div class="feature-overlay"></div>
-          <span class="feature-tag feature-tag-live">
-            <span class="live-dot"></span>
-            GAMES
-          </span>
-        </div>
-      </a>
-      <div class="feature-content">
-        <h3 class="feature-title">Jeux</h3>
-        <p class="feature-desc">Jouez, apprenez, progressez… et surtout, amusez-vous !</p>
-        <a routerLink="/play" class="feature-link">
-          <span>Jouer maintenant</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </a>
-      </div>
-    </article>
-
-  </section>
-
-
-  <app-documents></app-documents>
-
-
 
   <!-- ═══════════════════════════════════════════════════════
-         UNIVERS — RANGÉE 2
-         ═══════════════════════════════════════════════════════ -->
+       COMPOSANTS EMBARQUÉS
+       ═══════════════════════════════════════════════════════ -->
+  <app-play></app-play>
+  <app-offres></app-offres>
+  <app-documents></app-documents>
+
+  <!-- ═══════════════════════════════════════════════════════
+       UNIVERS — RANGÉE 2 (FEATURE CARD LIVE)
+       ═══════════════════════════════════════════════════════ -->
   <section class="features-section">
- 
 
     <!-- 🔴 LIVE -->
     <article class="feature-card" appReveal>
@@ -73,8 +50,8 @@
   </section>
 
   <!-- ═══════════════════════════════════════════════════════
-         POURQUOI NOUS — 3 PILIERS
-         ═══════════════════════════════════════════════════════ -->
+       POURQUOI NOUS — 3 PILIERS
+       ═══════════════════════════════════════════════════════ -->
   <section class="why-section">
     <div class="section-header">
       <span class="section-eyebrow">POURQUOI NOUS</span>
@@ -101,8 +78,8 @@
   </section>
 
   <!-- ═══════════════════════════════════════════════════════
-         TÉMOIGNAGES
-         ═══════════════════════════════════════════════════════ -->
+       TÉMOIGNAGES
+       ═══════════════════════════════════════════════════════ -->
   <section class="testimonials-section">
     <div class="section-header">
       <span class="section-eyebrow">ILS TÉMOIGNENT</span>
@@ -153,6 +130,5 @@
       </figure>
     </div>
   </section>
-
 
 </div>

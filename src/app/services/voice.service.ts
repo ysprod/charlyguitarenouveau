@@ -9,6 +9,9 @@ export type RecognitionError =
   | 'not-allowed' | 'service-not-allowed' | 'no-speech'
   | 'audio-capture' | 'network' | 'aborted' | 'unknown';
 
+export type MicrophonePermission =
+  | 'granted' | 'denied' | 'prompt' | 'unsupported';
+
 export interface SpeakOptions {
   lang?: string;
   pitch?: number;
@@ -92,8 +95,6 @@ export class VoiceService {
 
   /**
    * Prononce un texte avec la voix de synthèse.
-   * @param text Texte à prononcer
-   * @param options Options de voix (lang, pitch, rate, volume, interrupt)
    * @returns Promise résolue à la fin de la lecture
    */
   speak(text: string, options: SpeakOptions = {}): Promise<void> {
@@ -148,8 +149,7 @@ export class VoiceService {
   }
 
   /**
-   * Retourne une promesse qui se résout dès que la voix a fini de parler
-   * (ou immédiatement si elle ne parle pas).
+   * Retourne une promesse qui se résout dès que la voix a fini de parler.
    */
   waitForSpeechEnd(): Promise<void> {
     if (!this.isSpeaking()) return Promise.resolve();
@@ -212,6 +212,30 @@ export class VoiceService {
   /** Message par défaut associé à un code d'erreur. */
   getErrorMessage(error: RecognitionError): string {
     return DEFAULT_ERROR_MESSAGES[error] ?? '';
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     PERMISSION MICRO
+     ═══════════════════════════════════════════════════════ */
+
+  /**
+   * Vérifie l'état de la permission micro auprès du navigateur.
+   * Retourne 'unsupported' si l'API Permissions n'est pas disponible.
+   */
+  async checkMicrophonePermission(): Promise<MicrophonePermission> {
+    if (typeof navigator === 'undefined' || !navigator.permissions) {
+      return 'unsupported';
+    }
+
+    try {
+      const status = await navigator.permissions.query({
+        name: 'microphone' as PermissionName,
+      });
+      return status.state as 'granted' | 'denied' | 'prompt';
+    } catch {
+      // Safari, Firefox récents : query('microphone') non supporté
+      return 'prompt';
+    }
   }
 
   /* ═══════════════════════════════════════════════════════

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Auth, authState, signOut } from '@angular/fire/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
-import { HomeconnectComponent } from '../homeconnect/homeconnect.component';
+import { HomeconnectComponent } from './homeconnect/homeconnect.component';
 
 @Component({
   selector: 'app-home',

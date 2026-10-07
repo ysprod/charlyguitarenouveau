@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    OFFOLAND — Design immersif
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 
 :host {
   --offo-blanc:   #F5F5FF;
@@ -22,13 +22,19 @@
   overflow-x: hidden;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   HERO — PORTAIL
-   ═══════════════════════════════════════════════════════════════ */
+/* ─── Mixins locaux ─── */
+@mixin gradient-text($gradient) {
+  background: $gradient;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
+// ═════════════════════════════════════════════════════════════════════
+// HERO — PORTAIL
+// ═════════════════════════════════════════════════════════════════════
 .hero-section {
   position: relative;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -36,7 +42,6 @@
   padding: 5rem 2rem 6rem;
   overflow: hidden;
   isolation: isolate;
-
   background:
     radial-gradient(ellipse at 50% 0%,    rgba(255, 215, 0, 0.08) 0%, transparent 55%),
     radial-gradient(ellipse at 0% 100%,   rgba(0, 212, 255, 0.06) 0%, transparent 50%),
@@ -44,8 +49,7 @@
     linear-gradient(180deg, #06060F 0%, #0A0A1A 50%, #06060F 100%);
 }
 
-/* ─── Auras : Sept couleurs des Dimensions ─── */
-
+// ─── Auras : Sept couleurs des Dimensions ───
 .hero-aura {
   position: absolute;
   inset: 0;
@@ -53,11 +57,16 @@
   z-index: 0;
 }
 
-@mixin aura($size, $color) {
-  width: $size;
-  height: $size;
-  background: $color;
-}
+/* Config des 7 auras : (size, colorVar, position, duration, delay) */
+$auras: (
+  (do:  420px, var: --offo-blanc,   top: -8%,   left: 50%,  tx: true, dur: 18s, delay: 0s),
+  (re:  320px, var: --offo-rouge,   top: 25%,   left: 5%,   tx: false, dur: 22s, delay: 1s),
+  (mi:  300px, var: --offo-vert,    top: 15%,   right: 8%,  tx: false, dur: 20s, delay: 2s),
+  (fa:  280px, var: --offo-bleu,    bottom: 30%, left: 12%, tx: false, dur: 24s, delay: 3s),
+  (sol: 260px, var: --offo-noir,    bottom: 15%, right: 10%, tx: false, dur: 26s, delay: 4s),
+  (la:  340px, var: --offo-pourpre, bottom: -5%, left: 40%, tx: false, dur: 28s, delay: 5s),
+  (si:  220px, var: --offo-violet,  top: 45%,   right: 40%, tx: false, dur: 30s, delay: 6s)
+);
 
 .aura {
   position: absolute;
@@ -66,14 +75,42 @@
   opacity: 0.35;
   mix-blend-mode: screen;
   animation: auraDrift 24s ease-in-out infinite;
+}
 
-  &.aura-do  { @include aura(420px, var(--offo-blanc));   top: -8%;  left: 50%;  transform: translateX(-50%); animation-duration: 18s; }
-  &.aura-re  { @include aura(320px, var(--offo-rouge));   top: 25%;  left: 5%;   animation-duration: 22s; animation-delay: 1s; }
-  &.aura-mi  { @include aura(300px, var(--offo-vert));    top: 15%;  right: 8%;  animation-duration: 20s; animation-delay: 2s; }
-  &.aura-fa  { @include aura(280px, var(--offo-bleu));    bottom: 30%; left: 12%; animation-duration: 24s; animation-delay: 3s; }
-  &.aura-sol { @include aura(260px, var(--offo-noir));    bottom: 15%; right: 10%; animation-duration: 26s; animation-delay: 4s; }
-  &.aura-la  { @include aura(340px, var(--offo-pourpre)); bottom: -5%; left: 40%;  animation-duration: 28s; animation-delay: 5s; }
-  &.aura-si  { @include aura(220px, var(--offo-violet));  top: 45%;  right: 40%;  animation-duration: 30s; animation-delay: 6s; }
+.aura-do {
+  width: 420px; height: 420px; background: var(--offo-blanc);
+  top: -8%; left: 50%; transform: translateX(-50%);
+  animation-duration: 18s;
+}
+.aura-re {
+  width: 320px; height: 320px; background: var(--offo-rouge);
+  top: 25%; left: 5%;
+  animation-duration: 22s; animation-delay: 1s;
+}
+.aura-mi {
+  width: 300px; height: 300px; background: var(--offo-vert);
+  top: 15%; right: 8%;
+  animation-duration: 20s; animation-delay: 2s;
+}
+.aura-fa {
+  width: 280px; height: 280px; background: var(--offo-bleu);
+  bottom: 30%; left: 12%;
+  animation-duration: 24s; animation-delay: 3s;
+}
+.aura-sol {
+  width: 260px; height: 260px; background: var(--offo-noir);
+  bottom: 15%; right: 10%;
+  animation-duration: 26s; animation-delay: 4s;
+}
+.aura-la {
+  width: 340px; height: 340px; background: var(--offo-pourpre);
+  bottom: -5%; left: 40%;
+  animation-duration: 28s; animation-delay: 5s;
+}
+.aura-si {
+  width: 220px; height: 220px; background: var(--offo-violet);
+  top: 45%; right: 40%;
+  animation-duration: 30s; animation-delay: 6s;
 }
 
 @keyframes auraDrift {
@@ -82,8 +119,7 @@
   66%      { transform: translate(-30px, 40px) scale(0.9); }
 }
 
-/* ─── Premier Tambour : pulsation centrale ─── */
-
+// ─── Premier Tambour : pulsation centrale ───
 .premier-tambour {
   position: absolute;
   top: 50%;
@@ -108,11 +144,10 @@
 
 @keyframes pulseExpand {
   0%   { width: 100px; height: 100px; opacity: 0.8; border-color: rgba(255, 215, 0, 0.5); }
-  100% { width: 900px; height: 900px; opacity: 0;   border-color: rgba(255, 215, 0, 0);   }
+  100% { width: 900px; height: 900px; opacity: 0;   border-color: rgba(255, 215, 0, 0); }
 }
 
-/* ─── Contenu sacré ─── */
-
+// ─── Contenu sacré ───
 .hero-content {
   position: relative;
   z-index: 3;
@@ -126,12 +161,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Titre ─── */
-
-.hero-title-block {
-  margin-bottom: 2.5rem;
-}
-
+// ─── Titre ───
 .hero-title {
   margin: 0 0 1.5rem;
   font-size: clamp(3rem, 10vw, 7rem);
@@ -142,18 +172,15 @@
 
 .hero-title-gold {
   display: block;
-  background: linear-gradient(
+  @include gradient-text(linear-gradient(
     135deg,
     #FFD700 0%,
     #FFA500 25%,
     #00D4FF 50%,
     #B266FF 75%,
     #FFD700 100%
-  );
+  ));
   background-size: 300% 300%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
   animation: gradientFlow 8s ease infinite;
   filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.3));
 }
@@ -163,28 +190,27 @@
   50%      { background-position: 100% 50%; }
 }
 
-/* ─── Mélodie des Origines ─── */
-
+// ─── Mélodie des Origines ───
 .melodie-origines {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.7rem 1.5rem;
+  margin: 2rem auto;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 100px;
-  margin: 2rem auto;
   backdrop-filter: blur(10px);
   font-family: 'JetBrains Mono', 'Courier New', monospace;
 }
 
 .note {
+  position: relative;
+  padding: 0 0.25rem;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--note-color);
   letter-spacing: 0.05em;
-  position: relative;
-  padding: 0 0.25rem;
 
   &::before {
     content: '';
@@ -215,15 +241,14 @@
   font-size: 0.9rem;
 }
 
-/* ─── Divider sacré ─── */
-
+// ─── Divider sacré ───
 .hero-divider {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
-  margin: 2.5rem auto;
   max-width: 320px;
+  margin: 2.5rem auto;
 
   .line {
     flex: 1;
@@ -248,8 +273,7 @@
   50%      { transform: scale(1.15); opacity: 1;   }
 }
 
-/* ─── Portails (boutons) ─── */
-
+// ─── Portails (boutons) ───
 .portails-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -270,18 +294,23 @@
   color: var(--offo-texte);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   isolation: isolate;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 
+  /* Bordure dégradée en inner-border */
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: inherit;
     padding: 1px;
+    border-radius: inherit;
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(178, 102, 255, 0.2));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -316,11 +345,11 @@
 .portail-glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 100%, rgba(255, 215, 0, 0.25) 0%, transparent 65%);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
   z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 100%, rgba(255, 215, 0, 0.25) 0%, transparent 65%);
+  transition: opacity 0.4s ease;
 }
 
 .portail-icon {
@@ -342,147 +371,9 @@
   letter-spacing: 0.02em;
 }
 
-/* ─── Indicateur de scroll ─── */
-
-.scroll-indicator {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  z-index: 3;
-  animation: scrollFade 3s ease-in-out infinite;
-}
-
-@keyframes scrollFade {
-  0%, 100% { opacity: 0.4; }
-  50%      { opacity: 0.9; }
-}
-
-.scroll-mouse {
-  width: 22px;
-  height: 36px;
-  border: 1.5px solid rgba(255, 215, 0, 0.5);
-  border-radius: 12px;
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 6px;
-    background: var(--offo-or);
-    border-radius: 2px;
-    animation: scrollDot 2s ease-in-out infinite;
-  }
-}
-
-@keyframes scrollDot {
-  0%, 100% { transform: translateX(-50%) translateY(0);    opacity: 1;   }
-  50%      { transform: translateX(-50%) translateY(10px); opacity: 0.3; }
-}
-
-.scroll-label {
-  font-size: 0.7rem;
-  color: var(--offo-texte-2);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   SECTION TROIS DIVINITÉS
-   ═══════════════════════════════════════════════════════════════ */
-
-.divinites-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
-  max-width: 1100px;
-  margin: -3rem auto 4rem;
-  padding: 0 1.5rem;
-  position: relative;
-  z-index: 4;
-}
-
-.divinite-card {
-  position: relative;
-  padding: 2rem 1.5rem;
-  background: rgba(15, 15, 31, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  text-align: center;
-  backdrop-filter: blur(20px);
-  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60%;
-    height: 2px;
-    background: linear-gradient(to right, transparent, var(--card-color, #FFD700), transparent);
-    opacity: 0.6;
-  }
-
-  &:hover {
-    transform: translateY(-6px);
-    border-color: var(--card-color, #FFD700);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
-                0 0 40px -12px var(--card-color, #FFD700);
-
-    .divinite-symbol { transform: scale(1.15); }
-  }
-
-  &.divinite-eau      { --card-color: #00D4FF; }
-  &.divinite-amour    { --card-color: #FFD700; }
-  &.divinite-portails { --card-color: #B266FF; }
-
-  h3 {
-    font-size: 1.15rem;
-    font-weight: 800;
-    margin: 0 0 0.25rem;
-    color: var(--card-color);
-    letter-spacing: 0.02em;
-  }
-}
-
-.divinite-symbol {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  transition: transform 0.4s ease;
-}
-
-.divinite-role {
-  font-size: 0.75rem;
-  color: var(--offo-texte-2);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  margin: 0 0 1rem;
-}
-
-.divinite-enseignement {
-  font-size: 0.85rem;
-  color: rgba(245, 245, 255, 0.85);
-  font-style: italic;
-  line-height: 1.6;
-  margin: 0;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   MAIN CONTENT
-   ═══════════════════════════════════════════════════════════════ */
-
+// ═════════════════════════════════════════════════════════════════════
+// MAIN CONTENT
+// ═════════════════════════════════════════════════════════════════════
 .main-content {
   max-width: 1280px;
   margin: 0 auto;
@@ -493,10 +384,9 @@
   margin-bottom: 4rem;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════════ */
-
+// ═════════════════════════════════════════════════════════════════════
+// RESPONSIVE
+// ═════════════════════════════════════════════════════════════════════
 @media (max-width: 768px) {
   .hero-section {
     padding: 4rem 1.25rem 5rem;
@@ -515,14 +405,5 @@
   .portails-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
-  }
-
-  .divinites-section {
-    margin-top: -1.5rem;
-    padding: 0 1rem;
-  }
-
-  .scroll-indicator {
-    display: none;
   }
 }

@@ -1,0 +1,48 @@
+<div class="dimension-page" style="--accent: #7c3aed; --accent-light: #a78bfa;">
+
+  <header class="dimension-header">
+    <div class="dimension-badge">
+      <span class="badge-number">Dimension {{ dimension.numero }}</span>
+      <h1 class="badge-name">{{ dimension.nom }}</h1>
+    </div>
+    <p class="dimension-quote">{{ dimension.citation }}</p>
+  </header>
+
+  <section class="dimension-infos">
+    <div class="info-card">
+      <span class="info-emoji">🧙</span>
+      <span class="info-label">Sage</span>
+      <span class="info-value">{{ dimension.sage }}</span>
+      <span class="info-sub">{{ dimension.sageTitre }}</span>
+    </div>
+    <div class="info-card">
+      <span class="info-emoji">{{ dimension.totemEmoji }}</span>
+      <span class="info-label">Totem</span>
+      <span class="info-value">{{ dimension.totem }}</span>
+    </div>
+    <div class="info-card">
+      <span class="info-emoji">{{ dimension.instrumentEmoji }}</span>
+      <span class="info-label">Instrument</span>
+      <span class="info-value">{{ dimension.instrument }}</span>
+    </div>
+    <div class="info-card">
+      <span class="info-emoji">{{ dimension.espritEmoji }}</span>
+      <span class="info-label">Esprit</span>
+      <span class="info-value">{{ dimension.esprit }}</span>
+    </div>
+  </section>
+
+  <section class="dimension-note-section">
+    <div class="note-display">
+      <span class="note-label">Note sacrée</span>
+      <span class="note-value">{{ dimension.note }}</span>
+    </div>
+  </section>
+
+  <section class="dimension-trial">
+    <h2>L'Épreuve</h2>
+    <p class="trial-question">{{ dimension.epreuve }}</p>
+    <p class="trial-desc">{{ dimension.question }}</p>
+  </section>
+
+</div>
