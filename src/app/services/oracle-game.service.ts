@@ -1,5 +1,10 @@
 import {
-  Injectable, signal, computed, inject, effect, DestroyRef,
+  Injectable,
+  signal,
+  computed,
+  inject,
+  effect,
+  untracked,
 } from '@angular/core';
 import { AudioFxService } from './audio-fx.service';
 import { ParticleService } from './particle.service';
@@ -25,6 +30,7 @@ import type {
   Achievement,
   RecognitionError,
   MicrophonePermission,
+  MicrophoneDiagnostic,
 } from '../data/oracle-game.data';
 
 export type {
@@ -33,14 +39,13 @@ export type {
   Achievement,
   RecognitionError,
   MicrophonePermission,
+  MicrophoneDiagnostic,
 } from '../data/oracle-game.data';
-
 
 @Injectable({ providedIn: 'root' })
 export class OracleGameService {
   private readonly voice = inject(VoiceService);
   private readonly storage = inject(STORAGE);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly audio = inject(AudioFxService);
   readonly particles = inject(ParticleService);
 
@@ -52,7 +57,7 @@ export class OracleGameService {
   readonly totalQuests = QUESTS.length;
 
   /* ═══════════════════════════════════════════════════════
-     ÉTAT DU JEU
+     ÉTAT DU JEU & SIGNALS
      ═══════════════════════════════════════════════════════ */
   readonly xp = signal<number>(0);
   readonly level = computed(() => Math.floor(this.xp() / XP_PER_LEVEL) + 1);
@@ -69,8 +74,8 @@ export class OracleGameService {
   });
 
   readonly rankEmoji = computed(() => {
-    const lvl = this.level();
-    return ['🥉', '🥈', '🥇', '💎', '👑'][Math.min(lvl - 1, 4)];
+    const lvl = Math.min(this.level() - 1, 4);
+    return ['🥉', '🥈', '🥇', '💎', '👑'][lvl] ?? '🥉';
   });
 
   readonly gameCompleted = signal<boolean>(false);
@@ -82,20 +87,26 @@ export class OracleGameService {
   readonly showLevelUp = signal<boolean>(false);
 
   readonly oracleSpeech = signal<string>(
-    "Salut ! Je suis Offowa, Gardienne des Sept Portails."
+    'Salut ! Je suis Offowa, Gardienne des Sept Portails.'
   );
 
   readonly currentQuestIndex = signal<number>(0);
   readonly unlockedAchievements = signal<string[]>([]);
 
-  /* Ré-exposition des signaux vocaux */
+  /* Signaux vocaux réexposés */
   readonly isSpeaking = this.voice.isSpeaking;
   readonly isListening = this.voice.isListening;
   readonly isSupported = this.voice.isSupported;
   readonly lastError = this.voice.lastError;
 
-  /* Permission micro (état initialisé au démarrage) */
+  /* Micro & Diagnostic */
   readonly microphonePermission = signal<MicrophonePermission | 'unknown'>('unknown');
+  readonly microphoneDiagnostic = signal<MicrophoneDiagnostic | null>(null);
+
+  readonly canUseMicrophone = computed(() => {
+    const diag = this.microphoneDiagnostic();
+    return diag?.usable === true;
+  });
 
   readonly currentQuest = computed<Quest | null>(
     () => QUESTS[this.currentQuestIndex()] ?? null
@@ -104,7 +115,7 @@ export class OracleGameService {
   readonly currentDimension = computed<Dimension | null>(() => {
     const quest = this.currentQuest();
     if (!quest) return null;
-    return DIMENSIONS.find(d => d.id === quest.dimensionId) ?? null;
+    return DIMENSIONS.find((d) => d.id === quest.dimensionId) ?? null;
   });
 
   readonly completionPercent = computed(
@@ -120,14 +131,14 @@ export class OracleGameService {
       { id: 'first_step', title: 'Premier Pas', description: 'Franchir le Premier Portail', icon: '🚪', unlocked: unlocked.includes('first_step') },
       { id: 'streak_3', title: 'Série Ardente', description: '3 bonnes réponses consécutives', icon: '🔥', unlocked: unlocked.includes('streak_3') },
       { id: 'streak_5', title: 'Feu Sacré', description: '5 bonnes réponses consécutives', icon: '⚡', unlocked: unlocked.includes('streak_5') },
-      { id: 'no_hint', title: 'Sans Aide', description: 'Terminer sans utiliser d\'indice', icon: '🎯', unlocked: unlocked.includes('no_hint') },
+      { id: 'no_hint', title: 'Sans Aide', description: "Terminer sans utiliser d'indice", icon: '🎯', unlocked: unlocked.includes('no_hint') },
       { id: 'half_way', title: 'Mi-Chemin', description: 'Atteindre la 4ème Dimension', icon: '🌗', unlocked: unlocked.includes('half_way') },
       { id: 'level_3', title: 'Virtuose', description: 'Atteindre le niveau 3', icon: '🎸', unlocked: unlocked.includes('level_3') },
-      { id: 'offolomou', title: 'Offolomou', description: 'Traverser les 7 Dimensions', icon: '💎', unlocked: unlocked.includes('offolomou') }
+      { id: 'offolomou', title: 'Offolomou', description: 'Traverser les 7 Dimensions', icon: '💎', unlocked: unlocked.includes('offolomou') },
     ];
   });
 
-  readonly unlockedCount = computed(() => this.achievements().filter(a => a.unlocked).length);
+  readonly unlockedCount = computed(() => this.achievements().filter((a) => a.unlocked).length);
 
   private lastAnnouncedQuestIndex = -1;
 
@@ -139,28 +150,34 @@ export class OracleGameService {
   }
 
   /* ═══════════════════════════════════════════════════════
-     VÉRIFICATION MICRO AU DÉMARRAGE
+     GESTION AVANCÉE ET REPRISE DU MICROPHONE
      ═══════════════════════════════════════════════════════ */
-  private async checkMicrophoneOnStartup(): Promise<void> {
-    const state = await this.voice.checkMicrophonePermission();
-    this.microphonePermission.set(state);
+  public async checkMicrophoneOnStartup(): Promise<void> {
+    try {
+      const diag = await this.voice.diagnoseMicrophone();
+      this.microphoneDiagnostic.set(diag);
+      this.microphonePermission.set(diag.permission);
 
-    // Si le micro est OK, aucune annonce spéciale — l'utilisateur peut parler.
-    if (state === 'granted' || state === 'prompt') return;
+      if (diag.usable || diag.permission === 'prompt') return;
 
-    // Délai : laisse le temps à l'annonce de quête de se terminer
-    // (registerQuestAnnouncer déclenche un setTimeout à 500ms + le speak lui-même)
-    setTimeout(async () => {
-      const message =
-        state === 'denied'
-          ? `Attention, offolandais ! Ton micro est bloqué par le navigateur. ` +
-            `Tu ne peux pas me parler directement. Utilise la saisie texte ci-dessous, ` +
-            `ou autorise le micro dans les réglages du navigateur.`
-          : `Ton navigateur ne supporte pas la reconnaissance vocale. ` +
-            `Utilise la saisie texte ci-dessous pour me répondre.`;
+      setTimeout(async () => {
+        await this.speak(
+          diag.userMessage || 'Le micro est indisponible. Utilise le clavier pour saisir tes réponses !'
+        );
+      }, 3000);
+    } catch {
+      this.microphonePermission.set('denied');
+    }
+  }
 
-      await this.speak(message);
-    }, 3500);
+  public async requestMicrophoneAccess(): Promise<void> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      await this.checkMicrophoneOnStartup();
+    } catch {
+      this.speak("Permission refusée. Activer le micro dans les paramètres du navigateur.");
+    }
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -174,23 +191,25 @@ export class OracleGameService {
       const index = this.currentQuestIndex();
 
       if (completed || !quest || !dimension) return;
-      if (index === this.lastAnnouncedQuestIndex) return;
 
-      this.lastAnnouncedQuestIndex = index;
+      untracked(() => {
+        if (index === this.lastAnnouncedQuestIndex) return;
+        this.lastAnnouncedQuestIndex = index;
 
-      setTimeout(async () => {
-        if (this.voice.isSpeaking()) return;
-        const intro =
-          `Quête ${index + 1} sur ${this.totalQuests}. ` +
-          `${dimension.name}, gardée par ${dimension.sage}, ${dimension.sageTitle}. ` +
-          `${quest.description}`;
-        await this.speak(intro);
-      }, 500);
+        setTimeout(async () => {
+          if (this.voice.isSpeaking()) return;
+          const intro =
+            `Quête ${index + 1} sur ${this.totalQuests}. ` +
+            `${dimension.name}, gardée par ${dimension.sage}, ${dimension.sageTitle}. ` +
+            `${quest.description}`;
+          await this.speak(intro);
+        }, 400);
+      });
     });
   }
 
   /* ═══════════════════════════════════════════════════════
-     AUDIO HELPERS
+     AUDIO & PERSISTANCE (CORRIGÉE)
      ═══════════════════════════════════════════════════════ */
   playClick(): void { this.audio.play('click'); }
   playHover(): void { this.audio.play('hover'); }
@@ -200,23 +219,23 @@ export class OracleGameService {
     const next = !this.soundEnabled();
     this.soundEnabled.set(next);
     this.audio.setEnabled(next);
-    if (this.storage) {
-      try { this.storage.setItem(STORAGE_KEY_SOUND, String(next)); } catch {}
+    const storage = this.storage;
+    if (storage) {
+      try { storage.setItem(STORAGE_KEY_SOUND, String(next)); } catch {}
     }
     if (next) this.audio.play('click');
   }
 
-  /* ═══════════════════════════════════════════════════════
-     PERSISTANCE
-     ═══════════════════════════════════════════════════════ */
   private restoreFromStorage(): void {
-    if (!this.storage) return;
+    const storage = this.storage;
+    if (!storage) return;
+
     try {
-      const xpRaw = this.storage.getItem(STORAGE_KEY_XP);
-      const idxRaw = this.storage.getItem(STORAGE_KEY_QUEST_INDEX);
-      const doneRaw = this.storage.getItem(STORAGE_KEY_COMPLETED);
-      const soundRaw = this.storage.getItem(STORAGE_KEY_SOUND);
-      const achRaw = this.storage.getItem(STORAGE_KEY_ACHIEVEMENTS);
+      const xpRaw = storage.getItem(STORAGE_KEY_XP);
+      const idxRaw = storage.getItem(STORAGE_KEY_QUEST_INDEX);
+      const doneRaw = storage.getItem(STORAGE_KEY_COMPLETED);
+      const soundRaw = storage.getItem(STORAGE_KEY_SOUND);
+      const achRaw = storage.getItem(STORAGE_KEY_ACHIEVEMENTS);
 
       if (xpRaw !== null) {
         const parsed = Number(xpRaw);
@@ -244,20 +263,36 @@ export class OracleGameService {
 
   private registerPersistence(): void {
     effect(() => {
-      if (!this.storage) return;
-      try {
-        this.storage.setItem(STORAGE_KEY_XP, String(this.xp()));
-        this.storage.setItem(STORAGE_KEY_QUEST_INDEX, String(this.currentQuestIndex()));
-        this.storage.setItem(STORAGE_KEY_COMPLETED, String(this.gameCompleted()));
-        this.storage.setItem(STORAGE_KEY_ACHIEVEMENTS, JSON.stringify(this.unlockedAchievements()));
-      } catch {}
+      const xp = this.xp();
+      const idx = this.currentQuestIndex();
+      const completed = this.gameCompleted();
+      const achievements = this.unlockedAchievements();
+      const storage = this.storage;
+
+      if (!storage) return;
+
+      untracked(() => {
+        try {
+          storage.setItem(STORAGE_KEY_XP, String(xp));
+          storage.setItem(STORAGE_KEY_QUEST_INDEX, String(idx));
+          storage.setItem(STORAGE_KEY_COMPLETED, String(completed));
+          storage.setItem(STORAGE_KEY_ACHIEVEMENTS, JSON.stringify(achievements));
+        } catch {}
+      });
     });
   }
 
   /* ═══════════════════════════════════════════════════════
-     INTERACTIONS
+     INTERACTIONS & TRAITEMENT
      ═══════════════════════════════════════════════════════ */
   startListening(): void {
+    if (!this.canUseMicrophone()) {
+      const diag = this.microphoneDiagnostic();
+      const msg = diag?.userMessage ?? "Le micro n'est pas disponible. Entre la réponse au clavier !";
+      this.speak(msg);
+      return;
+    }
+
     this.voice.listen({
       lang: 'fr-FR',
       onResult: (transcript) => this.processInput(transcript),
@@ -285,7 +320,7 @@ export class OracleGameService {
     const q = this.currentQuest();
     if (!q || this.gameCompleted()) return;
     this.audio.play('hint');
-    this.xp.update(v => Math.max(0, v - HINT_COST));
+    this.xp.update((v) => Math.max(0, v - HINT_COST));
     this.speak(`Voici ton indice, offolandais : ${q.hint}`);
   }
 
@@ -339,16 +374,16 @@ export class OracleGameService {
   }
 
   /* ═══════════════════════════════════════════════════════
-     GESTION DU SUCCÈS
+     RÉPONSES ÉCHÉANCES ET SUCCÈS
      ═══════════════════════════════════════════════════════ */
   private handleSuccess(quest: Quest): void {
     const prevLevel = this.level();
-    const dimension = DIMENSIONS.find(d => d.id === quest.dimensionId);
+    const dimension = DIMENSIONS.find((d) => d.id === quest.dimensionId);
 
     this.showSuccessFx.set(true);
     this.audio.play('success');
-    this.totalCorrect.update(v => v + 1);
-    this.streak.update(v => v + 1);
+    this.totalCorrect.update((v) => v + 1);
+    this.streak.update((v) => v + 1);
     this.attempts.set(0);
 
     this.particles.burst(window.innerWidth / 2, window.innerHeight / 2, {
@@ -365,7 +400,7 @@ export class OracleGameService {
     const streakBonus = this.streak() >= 3 ? 20 : 0;
     const totalGain = quest.xpReward + streakBonus;
 
-    this.xp.update(v => v + totalGain);
+    this.xp.update((v) => v + totalGain);
 
     const newLevel = this.level();
     if (newLevel > prevLevel) {
@@ -390,9 +425,9 @@ export class OracleGameService {
         `Extraordinaire, offolandais ! Tu as traversé les Sept Dimensions et découvert Offolomou, le Don de Dieu. +${totalGain} XP ! La musique unit les notes, l'amour unit les êtres, le Don de Dieu unit les dimensions.`
       );
     } else {
-      this.currentQuestIndex.update(i => i + 1);
+      this.currentQuestIndex.update((i) => i + 1);
       const next = this.currentQuest();
-      const nextDim = next ? DIMENSIONS.find(d => d.id === next.dimensionId) : null;
+      const nextDim = next ? DIMENSIONS.find((d) => d.id === next.dimensionId) : null;
       const bonusTxt = streakBonus ? ` Bonus de série : +${streakBonus} XP !` : '';
       const dimensionTxt = dimension ? `${dimension.sage} hoche la tête. ` : '';
       const nextTxt =
@@ -417,21 +452,18 @@ export class OracleGameService {
 
   private unlockAchievement(id: string): void {
     if (this.unlockedAchievements().includes(id)) return;
-    this.unlockedAchievements.update(arr => [...arr, id]);
+    this.unlockedAchievements.update((arr) => [...arr, id]);
     this.audio.play('levelUp');
-    const ach = this.achievements().find(a => a.id === id);
-    if (ach) {
-      this.particles.burst(window.innerWidth / 2, window.innerHeight / 2, {
-        count: 30,
-        emojis: ['🏆', '⭐', '✨'],
-      });
-    }
+    this.particles.burst(window.innerWidth / 2, window.innerHeight / 2, {
+      count: 30,
+      emojis: ['🏆', '⭐', '✨'],
+    });
   }
 
   private handleFailure(message: string): void {
     this.audio.play('error');
     this.streak.set(0);
-    this.attempts.update(v => v + 1);
+    this.attempts.update((v) => v + 1);
 
     const safe = message.length > 50 ? message.slice(0, 50) + '…' : message;
     let hint = '';
@@ -454,7 +486,7 @@ export class OracleGameService {
   }
 
   private matchesAnswer(normalizedMessage: string, accepted: string[]): boolean {
-    return accepted.some(ans => {
+    return accepted.some((ans) => {
       const norm = this.normalize(ans);
       if (!norm) return false;
       const pattern = `(^|\\s)${this.escapeRegex(norm)}(\\s|$)`;
@@ -467,7 +499,7 @@ export class OracleGameService {
   }
 
   /* ═══════════════════════════════════════════════════════
-     API VOCALE (déléguée au VoiceService)
+     API VOCALE
      ═══════════════════════════════════════════════════════ */
   async speak(text: string): Promise<void> {
     this.oracleSpeech.set(text);

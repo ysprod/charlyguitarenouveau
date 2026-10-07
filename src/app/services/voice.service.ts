@@ -12,6 +12,21 @@ export type RecognitionError =
 export type MicrophonePermission =
   | 'granted' | 'denied' | 'prompt' | 'unsupported';
 
+export interface MicrophoneDiagnostic {
+  /** Le contexte est-il sécurisé (HTTPS ou localhost) ? */
+  secureContext: boolean;
+  /** API `navigator.mediaDevices.getUserMedia` disponible ? */
+  hasMediaDevices: boolean;
+  /** `SpeechRecognition` / `webkitSpeechRecognition` disponible ? */
+  hasRecognitionApi: boolean;
+  /** État de la permission micro. */
+  permission: MicrophonePermission;
+  /** Le micro est-il utilisable dans l'état actuel ? */
+  usable: boolean;
+  /** Message pédagogique à afficher à l'utilisateur. */
+  userMessage: string;
+}
+
 export interface SpeakOptions {
   lang?: string;
   pitch?: number;
@@ -23,13 +38,9 @@ export interface SpeakOptions {
 
 export interface ListenOptions {
   lang?: string;
-  /** Callback unique pour le résultat (transcript). */
   onResult: (transcript: string) => void;
-  /** Callback en cas d'erreur de reconnaissance. */
   onError?: (error: RecognitionError) => void;
-  /** Callback quand l'écoute démarre. */
   onStart?: () => void;
-  /** Callback quand l'écoute se termine. */
   onEnd?: () => void;
 }
 
@@ -53,13 +64,13 @@ export const SPEECH_RECOGNITION_CTOR = new InjectionToken<any>(
 );
 
 /* ═══════════════════════════════════════════════════════
-   MESSAGES D'ERREUR PAR DÉFAUT
+   MESSAGES PAR DÉFAUT
    ═══════════════════════════════════════════════════════ */
 const DEFAULT_ERROR_MESSAGES: Record<RecognitionError, string> = {
-  'not-allowed': "Autorise l'accès au micro dans ton navigateur.",
+  'not-allowed': 'Autorise l\'accès au micro dans ton navigateur.',
   'service-not-allowed': 'Service vocal bloqué par le navigateur.',
-  'no-speech': "Je n'ai rien entendu ! Parle un peu plus fort.",
-  'audio-capture': "Aucun micro n'est détecté.",
+  'no-speech': 'Je n\'ai rien entendu ! Parle un peu plus fort.',
+  'audio-capture': 'Aucun micro n\'est détecté.',
   network: 'Problème de connexion au service vocal.',
   aborted: '',
   unknown: 'Une erreur vocale est survenue.',
@@ -74,7 +85,6 @@ export class VoiceService {
   private readonly SpeechRecognitionCtor = inject(SPEECH_RECOGNITION_CTOR);
   private readonly destroyRef = inject(DestroyRef);
 
-  /* État observable — utilisable dans les templates */
   readonly isSpeaking = signal<boolean>(false);
   readonly isListening = signal<boolean>(false);
   readonly isSupported = signal<boolean>(true);
@@ -90,15 +100,10 @@ export class VoiceService {
   }
 
   /* ═══════════════════════════════════════════════════════
-     SYNTHÈSE VOCALE (parler)
+     SYNTHÈSE VOCALE
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Prononce un texte avec la voix de synthèse.
-   * @returns Promise résolue à la fin de la lecture
-   */
   speak(text: string, options: SpeakOptions = {}): Promise<void> {
-    // Capture locale : garantit le narrowing à travers la closure async
     const synth = this.synth;
     if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
       return Promise.resolve();
@@ -142,15 +147,11 @@ export class VoiceService {
     });
   }
 
-  /** Coupe immédiatement toute lecture en cours. */
   stopSpeaking(): void {
     try { this.synth?.cancel(); } catch {}
     this.isSpeaking.set(false);
   }
 
-  /**
-   * Retourne une promesse qui se résout dès que la voix a fini de parler.
-   */
   waitForSpeechEnd(): Promise<void> {
     if (!this.isSpeaking()) return Promise.resolve();
     return new Promise<void>((resolve) => {
@@ -163,13 +164,9 @@ export class VoiceService {
   }
 
   /* ═══════════════════════════════════════════════════════
-     RECONNAISSANCE VOCALE (écouter)
+     RECONNAISSANCE VOCALE
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Démarre l'écoute du micro.
-   * @returns true si l'écoute a démarré, false sinon.
-   */
   listen(options: ListenOptions): boolean {
     if (!this.recognition || this.isListening()) return false;
 
@@ -177,14 +174,12 @@ export class VoiceService {
     this.lastError.set(null);
     this.currentOptions = options;
 
-    // Config langue
     if (options.lang) this.recognition.lang = options.lang;
 
     try {
       this.recognition.start();
       this.clearStartTimeout();
 
-      // Timeout de démarrage : si onStart n'est pas appelé en 3 s, on abort.
       this.startTimeoutId = setTimeout(() => {
         if (!this.isListening()) {
           try { this.recognition?.abort(); } catch {}
@@ -199,29 +194,22 @@ export class VoiceService {
     }
   }
 
-  /** Arrête l'écoute en cours. */
   stopListening(): void {
     try { this.recognition?.stop(); } catch {}
   }
 
-  /** Abandonne l'écoute en cours. */
   abortListening(): void {
     try { this.recognition?.abort(); } catch {}
   }
 
-  /** Message par défaut associé à un code d'erreur. */
   getErrorMessage(error: RecognitionError): string {
     return DEFAULT_ERROR_MESSAGES[error] ?? '';
   }
 
   /* ═══════════════════════════════════════════════════════
-     PERMISSION MICRO
+     PERMISSION & DIAGNOSTIC MICRO
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Vérifie l'état de la permission micro auprès du navigateur.
-   * Retourne 'unsupported' si l'API Permissions n'est pas disponible.
-   */
   async checkMicrophonePermission(): Promise<MicrophonePermission> {
     if (typeof navigator === 'undefined' || !navigator.permissions) {
       return 'unsupported';
@@ -233,9 +221,66 @@ export class VoiceService {
       });
       return status.state as 'granted' | 'denied' | 'prompt';
     } catch {
-      // Safari, Firefox récents : query('microphone') non supporté
       return 'prompt';
     }
+  }
+
+  /**
+   * Diagnostic complet du micro avec message pédagogique.
+   */
+  async diagnoseMicrophone(): Promise<MicrophoneDiagnostic> {
+    const secureContext =
+      typeof window !== 'undefined' && window.isSecureContext;
+
+    const hasMediaDevices =
+      typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
+
+    const hasRecognitionApi = !!this.SpeechRecognitionCtor;
+
+    const permission = await this.checkMicrophonePermission();
+
+    const usable =
+      secureContext &&
+      hasMediaDevices &&
+      hasRecognitionApi &&
+      permission !== 'denied' &&
+      permission !== 'unsupported';
+
+    let userMessage = '';
+
+    if (!secureContext) {
+      userMessage =
+        'Le micro nécessite une connexion sécurisée (HTTPS). ' +
+        'Ouvre cette page en HTTPS pour utiliser la voix.';
+    } else if (!hasRecognitionApi) {
+      userMessage =
+        'Ton navigateur ne supporte pas la reconnaissance vocale. ' +
+        'Utilise la saisie texte ou change de navigateur (Chrome, Edge).';
+    } else if (!hasMediaDevices) {
+      userMessage =
+        'L\'accès au micro est indisponible sur cet appareil. ' +
+        'Utilise la saisie texte.';
+    } else if (permission === 'denied') {
+      userMessage =
+        'Ton micro est bloqué. Autorise le micro pour ce site dans les ' +
+        'réglages de ton navigateur (icône 🔒 dans la barre d\'adresse), ' +
+        'puis recharge la page.';
+    } else if (permission === 'prompt') {
+      userMessage =
+        'Appuie sur le bouton micro pour autoriser l\'accès. ' +
+        'Une popup te demandera la permission.';
+    } else {
+      userMessage = 'Micro prêt — tu peux parler à Offowa.';
+    }
+
+    return {
+      secureContext,
+      hasMediaDevices,
+      hasRecognitionApi,
+      permission,
+      usable,
+      userMessage,
+    };
   }
 
   /* ═══════════════════════════════════════════════════════

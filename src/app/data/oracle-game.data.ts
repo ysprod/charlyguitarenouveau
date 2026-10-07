@@ -5,6 +5,15 @@
 export type MicrophonePermission =
   | 'granted' | 'denied' | 'prompt' | 'unsupported';
 
+export interface MicrophoneDiagnostic {
+  secureContext: boolean;
+  hasMediaDevices: boolean;
+  hasRecognitionApi: boolean;
+  permission: MicrophonePermission;
+  usable: boolean;
+  userMessage: string;
+}
+
 export interface Dimension {
   id: number;
   name: string;

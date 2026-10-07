@@ -1251,3 +1251,20 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ═══════════ ÉTAT DÉSACTIVÉ DU BOUTON MICRO ═══════════ */
+.btn-arcade-mic.disabled {
+  background: linear-gradient(135deg, #4b5563, #374151);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.85;
+
+  &:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .mic-icon {
+    filter: none;
+  }
+}

@@ -36,17 +36,18 @@
     </div>
   </header>
 
-  <!-- Bannière alerte micro -->
-  @if (game.microphonePermission() === 'denied' || game.microphonePermission() === 'unsupported') {
+  <!-- Bannière alerte micro optimisée -->
+  @if (game.microphoneDiagnostic() && !game.canUseMicrophone() && game.microphonePermission() !== 'prompt') {
   <div class="mic-alert" role="alert">
-    <span class="mic-alert-icon">🎤</span>
-    <span class="mic-alert-text">
-      @if (game.microphonePermission() === 'denied') {
-        Micro bloqué — utilise la <strong>saisie texte</strong> pour parler à Offowa.
-      } @else {
-        Micro non supporté par ton navigateur — utilise la <strong>saisie texte</strong>.
-      }
-    </span>
+    <div class="mic-alert-content">
+      <span class="mic-alert-icon">🎤</span>
+      <span class="mic-alert-text">
+        {{ game.microphoneDiagnostic()!.userMessage }}
+      </span>
+    </div>
+    <button type="button" class="btn-mic-retry" (click)="game.requestMicrophoneAccess()" (mouseenter)="onHover()">
+      🔄 Réactiver
+    </button>
   </div>
   }
 
@@ -165,20 +166,31 @@
   </div>
   }
 
-  <!-- Contrôles -->
+  <!-- Section Contrôles avec UX adaptative -->
   <div class="controls-section">
     <button type="button" class="btn-arcade-mic" [class.active]="game.isListening()"
-      [disabled]="game.isListening() || game.gameCompleted()" (click)="game.startListening()" (mouseenter)="onHover()">
+      [class.disabled]="!game.canUseMicrophone() && game.microphonePermission() !== 'prompt'"
+      [disabled]="game.isListening() || game.gameCompleted()" 
+      (click)="onMicClick()" 
+      (mouseenter)="onHover()">
       <span class="btn-glow"></span>
-      <span class="mic-icon">{{ game.isListening() ? '🎙️' : '🎤' }}</span>
+      <span class="mic-icon">
+        {{ game.isListening() ? '🎙️' : (game.canUseMicrophone() ? '🎤' : '⌨️') }}
+      </span>
       <span class="btn-text">
-        {{ game.isListening() ? "Offowa t'écoute..." : "Clique ici pour parler à OFFOWA" }}
+        @if (game.isListening()) {
+        Offowa t'écoute...
+        } @else if (game.canUseMicrophone()) {
+        Clique ici pour parler à OFFOWA
+        } @else {
+        Mode Clavier actif — Tape ta réponse ci-dessous
+        }
       </span>
     </button>
 
     @if (!game.gameCompleted()) {
-    <div class="text-input-group">
-      <input type="text" class="arcade-input" placeholder="Ou tape ta réponse ici..." [ngModel]="textInput()"
+    <div class="text-input-group" [class.input-highlighted]="!game.canUseMicrophone()">
+      <input #textInputElem type="text" class="arcade-input" placeholder="Tape ta réponse ici..." [ngModel]="textInput()"
         (ngModelChange)="textInput.set($event); onTyping()" (keyup.enter)="submitText()" />
       <button type="button" class="btn-send" (click)="submitText()" (mouseenter)="onHover()">
         🚀

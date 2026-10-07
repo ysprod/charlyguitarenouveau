@@ -1,8 +1,7 @@
-
 import { CommonModule } from '@angular/common';
 import {
   Component, EnvironmentInjector, HostListener, OnDestroy,
-  OnInit, runInInjectionContext
+  OnInit, runInInjectionContext, inject
 } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -15,6 +14,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { FooterComponent } from './features/footer/footer.component';
+import { VoiceService } from './services/voice.service';
 
 @Component({
   selector: 'app-root',
@@ -30,7 +30,6 @@ import { FooterComponent } from './features/footer/footer.component';
     MatSnackBarModule,
     FooterComponent
   ],
-
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
@@ -43,6 +42,20 @@ export class AppComponent implements OnInit, OnDestroy {
   unreadCount$: Observable<number> = of(0);
 
   private readonly destroy$ = new Subject<void>();
+  private readonly voice = inject(VoiceService);
+
+  /**
+   * Dernier nombre de messages non lus connu.
+   * Sert à détecter une AUGMENTATION (nouveau message) et non
+   * une simple émission du flux Firebase.
+   */
+  private lastUnreadCount = 0;
+
+  /**
+   * Évite d'annoncer la première valeur du flux
+   * (sinon on parle à chaque rechargement de page).
+   */
+  private hasSeenFirstValue = false;
 
   constructor(
     public readonly auth: AuthService,
@@ -61,6 +74,9 @@ export class AppComponent implements OnInit, OnDestroy {
       switchMap(user => {
 
         if (!user) {
+          // Déconnexion : reset du compteur
+          this.lastUnreadCount = 0;
+          this.hasSeenFirstValue = false;
           return of(0);
         }
 
@@ -96,6 +112,9 @@ export class AppComponent implements OnInit, OnDestroy {
       })
 
     );
+
+    // Abonnement séparé pour surveiller les CHANGEMENTS de compteur
+    this.watchNewMessages();
   }
 
   ngOnDestroy(): void {
@@ -103,6 +122,46 @@ export class AppComponent implements OnInit, OnDestroy {
     this.destroy$.next();
 
     this.destroy$.complete();
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     ANNONCE VOCALE DES NOUVEAUX MESSAGES
+     ═══════════════════════════════════════════════════════ */
+  private watchNewMessages(): void {
+    this.unreadCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(count => {
+
+        // Première valeur : on la mémorise sans parler
+        // (évite d'annoncer "3 messages" à chaque rechargement de page)
+        if (!this.hasSeenFirstValue) {
+          this.hasSeenFirstValue = true;
+          this.lastUnreadCount = count;
+          return;
+        }
+
+        // Nouveau(x) message(s) reçu(s)
+        if (count > this.lastUnreadCount) {
+          const diff = count - this.lastUnreadCount;
+
+          const message = diff === 1
+            ? `Tu as reçu un nouveau message de Charly Guitare.`
+            : `Tu as reçu ${diff} nouveaux messages de Charly Guitare.`;
+
+          // Léger délai pour laisser le DOM se stabiliser
+          setTimeout(async () => {
+            // Attend poliment que la voix actuelle termine avant d'annoncer
+            await this.voice.waitForSpeechEnd();
+
+            await this.voice.speak(message, {
+              pitch: 1.05,
+              rate: 0.95,
+            });
+          }, 300);
+        }
+
+        this.lastUnreadCount = count;
+      });
   }
 
   @HostListener('window:scroll')
@@ -164,42 +223,5 @@ export class AppComponent implements OnInit, OnDestroy {
       .toUpperCase();
   }
 
-  async onGoogleLogin(): Promise<void> {
-
-    try {
-
-      const result =
-        await this.auth.loginWithGoogle();
-
-      if (result.user) {
-
-        this.snackBar.open(
-          `Bienvenue ${result.user.displayName ?? ''} !`,
-          'Fermer',
-          {
-            duration: 3000
-          }
-        );
-
-        await this.router.navigate([
-          '/academie'
-        ]);
-      }
-
-    } catch (error) {
-
-      console.error(
-        'Erreur lors de la connexion Google :',
-        error
-      );
-
-      this.snackBar.open(
-        'Échec de la connexion Google',
-        'Fermer',
-        {
-          duration: 3000
-        }
-      );
-    }
-  }
-} 
+  
+}
