@@ -51,6 +51,7 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   readonly filters: Filter[] = [
     { id: 'all',      label: 'Tous',      icon: '🎮' },
+    { id: 'live',     label: 'Live',      icon: '🎸' },
     { id: 'multi',    label: 'Multi',     icon: '👥' },
     { id: 'music',    label: 'Musique',   icon: '🎵' },
     { id: 'quiz',     label: 'Quiz',      icon: '🧠' },
@@ -202,7 +203,6 @@ export class PlayComponent implements OnInit, OnDestroy {
     if (this.selectedFilter() === id) return;
     this.selectedFilter.set(id);
 
-    // Si le DOM n'est pas encore caché, on le fait au prochain tick
     if (this.gameCards.length === 0) {
       setTimeout(() => this.applyFilter(id), 0);
       return;

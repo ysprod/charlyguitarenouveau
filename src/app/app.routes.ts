@@ -39,6 +39,7 @@ import { RougeComponent } from './univers/rouge/rouge.component';
 import { VertComponent } from './univers/vert/vert.component';
 import { BcoComponent } from './offoland/bco/bco.component';
 import { PianovirtuelComponent } from './game/pianovirtuel/pianovirtuel.component';
+import { GuitarLiveComponent } from './guitar-live/guitar-live.component';
 
 export const routes: Routes = [
   {
@@ -50,6 +51,8 @@ export const routes: Routes = [
     path: 'register',
     component: RegisterComponent
   },
+
+
 
   {
     path: 'home',
@@ -67,6 +70,8 @@ export const routes: Routes = [
     component: FretboardComponent,
     canActivate: [AuthGuard]
   },
+
+   
 
   {
     path: 'memory',
@@ -143,6 +148,12 @@ export const routes: Routes = [
   {
     path: 'profil',
     component: ProfilComponent,
+    canActivate: [AuthGuard]
+  },
+
+  {
+    path: 'guitar-live',
+    component: GuitarLiveComponent,
     canActivate: [AuthGuard]
   },
 

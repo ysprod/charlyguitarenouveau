@@ -293,7 +293,6 @@
   mix-blend-mode: screen;
 }
 
-/* Bordure animée conic gradient masquée */
 .btn-border-anim {
   position: absolute;
   inset: -1px;
@@ -326,7 +325,6 @@
   }
 }
 
-/* Coins HUD */
 .corner {
   position: absolute;
   width: 12px; height: 12px;
@@ -339,7 +337,6 @@
 .corner-bl { bottom: 8px; left: 8px; border-bottom: 2px solid; border-left: 2px solid; border-bottom-left-radius: 6px; }
 .corner-br { bottom: 8px; right: 8px; border-bottom: 2px solid; border-right: 2px solid; border-bottom-right-radius: 6px; }
 
-/* Icône */
 .btn-icon {
   flex-shrink: 0;
   width: 60px; height: 60px;
@@ -354,7 +351,6 @@
   box-shadow: 0 0 20px rgba(0,0,0,0.4);
 }
 
-/* Contenu */
 .btn-content { flex: 1; min-width: 0; position: relative; z-index: 1; }
 
 .btn-tag {
@@ -374,6 +370,7 @@
 .tag-metro { background: linear-gradient(135deg, #f472b6, #ec4899); color: #fff; }
 .tag-card  { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
 .tag-time  { background: linear-gradient(135deg, #06b6d4, #0e7490); color: #fff; }
+.tag-live  { background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
 
 .btn-text {
   display: block;
@@ -413,6 +410,7 @@
 .btn-kronos       { --btn-color: #06b6d4; }
 .btn-piano        { --btn-color: #22d3ee; }
 .btn-pianovirtuel { --btn-color: #14b8a6; }
+.btn-guitarlive   { --btn-color: #ffd700; }
 
 /* Shimmer sur Lyko Duo */
 .btn-duo::before {
@@ -428,6 +426,84 @@
 @keyframes shimmer {
   0% { left: -150%; }
   60%,100% { left: 150%; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CARTE GUITARE LIVE — DESIGN PREMIUM OR/AMBRE
+   ═══════════════════════════════════════════════════════ */
+.btn-guitarlive {
+  background:
+    linear-gradient(145deg, rgba(255, 215, 0, 0.08), rgba(139, 90, 43, 0.06)),
+    linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border-color: rgba(255, 215, 0, 0.25);
+
+  /* Reflet doré qui brille en boucle */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -150%;
+    width: 50%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 215, 0, 0.35), transparent);
+    transform: skewX(-25deg);
+    animation: shimmerGold 4s infinite;
+    pointer-events: none;
+  }
+
+  /* Halo doré pulsant derrière la carte */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 22px;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.35), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: -1;
+    animation: goldPulse 3s ease-in-out infinite;
+  }
+
+  .btn-icon {
+    background: linear-gradient(145deg, rgba(255, 215, 0, 0.15), rgba(139, 90, 43, 0.25));
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow:
+      0 0 20px rgba(255, 215, 0, 0.3),
+      inset 0 0 15px rgba(255, 215, 0, 0.1);
+    animation: guitarIconSwing 4s ease-in-out infinite;
+  }
+
+  &:hover {
+    border-color: #ffd700;
+    box-shadow:
+      0 20px 40px rgba(0,0,0,0.5),
+      0 0 40px rgba(255, 215, 0, 0.6),
+      0 0 80px rgba(255, 215, 0, 0.25),
+      inset 0 0 40px rgba(255, 215, 0, 0.08);
+
+    &::after { opacity: 1; }
+
+    .btn-icon {
+      transform: rotate(-12deg) scale(1.2);
+      box-shadow: 0 0 35px #ffd700, inset 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+    .btn-text { text-shadow: 0 0 15px #ffd700; }
+  }
+}
+
+@keyframes shimmerGold {
+  0% { left: -150%; }
+  60%, 100% { left: 150%; }
+}
+
+@keyframes goldPulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes guitarIconSwing {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-6deg); }
+  75% { transform: rotate(6deg); }
 }
 
 /* ============================================================
@@ -458,7 +534,7 @@
 .footer-line {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,242,254,0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 242, 254, 0.4), transparent);
 }
 .footer-text {
   font-size: 0.85rem;

@@ -3,99 +3,100 @@
      [class.screen-shake]="screenShake()"
      [class.melody-mode]="melodyPlaying()">
 
-  <!-- ═══════════ FOND ANIMÉ DYNAMIQUE ═══════════ -->
+  <!-- ═══════════ FOND ANIMÉ ═══════════ -->
   <div class="animated-background">
     <div class="bg-grid"></div>
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
     <div class="bg-glow bg-glow-3"></div>
-    <div class="bg-scanlines"></div>
     @if (isStarPowerActive()) {
       <div class="starpower-overlay"></div>
-      <div class="starpower-rays"></div>
+    }
+    @if (melodyPlaying()) {
+      <div class="celebration-overlay"></div>
     }
   </div>
 
-  <!-- ═══════════ HUD GUITAR HERO ═══════════ -->
+  <!-- ═══════════ CONFETTIS DE CÉLÉBRATION ═══════════ -->
+  @if (melodyPlaying()) {
+    <div class="confetti-layer">
+      @for (c of confettiParticles(); track c.id) {
+        <div class="confetti"
+             [style.left.%]="c.x"
+             [style.background]="c.color"
+             [style.width.px]="c.size"
+             [style.height.px]="c.size * 1.6"
+             [style.animation-delay.ms]="c.delay"
+             [style.animation-duration.ms]="c.duration"
+             [style.transform]="'rotate(' + c.rotation + 'deg)'"></div>
+      }
+    </div>
+  }
+
+  <!-- ═══════════ HUD ═══════════ -->
   <header class="game-hud">
     <div class="hud-box score-box">
       <span class="label">SCORE</span>
       <span class="value">{{ score() }}</span>
-      <div class="score-glow"></div>
     </div>
 
     @if (isPlaying()) {
       <div class="target-card" [@starPowerPulse]="isStarPowerActive() ? 'active' : 'inactive'">
-        <div class="target-rings">
-          <div class="ring ring-1"></div>
-          <div class="ring ring-2"></div>
-          <div class="ring ring-3"></div>
-        </div>
-        <span class="sub-text">TROUVE LA NOTE :</span>
-        <h2 class="target-note pulse-target">{{ targetNote() }}</h2>
-        <div class="target-glow"></div>
+        <span class="sub-text">TROUVE</span>
+        <h2 class="target-note">{{ targetNote() }}</h2>
       </div>
     }
 
     <div class="hud-box combo-box"
          [class.multiplier-active]="multiplier() > 1"
-         [class.multiplier-max]="multiplier() >= 5"
          [@comboFlash]="comboFlashKey()">
       <span class="label">COMBO</span>
       <span class="value">x{{ effectiveMultiplier() }}</span>
-      @if (multiplier() > 1) {
-        <div class="combo-fire">🔥</div>
-      }
     </div>
   </header>
 
-  <!-- ═══════════ BARRE STAR POWER AMÉLIORÉE ═══════════ -->
+  <!-- ═══════════ STAR POWER + TIMER ═══════════ -->
   @if (isPlaying()) {
-    <div class="star-power-container" [class.ready]="starPowerGauge() >= 100">
+    <div class="star-power-container">
       <div class="star-power-track">
-        <div class="star-power-bar" [style.width.%]="starPowerGauge()">
-          <div class="bar-shine"></div>
-        </div>
+        <div class="star-power-bar" [style.width.%]="starPowerGauge()"></div>
         <div class="star-power-stars">
           @for (star of getStarPowerStars(); track star) {
             <span class="star" [class.filled]="isStarFilled(star)">★</span>
           }
         </div>
       </div>
-      <button
-        class="star-power-btn"
-        [disabled]="starPowerGauge() < 100 || isStarPowerActive()"
-        [class.charging]="starPowerGauge() < 100"
-        [class.ready]="starPowerGauge() >= 100 && !isStarPowerActive()"
-        [class.active]="isStarPowerActive()"
-        (click)="activateStarPower()">
-        @if (isStarPowerActive()) {
-          <span class="btn-icon">⚡</span>
-          <span class="btn-text">ACTIF {{ starPowerTimeLeft() | number:'1.1-1' }}s</span>
-        } @else if (starPowerGauge() >= 100) {
-          <span class="btn-icon">⚡</span>
-          <span class="btn-text">STAR POWER !</span>
-        } @else {
-          <span class="btn-icon">⚡</span>
-          <span class="btn-text">{{ starPowerGauge() | number:'1.0-0' }}%</span>
+      <div class="star-power-btn-wrapper">
+        <button
+          class="star-power-btn"
+          [disabled]="starPowerGauge() < 100 || isStarPowerActive()"
+          [class.ready]="starPowerGauge() >= 100 && !isStarPowerActive()"
+          [class.active]="isStarPowerActive()"
+          (click)="activateStarPower()">
+          @if (isStarPowerActive()) {
+            ⚡ {{ starPowerTimeLeft() | number:'1.1-1' }}s
+          } @else if (starPowerGauge() >= 100) {
+            ⚡ BOOSTER
+          } @else {
+            ⚡ {{ starPowerGauge() | number:'1.0-0' }}%
+          }
+        </button>
+        @if (starPowerGauge() >= 100 && !isStarPowerActive()) {
+          <span class="booster-hint">⚡ ×2 COMBO si tu joues vite !</span>
         }
-      </button>
+      </div>
     </div>
 
-    <div class="timer-bar-wrapper" [class.critical]="getTimerPercent() < 20">
+    <div class="timer-bar-wrapper">
       <div class="timer-bar"
            [style.width.%]="getTimerPercent()"
-           [style.background]="getTimerColor()">
-        <div class="timer-pulse"></div>
-      </div>
-      <div class="timer-glow" [style.background]="getTimerColor()"></div>
+           [style.background]="getTimerColor()"></div>
     </div>
   }
 
-  <!-- ═══════════ OVERLAY FEEDBACK ═══════════ -->
+  <!-- ═══════════ FEEDBACK ═══════════ -->
   @if (feedbackMessage()) {
     <div class="feedback-overlay" [@feedbackAnim] [attr.data-key]="feedbackKey()">
-      <div class="feedback-burst"></div>
       <span class="feedback-badge"
             [class.success]="feedbackType() === 'success'"
             [class.error]="feedbackType() === 'error'"
@@ -105,108 +106,189 @@
     </div>
   }
 
-  <!-- ═══════════ OVERLAY MÉLODIE DES ORIGINES ═══════════ -->
+  <!-- ═══════════ MÉLODIE DES ORIGINES ═══════════ -->
   @if (melodyPlaying()) {
     <div class="melody-overlay" [@melodyBanner] [style.--melody-color]="melodyChordColor()">
-      <div class="melody-aura"></div>
-      <div class="melody-particles">
-        @for (i of [1,2,3,4,5,6,7,8]; track i) {
-          <span class="melody-particle" [style.--i]="i"></span>
+      <div class="melody-sparkles">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <span class="sparkle" [style.--i]="i">✨</span>
         }
       </div>
       <div class="melody-banner">
         <span class="melody-icon">🎼</span>
-        <div class="melody-titles">
-          <h3 class="melody-title">FÉLICITATIONS !</h3>
-          <p class="melody-subtitle">
-            @if (melodyChordName()) {
-              <span class="melody-chord" [style.color]="melodyChordColor()">{{ melodyChordName() }}</span>
-            }
-            @if (melodyChordFrench()) {
-              <span class="melody-chord-french"> — {{ melodyChordFrench() }}</span>
-            }
-          </p>
-        </div>
+        <h3 class="melody-title">
+          <span class="title-text">FELICITATION !</span>
+        </h3>
+        <p class="melody-subtitle">
+          <span class="melody-chord" [style.color]="melodyChordColor()">{{ melodyChordName() }}</span>
+          @if (melodyChordFrench()) {
+            <span class="melody-chord-french"> — {{ melodyChordFrench() }}</span>
+          }
+        </p>
       </div>
       <div class="melody-progression">
-        @for (chord of melodieOrigines; track chord.name; let i = $index) {
+        @for (note of melodieOrigines; track $index; let i = $index) {
           <div class="melody-chord-dot"
                [class.active]="melodyChordIndex() === i"
                [class.past]="melodyChordIndex() > i"
-               [style.--chord-color]="chord.color">
-            <div class="dot-ring"></div>
-            <span class="chord-name">{{ chord.name }}</span>
+               [style.--chord-color]="note.color">
+            <span class="chord-name">{{ note.name }}</span>
           </div>
         }
       </div>
     </div>
   }
 
-  <!-- ═══════════ MANCHE DE GUITARE LÉGENDAIRE ═══════════ -->
+  <!-- ═══════════ MANCHE DE GUITARE ACOUSTIQUE ═══════════ -->
   @if (isPlaying()) {
-    <div class="fretboard-wrapper">
-      <div class="fretboard-3d">
-        <div class="fretboard">
-          <!-- Marqueurs de frette -->
-          <div class="fret-markers">
-            <span class="marker fret-3"></span>
-            <span class="marker fret-5"></span>
-            <span class="marker fret-7"></span>
-            <span class="marker fret-9"></span>
-            <span class="marker fret-12"></span>
-          </div>
+    <div class="guitar-viewport">
 
-          <!-- En-tête des frettes -->
-          <div class="frets-header">
-            @for (fret of frets; track fret) {
-              <div class="fret-num" [class.open-string]="fret === 0">
-                {{ fret === 0 ? 'VIDE' : fret }}
-              </div>
-            }
-          </div>
-
-          <!-- Cordes et frettes -->
-          <div class="strings-container">
+      <!-- Tête de guitare stylisée (gauche) -->
+      <div class="guitar-headstock">
+        <div class="headstock-wood">
+          <div class="tuning-pegs">
             @for (str of strings; track str.index) {
-              <div class="guitar-string"
-                   [attr.data-string]="str.name"
-                   [style.--string-color]="getStringColor(str.index)">
-                <div class="string-line"></div>
-                @for (fret of frets; track fret) {
-                  <div class="fret-node"
-                       [class.correct]="correctFretIndex() === fret && correctStringIndex() === str.index"
-                       [class.hit]="isHit(str.index, fret)"
-                       [class.star-power-node]="isStarPowerActive()"
-                       (click)="onFretClick(str.index, fret)">
-                    <div class="fret-wire"></div>
-                    <div class="touch-point">
-                      <div class="touch-ring"></div>
-                      @if (shouldShowNoteLabel()) {
-                        <span class="note-label">{{ getNoteAt(str.index, fret) }}</span>
-                      }
-                    </div>
-                  </div>
-                }
+              <div class="peg" [class.left]="str.index % 2 === 0">
+                <div class="peg-post"></div>
+                <div class="peg-button"></div>
               </div>
             }
           </div>
+        </div>
+      </div>
 
-          <!-- Particules -->
-          @for (p of particles(); track p.id) {
-            <div class="particle"
-                 [style.left.%]="p.x"
-                 [style.top.%]="p.y"
-                 [style.background]="p.color"
-                 [style.width.px]="p.size"
-                 [style.height.px]="p.size"
-                 [style.--rotation.deg]="p.rotation"></div>
+      <!-- Sillet (Nut) -->
+      <div class="guitar-nut">
+        <div class="nut-grooves">
+          @for (str of strings; track str.index) {
+            <div class="nut-groove" [style.--gauge]="str.gaugeMm"></div>
           }
         </div>
       </div>
+
+      <!-- Manche scrollable -->
+      <div class="fretboard-scroll">
+        <div class="fretboard-inner">
+
+          <!-- Corps du manche -->
+          <div class="guitar-neck">
+            <div class="wood-grain"></div>
+            <div class="wood-highlight"></div>
+
+            <!-- Inlays nacrés -->
+            <div class="fret-inlays">
+              <span class="inlay" style="--fret:3"></span>
+              <span class="inlay" style="--fret:5"></span>
+              <span class="inlay" style="--fret:7"></span>
+              <span class="inlay" style="--fret:9"></span>
+              <span class="inlay double" style="--fret:12">
+                <span></span><span></span>
+              </span>
+            </div>
+
+            <!-- Frettes métalliques -->
+            <div class="fret-wires">
+              @for (fret of frets; track fret) {
+                @if (fret > 0) {
+                  <div class="fret-wire" [style.--fret-pos]="fret"></div>
+                }
+              }
+            </div>
+
+            <!-- Cordes -->
+            <div class="strings-layer">
+              @for (str of strings; track str.index) {
+                <div class="string-track">
+                  <div class="string"
+                       [class.vibrating]="activeVibratingString() === str.index"
+                       [style.--gauge]="str.gaugeMm"
+                       [style.--color]="getStringColor(str.index)">
+                    <div class="string-body"></div>
+                    <div class="string-highlight"></div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Zones interactives avec notes -->
+            <div class="notes-layer">
+              @for (str of strings; track str.index) {
+                <div class="notes-row">
+                  @for (fret of frets; track fret) {
+                    <div class="note-cell"
+                         [class.open]="fret === 0"
+                         [class.correct]="correctFretIndex() === fret && correctStringIndex() === str.index"
+                         [class.hit]="isHit(str.index, fret)"
+                         [class.hidden-note]="!shouldShowNoteLabel() && fret > 0"
+                         [class.melody-active]="isMelodyNote(str.index, fret)"
+                         [style.--melody-note-color]="melodyChordColor()"
+                         (click)="onFretClick(str.index, fret)">
+                      @if (fret > 0) {
+                        <div class="note-pill"
+                             [class.is-target]="shouldShowNoteLabel() && getNoteAt(str.index, fret) === targetNote()">
+                          @if (shouldShowNoteLabel()) {
+                            <span class="note-text">{{ getNoteAt(str.index, fret) }}</span>
+                          }
+                        </div>
+                      }
+                      @if (fret === 0) {
+                        <div class="note-pill open-pill">
+                          @if (shouldShowNoteLabel()) {
+                            <span class="note-text">VIDE</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Particules -->
+            @for (p of particles(); track p.id) {
+              <div class="particle"
+                   [style.left.%]="p.x"
+                   [style.top.%]="p.y"
+                   [style.background]="p.color"
+                   [style.width.px]="p.size"
+                   [style.height.px]="p.size"></div>
+            }
+          </div>
+
+          <!-- Numéros de frettes en bas -->
+          <div class="fret-numbers">
+            @for (fret of frets; track fret) {
+              <div class="fret-num" [style.--fret-pos]="fret">
+                {{ fret === 0 ? '🎸' : fret }}
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Rosace (droite, décorative) -->
+      <div class="guitar-rosette">
+        <div class="rosette-ring outer"></div>
+        <div class="rosette-ring inner"></div>
+        <div class="sound-hole"></div>
+      </div>
+    </div>
+
+    <!-- Indication scroll mobile -->
+    <div class="scroll-hint">← Glisse pour explorer le manche →</div>
+  }
+
+  <!-- ═══════════ INFO BOOSTER ═══════════ -->
+  @if (isPlaying()) {
+    <div class="booster-info-banner">
+      <span class="booster-icon">⚡</span>
+      <span class="booster-text">
+        Active le <strong>BOOSTER</strong> pour <strong>doubler ton combo</strong> quand tu joues rapidement !
+      </span>
     </div>
   }
 
-  <!-- ═══════════ BARRE DE VIES ═══════════ -->
+  <!-- ═══════════ VIES ═══════════ -->
   @if (isPlaying()) {
     <div class="lives-bar">
       @for (heart of [1,2,3,4,5]; track $index; let i = $index) {
@@ -217,39 +299,45 @@
     </div>
   }
 
-  <!-- ═══════════ BARRE SUPÉRIEURE ═══════════ -->
+  <!-- ═══════════ TOP BAR ═══════════ -->
   <header class="game-top-bar">
     <button class="btn-back" (click)="goToPlay()">
       <span class="material-icons">arrow_back</span>
       <span>RETOUR</span>
     </button>
+
+    @if (isPlaying()) {
+      <button class="btn-menu" (click)="backToMenu()">
+        <span class="material-icons">menu</span>
+        <span>MENU</span>
+      </button>
+    }
+
     <div class="logo-zone">
       <span class="icon">🎸</span>
       <h1>CHARLY GUITARE HERO</h1>
-      <div class="logo-glow"></div>
     </div>
     @if (highScore() > 0) {
       <div class="high-score-badge">
         <span class="trophy">🏆</span>
-        <span>RECORD : {{ highScore() }}</span>
+        <span>{{ highScore() }}</span>
       </div>
     }
   </header>
 
-  <!-- ═══════════ ÉCRAN D'ACCUEIL & GAME OVER ═══════════ -->
+  <!-- ═══════════ ÉCRANS MODAUX ═══════════ -->
   @if (!isPlaying()) {
     <div class="overlay-screen">
       @if (!isGameOver()) {
         <div class="card-modal" [@modalAnim]>
-          <div class="modal-bg-effects">
-            <div class="modal-orb orb-1"></div>
-            <div class="modal-orb orb-2"></div>
-          </div>
           <div class="modal-icon">🎸</div>
           <h1>CHARLY GUITARE HERO</h1>
           <p class="modal-description">
             Retrouve les notes demandées sur le manche pour remplir ton <strong>Star Power</strong>
             et débloquer la <strong>Mélodie des Origines</strong> !
+          </p>
+          <p class="description-highlight">
+            ⚡ Active le <strong>BOOSTER</strong> pour <strong>doubler ton combo</strong> quand tu joues rapidement !
           </p>
 
           <div class="difficulty-selector">
@@ -273,7 +361,7 @@
                       [class.active]="difficulty() === 'hardcore'"
                       (click)="setDifficulty('hardcore')">
                 <span class="diff-icon">🌟</span>
-                <span class="diff-name">DIFICILE</span>
+                <span class="diff-name">DIFFICILE</span>
                 <span class="diff-desc">2 vies · Rapide</span>
               </button>
             </div>
@@ -281,10 +369,7 @@
 
           <div class="modal-actions-horizontal">
             <button class="btn-secondary" (click)="goToPlay()">RETOUR</button>
-            <button class="btn-start" (click)="startGame()">
-              <span class="btn-glow"></span>
-              <span>LANCER LE DÉFI</span>
-            </button>
+            <button class="btn-start" (click)="startGame()">LANCER LE DÉFI</button>
           </div>
         </div>
       }
@@ -317,11 +402,9 @@
             <div class="new-record">🎉 NOUVEAU RECORD ! 🎉</div>
           }
           <div class="modal-actions">
-            <button class="btn-start" (click)="startGame()">
-              <span class="btn-glow"></span>
-              <span>RÉESSAYER</span>
-            </button>
-            <button class="btn-secondary" (click)="goToPlay()">RETOUR AU MENU</button>
+            <button class="btn-start" (click)="startGame()">RÉESSAYER</button>
+            <button class="btn-secondary" (click)="backToMenu()">MENU PRINCIPAL</button>
+            <button class="btn-tertiary" (click)="goToPlay()">QUITTER</button>
           </div>
         </div>
       }

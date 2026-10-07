@@ -92,7 +92,6 @@ interface ProfileFormControls {
   confirmPassword: FormControl<string>;
 }
 
-
 @Component({
   selector: 'app-profil',
   standalone: true,

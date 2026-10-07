@@ -1,20 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LvideoComponent } from './lvideo.component';
+import { GuitarLiveComponent } from './guitar-live.component';
 
-describe('LvideoComponent', () => {
-  let component: LvideoComponent;
-  let fixture: ComponentFixture<LvideoComponent>;
+describe('GuitarLiveComponent', () => {
+  let component: GuitarLiveComponent;
+  let fixture: ComponentFixture<GuitarLiveComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ LvideoComponent ]
+      imports: [GuitarLiveComponent]
     })
     .compileComponents();
-  });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(LvideoComponent);
+    fixture = TestBed.createComponent(GuitarLiveComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

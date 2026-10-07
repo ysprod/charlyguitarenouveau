@@ -60,7 +60,7 @@
     <section class="games-selector-section">
       <div class="game-buttons-grid">
 
-        <!-- 🐵 LYKO DUEL -->
+   <!-- 🐵 LYKO DUEL -->
         <button type="button"
                 class="btn-game btn-lyko btn-duo"
                 data-category="multi"
@@ -80,6 +80,29 @@
           <span class="corner corner-bl"></span>
           <span class="corner corner-br"></span>
         </button>
+        
+        <!-- 🎸 GUITARE LIVE (NOUVEAU) -->
+        <a [routerLink]="['/guitar-live']"
+           class="btn-game btn-guitarlive"
+           data-category="live"
+           title="Guitare Live - Jouer pour le plaisir"
+           aria-label="Lancer Guitare Live">
+          <span class="btn-glow"></span>
+          <span class="btn-border-anim"></span>
+          <span class="btn-icon">🎸</span>
+          <span class="btn-content">
+            <span class="btn-tag tag-live">LIVE</span>
+            <span class="btn-text">GUITARE LIVE</span>
+            <span class="btn-sub">Joue pour le plaisir</span>
+          </span>
+          <span class="btn-arrow">→</span>
+          <span class="corner corner-tl"></span>
+          <span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span>
+          <span class="corner corner-br"></span>
+        </a>
+
+     
 
         <!-- 🎸 CHARLY GUITARE HERO -->
         <a [routerLink]="['/fretboard']"

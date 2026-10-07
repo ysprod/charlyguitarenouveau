@@ -1,0 +1,148 @@
+<div class="guitar-live-container">
+
+  <!-- ═══════════ FOND ANIMÉ ═══════════ -->
+  <div class="animated-background">
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+  </div>
+
+  <!-- ═══════════ TOP BAR ═══════════ -->
+  <header class="game-top-bar">
+    <button class="btn-back" (click)="goBack()">
+      <span class="material-icons">arrow_back</span>
+      <span>RETOUR</span>
+    </button>
+
+    <div class="logo-zone">
+      <span class="icon">🎸</span>
+      <h1>GUITARE LIVE</h1>
+    </div>
+
+    <!-- Affichage note jouée -->
+    <div class="note-display" [class.active]="lastPlayedNote()">
+      @if (lastPlayedNote()) {
+        <span class="note-name">{{ lastPlayedNote() }}</span>
+      } @else {
+        <span class="note-placeholder">Joue...</span>
+      }
+    </div>
+  </header>
+
+  <!-- ═══════════ INSTRUCTION ═══════════ -->
+  <div class="instruction-banner">
+    <span class="instruction-icon">👆</span>
+    <span class="instruction-text">
+      Touche une case pour la faire sonner — comme sur une vraie guitare !
+    </span>
+  </div>
+
+  <!-- ═══════════ GUITARE ACOUSTIQUE ═══════════ -->
+  <div class="guitar-viewport">
+
+    <!-- Tête de guitare -->
+    <div class="guitar-headstock">
+      <div class="headstock-wood">
+        <div class="tuning-pegs">
+          @for (str of strings; track str.index) {
+            <div class="peg" [class.left]="str.index % 2 === 0">
+              <div class="peg-post"></div>
+              <div class="peg-button"></div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Sillet (cordes à vide - case 0) -->
+    <div class="guitar-nut">
+      <div class="nut-grooves">
+        @for (str of strings; track str.index) {
+          <div class="nut-groove" [style.--gauge]="str.gaugeMm"></div>
+        }
+      </div>
+    </div>
+
+    <!-- Manche scrollable -->
+    <div class="fretboard-scroll">
+      <div class="fretboard-inner">
+
+        <div class="guitar-neck">
+          <div class="wood-grain"></div>
+          <div class="wood-highlight"></div>
+
+          <!-- Inlays nacrés (positionnés entre les frettes) -->
+          <div class="fret-inlays">
+            <span class="inlay" style="--fret:3"></span>
+            <span class="inlay" style="--fret:5"></span>
+            <span class="inlay" style="--fret:7"></span>
+            <span class="inlay" style="--fret:9"></span>
+            <span class="inlay double" style="--fret:12">
+              <span></span><span></span>
+            </span>
+          </div>
+
+          <!-- Frettes métalliques (lignes visuelles) -->
+          <div class="fret-wires">
+            @for (fret of frets; track fret) {
+              @if (fret > 0) {
+                <div class="fret-wire" [style.--fret-pos]="fret"></div>
+              }
+            }
+          </div>
+
+          <!-- Cordes -->
+          <div class="strings-layer">
+            @for (str of strings; track str.index) {
+              <div class="string-track">
+                <div class="string"
+                     [class.vibrating]="activeVibratingString() === str.index"
+                     [style.--gauge]="str.gaugeMm"
+                     [style.--color]="getStringColor(str.index)">
+                  <div class="string-body"></div>
+                  <div class="string-highlight"></div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- ═══════════ ZONES CLIQUABLES — CENTRÉES DANS LES CASES ═══════════ -->
+          <!-- 12 cases (1 à 12), chaque cellule est centrée entre 2 frettes -->
+          <div class="play-zones">
+            @for (str of strings; track str.index) {
+              <div class="play-row">
+                @for (caseNum of cases; track caseNum) {
+                  <div class="play-cell"
+                       [style.--case-pos]="caseNum"
+                       (mousedown)="onFretPress(str.index, caseNum, $event)"
+                       (touchstart)="onFretPress(str.index, caseNum, $event)">
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Numéros de cases (centrés dans les cases) -->
+        <div class="fret-numbers">
+          @for (caseNum of cases; track caseNum) {
+            <div class="fret-num" [style.--case-pos]="caseNum">
+              {{ caseNum }}
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Rosace -->
+    <div class="guitar-rosette">
+      <div class="rosette-ring outer"></div>
+      <div class="rosette-ring inner"></div>
+      <div class="sound-hole"></div>
+    </div>
+  </div>
+
+  <!-- Indication scroll -->
+  <div class="scroll-hint">← Glisse pour explorer le manche →</div>
+</div>

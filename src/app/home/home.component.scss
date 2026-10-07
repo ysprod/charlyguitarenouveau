@@ -1342,3 +1342,11 @@ a:focus-visible {
     transform: none;
   }
 }
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+}
