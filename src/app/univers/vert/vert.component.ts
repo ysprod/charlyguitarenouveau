@@ -41,7 +41,7 @@ export class VertComponent implements OnInit {
       numero: 1,
       nom: 'LA SIRÈNE DU RÊVE',
       pouvoir: 'Son Médium Berçant',
-      description: 'Émet un son médium qui transforme l\'univers de celui qui l\'entend en une île paradisiaque. Le voyageur ne veut plus jamais partir.',
+      description: 'Émet un son médium qui transforme l\'univers de celui qui l\'entend en une île paradisiaque. Le offolandais ne veut plus jamais partir.',
       couleur: '#22c55e',
       icone: '🎵',
       danger: 'Illusion paradisiaque'

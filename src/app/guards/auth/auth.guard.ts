@@ -5,7 +5,7 @@ import {
   RouterStateSnapshot,
   UrlTree
 } from '@angular/router';
-import { Auth, authState } from '@angular/fire/auth';
+import { Auth, user } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 
@@ -20,19 +20,17 @@ export class AuthGuard {
     _route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Observable<boolean | UrlTree> {
-    return authState(this.auth).pipe(
+    return user(this.auth).pipe(
       take(1),
-      map(user => {
-        if (user) {
+      map(currentUser => {
+        if (currentUser) {
           return true;
         }
 
         return this.router.createUrlTree(['/login'], {
-          queryParams: {
-            returnUrl: state.url
-          }
+          queryParams: { returnUrl: state.url }
         });
       })
     );
   }
-} 
+}

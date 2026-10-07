@@ -7,23 +7,13 @@
 
     <!-- 🌌 Sept couleurs primordiales en auras tournantes -->
     <div class="hero-aura" aria-hidden="true">
-      <div class="aura aura-do"></div>   <!-- Blanc  -->
-      <div class="aura aura-re"></div>   <!-- Rouge  -->
-      <div class="aura aura-mi"></div>   <!-- Vert   -->
-      <div class="aura aura-fa"></div>   <!-- Bleu   -->
-      <div class="aura aura-sol"></div>  <!-- Noir   -->
-      <div class="aura aura-la"></div>   <!-- Pourpre -->
-      <div class="aura aura-si"></div>   <!-- Violet -->
-    </div>
-
-    <!-- ✨ Particules : poussière du Premier Souffle -->
-    <div class="particles-bg" aria-hidden="true">
-      @for (p of particles; track p) {
-        <span class="particle"
-              [style.left.%]="p * 4.3 % 100"
-              [style.animation-delay]="p * 0.4 + 's'"
-              [style.animation-duration]="7 + (p % 6) + 's'"></span>
-      }
+      <div class="aura aura-do"></div>  <!-- Blanc    -->
+      <div class="aura aura-re"></div>  <!-- Rouge    -->
+      <div class="aura aura-mi"></div>  <!-- Vert     -->
+      <div class="aura aura-fa"></div>  <!-- Bleu     -->
+      <div class="aura aura-sol"></div> <!-- Noir     -->
+      <div class="aura aura-la"></div>  <!-- Pourpre  -->
+      <div class="aura aura-si"></div>  <!-- Violet   -->
     </div>
 
     <!-- 🥁 Battement du Premier Tambour -->
@@ -37,24 +27,12 @@
     <div class="hero-content">
 
       <!-- 🌟 Titre principal -->
-      <div class="hero-title-block">
-        <span class="hero-eyebrow">
-          <span class="eyebrow-dot"></span>
-          LE CONSORTIUM DES SEPT DIMENSIONS
-        </span>
-
-        <h1 class="hero-title">
-          <span class="hero-title-line hero-title-gold">OFFOLAND</span>
-        </h1>
-
-        <p class="hero-motto">
-          « Celui qui découvrira l'harmonie des Sept Dimensions
-          connaîtra <strong>Offolomou</strong>. »
-        </p>
-      </div>
+      <h1 class="hero-title">
+        <span class="hero-title-gold">OFFOLAND</span>
+      </h1>
 
       <!-- 🎵 Mélodie des Origines (La m – Ré m – Fa M – Sol M) -->
-      <div class="melodie-origines" aria-hidden="true">
+      <div class="melodie-origines">
         <span class="note" style="--note-color: #A0A0C0">La m</span>
         <span class="note-sep">·</span>
         <span class="note" style="--note-color: #FF6B6B">Ré m</span>

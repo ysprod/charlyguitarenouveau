@@ -1,6 +1,5 @@
 <div class="arcade-card" [class.fx-success]="game.showSuccessFx()" [class.fx-victory]="game.gameCompleted()"
   [style.--dim-color]="game.currentDimension()?.colorHex || '#a855f7'">
-
   <!-- Canvas de particules (overlay plein écran) -->
   <canvas #particlesCanvas class="particles-overlay"></canvas>
 
@@ -44,8 +43,6 @@
       <span class="progress-glow"></span>
     </div>
   </div>
-
-
 
   <!-- Barre de progression globale de l'aventure -->
   <div class="quest-progress">
@@ -92,8 +89,10 @@
   <div class="quest-card victory-card">
     <div class="victory-icon">🎉</div>
     <h3>OFFOLOMOU RÉVÉLÉ !</h3>
-    <p>Tu as traversé les Sept Dimensions et découvert le Don de Dieu. La musique unit les notes, l'amour unit les
-      êtres, Offolomou unit les dimensions.</p>
+    <p>
+      Tu as traversé les Sept Dimensions et découvert le Don de Dieu.
+      La musique unit les notes, l'amour unit les êtres, Offolomou unit les dimensions.
+    </p>
     <div class="victory-stats">
       <div class="victory-stat">
         <span class="vs-value">{{ game.xp() }}</span>
@@ -108,7 +107,9 @@
         <span class="vs-label">Bonnes réponses</span>
       </div>
       <div class="victory-stat">
-        <span class="vs-value">{{ game.unlockedCount() }}/{{ game.achievements().length }}</span>
+        <span class="vs-value">
+          {{ game.unlockedCount() }}/{{ game.achievements().length }}
+        </span>
         <span class="vs-label">Succès</span>
       </div>
     </div>
@@ -117,8 +118,99 @@
     </div>
   </div>
   } @else if (quest && dimension) {
-  <div class="quest-card" [attr.data-difficulty]="quest.difficulty" [style.--dim-color]="dimension.colorHex">
+  <div class="quest-card" [attr.data-difficulty]="quest.difficulty">
+    <div class="quest-card-header">
+      <span class="quest-chip">
+        {{ quest.icon }} Quête {{ game.currentQuestIndex() + 1 }}/{{ game.totalQuests }}
+      </span>
+      <span class="difficulty-chip" [attr.data-diff]="quest.difficulty">
+        {{ quest.difficulty }}
+      </span>
+      <span class="reward-chip">+{{ quest.xpReward }} XP</span>
+    </div>
 
+    <h3 class="quest-title">{{ quest.title }}</h3>
+    <p class="quest-desc">{{ quest.description }}</p>
+
+    @if (game.streak() >= 3) {
+    <p class="streak-bonus">
+      🔥 Bonus de série actif : +20 XP à la prochaine réussite !
+    </p>
+    }
+  </div>
+  }
+
+  <!-- ═══════════ SUCCÈS ═══════════ -->
+  @if (!game.gameCompleted()) {
+  <div class="achievements-strip">
+    @for (ach of game.achievements(); track ach.id) {
+    <div class="achievement" [class.unlocked]="ach.unlocked" [title]="ach.title + ' — ' + ach.description">
+      <span class="ach-icon">{{ ach.icon }}</span>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Contrôles -->
+  <div class="controls-section">
+    <button type="button" class="btn-arcade-mic" [class.active]="game.isListening()"
+      [disabled]="game.isListening() || game.gameCompleted()" (click)="game.startListening()" (mouseenter)="onHover()">
+      <span class="btn-glow"></span>
+      <span class="mic-icon">{{ game.isListening() ? '🎙️' : '🎤' }}</span>
+      <span class="btn-text">
+        {{ game.isListening() ? "Offowa t'écoute..." : "Clique ici pour parler à OFFOWA" }}
+      </span>
+    </button>
+
+    @if (!game.gameCompleted()) {
+    <div class="text-input-group">
+      <input type="text" class="arcade-input" placeholder="Ou tape ta réponse ici..." [ngModel]="textInput()"
+        (ngModelChange)="textInput.set($event); onTyping()" (keyup.enter)="submitText()" />
+      <button type="button" class="btn-send" (click)="submitText()" (mouseenter)="onHover()">
+        🚀
+      </button>
+    </div>
+
+    <div class="secondary-actions">
+      <button type="button" class="btn-ghost" (click)="game.repeatQuest()" (mouseenter)="onHover()">
+        🔊 Répéter
+      </button>
+      <button type="button" class="btn-ghost" (click)="game.giveHint()" (mouseenter)="onHover()">
+        💡 Indice (-10 XP)
+      </button>
+    </div>
+    } @else {
+    <button type="button" class="btn-restart" (click)="game.restartGame()" (mouseenter)="onHover()">
+      🔄 Rejouer l'Aventure des Sept Dimensions
+    </button>
+    }
+  </div>
+
+  <!-- Mots-clés -->
+  @if (!game.gameCompleted()) {
+  <footer class="voice-hints">
+    <span>Mots clés :</span>
+    <span class="hint-tag">« répète »</span>
+    <span class="hint-tag">« indice »</span>
+    <span class="hint-tag">« recommencer »</span>
+  </footer>
+  }
+
+  <!-- ═══════════ ROUE DES 7 DIMENSIONS ═══════════ -->
+  <div class="dimensions-wheel">
+    @for (dim of game.dimensions; track dim.id) {
+    <div class="dim-node" [class.active]="game.currentDimension()?.id === dim.id"
+      [class.passed]="dim.id < (game.currentDimension()?.id || 0)" [style.--dim-color]="dim.colorHex"
+      [title]="dim.name + ' — ' + dim.note + ' — ' + dim.sage">
+      <span class="dim-note">{{ dim.note }}</span>
+      <span class="dim-emoji">{{ dim.totemEmoji }}</span>
+    </div>
+    }
+  </div>
+
+  <!-- ═══════════ DÉTAILS DE LA DIMENSION ACTIVE ═══════════ -->
+  @if (quest && dimension && !game.gameCompleted()) {
+  <div class="dimension-details">
     <!-- En-tête dimension -->
     <div class="dimension-header">
       <div class="dimension-badge" [style.background]="dimension.colorHex">
@@ -154,88 +246,6 @@
       <span class="trial-label">Épreuve :</span>
       <span class="trial-text">{{ dimension.trial }}</span>
     </div>
-
-    <div class="quest-card-header">
-      <span class="quest-chip">{{ quest.icon }} Quête {{ game.currentQuestIndex() + 1 }}/{{ game.totalQuests }}</span>
-      <span class="difficulty-chip" [attr.data-diff]="quest.difficulty">{{ quest.difficulty }}</span>
-      <span class="reward-chip">+{{ quest.xpReward }} XP</span>
-    </div>
-
-    <h3 class="quest-title">{{ quest.title }}</h3>
-    <p class="quest-desc">{{ quest.description }}</p>
-
-    @if (game.streak() >= 3) {
-    <p class="streak-bonus">🔥 Bonus de série actif : +20 XP à la prochaine réussite !</p>
-    }
   </div>
   }
-
-  <!-- ═══════════ SUCCÈS ═══════════ -->
-  @if (!game.gameCompleted()) {
-  <div class="achievements-strip">
-    @for (ach of game.achievements(); track ach.id) {
-    <div class="achievement" [class.unlocked]="ach.unlocked" [title]="ach.title + ' — ' + ach.description">
-      <span class="ach-icon">{{ ach.icon }}</span>
-    </div>
-    }
-  </div>
-  }
-
-  <!-- Contrôles -->
-  <div class="controls-section">
-    <button type="button" class="btn-arcade-mic" [class.active]="game.isListening()"
-      [disabled]="game.isListening() || game.gameCompleted()" (click)="game.startListening()" (mouseenter)="onHover()">
-      <span class="btn-glow"></span>
-      <span class="mic-icon">{{ game.isListening() ? '🎙️' : '🎤' }}</span>
-      <span class="btn-text">
-        {{ game.isListening() ? "Offowa t'écoute..." : "Clique ici pour parler à la Gardienne" }}
-      </span>
-    </button>
-
-    @if (!game.gameCompleted()) {
-    <div class="text-input-group">
-      <input type="text" class="arcade-input" placeholder="Ou tape ta réponse ici..." [ngModel]="textInput()"
-        (ngModelChange)="textInput.set($event); onTyping()" (keyup.enter)="submitText()" />
-      <button type="button" class="btn-send" (click)="submitText()" (mouseenter)="onHover()">🚀</button>
-    </div>
-    }
-
-    @if (!game.gameCompleted()) {
-    <div class="secondary-actions">
-      <button type="button" class="btn-ghost" (click)="game.repeatQuest()" (mouseenter)="onHover()">
-        🔊 Répéter
-      </button>
-      <button type="button" class="btn-ghost" (click)="game.giveHint()" (mouseenter)="onHover()">
-        💡 Indice (-10 XP)
-      </button>
-    </div>
-    } @else {
-    <button type="button" class="btn-restart" (click)="game.restartGame()" (mouseenter)="onHover()">
-      🔄 Rejouer l'Aventure des Sept Dimensions
-    </button>
-    }
-  </div>
-
-  <!-- Mots-clés -->
-  @if (!game.gameCompleted()) {
-  <footer class="voice-hints">
-    <span>Mots clés :</span>
-    <span class="hint-tag">« répète »</span>
-    <span class="hint-tag">« indice »</span>
-    <span class="hint-tag">« recommencer »</span>
-  </footer>
-  }
-  <br /><br />
-  <!-- ═══════════ ROUE DES 7 DIMENSIONS ═══════════ -->
-  <div class="dimensions-wheel">
-    @for (dim of game.dimensions; track dim.id) {
-    <div class="dim-node" [class.active]="game.currentDimension()?.id === dim.id"
-      [class.passed]="dim.id < (game.currentDimension()?.id || 0)" [style.--dim-color]="dim.colorHex"
-      [title]="dim.name + ' — ' + dim.note + ' — ' + dim.sage">
-      <span class="dim-note">{{ dim.note }}</span>
-      <span class="dim-emoji">{{ dim.totemEmoji }}</span>
-    </div>
-    }
-  </div>
-
 </div>

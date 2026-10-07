@@ -1,76 +1,33 @@
- 
-import {
-  CommonModule
-} from '@angular/common';
 
+import { CommonModule } from '@angular/common';
 import {
-  Component,
-  EnvironmentInjector,
-  HostListener,
-  OnDestroy,
-  OnInit,
-  runInInjectionContext
+  Component, EnvironmentInjector, HostListener, OnDestroy,
+  OnInit, runInInjectionContext
 } from '@angular/core';
-
-import {
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet
-} from '@angular/router';
-
-import {
-  MatSnackBar,
-  MatSnackBarModule
-} from '@angular/material/snack-bar';
-
-import {
-  Database,
-  equalTo,
-  listVal,
-  orderByChild,
-  query,
-  ref
-} from '@angular/fire/database';
-
-import {
-  Observable,
-  Subject,
-  of
-} from 'rxjs';
-
-import {
-  map,
-  switchMap,
-  takeUntil
-} from 'rxjs/operators';
-
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Database, equalTo, listVal, orderByChild, query, ref } from '@angular/fire/database';
+import { Observable, Subject, of } from 'rxjs';
+import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { AuthService } from './services/auth.service';
-
 import { UserMessage } from './models/user-message.model';
-
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-
 import { FooterComponent } from './features/footer/footer.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-
   imports: [
     CommonModule,
-
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
-
     MatIconModule,
     MatMenuModule,
     MatDividerModule,
     MatSnackBarModule,
-
     FooterComponent
   ],
 
@@ -80,13 +37,9 @@ import { FooterComponent } from './features/footer/footer.component';
 export class AppComponent implements OnInit, OnDestroy {
 
   title = 'CHARLY GUITARE';
-
   currentYear = new Date().getFullYear();
-
   isMobileMenuOpen = false;
-
   isScrolled = false;
-
   unreadCount$: Observable<number> = of(0);
 
   private readonly destroy$ = new Subject<void>();
@@ -97,7 +50,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private readonly snackBar: MatSnackBar,
     private readonly database: Database,
     private readonly environmentInjector: EnvironmentInjector
-  ) {}
+  ) { }
 
   ngOnInit(): void {
 

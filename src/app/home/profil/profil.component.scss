@@ -14,10 +14,8 @@
 
   --primary: #6366f1;
   --success: #10b981;
-  --success-glow: rgba(16, 185, 129, .35);
   --warning: #f59e0b;
   --danger: #ef4444;
-  --danger-glow: rgba(239, 68, 68, .35);
   --purple: #a855f7;
 
   --text-primary: #f8fafc;
@@ -36,8 +34,6 @@
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, .6);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, .7);
-  --shadow-lg: 0 20px 40px rgba(0, 0, 0, .85);
-  --shadow-gold: 0 0 24px rgba(229, 185, 92, .2);
 
   --t-fast: .15s cubic-bezier(.4, 0, .2, 1);
   --t-base: .25s cubic-bezier(.4, 0, .2, 1);
@@ -171,12 +167,6 @@ svg {
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* ============================================
    GLASS CARD
    ============================================ */
@@ -234,7 +224,6 @@ svg {
       margin: 0;
       font-size: .95rem;
       font-weight: 700;
-      color: var(--text-primary);
       letter-spacing: -.2px;
     }
   }
@@ -256,24 +245,18 @@ svg {
       box-shadow: 0 0 32px var(--gold-glow);
     }
 
-    .avatar-overlay {
-      opacity: 1;
-    }
+    .avatar-overlay { opacity: 1; }
   }
 
   &:hover {
-    .avatar-overlay {
-      opacity: 1;
-    }
+    .avatar-overlay { opacity: 1; }
 
     .avatar-ring {
       border-color: var(--gold-primary);
       box-shadow: 0 0 24px var(--gold-glow);
     }
 
-    .avatar {
-      transform: scale(1.03);
-    }
+    .avatar { transform: scale(1.03); }
   }
 }
 
@@ -319,7 +302,6 @@ svg {
   }
 }
 
-/* Overlay d'upload */
 .avatar-overlay {
   position: absolute;
   inset: 0;
@@ -350,7 +332,6 @@ svg {
   }
 }
 
-/* Bouton retirer */
 .btn-remove-avatar {
   display: inline-flex;
   align-items: center;
@@ -399,24 +380,24 @@ svg {
   border-top: 1px solid var(--border-subtle);
   text-align: center;
 
-  .preview-name {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-    letter-spacing: -.2px;
+  .preview-name,
+  .preview-email {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .preview-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -.2px;
   }
 
   .preview-email {
     font-size: .8rem;
     color: var(--text-muted);
     margin-bottom: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .preview-meta {
@@ -472,7 +453,6 @@ svg {
   gap: 20px;
 }
 
-/* Section header */
 .form-section {
   padding: 24px 26px 26px;
 }
@@ -509,7 +489,6 @@ svg {
       margin: 0 0 2px;
       font-size: 1.05rem;
       font-weight: 700;
-      color: var(--text-primary);
       letter-spacing: -.2px;
     }
 
@@ -550,7 +529,7 @@ svg {
   label {
     font-size: .82rem;
     font-weight: 700;
-    color: var(--text-light);
+    color: var(--text-secondary);
     letter-spacing: .2px;
     display: flex;
     align-items: center;
@@ -592,9 +571,7 @@ svg {
     outline: none;
     transition: var(--t-base);
 
-    &::placeholder {
-      color: var(--text-dim);
-    }
+    &::placeholder { color: var(--text-dim); }
 
     &:hover {
       border-color: var(--border-medium);
@@ -607,13 +584,6 @@ svg {
       box-shadow:
         0 0 0 3px var(--gold-soft),
         0 0 24px rgba(229, 185, 92, .1);
-
-      ~ .input-icon,
-      + .input-icon {
-        color: var(--gold-primary);
-        transform: scale(1.1);
-        filter: drop-shadow(0 0 6px var(--gold-glow));
-      }
     }
 
     &.invalid {
@@ -704,10 +674,7 @@ svg {
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-
-    svg {
-      transform: scale(1.15);
-    }
+    svg { transform: scale(1.15); }
   }
 
   &:active:not(:disabled) {
@@ -733,7 +700,6 @@ svg {
   to { transform: rotate(360deg); }
 }
 
-/* Bouton primaire (doré) */
 .btn-primary {
   background: linear-gradient(135deg, #b8860b 0%, var(--gold-primary) 50%, var(--gold-hover) 100%);
   color: #000;
@@ -753,13 +719,10 @@ svg {
   &:hover:not(:disabled) {
     box-shadow: 0 8px 24px rgba(229, 185, 92, .55);
 
-    &::before {
-      left: 100%;
-    }
+    &::before { left: 100%; }
   }
 }
 
-/* Bouton secondaire */
 .btn-secondary {
   background: transparent;
   border-color: var(--border-medium);
@@ -770,9 +733,7 @@ svg {
     border-color: var(--border-gold);
     color: var(--gold-primary);
 
-    svg {
-      transform: rotate(-180deg) scale(1.15);
-    }
+    svg { transform: rotate(-180deg) scale(1.15); }
   }
 }
 
@@ -780,6 +741,10 @@ svg {
    RESPONSIVE
    ============================================ */
 @media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
   .sidebar-column {
     position: static;
   }
@@ -800,9 +765,7 @@ svg {
       height: 100px;
       margin-right: 20px;
 
-      .avatar {
-        font-size: 2rem;
-      }
+      .avatar { font-size: 2rem; }
     }
 
     .btn-remove-avatar,
@@ -816,9 +779,7 @@ svg {
       padding-top: 0;
       border-top: none;
 
-      .preview-meta {
-        align-items: flex-start;
-      }
+      .preview-meta { align-items: flex-start; }
     }
   }
 }
@@ -841,13 +802,8 @@ svg {
       }
     }
 
-    .title-content h1 {
-      font-size: 1.5rem;
-    }
-
-    .subtitle {
-      font-size: .82rem;
-    }
+    .title-content h1 { font-size: 1.5rem; }
+    .subtitle { font-size: .82rem; }
   }
 
   .glass-card {
@@ -861,9 +817,7 @@ svg {
   .form-actions {
     flex-direction: column-reverse;
 
-    .btn {
-      width: 100%;
-    }
+    .btn { width: 100%; }
   }
 
   .avatar-card {
@@ -877,16 +831,15 @@ svg {
     .user-preview {
       text-align: center;
 
-      .preview-meta {
-        align-items: center;
-      }
+      .preview-meta { align-items: center; }
     }
 
     .btn-remove-avatar,
     .avatar-hint {
-      display: inline-flex;
       display: block;
     }
+
+    .btn-remove-avatar { display: inline-flex; }
   }
 }
 
@@ -899,9 +852,7 @@ svg {
     width: 120px;
     height: 120px;
 
-    .avatar {
-      font-size: 2.4rem;
-    }
+    .avatar { font-size: 2.4rem; }
   }
 }
 

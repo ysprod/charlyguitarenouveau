@@ -70,10 +70,6 @@ export class OracleWidgetComponent implements OnDestroy {
     this.game.playHover();
   }
 
-  onClick(): void {
-    this.game.playClick();
-  }
-
   private startWaveAnimation(color: string): void {
     this.stopWaveAnimation();
     let step = 0;

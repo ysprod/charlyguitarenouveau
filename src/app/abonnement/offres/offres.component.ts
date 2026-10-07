@@ -76,9 +76,9 @@ interface PackCategory {
   ]
 })
 export class OffresComponent {
- /* ============================================================
-     SIGNAUX UI
-     ============================================================ */
+  /* ============================================================
+      SIGNAUX UI
+      ============================================================ */
 
   activeCategory = signal<'debutant' | 'intermediaire' | 'solo' | 'chansons'>('debutant');
   hoveredPack = signal<string | null>(null);

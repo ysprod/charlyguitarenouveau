@@ -1,20 +1,10 @@
 <div class="method-container">
 
-  <!-- Fond de particules dorées -->
-  <div class="particles-bg">
-    <span *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"
-          class="particle"
-          [style.left.%]="(p * 5) % 100"
-          [style.animation-delay]="(p * 0.4) + 's'">
-    </span>
-  </div>
-
   <!-- HEADER ÉPIQUE -->
   <header class="method-header">
-   
-    <h1 class="title-glow"><br>LES 5 DIMENSIONS</h1>
+    <h1 class="title-glow">DIMENSIONS</h1>
     <h2 class="title-sub">CHARLY GUITARE</h2>
- 
+
     <div class="header-divider">
       <span class="line"></span>
       <span class="icon">🎸</span>
@@ -31,24 +21,13 @@
        [style.--accent-light]="dim.couleurSecondaire"
        [style.animation-delay]="(i * 0.15) + 's'"
        [attr.title]="'Dimension ' + dim.nom + ' - ' + dim.sage">
-      
-      <!-- Particules internes de la carte -->
-      <div class="card-particles">
-        <span *ngFor="let p of [1,2,3,4,5,6]"></span>
-      </div>
 
       <!-- Halo lumineux -->
       <div class="card-halo"></div>
 
-      <!-- Image de fond -->
-      <div class="card-image-wrapper">
-        <img [src]="dim.image" [alt]="'Dimension ' + dim.nom" class="dimension-img" />
-        <div class="card-gradient-overlay"></div>
-      </div>
-
       <!-- Contenu de la carte -->
       <div class="card-content">
-        
+
         <!-- Badge de couleur -->
         <div class="dimension-badge">
           <span class="badge-symbol">{{ dim.symbole }}</span>
@@ -85,35 +64,5 @@
       <div class="corner-decoration bottom-right"></div>
     </a>
   </main>
-
-  <!-- SECTION VIDÉO -->
-  <section class="video-section">
-    <div class="video-header">
-      <span class="material-icons">play_circle</span>
-      <h3>CHARLY GUITARE 5D</h3>
-    </div>
-    <div class="video-wrapper">
-      <div class="video-frame">
-        <iframe 
-          src="https://www.youtube.com/embed/GABVt9iGlJ4?autoplay=1&mute=1" 
-          title="Présentation Charly Guitare"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowfullscreen>
-        </iframe>
-      </div>
-      <div class="video-glow"></div>
-    </div>
-  </section>
-
-  <!-- FOOTER ÉPIQUE -->
-  <footer class="method-footer">
-    <div class="footer-quote">
-      <span class="quote-mark">«</span>
-      <p>Chaque dimension t'apprendra une note. Chaque note t'ouvrira un portail.</p>
-      <span class="quote-mark">»</span>
-    </div>
-    <p class="footer-signature">— Offowa, Gardienne des Sept Portails</p> 
-  </footer>
 
 </div>

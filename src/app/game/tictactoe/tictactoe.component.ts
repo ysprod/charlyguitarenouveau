@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TictactoeserviceService } from '../../services/tictactoeservice.service';
+import { VoiceService } from '../../services/voice.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -31,12 +32,14 @@ export class TictactoeComponent implements OnInit, OnDestroy {
 
   private audioCtx?: AudioContext;
   private timeouts: number[] = [];
+  private hasAnnouncedIntro = false;
 
   constructor(
     private activatedRoute: ActivatedRoute,
     private snackBar: MatSnackBar,
     public gs: TictactoeserviceService,
-    private router: Router
+    private router: Router,
+    private voice: VoiceService
   ) { }
 
   ngOnInit(): void {
@@ -52,6 +55,7 @@ export class TictactoeComponent implements OnInit, OnDestroy {
 
     this.initAudio();
     this.resetjeu();
+    this.announceGameRules();
   }
 
   ngOnDestroy(): void {
@@ -61,6 +65,29 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     }
     // 2. Annulation de tous les timeouts actifs au moment de la destruction
     this.timeouts.forEach(t => clearTimeout(t));
+    // 3. Annulation de la lecture vocale en cours
+    this.voice.stopSpeaking();
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     ANNONCE VOCALE D'INTRODUCTION
+     ═══════════════════════════════════════════════════════ */
+  private announceGameRules(): void {
+    if (this.hasAnnouncedIntro) return;
+    this.hasAnnouncedIntro = true;
+
+    const intro =
+      `Bienvenu, offolandais ! ` +
+      `Le duel t'oppose à Lykö le Sage, sur une grille de ${this.gs.gridSize} sur ${this.gs.gridSize}. ` +
+      `Pour placer un pion, appuie simplement sur une case vide de la grille. ` +
+      `Chaque alignement de trois pions te rapporte dix points de vie. ` +
+      `La manche se termine lorsque toutes les cases sont remplies. ` +
+      `Que la stratégie guide ta main !`;
+
+    const timerId = window.setTimeout(() => {
+      this.voice.speak(intro);
+    }, 600);
+    this.timeouts.push(timerId);
   }
 
   private initAudio(): void {
@@ -165,6 +192,10 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     this.gs.nextLevel();
     this.resetjeu();
     this.snackBar.open(`🚀 Niveau Supérieur ! Grille ${this.gs.gridSize}x${this.gs.gridSize} !`, "Sensationnel !", { duration: 3000 });
+
+    this.voice.speak(
+      `Niveau supérieur ! Nouvelle grille ${this.gs.gridSize} sur ${this.gs.gridSize}. Bonne chance !`
+    );
   }
 
   precedentNiveau(): void {
@@ -173,6 +204,10 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     this.gs.previousLevel();
     this.resetjeu();
     this.snackBar.open(`⏪ Niveau Précédent ! Grille ${this.gs.gridSize}x${this.gs.gridSize} !`, "Retour !", { duration: 2500 });
+
+    this.voice.speak(
+      `Retour au niveau précédent. Grille ${this.gs.gridSize} sur ${this.gs.gridSize}.`
+    );
   }
 
   yaprecedent(): boolean {
@@ -294,15 +329,24 @@ export class TictactoeComponent implements OnInit, OnDestroy {
       this.showVictoryOverlay = true;
       this.messageLyko = `🏆 Grille terminée ! Vous remportez le duel (${scoreVous} - ${scoreLyko}) !`;
       this.snackBar.open(`🏆 VICTOIRE ${scoreVous} - ${scoreLyko} !`, "Bravo !", { duration: 3500 });
+      this.voice.speak(
+        `Victoire ! Tu remportes le duel ${scoreVous} à ${scoreLyko}. Bravo, offolandais !`
+      );
     } else if (scoreLyko > scoreVous) {
       this.playSound('lose');
       this.showDefeatOverlay = true;
       this.messageLyko = `💀 Grille terminée ! Lykö le Sage l'emporte (${scoreLyko} - ${scoreVous}).`;
       this.snackBar.open(`💀 DÉFAITE ${scoreLyko} - ${scoreVous}`, "Revanche !", { duration: 3000 });
+      this.voice.speak(
+        `Défaite. Lykö le Sage l'emporte ${scoreLyko} à ${scoreVous}. Prends ta revanche !`
+      );
     } else {
       this.playSound('draw');
       this.messageLyko = `⚖️ Grille terminée ! Égalité parfaite (${scoreVous} - ${scoreLyko}).`;
       this.snackBar.open(`⚖️ MATCH NUL ${scoreVous} - ${scoreLyko}`, "Égalité", { duration: 3000 });
+      this.voice.speak(
+        `Match nul, ${scoreVous} partout. Égalité parfaite !`
+      );
     }
   }
 

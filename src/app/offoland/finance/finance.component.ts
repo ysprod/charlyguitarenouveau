@@ -202,7 +202,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
 
   // Statistiques animées
   stats = [
-    { label: 'Voyageurs actifs', value: 12450, suffix: '+', icon: '👥' },
+    { label: 'Offolandais actifs', value: 12450, suffix: '+', icon: '👥' },
     { label: 'OFFO en circulation', value: 2_450_000, suffix: '', icon: '💰' },
     { label: 'Transactions / jour', value: 8740, suffix: '', icon: '⚡' },
     { label: 'Dimensions connectées', value: 7, suffix: '/7', icon: '🌟' }
