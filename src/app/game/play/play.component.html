@@ -1,37 +1,6 @@
 <div class="game-dashboard-container">
 
-  <!-- DÉCOR ANIMÉ -->
-  <div class="bg-decor" aria-hidden="true">
-    <div class="glow glow-1"></div>
-    <div class="glow glow-2"></div>
-    <div class="glow glow-3"></div>
-    <div class="glow glow-4"></div>
-
-    <div class="cyber-grid"></div>
-    <div class="aurora"></div>
-
-    <div class="particles">
-      @for (p of particles; track $index) {
-        <span class="particle"
-              [style.left.%]="p.left"
-              [style.animation-delay.s]="p.delay"
-              [style.animation-duration.s]="p.duration"
-              [style.width.px]="p.size"
-              [style.height.px]="p.size"></span>
-      }
-    </div>
-
-    <div class="rays"></div>
-
-    <div class="music-notes">
-      @for (n of musicNotes; track $index) {
-        <span class="note"
-              [style.left.%]="n.left"
-              [style.animation-delay.s]="n.delay"
-              [style.animation-duration.s]="n.duration">{{ n.symbol }}</span>
-      }
-    </div>
-  </div>
+ 
 
   <div class="main-game-area">
 
@@ -59,6 +28,27 @@
     <!-- GRILLE DE JEUX -->
     <section class="games-selector-section">
       <div class="game-buttons-grid">
+
+        <!-- 🔮 L'ORACLE -->
+        <button type="button"
+                class="btn-game btn-oracle"
+                data-category="quiz"
+                (click)="onSelectOracle()"
+                aria-label="Consulter L'Oracle">
+          <span class="btn-glow"></span>
+          <span class="btn-border-anim"></span>
+          <span class="btn-icon">🔮</span>
+          <span class="btn-content">
+            <span class="btn-tag tag-oracle">MATRIX</span>
+            <span class="btn-text">L'ORACLE</span>
+            <span class="btn-sub">Réponds à la question</span>
+          </span>
+          <span class="btn-arrow">→</span>
+          <span class="corner corner-tl"></span>
+          <span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span>
+          <span class="corner corner-br"></span>
+        </button>
 
    <!-- 🐵 LYKO DUEL -->
         <button type="button"

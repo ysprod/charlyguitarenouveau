@@ -253,7 +253,11 @@ export class PlayComponent implements OnInit, OnDestroy {
   onSelectPianovirtuel(): void {
     this.router.navigate(['/pianovirtuel']);
   }
-
+ // ═══════════ NOUVEAU : L'ORACLE ═══════════
+  onSelectOracle(): void {
+    this.router.navigate(['/oracle']);
+  }
+  
   private navigateToGame(route: string, etape: string): void {
     this.router.navigate([route], { queryParams: { etape } });
   }

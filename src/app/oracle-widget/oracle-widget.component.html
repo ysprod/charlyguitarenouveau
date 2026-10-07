@@ -1,0 +1,241 @@
+<div class="arcade-card" [class.fx-success]="game.showSuccessFx()" [class.fx-victory]="game.gameCompleted()"
+  [style.--dim-color]="game.currentDimension()?.colorHex || '#a855f7'">
+
+  <!-- Canvas de particules (overlay plein écran) -->
+  <canvas #particlesCanvas class="particles-overlay"></canvas>
+
+  <!-- Effet Level Up -->
+  @if (game.showLevelUp()) {
+  <div class="levelup-flash">
+    <div class="levelup-text">NIVEAU SUPÉRIEUR !</div>
+    <div class="levelup-rank">{{ game.rankEmoji() }} {{ game.rankTitle() }}</div>
+  </div>
+  }
+
+  <!-- HUD Header -->
+  <header class="hud-header">
+    <button type="button" class="btn-back-menu" (click)="goBackToMenu()" (mouseenter)="onHover()"
+      aria-label="Retour au menu des jeux">
+      <span class="material-icons">arrow_back</span>
+      <span class="back-label">MENU</span>
+    </button>
+
+    <div class="player-rank">
+      <span class="rank-badge">
+        <span class="rank-emoji">{{ game.rankEmoji() }}</span>
+        {{ game.rankTitle() }}
+      </span>
+    </div>
+
+    <div class="stats-group">
+      <button type="button" class="sound-toggle" (click)="game.toggleSound()"
+        [attr.aria-label]="game.soundEnabled() ? 'Couper le son' : 'Activer le son'">
+        {{ game.soundEnabled() ? '🔊' : '🔇' }}
+      </button>
+      <span class="stat-pill level-pill">Niv. {{ game.level() }}</span>
+      <span class="stat-pill xp-pill">⭐ {{ game.xp() }} XP</span>
+    </div>
+  </header>
+
+  <!-- Barre de progression XP -->
+  <div class="progress-container" role="progressbar" [attr.aria-valuenow]="game.xpProgress()" aria-valuemin="0"
+    aria-valuemax="100">
+    <div class="progress-bar-fill" [style.width.%]="game.xpProgress()">
+      <span class="progress-glow"></span>
+    </div>
+  </div>
+
+
+
+  <!-- Barre de progression globale de l'aventure -->
+  <div class="quest-progress">
+    <span class="quest-progress-label">Aventure</span>
+    <div class="quest-progress-track">
+      <div class="quest-progress-fill" [style.width.%]="game.completionPercent()"></div>
+    </div>
+    <span class="quest-progress-count">
+      {{ game.currentQuestIndex() + (game.gameCompleted() ? 1 : 0) }}/{{ game.totalQuests }}
+    </span>
+  </div>
+
+  <!-- Zone Avatar & Visualiseur -->
+  <div class="oracle-avatar-stage">
+    <div class="oracle-avatar" [class.speaking]="game.isSpeaking()" [class.listening]="game.isListening()">
+      <div class="avatar-halo"></div>
+      <div class="avatar-ring"></div>
+      <span class="avatar-emoji">🧙‍♀️</span>
+    </div>
+    <span class="oracle-name">OFFOWA — Gardienne des Sept Portails</span>
+    <canvas #visualizerCanvas class="wave-canvas" width="280" height="40"></canvas>
+  </div>
+
+  <!-- Bulle de dialogue -->
+  <div class="speech-bubble" aria-live="polite">
+    <p>{{ game.oracleSpeech() }}</p>
+    @if (game.streak() >= 3) {
+    <div class="streak-badge">🔥 Série de {{ game.streak() }} !</div>
+    }
+  </div>
+
+  <!-- Alerte erreur -->
+  @if (game.lastError()) {
+  <div class="error-toast" role="alert">
+    ⚠️ {{ game.lastError() }} — Vérifie ton micro ou utilise la saisie texte.
+  </div>
+  }
+
+  @let quest = game.currentQuest();
+  @let dimension = game.currentDimension();
+
+  <!-- Carte Quête / Victoire -->
+  @if (game.gameCompleted()) {
+  <div class="quest-card victory-card">
+    <div class="victory-icon">🎉</div>
+    <h3>OFFOLOMOU RÉVÉLÉ !</h3>
+    <p>Tu as traversé les Sept Dimensions et découvert le Don de Dieu. La musique unit les notes, l'amour unit les
+      êtres, Offolomou unit les dimensions.</p>
+    <div class="victory-stats">
+      <div class="victory-stat">
+        <span class="vs-value">{{ game.xp() }}</span>
+        <span class="vs-label">XP total</span>
+      </div>
+      <div class="victory-stat">
+        <span class="vs-value">{{ game.level() }}</span>
+        <span class="vs-label">Niveau</span>
+      </div>
+      <div class="victory-stat">
+        <span class="vs-value">{{ game.totalCorrect() }}</span>
+        <span class="vs-label">Bonnes réponses</span>
+      </div>
+      <div class="victory-stat">
+        <span class="vs-value">{{ game.unlockedCount() }}/{{ game.achievements().length }}</span>
+        <span class="vs-label">Succès</span>
+      </div>
+    </div>
+    <div class="final-quote">
+      « La musique unit les notes. L'amour unit les êtres. Le Don de Dieu unit les dimensions. »
+    </div>
+  </div>
+  } @else if (quest && dimension) {
+  <div class="quest-card" [attr.data-difficulty]="quest.difficulty" [style.--dim-color]="dimension.colorHex">
+
+    <!-- En-tête dimension -->
+    <div class="dimension-header">
+      <div class="dimension-badge" [style.background]="dimension.colorHex">
+        <span class="dim-roman">Dimension {{ dimension.id }}</span>
+        <span class="dim-name">{{ dimension.name }}</span>
+      </div>
+      <div class="dimension-note" [style.color]="dimension.colorHex">
+        ♪ {{ dimension.note }}
+      </div>
+    </div>
+
+    <!-- Infos Sage / Totem / Instrument -->
+    <div class="dimension-infos">
+      <div class="info-item">
+        <span class="info-emoji">🧙</span>
+        <span class="info-label">Sage</span>
+        <span class="info-value">{{ dimension.sage }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-emoji">{{ dimension.totemEmoji }}</span>
+        <span class="info-label">Totem</span>
+        <span class="info-value">{{ dimension.totem }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-emoji">{{ dimension.instrumentEmoji }}</span>
+        <span class="info-label">Instrument</span>
+        <span class="info-value">{{ dimension.instrument }}</span>
+      </div>
+    </div>
+
+    <!-- Épreuve -->
+    <div class="trial-line">
+      <span class="trial-label">Épreuve :</span>
+      <span class="trial-text">{{ dimension.trial }}</span>
+    </div>
+
+    <div class="quest-card-header">
+      <span class="quest-chip">{{ quest.icon }} Quête {{ game.currentQuestIndex() + 1 }}/{{ game.totalQuests }}</span>
+      <span class="difficulty-chip" [attr.data-diff]="quest.difficulty">{{ quest.difficulty }}</span>
+      <span class="reward-chip">+{{ quest.xpReward }} XP</span>
+    </div>
+
+    <h3 class="quest-title">{{ quest.title }}</h3>
+    <p class="quest-desc">{{ quest.description }}</p>
+
+    @if (game.streak() >= 3) {
+    <p class="streak-bonus">🔥 Bonus de série actif : +20 XP à la prochaine réussite !</p>
+    }
+  </div>
+  }
+
+  <!-- ═══════════ SUCCÈS ═══════════ -->
+  @if (!game.gameCompleted()) {
+  <div class="achievements-strip">
+    @for (ach of game.achievements(); track ach.id) {
+    <div class="achievement" [class.unlocked]="ach.unlocked" [title]="ach.title + ' — ' + ach.description">
+      <span class="ach-icon">{{ ach.icon }}</span>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Contrôles -->
+  <div class="controls-section">
+    <button type="button" class="btn-arcade-mic" [class.active]="game.isListening()"
+      [disabled]="game.isListening() || game.gameCompleted()" (click)="game.startListening()" (mouseenter)="onHover()">
+      <span class="btn-glow"></span>
+      <span class="mic-icon">{{ game.isListening() ? '🎙️' : '🎤' }}</span>
+      <span class="btn-text">
+        {{ game.isListening() ? "Offowa t'écoute..." : "Clique ici pour parler à la Gardienne" }}
+      </span>
+    </button>
+
+    @if (!game.gameCompleted()) {
+    <div class="text-input-group">
+      <input type="text" class="arcade-input" placeholder="Ou tape ta réponse ici..." [ngModel]="textInput()"
+        (ngModelChange)="textInput.set($event); onTyping()" (keyup.enter)="submitText()" />
+      <button type="button" class="btn-send" (click)="submitText()" (mouseenter)="onHover()">🚀</button>
+    </div>
+    }
+
+    @if (!game.gameCompleted()) {
+    <div class="secondary-actions">
+      <button type="button" class="btn-ghost" (click)="game.repeatQuest()" (mouseenter)="onHover()">
+        🔊 Répéter
+      </button>
+      <button type="button" class="btn-ghost" (click)="game.giveHint()" (mouseenter)="onHover()">
+        💡 Indice (-10 XP)
+      </button>
+    </div>
+    } @else {
+    <button type="button" class="btn-restart" (click)="game.restartGame()" (mouseenter)="onHover()">
+      🔄 Rejouer l'Aventure des Sept Dimensions
+    </button>
+    }
+  </div>
+
+  <!-- Mots-clés -->
+  @if (!game.gameCompleted()) {
+  <footer class="voice-hints">
+    <span>Mots clés :</span>
+    <span class="hint-tag">« répète »</span>
+    <span class="hint-tag">« indice »</span>
+    <span class="hint-tag">« recommencer »</span>
+  </footer>
+  }
+  <br /><br />
+  <!-- ═══════════ ROUE DES 7 DIMENSIONS ═══════════ -->
+  <div class="dimensions-wheel">
+    @for (dim of game.dimensions; track dim.id) {
+    <div class="dim-node" [class.active]="game.currentDimension()?.id === dim.id"
+      [class.passed]="dim.id < (game.currentDimension()?.id || 0)" [style.--dim-color]="dim.colorHex"
+      [title]="dim.name + ' — ' + dim.note + ' — ' + dim.sage">
+      <span class="dim-note">{{ dim.note }}</span>
+      <span class="dim-emoji">{{ dim.totemEmoji }}</span>
+    </div>
+    }
+  </div>
+
+</div>

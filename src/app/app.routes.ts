@@ -40,6 +40,7 @@ import { VertComponent } from './univers/vert/vert.component';
 import { BcoComponent } from './offoland/bco/bco.component';
 import { PianovirtuelComponent } from './game/pianovirtuel/pianovirtuel.component';
 import { GuitarLiveComponent } from './guitar-live/guitar-live.component';
+ import { OracleWidgetComponent } from './oracle-widget/oracle-widget.component';
 
 export const routes: Routes = [
   {
@@ -154,6 +155,12 @@ export const routes: Routes = [
   {
     path: 'guitar-live',
     component: GuitarLiveComponent,
+    canActivate: [AuthGuard]
+  },
+
+  {
+    path: 'oracle',
+    component: OracleWidgetComponent,
     canActivate: [AuthGuard]
   },
 
