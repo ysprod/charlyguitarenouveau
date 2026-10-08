@@ -2,43 +2,60 @@
    GUITARE LIVE — Jouer pour le plaisir
    ═════════════════════════════════════════════════════════════════════ */
 
+/* ─── Variables ─── */
 :host {
+  --gold:        #d4af37;
+  --gold-bright: #ffd700;
+  --wood-dark:   #2a1810;
+  --wood-mid:    #4a2c1a;
+  --cyan:        #00d4ff;
+
   display: block;
 }
 
+/* ─── Mixins ─── */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   CONTAINER
+   ═════════════════════════════════════════════════════════════════════ */
 .guitar-live-container {
   position: relative;
-  width: 100%;
-  min-height: 100vh;
-  background: radial-gradient(ellipse at center, #1a0f0a 0%, #0d0603 100%);
-  color: #fff;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  min-height: 100vh;
   padding: 12px 12px 20px;
+  overflow: hidden;
   box-sizing: border-box;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  background: radial-gradient(ellipse at center, #1a0f0a 0%, #0d0603 100%);
+  color: #fff;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* ═══════════════════════════════════════════════════════
-   FOND
-   ═══════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════
+   FOND ANIMÉ
+   ═════════════════════════════════════════════════════════════════════ */
 .animated-background {
   position: absolute;
   inset: 0;
   z-index: 0;
-  pointer-events: none;
   overflow: hidden;
+  pointer-events: none;
 
   .bg-grid {
     position: absolute;
-    width: 200%;
-    height: 200%;
     top: -50%;
     left: -50%;
+    width: 200%;
+    height: 200%;
     background-image:
       linear-gradient(to right, rgba(212, 175, 55, 0.04) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(212, 175, 55, 0.04) 1px, transparent 1px);
@@ -50,67 +67,45 @@
   .bg-glow {
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px);
     opacity: 0.18;
+    filter: blur(100px);
 
-    &.bg-glow-1 {
-      top: -10%;
-      left: -10%;
-      width: 400px;
-      height: 400px;
-      background: #d4af37;
-    }
-
-    &.bg-glow-2 {
-      bottom: -10%;
-      right: -10%;
-      width: 500px;
-      height: 500px;
-      background: #8b5a2b;
-    }
-
-    &.bg-glow-3 {
-      top: 40%;
-      left: 30%;
-      width: 350px;
-      height: 350px;
-      background: #00d4ff;
-    }
+    &.bg-glow-1 { top: -10%; left: -10%;     width: 400px; height: 400px; background: var(--gold); }
+    &.bg-glow-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: #8b5a2b; }
+    &.bg-glow-3 { top: 40%; left: 30%;       width: 350px; height: 350px; background: var(--cyan); }
   }
 }
 
-/* ═══════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    TOP BAR
-   ═══════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .game-top-bar {
   position: relative;
   z-index: 5;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
   max-width: 1200px;
   margin-bottom: 12px;
-  gap: 8px;
 
   .btn-back {
     display: flex;
     align-items: center;
     gap: 4px;
-    background: rgba(42, 30, 23, 0.85);
-    border: 1px solid #8b5a2b;
-    color: #f5e6d3;
     padding: 8px 14px;
-    border-radius: 20px;
-    cursor: pointer;
     font-weight: 600;
     font-size: 0.8rem;
-    transition: all 0.2s;
+    color: #f5e6d3;
+    background: rgba(42, 30, 23, 0.85);
+    border: 1px solid #8b5a2b;
+    border-radius: 20px;
     backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: all 0.2s;
 
-    .material-icons {
-      font-size: 1rem;
-    }
+    .material-icons { font-size: 1rem; }
 
     &:hover {
       background: #8b5a2b;
@@ -124,95 +119,499 @@
     gap: 8px;
 
     h1 {
+      margin: 0;
       font-size: 1rem;
       letter-spacing: 2px;
-      margin: 0;
-      background: linear-gradient(180deg, #fff 0%, #d4af37 100%);
+      white-space: nowrap;
+      background: linear-gradient(180deg, #fff 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
-      white-space: nowrap;
     }
 
-    .icon {
-      font-size: 1.4rem;
-    }
+    .icon { font-size: 1.4rem; }
   }
 
   .note-display {
+    @include flex-center;
     min-width: 90px;
     height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0 16px;
     background: rgba(26, 21, 16, 0.85);
     border: 1px solid #8b5a2b;
     border-radius: 20px;
-    padding: 0 16px;
     backdrop-filter: blur(8px);
     transition: all 0.3s;
 
     &.active {
-      border-color: #ffd700;
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
       background: rgba(212, 175, 55, 0.15);
+      border-color: var(--gold-bright);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
     }
 
     .note-name {
       font-size: 1.1rem;
       font-weight: 900;
-      color: #ffd700;
-      text-shadow: 0 0 15px #ffd700;
       letter-spacing: 1px;
+      color: var(--gold-bright);
+      text-shadow: 0 0 15px var(--gold-bright);
       animation: noteAppear 0.3s ease-out;
     }
 
     .note-placeholder {
       font-size: 0.75rem;
-      color: #a88b68;
       font-style: italic;
+      color: #a88b68;
     }
   }
 }
 
-@keyframes noteAppear {
-  0% { transform: scale(0.5); opacity: 0; }
-  60% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* ═══════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    BANNIÈRE D'INSTRUCTION
-   ═══════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .instruction-banner {
   position: relative;
   z-index: 5;
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  max-width: 90vw;
   margin-bottom: 16px;
   padding: 10px 20px;
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.12), rgba(139, 90, 43, 0.12));
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  border-radius: 24px;
-  color: #f5e6d3;
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.5px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
-  animation: instructionPulse 2.5s ease-in-out infinite alternate;
-  max-width: 90vw;
   text-align: center;
+  color: #f5e6d3;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.12), rgba(139, 90, 43, 0.12));
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 24px;
+  backdrop-filter: blur(8px);
+  animation: instructionPulse 2.5s ease-in-out infinite alternate;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
 
   .instruction-icon {
     font-size: 1.2rem;
     animation: tapAnimation 1.5s ease-in-out infinite;
   }
 
-  .instruction-text {
-    line-height: 1.3;
+  .instruction-text { line-height: 1.3; }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   GUITARE
+   ═════════════════════════════════════════════════════════════════════ */
+.guitar-viewport {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1200px;
+  height: 480px;
+  margin: 8px 0;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.7));
+  perspective: 1200px;
+}
+
+/* ─── Tête ─── */
+.guitar-headstock {
+  position: relative;
+  flex: 0 0 70px;
+
+  .headstock-wood {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(0, 0, 0, 0.4) 100%),
+      linear-gradient(135deg, #4a2c1a 0%, #2a1810 50%, #3d2419 100%);
+    border-radius: 12px 0 0 12px;
+    box-shadow:
+      inset 0 0 20px rgba(0, 0, 0, 0.8),
+      0 0 0 1px rgba(212, 175, 55, 0.3);
+
+    .tuning-pegs {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      padding: 12px 0;
+
+      .peg {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 50px;
+
+        .peg-post {
+          position: absolute;
+          left: 50%;
+          width: 22px;
+          height: 3px;
+          background: linear-gradient(180deg, #e0e0e0, #808080);
+          border-radius: 2px;
+          transform: translateX(-50%);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .peg-button {
+          position: absolute;
+          width: 18px;
+          height: 18px;
+          background: radial-gradient(circle at 35% 30%, #f0f0f0, #a0a0a0 60%, #505050);
+          border-radius: 50%;
+          box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.6),
+            inset 0 -1px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        &.left .peg-button          { left: 4px; }
+        &:not(.left) .peg-button    { right: 4px; }
+      }
+    }
   }
+}
+
+/* ─── Sillet ─── */
+.guitar-nut {
+  position: relative;
+  z-index: 4;
+  flex: 0 0 14px;
+  background: linear-gradient(90deg, #e8dcc0 0%, #f5f0e1 50%, #d4c5a0 100%);
+  box-shadow:
+    inset -2px 0 4px rgba(0, 0, 0, 0.4),
+    2px 0 6px rgba(0, 0, 0, 0.5);
+
+  .nut-grooves {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 12px 0;
+
+    .nut-groove {
+      height: calc(var(--gauge) * 1.2px);
+      min-height: 1px;
+      margin: 0 2px;
+      background: linear-gradient(90deg, transparent, #3a2e1f 30%, #1a0f08 70%, transparent);
+      border-radius: 1px;
+    }
+  }
+}
+
+/* ─── Manche scrollable ─── */
+.fretboard-scroll {
+  position: relative;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #8b5a2b #1a0f0a;
+
+  &::-webkit-scrollbar         { height: 6px; }
+  &::-webkit-scrollbar-track   { background: #1a0f0a; border-radius: 3px; }
+  &::-webkit-scrollbar-thumb   { background: #8b5a2b; border-radius: 3px; }
+}
+
+.fretboard-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 900px;
+  height: 100%;
+}
+
+/* ─── Manche ─── */
+.guitar-neck {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.3) 100%),
+    linear-gradient(180deg, #3d2419 0%, #2a1810 25%, #1f1209 50%, #2a1810 75%, #3d2419 100%);
+  border-radius: 0 4px 4px 0;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  .wood-grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.7;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(92deg,
+      transparent 0px,
+      rgba(0, 0, 0, 0.18) 1px,
+      transparent 3px,
+      transparent 9px,
+      rgba(255, 200, 120, 0.03) 10px,
+      transparent 12px);
+  }
+
+  .wood-highlight {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255, 200, 100, 0.08), transparent 60%);
+  }
+}
+
+/* ─── Inlays ─── */
+.fret-inlays {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+
+  .inlay {
+    position: absolute;
+    top: 50%;
+    left: calc((var(--fret) - 0.5) / 12 * 100%);
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f0e8d0 40%, #c8b898 80%, #a89878 100%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow:
+      0 0 8px rgba(255, 240, 200, 0.5),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.35),
+      0 1px 2px rgba(0, 0, 0, 0.7);
+
+    &.double {
+      display: flex;
+      gap: 18px;
+      width: auto;
+      height: auto;
+      background: none;
+      border-radius: 0;
+      box-shadow: none;
+
+      span {
+        width: 12px;
+        height: 12px;
+        background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f0e8d0 40%, #c8b898 80%, #a89878 100%);
+        border-radius: 50%;
+        box-shadow:
+          0 0 8px rgba(255, 240, 200, 0.5),
+          inset 0 -1px 2px rgba(0, 0, 0, 0.35),
+          0 1px 2px rgba(0, 0, 0, 0.7);
+      }
+    }
+  }
+}
+
+/* ─── Frettes ─── */
+.fret-wires {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+
+  .fret-wire {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--fret-pos) / 12 * 100%);
+    width: 3px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg,
+      #4a4a4a 0%, #a8a8a8 20%, #f0f0f0 45%,
+      #ffffff 50%, #f0f0f0 55%, #a8a8a8 80%, #4a4a4a 100%);
+    box-shadow:
+      0 0 3px rgba(255, 255, 255, 0.4),
+      -1px 0 2px rgba(0, 0, 0, 0.6),
+      1px 0 2px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* ─── Cordes ─── */
+.strings-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 20px 0;
+  pointer-events: none;
+
+  .string-track {
+    display: flex;
+    align-items: center;
+    height: 1px;
+
+    .string {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: calc(var(--gauge) * 2.5px);
+      min-height: 2px;
+
+      .string-body {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, #ffffff 0%, var(--color) 50%, #000000 100%);
+        border-radius: 50%;
+        box-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.9),
+          0 0 3px rgba(255, 255, 255, 0.3);
+      }
+
+      .string-highlight {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 45%;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent);
+        border-radius: 50%;
+      }
+
+      &.vibrating { animation: stringVibrate 0.5s ease-out; }
+    }
+  }
+}
+
+/* ─── Zones cliquables (centrées dans les cases) ─── */
+.play-zones {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 10px 0;
+
+  .play-row {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: center;
+
+    .play-cell {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc((var(--case-pos) - 0.5) / 12 * 100%);
+      width: calc(100% / 12);
+      border-radius: 6px;
+      cursor: pointer;
+      transform: translateX(-50%);
+      transition: background 0.15s;
+
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+
+      &:hover { background: rgba(212, 175, 55, 0.12); }
+
+      &:active {
+        background: rgba(212, 175, 55, 0.3);
+        transition: background 0.05s;
+      }
+    }
+  }
+}
+
+/* ─── Numéros de cases ─── */
+.fret-numbers {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 2px;
+
+  .fret-num {
+    position: absolute;
+    left: calc((var(--case-pos) - 0.5) / 12 * 100%);
+    font-size: 0.65rem;
+    font-weight: bold;
+    text-align: center;
+    color: rgba(212, 175, 55, 0.6);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    transform: translateX(-50%);
+  }
+}
+
+/* ─── Rosace ─── */
+.guitar-rosette {
+  position: relative;
+  flex: 0 0 70px;
+  @include flex-center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 50%, rgba(0, 0, 0, 0.4) 100%),
+    linear-gradient(135deg, #3d2419 0%, #2a1810 50%, #1f1209 100%);
+  border-radius: 0 12px 12px 0;
+  box-shadow:
+    inset 0 0 20px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(212, 175, 55, 0.3);
+
+  .rosette-ring {
+    position: absolute;
+    border: 2px solid transparent;
+    border-radius: 50%;
+
+    &.outer {
+      width: 56px;
+      height: 56px;
+      opacity: 0.85;
+      background:
+        linear-gradient(#2a1810, #2a1810) padding-box,
+        repeating-conic-gradient(from 0deg, var(--gold) 0deg 12deg, #8b5a2b 12deg 24deg) border-box;
+    }
+
+    &.inner {
+      width: 42px;
+      height: 42px;
+      opacity: 0.7;
+      background:
+        linear-gradient(#2a1810, #2a1810) padding-box,
+        repeating-conic-gradient(from 0deg, #8b5a2b 0deg 8deg, var(--gold) 8deg 16deg) border-box;
+    }
+  }
+
+  .sound-hole {
+    width: 28px;
+    height: 28px;
+    background: radial-gradient(circle, #000 0%, #0a0503 70%, #1a0d07 100%);
+    border-radius: 50%;
+    box-shadow:
+      inset 0 3px 8px rgba(0, 0, 0, 1),
+      0 0 6px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* ─── Hint scroll ─── */
+.scroll-hint {
+  position: relative;
+  z-index: 4;
+  margin-top: 8px;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  text-align: center;
+  color: rgba(212, 175, 55, 0.6);
+  animation: fadeHint 3s ease-in-out infinite;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ═════════════════════════════════════════════════════════════════════ */
+@keyframes gridMove {
+  0%   { transform: perspective(500px) rotateX(60deg) translateY(0); }
+  100% { transform: perspective(500px) rotateX(60deg) translateY(40px); }
+}
+
+@keyframes noteAppear {
+  0%   { opacity: 0; transform: scale(0.5); }
+  60%  { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes instructionPulse {
@@ -228,500 +627,42 @@
 
 @keyframes tapAnimation {
   0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-4px) scale(1.15); }
-}
-
-/* ═══════════════════════════════════════════════════════
-   GUITARE
-   ═══════════════════════════════════════════════════════ */
-.guitar-viewport {
-  position: relative;
-  z-index: 3;
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  align-items: stretch;
-  height: 480px;
-  margin: 8px 0;
-  perspective: 1200px;
-  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.7));
-}
-
-/* ─────────── TÊTE DE GUITARE ─────────── */
-.guitar-headstock {
-  flex: 0 0 70px;
-  position: relative;
-
-  .headstock-wood {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(0, 0, 0, 0.4) 100%),
-      linear-gradient(135deg, #4a2c1a 0%, #2a1810 50%, #3d2419 100%);
-    border-radius: 12px 0 0 12px;
-    box-shadow:
-      inset 0 0 20px rgba(0, 0, 0, 0.8),
-      0 0 0 1px rgba(212, 175, 55, 0.3);
-    overflow: hidden;
-
-    .tuning-pegs {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      padding: 12px 0;
-
-      .peg {
-        position: relative;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        .peg-post {
-          position: absolute;
-          width: 22px;
-          height: 3px;
-          background: linear-gradient(180deg, #e0e0e0, #808080);
-          border-radius: 2px;
-          left: 50%;
-          transform: translateX(-50%);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-        }
-
-        .peg-button {
-          position: absolute;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background: radial-gradient(circle at 35% 30%, #f0f0f0, #a0a0a0 60%, #505050);
-          box-shadow:
-            0 2px 4px rgba(0, 0, 0, 0.6),
-            inset 0 -1px 2px rgba(0, 0, 0, 0.4);
-        }
-
-        &.left .peg-button {
-          left: 4px;
-        }
-
-        &:not(.left) .peg-button {
-          right: 4px;
-        }
-      }
-    }
-  }
-}
-
-/* ─────────── SILLET ─────────── */
-.guitar-nut {
-  flex: 0 0 14px;
-  position: relative;
-  background: linear-gradient(90deg, #e8dcc0 0%, #f5f0e1 50%, #d4c5a0 100%);
-  box-shadow:
-    inset -2px 0 4px rgba(0, 0, 0, 0.4),
-    2px 0 6px rgba(0, 0, 0, 0.5);
-  z-index: 4;
-
-  .nut-grooves {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    padding: 12px 0;
-
-    .nut-groove {
-      height: calc(var(--gauge) * 1.2px);
-      min-height: 1px;
-      background: linear-gradient(90deg, transparent, #3a2e1f 30%, #1a0f08 70%, transparent);
-      margin: 0 2px;
-      border-radius: 1px;
-    }
-  }
-}
-
-/* ─────────── MANCHE SCROLLABLE ─────────── */
-.fretboard-scroll {
-  flex: 1;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #8b5a2b #1a0f0a;
-  position: relative;
-
-  &::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #1a0f0a;
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #8b5a2b;
-    border-radius: 3px;
-  }
-}
-
-.fretboard-inner {
-  min-width: 900px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-/* ─────────── CORPS DU MANCHE ─────────── */
-.guitar-neck {
-  position: relative;
-  flex: 1;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.3) 100%),
-    linear-gradient(180deg, #3d2419 0%, #2a1810 25%, #1f1209 50%, #2a1810 75%, #3d2419 100%);
-  border-radius: 0 4px 4px 0;
-  overflow: hidden;
-  box-shadow:
-    inset 0 0 40px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-
-  .wood-grain {
-    position: absolute;
-    inset: 0;
-    background-image:
-      repeating-linear-gradient(92deg,
-        transparent 0px,
-        rgba(0, 0, 0, 0.18) 1px,
-        transparent 3px,
-        transparent 9px,
-        rgba(255, 200, 120, 0.03) 10px,
-        transparent 12px);
-    opacity: 0.7;
-    pointer-events: none;
-  }
-
-  .wood-highlight {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(255, 200, 100, 0.08), transparent 60%);
-    pointer-events: none;
-  }
-}
-
-/* ─────────── INLAYS ─────────── */
-.fret-inlays {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-
-  .inlay {
-    position: absolute;
-    top: 50%;
-    left: calc((var(--fret) - 0.5) / 12 * 100%);
-    transform: translate(-50%, -50%);
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f0e8d0 40%, #c8b898 80%, #a89878 100%);
-    box-shadow:
-      0 0 8px rgba(255, 240, 200, 0.5),
-      inset 0 -1px 2px rgba(0, 0, 0, 0.35),
-      0 1px 2px rgba(0, 0, 0, 0.7);
-
-    &.double {
-      width: auto;
-      height: auto;
-      background: none;
-      box-shadow: none;
-      border-radius: 0;
-      display: flex;
-      gap: 18px;
-
-      span {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f0e8d0 40%, #c8b898 80%, #a89878 100%);
-        box-shadow:
-          0 0 8px rgba(255, 240, 200, 0.5),
-          inset 0 -1px 2px rgba(0, 0, 0, 0.35),
-          0 1px 2px rgba(0, 0, 0, 0.7);
-      }
-    }
-  }
-}
-
-/* ─────────── FRETTES ─────────── */
-.fret-wires {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-
-  .fret-wire {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: calc(var(--fret-pos) / 12 * 100%);
-    width: 3px;
-    transform: translateX(-50%);
-    background: linear-gradient(90deg,
-        #4a4a4a 0%,
-        #a8a8a8 20%,
-        #f0f0f0 45%,
-        #ffffff 50%,
-        #f0f0f0 55%,
-        #a8a8a8 80%,
-        #4a4a4a 100%);
-    box-shadow:
-      0 0 3px rgba(255, 255, 255, 0.4),
-      -1px 0 2px rgba(0, 0, 0, 0.6),
-      1px 0 2px rgba(0, 0, 0, 0.6);
-  }
-}
-
-/* ─────────── CORDES ─────────── */
-.strings-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  padding: 20px 0;
-  pointer-events: none;
-
-  .string-track {
-    height: 1px;
-    display: flex;
-    align-items: center;
-
-    .string {
-      position: relative;
-      width: 100%;
-      height: calc(var(--gauge) * 2.5px);
-      min-height: 2px;
-      display: flex;
-      align-items: center;
-
-      .string-body {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        background: linear-gradient(180deg,
-            #ffffff 0%,
-            var(--color) 50%,
-            #000000 100%);
-        box-shadow:
-          0 1px 3px rgba(0, 0, 0, 0.9),
-          0 0 3px rgba(255, 255, 255, 0.3);
-      }
-
-      .string-highlight {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 45%;
-        border-radius: 50%;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent);
-      }
-
-      &.vibrating {
-        animation: stringVibrate 0.5s ease-out;
-      }
-    }
-  }
+  50%      { transform: translateY(-4px) scale(1.15); }
 }
 
 @keyframes stringVibrate {
-  0% { transform: translateX(0); filter: brightness(1); }
-  15% { transform: translateX(-5px); filter: brightness(2.5); }
-  30% { transform: translateX(5px); filter: brightness(2); }
-  45% { transform: translateX(-3px); filter: brightness(1.7); }
-  60% { transform: translateX(2px); filter: brightness(1.4); }
-  80% { transform: translateX(-1px); filter: brightness(1.15); }
-  100% { transform: translateX(0); filter: brightness(1); }
-}
-
-/* ─────────── ZONES CLIQUABLES — CENTRÉES DANS LES CASES ─────────── */
-.play-zones {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  padding: 10px 0;
-
-  .play-row {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    position: relative;
-
-    /* Chaque cellule est positionnée en absolu, centrée dans sa case */
-    .play-cell {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      /* Position du centre de la case : (N - 0.5) / 12 * 100% */
-      left: calc((var(--case-pos) - 0.5) / 12 * 100%);
-      /* Largeur = 1/12 du manche, centrée sur la position */
-      width: calc(100% / 12);
-      transform: translateX(-50%);
-      cursor: pointer;
-      border-radius: 6px;
-      transition: background 0.15s;
-
-      /* Empêche le zoom / la sélection sur double tap mobile */
-      touch-action: manipulation;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-
-      &:hover {
-        background: rgba(212, 175, 55, 0.12);
-      }
-
-      &:active {
-        background: rgba(212, 175, 55, 0.3);
-        transition: background 0.05s;
-      }
-    }
-  }
-}
-
-/* ─────────── NUMÉROS DE CASES ─────────── */
-.fret-numbers {
-  height: 28px;
-  display: flex;
-  align-items: center;
-  padding: 0 2px;
-  position: relative;
-
-  .fret-num {
-    position: absolute;
-    /* Centré dans la case */
-    left: calc((var(--case-pos) - 0.5) / 12 * 100%);
-    transform: translateX(-50%);
-    text-align: center;
-    font-size: 0.65rem;
-    font-weight: bold;
-    color: rgba(212, 175, 55, 0.6);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-  }
-}
-
-/* ─────────── ROSACE ─────────── */
-.guitar-rosette {
-  flex: 0 0 70px;
-  position: relative;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 50%, rgba(0, 0, 0, 0.4) 100%),
-    linear-gradient(135deg, #3d2419 0%, #2a1810 50%, #1f1209 100%);
-  border-radius: 0 12px 12px 0;
-  box-shadow:
-    inset 0 0 20px rgba(0, 0, 0, 0.8),
-    0 0 0 1px rgba(212, 175, 55, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .rosette-ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 2px solid transparent;
-
-    &.outer {
-      width: 56px;
-      height: 56px;
-      background:
-        linear-gradient(#2a1810, #2a1810) padding-box,
-        repeating-conic-gradient(from 0deg, #d4af37 0deg 12deg, #8b5a2b 12deg 24deg) border-box;
-      opacity: 0.85;
-    }
-
-    &.inner {
-      width: 42px;
-      height: 42px;
-      background:
-        linear-gradient(#2a1810, #2a1810) padding-box,
-        repeating-conic-gradient(from 0deg, #8b5a2b 0deg 8deg, #d4af37 8deg 16deg) border-box;
-      opacity: 0.7;
-    }
-  }
-
-  .sound-hole {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #000 0%, #0a0503 70%, #1a0d07 100%);
-    box-shadow:
-      inset 0 3px 8px rgba(0, 0, 0, 1),
-      0 0 6px rgba(0, 0, 0, 0.8);
-  }
-}
-
-/* ─────────── INDICATION SCROLL ─────────── */
-.scroll-hint {
-  position: relative;
-  z-index: 4;
-  text-align: center;
-  font-size: 0.7rem;
-  color: rgba(212, 175, 55, 0.6);
-  margin-top: 8px;
-  letter-spacing: 1px;
-  animation: fadeHint 3s ease-in-out infinite;
+  0%   { transform: translateX(0);    filter: brightness(1); }
+  15%  { transform: translateX(-5px); filter: brightness(2.5); }
+  30%  { transform: translateX(5px);  filter: brightness(2); }
+  45%  { transform: translateX(-3px); filter: brightness(1.7); }
+  60%  { transform: translateX(2px);  filter: brightness(1.4); }
+  80%  { transform: translateX(-1px); filter: brightness(1.15); }
+  100% { transform: translateX(0);    filter: brightness(1); }
 }
 
 @keyframes fadeHint {
   0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.9; }
+  50%      { opacity: 0.9; }
 }
 
-/* ═══════════════════════════════════════════════════════
-   ANIMATIONS
-   ═══════════════════════════════════════════════════════ */
-@keyframes gridMove {
-  0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
-  100% { transform: perspective(500px) rotateX(60deg) translateY(40px); }
-}
-
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE MOBILE
-   ═══════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .guitar-live-container {
-    padding: 8px 6px 12px;
-  }
+  .guitar-live-container { padding: 8px 6px 12px; }
 
   .game-top-bar {
     margin-bottom: 8px;
 
-    .logo-zone h1 {
-      font-size: 0.8rem;
-      letter-spacing: 1px;
-    }
-
-    .logo-zone .icon {
-      font-size: 1.1rem;
-    }
+    .logo-zone h1 { font-size: 0.8rem; letter-spacing: 1px; }
+    .logo-zone .icon { font-size: 1.1rem; }
 
     .btn-back {
       padding: 6px 10px;
       font-size: 0.7rem;
 
-      .material-icons {
-        font-size: 0.9rem;
-      }
-
-      span:not(.material-icons) {
-        display: none;
-      }
+      .material-icons { font-size: 0.9rem; }
+      span:not(.material-icons) { display: none; }
     }
 
     .note-display {
@@ -730,29 +671,19 @@
       padding: 0 10px;
       border-radius: 16px;
 
-      .note-name {
-        font-size: 0.85rem;
-      }
-
-      .note-placeholder {
-        font-size: 0.65rem;
-      }
+      .note-name { font-size: 0.85rem; }
+      .note-placeholder { font-size: 0.65rem; }
     }
   }
 
   .instruction-banner {
-    font-size: 0.7rem;
-    padding: 6px 12px;
     margin-bottom: 10px;
+    padding: 6px 12px;
+    font-size: 0.7rem;
     border-radius: 18px;
 
-    .instruction-icon {
-      font-size: 0.9rem;
-    }
-
-    .instruction-text {
-      line-height: 1.2;
-    }
+    .instruction-icon { font-size: 0.9rem; }
+    .instruction-text { line-height: 1.2; }
   }
 
   .guitar-viewport {
@@ -761,53 +692,36 @@
   }
 
   .guitar-headstock,
-  .guitar-rosette {
-    flex: 0 0 42px;
-  }
+  .guitar-rosette { flex: 0 0 42px; }
 
-  .fretboard-inner {
-    min-width: 780px;
-  }
+  .fretboard-inner { min-width: 780px; }
 
   .fret-numbers {
     height: 24px;
-
-    .fret-num {
-      font-size: 0.6rem;
-    }
+    .fret-num { font-size: 0.6rem; }
   }
 
   .scroll-hint {
-    font-size: 0.6rem;
     margin-top: 6px;
+    font-size: 0.6rem;
   }
 }
 
 @media (max-width: 480px) {
-  .guitar-live-container {
-    padding: 6px 4px 10px;
-  }
+  .guitar-live-container { padding: 6px 4px 10px; }
 
   .game-top-bar {
     gap: 4px;
     margin-bottom: 6px;
 
-    .logo-zone h1 {
-      font-size: 0.7rem;
-      letter-spacing: 0.5px;
-    }
-
-    .logo-zone .icon {
-      font-size: 1rem;
-    }
+    .logo-zone h1 { font-size: 0.7rem; letter-spacing: 0.5px; }
+    .logo-zone .icon { font-size: 1rem; }
 
     .btn-back {
       padding: 5px 8px;
       border-radius: 14px;
 
-      .material-icons {
-        font-size: 0.85rem;
-      }
+      .material-icons { font-size: 0.85rem; }
     }
 
     .note-display {
@@ -816,25 +730,18 @@
       padding: 0 8px;
       border-radius: 14px;
 
-      .note-name {
-        font-size: 0.75rem;
-      }
-
-      .note-placeholder {
-        font-size: 0.6rem;
-      }
+      .note-name { font-size: 0.75rem; }
+      .note-placeholder { font-size: 0.6rem; }
     }
   }
 
   .instruction-banner {
-    font-size: 0.65rem;
-    padding: 5px 10px;
     margin-bottom: 8px;
+    padding: 5px 10px;
+    font-size: 0.65rem;
     border-radius: 16px;
 
-    .instruction-icon {
-      font-size: 0.8rem;
-    }
+    .instruction-icon { font-size: 0.8rem; }
   }
 
   .guitar-viewport {
@@ -843,45 +750,42 @@
   }
 
   .guitar-headstock,
-  .guitar-rosette {
-    flex: 0 0 34px;
-  }
+  .guitar-rosette { flex: 0 0 34px; }
 
-  .fretboard-inner {
-    min-width: 680px;
-  }
+  .fretboard-inner { min-width: 680px; }
 
   .fret-numbers {
     height: 20px;
-
-    .fret-num {
-      font-size: 0.55rem;
-    }
+    .fret-num { font-size: 0.55rem; }
   }
 
   .scroll-hint {
-    font-size: 0.55rem;
     margin-top: 4px;
+    font-size: 0.55rem;
   }
 }
 
 @media (max-width: 360px) {
-  .guitar-viewport {
-    height: 280px;
-  }
-
-  .fretboard-inner {
-    min-width: 600px;
-  }
+  .guitar-viewport { height: 280px; }
+  .fretboard-inner { min-width: 600px; }
 
   .guitar-headstock,
-  .guitar-rosette {
-    flex: 0 0 30px;
-  }
+  .guitar-rosette { flex: 0 0 30px; }
 
   .note-display {
     min-width: 46px;
     height: 26px;
     padding: 0 6px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

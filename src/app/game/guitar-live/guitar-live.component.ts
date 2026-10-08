@@ -5,13 +5,13 @@ import { CommonModule } from '@angular/common';
 interface GuitarString {
   index: number;      // 1 (E aiguë) à 6 (E grave)
   name: string;       // E, B, G, D, A, E
-  gaugeMm: number;    // Épaisseur visuelle réelle
+  gaugeMm: number;    // Épaisseur visuelle
   baseMidi: number;   // Note à vide
   color: string;      // Couleur visuelle
 }
 
 interface PlayingVoice {
-  source: AudioBufferSourceNode | OscillatorNode;
+  source: OscillatorNode;
   gainNode: GainNode;
   stringIdx: number;
   startTime: number;
@@ -27,82 +27,64 @@ interface PlayingVoice {
 export class GuitarLiveComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
-  // Accordage standard guitare acoustique
+  /* ═══════════════════════════════════════════════════════
+     ACCORDAGE STANDARD GUITARE ACOUSTIQUE
+     ═══════════════════════════════════════════════════════ */
   readonly strings: GuitarString[] = [
-    { index: 1, name: 'E', gaugeMm: 0.30, baseMidi: 64, color: '#E6C280' }, // Mi aigu
-    { index: 2, name: 'B', gaugeMm: 0.41, baseMidi: 59, color: '#D4AF37' }, // Si
-    { index: 3, name: 'G', gaugeMm: 0.61, baseMidi: 55, color: '#B8860B' }, // Sol
-    { index: 4, name: 'D', gaugeMm: 0.81, baseMidi: 50, color: '#CD7F32' }, // Ré
-    { index: 5, name: 'A', gaugeMm: 1.07, baseMidi: 45, color: '#8B5A2B' }, // La
-    { index: 6, name: 'E', gaugeMm: 1.35, baseMidi: 40, color: '#5C4033' }  // Mi grave
+    { index: 1, name: 'E', gaugeMm: 0.30, baseMidi: 64, color: '#E6C280' },
+    { index: 2, name: 'B', gaugeMm: 0.41, baseMidi: 59, color: '#D4AF37' },
+    { index: 3, name: 'G', gaugeMm: 0.61, baseMidi: 55, color: '#B8860B' },
+    { index: 4, name: 'D', gaugeMm: 0.81, baseMidi: 50, color: '#CD7F32' },
+    { index: 5, name: 'A', gaugeMm: 1.07, baseMidi: 45, color: '#8B5A2B' },
+    { index: 6, name: 'E', gaugeMm: 1.35, baseMidi: 40, color: '#5C4033' }
   ];
 
-  /** Les 12 cases (1 à 12) — chaque case est l'espace entre 2 frettes */
   readonly cases = Array.from({ length: 12 }, (_, i) => i + 1);
-
-  /** Les 13 frettes (0 = sillet, 1 à 12 = frettes métalliques) */
   readonly frets = Array.from({ length: 13 }, (_, i) => i);
 
-  // État d'animation
-  activeVibratingString = signal<number>(-1);
-  lastPlayedNote = signal<string>('');
-  lastPlayedTime = signal<number>(0);
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT
+     ═══════════════════════════════════════════════════════ */
+  activeVibratingString = signal(-1);
+  lastPlayedNote = signal('');
+  lastPlayedTime = signal(0);
 
-  // Audio
+  /* ═══════════════════════════════════════════════════════
+     AUDIO (synthèse pure — aucun sample)
+     ═══════════════════════════════════════════════════════ */
   private audioCtx?: AudioContext;
   private activeVoices: Map<number, PlayingVoice> = new Map();
-  private audioBuffers: Map<string, AudioBuffer> = new Map();
-  private isAudioReady = false;
-  private readonly guitarBasePath = 'assets/audio/guitar-acoustic/';
-  private readonly guitarSamples: Record<string, string> = {
-    'E2': 'E2.ogg', 'A2': 'A2.ogg', 'D3': 'D3.ogg',
-    'G3': 'G3.ogg', 'B3': 'B3.ogg', 'E4': 'E4.ogg'
-  };
 
   private readonly noteToMidiOffset: Record<string, number> = {
     'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5,
     'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
   };
 
-  /* ═══════════════════════════════════════════════════════
-     ANTI-DOUBLON (click + touchstart / répétition)
-     ═══════════════════════════════════════════════════════ */
+  /* ─── Anti-doublon tactile / souris ─── */
   private lastTouchTime = 0;
   private lastPressKey = '';
   private lastPressTime = 0;
   private readonly PRESS_DEBOUNCE_MS = 120;
   private readonly TOUCH_GHOST_WINDOW_MS = 500;
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.initAudioContext();
-    await this.preloadSamples();
+  }
+
+  ngOnDestroy(): void {
+    this.activeVoices.forEach(v => {
+      try { v.source.stop(); } catch {}
+    });
+    this.activeVoices.clear();
+    if (this.audioCtx) this.audioCtx.close();
   }
 
   /* ═══════════════════════════════════════════════════════
      MOTEUR AUDIO
      ═══════════════════════════════════════════════════════ */
   private initAudioContext(): void {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (AudioContextClass) {
-      this.audioCtx = new AudioContextClass();
-    }
-  }
-
-  private async preloadSamples(): Promise<void> {
-    if (!this.audioCtx) return;
-    const promises = Object.entries(this.guitarSamples).map(async ([note, file]) => {
-      try {
-        const response = await fetch(this.guitarBasePath + file);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await this.audioCtx!.decodeAudioData(arrayBuffer);
-        this.audioBuffers.set(note, audioBuffer);
-      } catch (err) {
-        // Fallback silencieux si sample manquant
-      }
-    });
-    await Promise.all(promises);
-    this.isAudioReady = this.audioBuffers.size > 0;
+    const Ctor = window.AudioContext || (window as any).webkitAudioContext;
+    if (Ctor) this.audioCtx = new Ctor();
   }
 
   private async ensureAudioContextRunning(): Promise<void> {
@@ -118,6 +100,9 @@ export class GuitarLiveComponent implements OnInit, OnDestroy {
     return (parseInt(octaveStr, 10) + 1) * 12 + (this.noteToMidiOffset[pitch] ?? 0);
   }
 
+  /**
+   * Étouffe la note précédente sur la même corde (comme un vrai guitariste).
+   */
   private dampPreviousStringNote(stringIdx: number, dampingDuration = 0.05): void {
     const existing = this.activeVoices.get(stringIdx);
     if (existing && this.audioCtx) {
@@ -135,6 +120,14 @@ export class GuitarLiveComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Synthèse réaliste de guitare acoustique :
+   *  - 3 oscillateurs (fondamentale + 2 harmoniques) = son riche
+   *  - Filtre peaking (brillance du médiator)
+   *  - Filtre lowpass (résonance de caisse)
+   *  - Enveloppe ADSR naturelle (attaque rapide + decay organique)
+   *  - Léger vibrato (LFO) pour un rendu humain
+   */
   private playAcousticGuitarNote(
     stringIdx: number,
     toneNote: string,
@@ -149,91 +142,102 @@ export class GuitarLiveComponent implements OnInit, OnDestroy {
     const targetFreq = 440 * Math.pow(2, (targetMidi - 69) / 12);
     const startTime = this.audioCtx.currentTime;
 
-    // ─── CAS 1 : Sample réel ───
-    if (this.isAudioReady && this.audioBuffers.size > 0) {
-      let closest: { note: string; buffer: AudioBuffer; distance: number } | null = null;
-      this.audioBuffers.forEach((buffer, note) => {
-        const sampleMidi = this.noteToMidiIndex(note);
-        const distance = Math.abs(sampleMidi - targetMidi);
-        if (!closest || distance < closest.distance) {
-          closest = { note, buffer, distance };
-        }
-      });
-
-      if (closest) {
-        const sampleMidi = this.noteToMidiIndex((closest as any).note);
-        const playbackRate = Math.pow(2, (targetMidi - sampleMidi) / 12);
-
-        const source = this.audioCtx.createBufferSource();
-        source.buffer = (closest as any).buffer;
-        source.playbackRate.value = playbackRate;
-
-        const gainNode = this.audioCtx.createGain();
-        gainNode.gain.setValueAtTime(0.0001, startTime);
-        gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.008);
-        gainNode.gain.setValueAtTime(volume, startTime + duration * 0.3);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-
-        source.connect(gainNode);
-        gainNode.connect(this.audioCtx.destination);
-
-        source.start(startTime);
-        source.stop(startTime + duration + 0.1);
-
-        this.activeVoices.set(stringIdx, { source, gainNode, stringIdx, startTime });
-        return;
-      }
-    }
-
-    // ─── CAS 2 : Synthèse fallback ───
-    const osc = this.audioCtx.createOscillator();
+    /* ─── Nœuds principaux ─── */
     const gainNode = this.audioCtx.createGain();
     const bodyFilter = this.audioCtx.createBiquadFilter();
+    const pickFilter = this.audioCtx.createBiquadFilter();
 
-    osc.type = stringIdx >= 4 ? 'sawtooth' : 'triangle';
-    osc.frequency.setValueAtTime(targetFreq, startTime);
-
+    /* Caisse (bois) */
     bodyFilter.type = 'lowpass';
-    bodyFilter.frequency.setValueAtTime(targetFreq * 3, startTime);
-    bodyFilter.frequency.exponentialRampToValueAtTime(targetFreq * 1.2, startTime + duration * 0.7);
+    bodyFilter.frequency.setValueAtTime(targetFreq * 4, startTime);
+    bodyFilter.frequency.exponentialRampToValueAtTime(
+      targetFreq * 1.5,
+      startTime + duration * 0.6
+    );
+    bodyFilter.Q.value = 1.2;
+
+    /* Médiator (brillance) */
+    pickFilter.type = 'peaking';
+    pickFilter.frequency.value = targetFreq * 6;
+    pickFilter.Q.value = 0.8;
+    pickFilter.gain.value = 4;
+
+    /* Enveloppe ADSR */
+    const isBassString = stringIdx >= 5;
+    const attack = isBassString ? 0.004 : 0.002;
+    const decay = 0.08;
+    const sustainLevel = 0.45;
 
     gainNode.gain.setValueAtTime(0.0001, startTime);
-    gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.01);
-    gainNode.gain.setValueAtTime(volume, startTime + duration * 0.3);
+    gainNode.gain.linearRampToValueAtTime(volume, startTime + attack);
+    gainNode.gain.exponentialRampToValueAtTime(
+      volume * sustainLevel,
+      startTime + attack + decay
+    );
     gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
-    osc.connect(bodyFilter);
+    /* 3 oscillateurs (harmoniques) */
+    const harmonics: Array<{ type: OscillatorType; ratio: number; gain: number }> = [
+      { type: 'triangle', ratio: 1,    gain: 0.6  },
+      { type: 'sine',     ratio: 2,    gain: 0.25 },
+      { type: 'sine',     ratio: 3.01, gain: 0.15 }
+    ];
+
+    const oscillators: OscillatorNode[] = [];
+
+    harmonics.forEach(({ type, ratio, gain: hGain }) => {
+      const osc = this.audioCtx!.createOscillator();
+      const hGainNode = this.audioCtx!.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(targetFreq * ratio, startTime);
+
+      /* Vibrato léger naturel */
+      const lfo = this.audioCtx!.createOscillator();
+      const lfoGain = this.audioCtx!.createGain();
+      lfo.frequency.value = 4.5 + Math.random() * 1.5;
+      lfoGain.gain.value = targetFreq * 0.003;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      lfo.start(startTime);
+      lfo.stop(startTime + duration);
+
+      hGainNode.gain.value = hGain;
+      osc.connect(hGainNode);
+      hGainNode.connect(pickFilter);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+      oscillators.push(osc);
+    });
+
+    /* Chaîne : osc → pick → body → master → destination */
+    pickFilter.connect(bodyFilter);
     bodyFilter.connect(gainNode);
     gainNode.connect(this.audioCtx.destination);
 
-    osc.start(startTime);
-    osc.stop(startTime + duration + 0.05);
-
-    this.activeVoices.set(stringIdx, { source: osc, gainNode, stringIdx, startTime });
+    this.activeVoices.set(stringIdx, {
+      source: oscillators[0],
+      gainNode,
+      stringIdx,
+      startTime
+    });
   }
 
   /* ═══════════════════════════════════════════════════════
      INTERACTION JOUEUR — ANTI-DOUBLON
      ═══════════════════════════════════════════════════════ */
-
-  /**
-   * Point d'entrée unique pour mousedown + touchstart.
-   * @param stringIdx index de la corde (1 à 6)
-   * @param caseNum   numéro de case (1 à 12) — 0 = corde à vide
-   */
   onFretPress(stringIdx: number, caseNum: number, event: Event): void {
     const isTouch = event.type === 'touchstart';
     const now = performance.now();
 
-    // ─── 1. Ignore le click souris fantôme après un touch ───
+    /* 1. Ignore le "ghost click" après un touch */
     if (!isTouch && (now - this.lastTouchTime) < this.TOUCH_GHOST_WINDOW_MS) {
       return;
     }
-    if (isTouch) {
-      this.lastTouchTime = now;
-    }
+    if (isTouch) this.lastTouchTime = now;
 
-    // ─── 2. Anti-répétition sur la même cellule ───
+    /* 2. Anti-répétition sur la même cellule */
     const key = `${stringIdx}-${caseNum}`;
     if (key === this.lastPressKey && (now - this.lastPressTime) < this.PRESS_DEBOUNCE_MS) {
       return;
@@ -241,27 +245,19 @@ export class GuitarLiveComponent implements OnInit, OnDestroy {
     this.lastPressKey = key;
     this.lastPressTime = now;
 
-    // ─── 3. Lancer la note ───
+    /* 3. Lancer la note */
     void this.onFretClick(stringIdx, caseNum);
   }
 
-  /**
-   * @param stringIdx index de la corde (1 à 6)
-   * @param caseNum   numéro de case (1 à 12)
-   */
-  async onFretClick(stringIdx: number, caseNum: number): Promise<void> {
+  private async onFretClick(stringIdx: number, caseNum: number): Promise<void> {
     await this.ensureAudioContextRunning();
 
-    // Retour haptique léger sur mobile
-    if (navigator.vibrate) {
-      navigator.vibrate(8);
-    }
+    if (navigator.vibrate) navigator.vibrate(8);
 
     const toneNote = this.getToneNoteForCase(stringIdx, caseNum);
-
     this.playAcousticGuitarNote(stringIdx, toneNote, 3.5, 0.85);
 
-    // Vibration visuelle
+    /* Vibration visuelle */
     this.activeVibratingString.set(stringIdx);
     setTimeout(() => {
       if (this.activeVibratingString() === stringIdx) {
@@ -269,7 +265,7 @@ export class GuitarLiveComponent implements OnInit, OnDestroy {
       }
     }, 450);
 
-    // Affichage du nom de note jouée
+    /* Affichage de la note jouée */
     const displayName = this.getNoteDisplayName(stringIdx, caseNum);
     this.lastPlayedNote.set(displayName);
     this.lastPlayedTime.set(Date.now());
@@ -283,11 +279,6 @@ export class GuitarLiveComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      THÉORIE MUSICALE
      ═══════════════════════════════════════════════════════ */
-
-  /**
-   * Retourne la note (nom international) pour une corde + une case.
-   * caseNum = 1 → 1ère case (1 demi-ton au-dessus de la corde à vide)
-   */
   private getToneNoteForCase(stringIndex: number, caseNum: number): string {
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const str = this.strings.find(s => s.index === stringIndex);
@@ -297,9 +288,6 @@ export class GuitarLiveComponent implements OnInit, OnDestroy {
     return `${noteNames[midi % 12]}${octave}`;
   }
 
-  /**
-   * Nom français d'une note pour l'affichage.
-   */
   getNoteDisplayName(stringIndex: number, caseNum: number): string {
     const noteFr = ['DO', 'DO#', 'RÉ', 'RÉ#', 'MI', 'FA', 'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'];
     const str = this.strings.find(s => s.index === stringIndex);
@@ -318,14 +306,5 @@ export class GuitarLiveComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
   goBack(): void {
     this.router.navigate(['/play']);
-  }
-
-  ngOnDestroy(): void {
-    this.activeVoices.forEach(v => {
-      try { v.source.stop(); } catch {}
-    });
-    this.activeVoices.clear();
-    this.audioBuffers.clear();
-    if (this.audioCtx) this.audioCtx.close();
   }
 }

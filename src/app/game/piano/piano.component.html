@@ -22,11 +22,13 @@
       <span class="material-icons">arrow_back</span>
       <span>RETOUR</span>
     </button>
+
     <div class="logo-zone">
       <span class="icon">🎹</span>
       <h1>CHARLY PIANO HERO</h1>
       <div class="logo-glow"></div>
     </div>
+
     @if (highScore() > 0) {
       <div class="high-score-badge">
         <span class="trophy">🏆</span>
@@ -81,13 +83,13 @@
           }
         </div>
       </div>
-      <button
-        class="star-power-btn"
-        [disabled]="starPowerGauge() < 100 || isStarPowerActive()"
-        [class.charging]="starPowerGauge() < 100"
-        [class.ready]="starPowerGauge() >= 100 && !isStarPowerActive()"
-        [class.active]="isStarPowerActive()"
-        (click)="activateStarPower()">
+
+      <button class="star-power-btn"
+              [disabled]="starPowerGauge() < 100 || isStarPowerActive()"
+              [class.charging]="starPowerGauge() < 100"
+              [class.ready]="starPowerGauge() >= 100 && !isStarPowerActive()"
+              [class.active]="isStarPowerActive()"
+              (click)="activateStarPower()">
         @if (isStarPowerActive()) {
           <span class="btn-icon">⚡</span>
           <span class="btn-text">ACTIF {{ starPowerTimeLeft().toFixed(1) }}s</span>
@@ -133,6 +135,7 @@
           <span class="melody-particle" [style.--i]="i"></span>
         }
       </div>
+
       <div class="melody-banner">
         <span class="melody-icon">🎼</span>
         <div class="melody-titles">
@@ -147,6 +150,7 @@
           </p>
         </div>
       </div>
+
       <div class="melody-progression">
         @for (chord of currentMelodyProgression(); track chord.name; let i = $index) {
           <div class="melody-chord-dot"
@@ -166,6 +170,7 @@
     <div class="piano-wrapper">
       <div class="piano-scroll" #keyboardScroll>
         <div class="piano">
+
           <!-- Touches blanches -->
           <div class="white-keys">
             @for (key of whiteKeys(); track key.index) {
@@ -248,12 +253,14 @@
   <!-- ═══════════ ACCUEIL & GAME OVER ═══════════ -->
   @if (!isPlaying()) {
     <div class="overlay-screen">
+
       @if (!isGameOver()) {
         <div class="card-modal" [@modalAnim]>
           <div class="modal-bg-effects">
             <div class="modal-orb orb-1"></div>
             <div class="modal-orb orb-2"></div>
           </div>
+
           <div class="modal-icon">🎹</div>
           <h1>CHARLY PIANO HERO</h1>
           <p class="modal-description">
@@ -263,23 +270,17 @@
           <div class="difficulty-selector">
             <span class="selector-label">DIFFICULTÉ :</span>
             <div class="difficulty-buttons">
-              <button class="diff-btn"
-                      [class.active]="difficulty() === 'facile'"
-                      (click)="setDifficulty('facile')">
+              <button class="diff-btn" [class.active]="difficulty() === 'facile'" (click)="setDifficulty('facile')">
                 <span class="diff-icon">🌱</span>
                 <span class="diff-name">FACILE</span>
                 <span class="diff-desc">5 vies · Lent</span>
               </button>
-              <button class="diff-btn"
-                      [class.active]="difficulty() === 'normal'"
-                      (click)="setDifficulty('normal')">
+              <button class="diff-btn" [class.active]="difficulty() === 'normal'" (click)="setDifficulty('normal')">
                 <span class="diff-icon">🔥</span>
                 <span class="diff-name">NORMAL</span>
                 <span class="diff-desc">3 vies · Moyen</span>
               </button>
-              <button class="diff-btn"
-                      [class.active]="difficulty() === 'hardcore'"
-                      (click)="setDifficulty('hardcore')">
+              <button class="diff-btn" [class.active]="difficulty() === 'hardcore'" (click)="setDifficulty('hardcore')">
                 <span class="diff-icon">⚡</span>
                 <span class="diff-name">DIFFICILE</span>
                 <span class="diff-desc">2 vies · Rapide</span>
@@ -303,6 +304,7 @@
             <span class="game-over-icon">🎹</span>
             <h2>PARTIE TERMINÉE</h2>
           </div>
+
           <div class="final-stats">
             <div class="final-stat highlight">
               <span class="stat-label">Score Final</span>
@@ -321,9 +323,11 @@
               <span class="stat-value">{{ notesHit() }}</span>
             </div>
           </div>
+
           @if (score() > highScore()) {
             <div class="new-record">🎉 NOUVEAU RECORD ! 🎉</div>
           }
+
           <div class="modal-actions">
             <button class="btn-start" (click)="startChallenge()">
               <span class="btn-glow"></span>
