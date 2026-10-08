@@ -1,8 +1,21 @@
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { GridBar, SavedGrid, ChordDetail } from 'src/app/models/chord-decoder.model';
 
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES INTERNES
+   ═════════════════════════════════════════════════════════════════════ */
+interface Preset {
+  name: string;
+  grid: string;
+  key: string;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 @Component({
   selector: 'app-chord',
   standalone: true,
@@ -12,44 +25,71 @@ import { GridBar, SavedGrid, ChordDetail } from 'src/app/models/chord-decoder.mo
 })
 export class ChordComponent implements OnInit, OnDestroy {
 
-  // ---------- Saisie ----------
-  rawInput: string = '[C] [Am] | [F] [G] |\n[C] [Em] | [Dm] [G7]';
-  selectedKey: string = 'C';
-  bpm: number = 90;
-  beatsPerBar: number = 4;
+  private readonly router = inject(Router);
 
-  // ---------- Notes & gammes ----------
-  notesList: string[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  notesFlat: string[] = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-  useFlats: boolean = false;
+  /* ═══════════════════════════════════════════════════════════════════
+     ÉTAT (signals)
+     ═══════════════════════════════════════════════════════════════════ */
+  readonly rawInput = signal<string>('[C] [Am] | [F] [G] |\n[C] [Em] | [Dm] [G7]');
+  readonly selectedKey = signal<string>('C');
+  readonly bpm = signal<number>(90);
+  readonly beatsPerBar = signal<number>(4);
+  readonly useFlats = signal<boolean>(false);
 
-  // Gammes majeures (intervalles en demi-tons)
-  private majorScale: number[] = [0, 2, 4, 5, 7, 9, 11];
-  private degreeLabels: string[] = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+  readonly parsedBars = signal<GridBar[]>([]);
+  readonly savedGrids = signal<SavedGrid[]>([]);
 
-  // ---------- Grille décodée ----------
-  parsedBars: GridBar[] = [];
+  readonly isPlaying = signal<boolean>(false);
+  readonly isMetronomeOn = signal<boolean>(true);
+  readonly currentBarIndex = signal<number>(-1);
+  readonly currentBeat = signal<number>(0);
 
-  // ---------- Playback ----------
-  isPlaying: boolean = false;
-  isMetronomeOn: boolean = true;
-  currentBarIndex: number = -1;
-  currentBeat: number = 0;      // 0..3
-  private intervalId: any = null;
-  private audioCtx: AudioContext | null = null;
+  /* ─── Notes & gammes ─── */
+  readonly notesList = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  readonly notesFlat = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
-  // ---------- Suggestions ----------
-  presets: { name: string; grid: string; key: string }[] = [
-    { name: 'Pop I-V-vi-IV', grid: '[C] [G] | [Am] [F]', key: 'C' },
-    { name: 'Blues 12 mesures', grid: '[C7] | [F7] | [C7] | [G7] |\n[F7] | [C7] | [G7] | [C7]', key: 'C' },
-    { name: 'ii-V-I Jazz', grid: '[Dm7] [G7] | [Cmaj7]', key: 'C' },
-    { name: 'Anatole (Rhythm)', grid: '[Cmaj7] [Am7] | [Dm7] [G7]', key: 'C' },
-    { name: 'Andalouse', grid: '[Am] [G] | [F] [E7]', key: 'A' },
+  private readonly majorScale = [0, 2, 4, 5, 7, 9, 11];
+  private readonly degreeLabels = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+
+  /* ─── Presets ─── */
+  readonly presets: Preset[] = [
+    { name: 'Pop I-V-vi-IV',       grid: '[C] [G] | [Am] [F]',                              key: 'C' },
+    { name: 'Blues 12 mesures',    grid: '[C7] | [F7] | [C7] | [G7] |\n[F7] | [C7] | [G7] | [C7]', key: 'C' },
+    { name: 'ii-V-I Jazz',         grid: '[Dm7] [G7] | [Cmaj7]',                            key: 'C' },
+    { name: 'Anatole (Rhythm)',    grid: '[Cmaj7] [Am7] | [Dm7] [G7]',                      key: 'C' },
+    { name: 'Andalouse',           grid: '[Am] [G] | [F] [E7]',                             key: 'A' }
   ];
 
-  savedGrids: SavedGrid[] = [];
+  /* ─── Computed ─── */
+  readonly totalChords = computed(() =>
+    this.parsedBars().reduce((sum, b) => sum + b.chords.length, 0)
+  );
 
-  // ---------- Cycle de vie ----------
+  readonly diatonicCount = computed(() =>
+    this.parsedBars().reduce(
+      (sum, b) => sum + b.chords.filter(c => c.isDiatonic).length,
+      0
+    )
+  );
+
+  readonly diatonicPercentage = computed(() => {
+    const total = this.totalChords();
+    return total === 0 ? 0 : Math.round((this.diatonicCount() / total) * 100);
+  });
+
+  readonly uniqueChords = computed(() => {
+    const set = new Set<string>();
+    this.parsedBars().forEach(b => b.chords.forEach(c => set.add(c.raw)));
+    return set.size;
+  });
+
+  /* ─── Ressources ─── */
+  private intervalId: ReturnType<typeof setInterval> | null = null;
+  private audioCtx: AudioContext | null = null;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     LIFECYCLE
+     ═══════════════════════════════════════════════════════════════════ */
   ngOnInit(): void {
     this.decodeGrid();
     this.loadSaved();
@@ -60,17 +100,26 @@ export class ChordComponent implements OnInit, OnDestroy {
     this.audioCtx?.close();
   }
 
-  // ============================================================
-  // DÉCODAGE
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════════ */
+  goToPlay(): void {
+    this.stopPlayback();
+    this.router.navigate(['/play']);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     DÉCODAGE
+     ═══════════════════════════════════════════════════════════════════ */
   decodeGrid(): void {
-    this.parsedBars = [];
-    const rawBars = this.rawInput
+    const rawBars = this.rawInput()
       .split(/\||\n/)
       .map(b => b.trim())
       .filter(b => b.length > 0);
 
+    const bars: GridBar[] = [];
     let barCounter = 1;
+
     for (const rawBar of rawBars) {
       const matches = rawBar.match(/\[(.*?)\]|([A-G][b#]?[a-zA-Z0-9°+]*)/g);
       if (!matches) continue;
@@ -80,23 +129,28 @@ export class ChordComponent implements OnInit, OnDestroy {
         return this.analyzeChord(clean);
       });
 
-      this.parsedBars.push({
+      bars.push({
         barNumber: barCounter++,
         chords,
-        duration: this.beatsPerBar
+        duration: this.beatsPerBar()
       });
     }
+
+    this.parsedBars.set(bars);
   }
 
-  // ============================================================
-  // ANALYSE D'UN ACCORD
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     ANALYSE D'UN ACCORD
+     ═══════════════════════════════════════════════════════════════════ */
   private analyzeChord(chordStr: string): ChordDetail {
     const regex = /^([A-G][b#]?)(.*)$/;
     const match = chordStr.match(regex);
 
     if (!match) {
-      return { raw: chordStr, root: '?', quality: '', notes: [], degree: '', romanNumeral: '', isDiatonic: false };
+      return {
+        raw: chordStr, root: '?', quality: '',
+        notes: [], degree: '', romanNumeral: '', isDiatonic: false
+      };
     }
 
     const root = match[1];
@@ -117,44 +171,42 @@ export class ChordComponent implements OnInit, OnDestroy {
     };
   }
 
-  // ============================================================
-  // NOTES DE L'ACCORD (selon qualité)
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     NOTES DE L'ACCORD
+     ═══════════════════════════════════════════════════════════════════ */
   private getChordNotes(root: string, quality: string): string[] {
     let rootIndex = this.notesList.indexOf(root);
-    if (rootIndex === -1) {
-      rootIndex = this.notesFlat.indexOf(root);
-    }
+    if (rootIndex === -1) rootIndex = this.notesFlat.indexOf(root);
     if (rootIndex === -1) return [];
 
-    const list = this.useFlats ? this.notesFlat : this.notesList;
+    const list = this.useFlats() ? this.notesFlat : this.notesList;
     const get = (semi: number) => list[(rootIndex + semi + 12) % 12];
 
     switch (quality) {
-      case 'm': case 'min': return [root, get(3), get(7)];
-      case '7': return [root, get(4), get(7), get(10)];
-      case 'maj7': case 'M7': return [root, get(4), get(7), get(11)];
-      case 'm7': case 'min7': return [root, get(3), get(7), get(10)];
-      case 'dim': case '°': return [root, get(3), get(6)];
-      case 'dim7': case '°7': return [root, get(3), get(6), get(9)];
-      case 'aug': case '+': return [root, get(4), get(8)];
-      case 'sus2': return [root, get(2), get(7)];
-      case 'sus4': return [root, get(5), get(7)];
-      case '6': return [root, get(4), get(7), get(9)];
-      case 'm6': return [root, get(3), get(7), get(9)];
-      case '9': return [root, get(4), get(7), get(10), get(14)];
-      case 'm9': return [root, get(3), get(7), get(10), get(14)];
-      case 'add9': return [root, get(4), get(7), get(14)];
-      case 'm7b5': case 'ø': return [root, get(3), get(6), get(10)];
-      default: return [root, get(4), get(7)]; // majeur
+      case 'm': case 'min':       return [root, get(3), get(7)];
+      case '7':                   return [root, get(4), get(7), get(10)];
+      case 'maj7': case 'M7':     return [root, get(4), get(7), get(11)];
+      case 'm7': case 'min7':     return [root, get(3), get(7), get(10)];
+      case 'dim': case '°':       return [root, get(3), get(6)];
+      case 'dim7': case '°7':     return [root, get(3), get(6), get(9)];
+      case 'aug': case '+':       return [root, get(4), get(8)];
+      case 'sus2':                return [root, get(2), get(7)];
+      case 'sus4':                return [root, get(5), get(7)];
+      case '6':                   return [root, get(4), get(7), get(9)];
+      case 'm6':                  return [root, get(3), get(7), get(9)];
+      case '9':                   return [root, get(4), get(7), get(10), get(14)];
+      case 'm9':                  return [root, get(3), get(7), get(10), get(14)];
+      case 'add9':                return [root, get(4), get(7), get(14)];
+      case 'm7b5': case 'ø':      return [root, get(3), get(6), get(10)];
+      default:                    return [root, get(4), get(7)];
     }
   }
 
-  // ============================================================
-  // DEGRÉ HARMONIQUE
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     DEGRÉ HARMONIQUE
+     ═══════════════════════════════════════════════════════════════════ */
   private calculateDegree(root: string): string {
-    const keyIndex = this.notesList.indexOf(this.selectedKey);
+    const keyIndex = this.notesList.indexOf(this.selectedKey());
     let rootIndex = this.notesList.indexOf(root);
     if (rootIndex === -1) rootIndex = this.notesFlat.indexOf(root);
     if (keyIndex === -1 || rootIndex === -1) return '';
@@ -169,18 +221,17 @@ export class ChordComponent implements OnInit, OnDestroy {
   private degreeToRoman(degree: string, quality: string): string {
     if (!degree) return '';
     let roman = degree.replace('°', '');
-    // Ajouts selon la qualité
     if (quality.includes('7') && quality !== 'maj7') roman += '7';
     if (quality === 'maj7') roman += 'maj7';
     if (quality.includes('dim')) roman += '°';
     return roman;
   }
 
-  // ============================================================
-  // TRANSPOSITION
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     TRANSPOSITION
+     ═══════════════════════════════════════════════════════════════════ */
   transpose(semitones: number): void {
-    this.rawInput = this.rawInput.replace(
+    const transformed = this.rawInput().replace(
       /\[?([A-G][b#]?)([a-zA-Z0-9°+]*)\]?/g,
       (match, root, quality) => {
         const isBracketed = match.startsWith('[');
@@ -189,109 +240,122 @@ export class ChordComponent implements OnInit, OnDestroy {
         if (idx === -1) return match;
 
         const newIdx = (idx + semitones + 12) % 12;
-        const list = this.useFlats ? this.notesFlat : this.notesList;
+        const list = this.useFlats() ? this.notesFlat : this.notesList;
         const newChord = `${list[newIdx]}${quality}`;
         return isBracketed ? `[${newChord}]` : newChord;
       }
     );
-    this.decodeGrid();
-  }
 
-  transposeTo(targetKey: string): void {
-    const currentIdx = this.notesList.indexOf(this.selectedKey);
-    const targetIdx = this.notesList.indexOf(targetKey);
-    if (currentIdx === -1 || targetIdx === -1) return;
-    let diff = (targetIdx - currentIdx + 12) % 12;
-    if (diff > 6) diff -= 12;
-    this.transpose(diff);
-    this.selectedKey = targetKey;
+    this.rawInput.set(transformed);
     this.decodeGrid();
   }
 
   toggleFlats(): void {
-    this.useFlats = !this.useFlats;
-    // Retranscrire toute la grille en bémols/dièses
+    this.useFlats.update(v => !v);
     this.transpose(0);
   }
 
-  // ============================================================
-  // PRESETS & SAUVEGARDE
-  // ============================================================
-  loadPreset(preset: { name: string; grid: string; key: string }): void {
-    this.rawInput = preset.grid;
-    this.selectedKey = preset.key;
+  /* ═══════════════════════════════════════════════════════════════════
+     PRESETS & SAUVEGARDE
+     ═══════════════════════════════════════════════════════════════════ */
+  loadPreset(preset: Preset): void {
+    this.rawInput.set(preset.grid);
+    this.selectedKey.set(preset.key);
     this.decodeGrid();
   }
 
   saveGrid(): void {
     const name = prompt('Nom de la grille :');
     if (!name) return;
-    this.savedGrids.push({
-      name,
-      content: this.rawInput,
-      key: this.selectedKey,
-      bpm: this.bpm
-    });
-    localStorage.setItem('chordGrids', JSON.stringify(this.savedGrids));
-  }
 
-  private loadSaved(): void {
-    const raw = localStorage.getItem('chordGrids');
-    if (raw) {
-      try { this.savedGrids = JSON.parse(raw); } catch { this.savedGrids = []; }
-    }
+    const newGrid: SavedGrid = {
+      name,
+      content: this.rawInput(),
+      key: this.selectedKey(),
+      bpm: this.bpm()
+    };
+
+    this.savedGrids.update(list => [...list, newGrid]);
+    this.persistSaved();
   }
 
   loadSavedGrid(g: SavedGrid): void {
-    this.rawInput = g.content;
-    this.selectedKey = g.key;
-    this.bpm = g.bpm;
+    this.rawInput.set(g.content);
+    this.selectedKey.set(g.key);
+    this.bpm.set(g.bpm);
     this.decodeGrid();
   }
 
   deleteSaved(index: number): void {
-    this.savedGrids.splice(index, 1);
-    localStorage.setItem('chordGrids', JSON.stringify(this.savedGrids));
+    this.savedGrids.update(list => list.filter((_, i) => i !== index));
+    this.persistSaved();
   }
 
   clearAll(): void {
-    this.rawInput = '';
+    this.rawInput.set('');
     this.decodeGrid();
     this.stopPlayback();
   }
 
-  // ============================================================
-  // PLAYBACK (métronome + défilement)
-  // ============================================================
+  private persistSaved(): void {
+    try {
+      localStorage.setItem('chordGrids', JSON.stringify(this.savedGrids()));
+    } catch { /* ignore quota errors */ }
+  }
+
+  private loadSaved(): void {
+    const raw = localStorage.getItem('chordGrids');
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) this.savedGrids.set(parsed);
+    } catch { /* ignore */ }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PLAYBACK
+     ═══════════════════════════════════════════════════════════════════ */
   togglePlayback(): void {
-    this.isPlaying ? this.stopPlayback() : this.startPlayback();
+    this.isPlaying() ? this.stopPlayback() : this.startPlayback();
   }
 
   private startPlayback(): void {
-    if (this.parsedBars.length === 0) return;
+    if (this.parsedBars().length === 0) return;
 
-    this.isPlaying = true;
-    this.currentBarIndex = 0;
-    this.currentBeat = 0;
+    this.isPlaying.set(true);
+    this.currentBarIndex.set(0);
+    this.currentBeat.set(0);
 
-    this.audioCtx = this.audioCtx || new (window.AudioContext || (window as any).webkitAudioContext)();
+    /* Init audio */
+    if (!this.audioCtx) {
+      const Ctor = window.AudioContext
+        || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (Ctor) this.audioCtx = new Ctor();
+    }
 
-    const beatDuration = (60 / this.bpm) * 1000;
+    const beatDuration = (60 / this.bpm()) * 1000;
 
     this.intervalId = setInterval(() => {
-      if (this.isMetronomeOn) this.playClick(this.currentBeat === 0);
-      this.currentBeat++;
-      if (this.currentBeat >= this.beatsPerBar) {
-        this.currentBeat = 0;
-        this.currentBarIndex = (this.currentBarIndex + 1) % this.parsedBars.length;
+      if (this.isMetronomeOn()) this.playClick(this.currentBeat() === 0);
+
+      const nextBeat = this.currentBeat() + 1;
+
+      if (nextBeat >= this.beatsPerBar()) {
+        this.currentBeat.set(0);
+        this.currentBarIndex.update(i =>
+          (i + 1) % this.parsedBars().length
+        );
+      } else {
+        this.currentBeat.set(nextBeat);
       }
     }, beatDuration);
   }
 
   private stopPlayback(): void {
-    this.isPlaying = false;
-    this.currentBarIndex = -1;
-    this.currentBeat = 0;
+    this.isPlaying.set(false);
+    this.currentBarIndex.set(-1);
+    this.currentBeat.set(0);
+
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
@@ -300,44 +364,43 @@ export class ChordComponent implements OnInit, OnDestroy {
 
   private playClick(accent: boolean): void {
     if (!this.audioCtx) return;
+
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => { /* ignore */ });
+    }
+
     const osc = this.audioCtx.createOscillator();
     const gain = this.audioCtx.createGain();
+
     osc.frequency.value = accent ? 1200 : 800;
     gain.gain.value = accent ? 0.15 : 0.08;
+
     osc.connect(gain).connect(this.audioCtx.destination);
     osc.start();
     osc.stop(this.audioCtx.currentTime + 0.05);
   }
 
   onBpmChange(): void {
-    if (this.isPlaying) {
+    if (this.isPlaying()) {
       this.stopPlayback();
       this.startPlayback();
     }
   }
 
-  // ============================================================
-  // STATISTIQUES
-  // ============================================================
-  get totalChords(): number {
-    return this.parsedBars.reduce((sum, b) => sum + b.chords.length, 0);
+  /* ═══════════════════════════════════════════════════════════════════
+     HELPERS TEMPLATE
+     ═══════════════════════════════════════════════════════════════════ */
+  onRawInputChange(value: string): void {
+    this.rawInput.set(value);
+    this.decodeGrid();
   }
 
-  get diatonicCount(): number {
-    return this.parsedBars.reduce(
-      (sum, b) => sum + b.chords.filter(c => c.isDiatonic).length, 0
-    );
+  onKeyChange(value: string): void {
+    this.selectedKey.set(value);
+    this.decodeGrid();
   }
 
-  get diatonicPercentage(): number {
-    return this.totalChords === 0
-      ? 0
-      : Math.round((this.diatonicCount / this.totalChords) * 100);
-  }
-
-  get uniqueChords(): number {
-    const set = new Set<string>();
-    this.parsedBars.forEach(b => b.chords.forEach(c => set.add(c.raw)));
-    return set.size;
+  onBpmInput(value: number): void {
+    this.bpm.set(value);
   }
 }

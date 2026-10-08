@@ -1,161 +1,239 @@
 <div class="kronos-container">
 
-  <!-- HEADER -->
-  <header class="kronos-header">
-    <div class="logo-zone">
-      <div class="hourglass-anim">⏳</div>
-      <h1>KRONOS  </h1>
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER : Bouton retour + Titre + Bouton son
+       ═══════════════════════════════════════════════════════ -->
+  <header class="game-header">
+    <div class="header-top-row">
+
+      <button class="btn-floating-back"
+              (click)="onrecommencer()"
+              type="button"
+              aria-label="Retour au menu des jeux">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>Retour</span>
+      </button>
+
+      <h1 class="header-title">
+        <span class="header-icon">⏳</span>
+        <span class="title-text">KRONOS</span>
+      </h1>
+
+      <!-- Bouton son -->
+      <button class="btn-sound"
+              (click)="toggleSound()"
+              type="button"
+              [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
+              [attr.title]="soundEnabled() ? 'Couper tous les sons' : 'Activer tous les sons'">
+        <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
+        <span class="sound-label">{{ soundEnabled() ? 'Son activé' : 'Son coupé' }}</span>
+      </button>
     </div>
-    <button class="btn-back" (click)="onrecommencer()">
-      <span class="material-icons">arrow_back</span> Retour au Menu des Jeux
-    </button>
   </header>
 
+  <!-- ═══════════════════════════════════════════════════════
+       LAYOUT PRINCIPAL
+       ═══════════════════════════════════════════════════════ -->
   <div class="kronos-main">
 
-    <!-- COLONNE GAUCHE : Stats & Historique -->
+    <!-- ═══════════ COLONNE GAUCHE : STATS + HISTORIQUE ═══════════ -->
     <aside class="side-panel">
-      <!-- PV CARD -->
+
+      <!-- PV -->
       <div class="stat-card">
-        <div class="card-header"><span class="material-icons red">favorite</span> Points de Vie</div>
-        <div class="stat-value">{{ pointdevies | number }}</div>
+        <div class="card-header">
+          <span class="material-icons red">favorite</span>
+          Points de Vie
+        </div>
+        <div class="stat-value">{{ pointdevies() | number }}</div>
         <div class="progress-container">
-          <div class="progress-fill" [style.width.%]="progressionSeuil"></div>
+          <div class="progress-fill" [style.width.%]="progressionSeuil()"></div>
         </div>
         <div class="progress-label">
           <span>0</span>
-          <span>Seuil Lykö: {{ SEUIL_LYKO | number }}</span>
+          <span>Seuil Lykö : {{ SEUIL_LYKO | number }}</span>
         </div>
       </div>
 
-      <!-- BONUS & COMBOS -->
+      <!-- Bonus & Combos -->
       <div class="stat-card">
-        <div class="card-header"><span class="material-icons gold">bolt</span> Bonus & Séquences</div>
+        <div class="card-header">
+          <span class="material-icons gold">bolt</span>
+          Bonus &amp; Séquences
+        </div>
         <div class="stat-value-group">
           <div>
             <span class="sub-label">Bonus</span>
-            <div class="stat-subvalue">{{ pointdebonus | number }}</div>
+            <div class="stat-subvalue">{{ pointdebonus() | number }}</div>
           </div>
           <div>
             <span class="sub-label">Combo</span>
-            <div class="stat-subvalue highlight-combo">x{{ multiplierBonus.toFixed(1) }}</div>
+            <div class="stat-subvalue highlight-combo">x{{ multiplierBonus().toFixed(1) }}</div>
           </div>
         </div>
       </div>
 
-      <!-- HISTORIQUE -->
+      <!-- Historique -->
       <div class="history-card">
-        <div class="card-header"><span class="material-icons">history</span> Historique des Lançers</div>
+        <div class="card-header">
+          <span class="material-icons">history</span>
+          Historique des Lancers
+        </div>
         <div class="history-list">
-          <div *ngFor="let h of historique" class="history-item">
-            <span class="face-badge">{{ h.face }}</span>
-            <div class="history-details">
-              <span class="avant">{{ h.avant | number }}</span>
-              <span class="arrow">→</span>
-              <span class="apres">{{ h.apres | number }}</span>
+          @for (h of historique(); track h.date) {
+            <div class="history-item">
+              <span class="face-badge">{{ h.face }}</span>
+              <div class="history-details">
+                <span class="avant">{{ h.avant | number }}</span>
+                <span class="arrow">→</span>
+                <span class="apres">{{ h.apres | number }}</span>
+              </div>
             </div>
-          </div>
-          <div *ngIf="historique.length === 0" class="empty-history">Aucun lancer effectué</div>
+          }
+          @if (historique().length === 0) {
+            <div class="empty-history">Aucun lancer effectué</div>
+          }
         </div>
       </div>
     </aside>
 
-    <!-- COLONNE CENTRALE : Le Dé 3D & Actions -->
+    <!-- ═══════════ COLONNE CENTRALE : DÉ 3D + ACTIONS ═══════════ -->
     <main class="center-panel">
 
       <!-- Message Narratif -->
-      <div class="kronos-message" [class.rolling]="isRolling">
-        <p>{{ messageKronos }}</p>
+      <div class="kronos-message" [class.rolling]="isRolling()">
+        <p>{{ messageKronos() }}</p>
       </div>
 
-      <!-- Dodécaèdre 3D Animé -->
-      <div class="dice-container" [class.rolling]="isRolling">
+      <!-- Dodécaèdre 3D -->
+      <div class="dice-container" [class.rolling]="isRolling()">
         <div class="dice-glow"></div>
         <div class="dice-3d">
-          <div class="dice-face" *ngIf="!isRolling && randomnumber > 0">
-            <span class="dice-number">{{ randomnumber }}</span>
-            <span class="dice-symbol">{{ getFaceInfo(randomnumber)?.symbol }}</span>
-          </div>
-          <div class="dice-face rolling-anim" *ngIf="isRolling">
-            <span class="dice-number">{{ randomnumber }}</span>
-          </div>
-          <div class="dice-face empty" *ngIf="!isRolling && randomnumber === 0">
-            <span class="dice-symbol">✦</span>
-          </div>
+
+          @if (isRolling()) {
+            <div class="dice-face rolling-anim">
+              <span class="dice-number">{{ randomnumber() }}</span>
+            </div>
+          } @else if (randomnumber() > 0) {
+            <div class="dice-face">
+              <span class="dice-number">{{ randomnumber() }}</span>
+              <span class="dice-symbol">{{ getFaceInfo(randomnumber())?.symbol }}</span>
+            </div>
+          } @else {
+            <div class="dice-face empty">
+              <span class="dice-symbol">✦</span>
+            </div>
+          }
         </div>
       </div>
 
-      <!-- Info de la Face -->
-      <div class="face-name" *ngIf="derniereFace > 0 && !isRolling">
-        <span class="label">Face {{ derniereFace }} :</span>
-        <span class="name">{{ getFaceInfo(derniereFace)?.name }}</span>
-      </div>
+      <!-- Nom de la Face -->
+      @if (derniereFace() > 0 && !isRolling()) {
+        <div class="face-name">
+          <span class="label">Face {{ derniereFace() }} :</span>
+          <span class="name">{{ getFaceInfo(derniereFace())?.name }}</span>
+        </div>
+      }
 
-      <!-- POUVOIRS TEMPORELS -->
+      <!-- Pouvoirs Temporels -->
       <div class="powers-container">
         <h4 class="powers-title">Pouvoirs Temporels</h4>
         <div class="powers-grid">
-          <button *ngFor="let power of powers" class="power-card" [class.active]="power.active"
-            [class.disabled]="power.currentCooldown > 0 || pointdebonus < power.cost" (click)="activatePower(power)">
-            <span class="material-icons">{{ power.icon }}</span>
-            <div class="power-info">
-              <span class="p-name">{{ power.name }}</span>
-              <span class="p-cost">{{ power.cost }} Bonus</span>
-            </div>
-            <div class="cooldown-overlay" *ngIf="power.currentCooldown > 0">
-              {{ power.currentCooldown }}t
-            </div>
-          </button>
+          @for (power of powers; track power.id) {
+            <button class="power-card"
+                    [class.active]="power.active"
+                    [class.disabled]="power.currentCooldown > 0 || pointdebonus() < power.cost"
+                    (click)="activatePower(power)"
+                    type="button">
+              <span class="material-icons">{{ power.icon }}</span>
+              <div class="power-info">
+                <span class="p-name">{{ power.name }}</span>
+                <span class="p-cost">{{ power.cost }} Bonus</span>
+              </div>
+              @if (power.currentCooldown > 0) {
+                <div class="cooldown-overlay">{{ power.currentCooldown }}t</div>
+              }
+            </button>
+          }
         </div>
       </div>
 
-      <!-- Bouton Principal Lancer -->
-      <button class="btn-roll" (click)="resetjeu()" [disabled]="isRolling || casuffit() || pointdevies < COUT_LANCER">
-        <span class="material-icons">{{ isRolling ? 'hourglass_top' : 'casino' }}</span>
+      <!-- Bouton Lancer -->
+      <button class="btn-roll"
+              (click)="resetjeu()"
+              [disabled]="isRolling() || casuffit() || pointdevies() < COUT_LANCER"
+              type="button">
+        <span class="material-icons">{{ isRolling() ? 'hourglass_top' : 'casino' }}</span>
         <div class="btn-text">
-          <span class="main-text">{{ isRolling ? 'INVOCTION EN COURS...' : 'LANCER LE DÉ' }}</span>
+          <span class="main-text">{{ isRolling() ? 'INVOCATION EN COURS...' : 'LANCER LE DÉ' }}</span>
           <span class="sub-text">Coût : {{ COUT_LANCER | number }} PV • Multiplicateur x(1 à 12)</span>
         </div>
       </button>
 
-      <!-- Panneaux d'Alerte -->
-      <div class="alert success" *ngIf="gagnant() && !isRolling">
-        <span class="material-icons">emoji_events</span>
-        <p><strong>Excellente progression !</strong> Continuez de défier Kronos pour maximiser vos points.</p>
-      </div>
+      <!-- Alertes -->
+      @if (gagnant() && !isRolling()) {
+        <div class="alert success">
+          <span class="material-icons">emoji_events</span>
+          <p><strong>Excellente progression !</strong> Continuez de défier Kronos pour maximiser vos points.</p>
+        </div>
+      }
 
-      <div class="alert danger" *ngIf="casuffit()">
-        <span class="material-icons">warning</span>
-        <p><strong>Seuil Ultime Atteint !</strong> Vous avez accompli le destin fixé par Lykö.</p>
-      </div>
+      @if (casuffit()) {
+        <div class="alert danger">
+          <span class="material-icons">warning</span>
+          <p><strong>Seuil Ultime Atteint !</strong> Vous avez accompli le destin fixé par Lykö.</p>
+        </div>
+      }
 
-      <div class="alert info" *ngIf="pointdevies < COUT_LANCER && !casuffit()">
-        <span class="material-icons">info</span>
-        <p>Il vous faut au moins {{ COUT_LANCER | number }} PV pour invoquer le dé.</p>
-      </div>
-
+      @if (pointdevies() < COUT_LANCER && !casuffit()) {
+        <div class="alert info">
+          <span class="material-icons">info</span>
+          <p>Il vous faut au moins {{ COUT_LANCER | number }} PV pour invoquer le dé.</p>
+        </div>
+      }
     </main>
 
-    <!-- COLONNE DROITE : Règles & Lore -->
+    <!-- ═══════════ COLONNE DROITE : RÈGLES + LORE ═══════════ -->
     <aside class="side-panel">
+
       <div class="rules-card">
-        <div class="card-header"><span class="material-icons gold">menu_book</span> Règles & Stratégie</div>
+        <div class="card-header">
+          <span class="material-icons gold">menu_book</span>
+          Règles &amp; Stratégie
+        </div>
         <ul class="rules-list">
-          <li><span class="material-icons">casino</span> Lancez le dodécaèdre temporel (12 faces).</li>
-          <li><span class="material-icons">trending_down</span> Déduction de {{ COUT_LANCER | number }} PV par lancer.
+          <li>
+            <span class="material-icons">casino</span>
+            Lancez le dodécaèdre temporel (12 faces).
           </li>
-          <li><span class="material-icons">auto_awesome</span> Enchaînez les faces ≥ 7 pour débloquer des combos.</li>
-          <li><span class="material-icons">bolt</span> Utilisez vos points Bonus pour déclencher des sorts.</li>
+          <li>
+            <span class="material-icons">trending_down</span>
+            Déduction de {{ COUT_LANCER | number }} PV par lancer.
+          </li>
+          <li>
+            <span class="material-icons">auto_awesome</span>
+            Enchaînez les faces ≥ 7 pour débloquer des combos.
+          </li>
+          <li>
+            <span class="material-icons">bolt</span>
+            Utilisez vos points Bonus pour déclencher des sorts.
+          </li>
         </ul>
       </div>
 
       <div class="lore-card">
-        <div class="card-header"><span class="material-icons">auto_stories</span> La Légende</div>
-        <p>Forgé dans les profondeurs de l'Éther, le dodécaèdre de Kronos régit les lignes du temps. Chaque lancer tisse
-          une réalité alternative où le succès côtoie l'amertume.</p>
+        <div class="card-header">
+          <span class="material-icons">auto_stories</span>
+          La Légende
+        </div>
+        <p>
+          Forgé dans les profondeurs de l'Éther, le dodécaèdre de Kronos régit les lignes du temps.
+          Chaque lancer tisse une réalité alternative où le succès côtoie l'amertume.
+        </p>
       </div>
     </aside>
-
   </div>
-
 </div>

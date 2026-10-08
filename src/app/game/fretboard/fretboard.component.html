@@ -17,7 +17,7 @@
     }
   </div>
 
-  <!-- ═══════════ CONFETTIS DE CÉLÉBRATION ═══════════ -->
+  <!-- ═══════════ CONFETTIS ═══════════ -->
   @if (melodyPlaying()) {
     <div class="confetti-layer">
       @for (c of confettiParticles(); track c.id) {
@@ -32,6 +32,51 @@
       }
     </div>
   }
+
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER : Bouton retour + Titre sur la même ligne
+       ═══════════════════════════════════════════════════════ -->
+  <header class="game-header">
+    <div class="header-top-row">
+
+      <!-- Bouton retour -->
+      <button class="btn-floating-back"
+              (click)="goToPlay()"
+              type="button"
+              aria-label="Retour au menu des jeux">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>Retour</span>
+      </button>
+
+      <!-- Titre -->
+      <h1 class="header-title">
+        <span class="header-icon">🎸</span>
+        <span class="title-text">CHARLY GUITARE HERO</span>
+      </h1>
+
+      <!-- Record -->
+      @if (highScore() > 0) {
+        <div class="high-score-badge">
+          <span class="trophy">🏆</span>
+          <span>{{ highScore() }}</span>
+        </div>
+      }
+
+      <!-- Bouton menu (pendant la partie) -->
+      @if (isPlaying()) {
+        <button class="btn-menu-context"
+                (click)="backToMenu()"
+                type="button"
+                aria-label="Revenir au menu du jeu">
+          <span class="material-icons">menu</span>
+          <span>Menu</span>
+        </button>
+      }
+    </div>
+  </header>
 
   <!-- ═══════════ HUD ═══════════ -->
   <header class="game-hud">
@@ -67,12 +112,12 @@
         </div>
       </div>
       <div class="star-power-btn-wrapper">
-        <button
-          class="star-power-btn"
-          [disabled]="starPowerGauge() < 100 || isStarPowerActive()"
-          [class.ready]="starPowerGauge() >= 100 && !isStarPowerActive()"
-          [class.active]="isStarPowerActive()"
-          (click)="activateStarPower()">
+        <button class="star-power-btn"
+                [disabled]="starPowerGauge() < 100 || isStarPowerActive()"
+                [class.ready]="starPowerGauge() >= 100 && !isStarPowerActive()"
+                [class.active]="isStarPowerActive()"
+                (click)="activateStarPower()"
+                type="button">
           @if (isStarPowerActive()) {
             ⚡ {{ starPowerTimeLeft() | number:'1.1-1' }}s
           } @else if (starPowerGauge() >= 100) {
@@ -117,7 +162,7 @@
       <div class="melody-banner">
         <span class="melody-icon">🎼</span>
         <h3 class="melody-title">
-          <span class="title-text">FELICITATION !</span>
+          <span class="title-text">FÉLICITATIONS !</span>
         </h3>
         <p class="melody-subtitle">
           <span class="melody-chord" [style.color]="melodyChordColor()">{{ melodyChordName() }}</span>
@@ -143,7 +188,7 @@
   @if (isPlaying()) {
     <div class="guitar-viewport">
 
-      <!-- Tête de guitare stylisée (gauche) -->
+      <!-- Tête de guitare -->
       <div class="guitar-headstock">
         <div class="headstock-wood">
           <div class="tuning-pegs">
@@ -157,7 +202,7 @@
         </div>
       </div>
 
-      <!-- Sillet (Nut) -->
+      <!-- Sillet -->
       <div class="guitar-nut">
         <div class="nut-grooves">
           @for (str of strings; track str.index) {
@@ -170,12 +215,11 @@
       <div class="fretboard-scroll">
         <div class="fretboard-inner">
 
-          <!-- Corps du manche -->
           <div class="guitar-neck">
             <div class="wood-grain"></div>
             <div class="wood-highlight"></div>
 
-            <!-- Inlays nacrés -->
+            <!-- Inlays -->
             <div class="fret-inlays">
               <span class="inlay" style="--fret:3"></span>
               <span class="inlay" style="--fret:5"></span>
@@ -186,7 +230,7 @@
               </span>
             </div>
 
-            <!-- Frettes métalliques -->
+            <!-- Frettes -->
             <div class="fret-wires">
               @for (fret of frets; track fret) {
                 @if (fret > 0) {
@@ -210,7 +254,7 @@
               }
             </div>
 
-            <!-- Zones interactives avec notes -->
+            <!-- Zones interactives -->
             <div class="notes-layer">
               @for (str of strings; track str.index) {
                 <div class="notes-row">
@@ -255,7 +299,7 @@
             }
           </div>
 
-          <!-- Numéros de frettes en bas -->
+          <!-- Numéros de frettes -->
           <div class="fret-numbers">
             @for (fret of frets; track fret) {
               <div class="fret-num" [style.--fret-pos]="fret">
@@ -266,7 +310,7 @@
         </div>
       </div>
 
-      <!-- Rosace (droite, décorative) -->
+      <!-- Rosace -->
       <div class="guitar-rosette">
         <div class="rosette-ring outer"></div>
         <div class="rosette-ring inner"></div>
@@ -274,7 +318,6 @@
       </div>
     </div>
 
-    <!-- Indication scroll mobile -->
     <div class="scroll-hint">← Glisse pour explorer le manche →</div>
   }
 
@@ -299,35 +342,10 @@
     </div>
   }
 
-  <!-- ═══════════ TOP BAR ═══════════ -->
-  <header class="game-top-bar">
-    <button class="btn-back" (click)="goToPlay()">
-      <span class="material-icons">arrow_back</span>
-      <span>RETOUR</span>
-    </button>
-
-    @if (isPlaying()) {
-      <button class="btn-menu" (click)="backToMenu()">
-        <span class="material-icons">menu</span>
-        <span>MENU</span>
-      </button>
-    }
-
-    <div class="logo-zone">
-      <span class="icon">🎸</span>
-      <h1>CHARLY GUITARE HERO</h1>
-    </div>
-    @if (highScore() > 0) {
-      <div class="high-score-badge">
-        <span class="trophy">🏆</span>
-        <span>{{ highScore() }}</span>
-      </div>
-    }
-  </header>
-
   <!-- ═══════════ ÉCRANS MODAUX ═══════════ -->
   @if (!isPlaying()) {
     <div class="overlay-screen">
+
       @if (!isGameOver()) {
         <div class="card-modal" [@modalAnim]>
           <div class="modal-icon">🎸</div>
@@ -345,21 +363,24 @@
             <div class="difficulty-buttons">
               <button class="diff-btn"
                       [class.active]="difficulty() === 'facile'"
-                      (click)="setDifficulty('facile')">
+                      (click)="setDifficulty('facile')"
+                      type="button">
                 <span class="diff-icon">🌱</span>
                 <span class="diff-name">FACILE</span>
                 <span class="diff-desc">5 vies · Lent</span>
               </button>
               <button class="diff-btn"
                       [class.active]="difficulty() === 'normal'"
-                      (click)="setDifficulty('normal')">
+                      (click)="setDifficulty('normal')"
+                      type="button">
                 <span class="diff-icon">🔥</span>
                 <span class="diff-name">NORMAL</span>
                 <span class="diff-desc">3 vies · Moyen</span>
               </button>
               <button class="diff-btn"
                       [class.active]="difficulty() === 'hardcore'"
-                      (click)="setDifficulty('hardcore')">
+                      (click)="setDifficulty('hardcore')"
+                      type="button">
                 <span class="diff-icon">🌟</span>
                 <span class="diff-name">DIFFICILE</span>
                 <span class="diff-desc">2 vies · Rapide</span>
@@ -368,8 +389,8 @@
           </div>
 
           <div class="modal-actions-horizontal">
-            <button class="btn-secondary" (click)="goToPlay()">RETOUR</button>
-            <button class="btn-start" (click)="startGame()">LANCER LE DÉFI</button>
+            <button class="btn-secondary" (click)="goToPlay()" type="button">RETOUR</button>
+            <button class="btn-start" (click)="startGame()" type="button">LANCER LE DÉFI</button>
           </div>
         </div>
       }
@@ -380,6 +401,7 @@
             <span class="game-over-icon">🎸</span>
             <h2>PARTIE TERMINÉE</h2>
           </div>
+
           <div class="final-stats">
             <div class="final-stat highlight">
               <span class="stat-label">Score Final</span>
@@ -398,13 +420,15 @@
               <span class="stat-value">{{ notesHit() }}</span>
             </div>
           </div>
+
           @if (score() > highScore()) {
             <div class="new-record">🎉 NOUVEAU RECORD ! 🎉</div>
           }
+
           <div class="modal-actions">
-            <button class="btn-start" (click)="startGame()">RÉESSAYER</button>
-            <button class="btn-secondary" (click)="backToMenu()">MENU PRINCIPAL</button>
-            <button class="btn-tertiary" (click)="goToPlay()">QUITTER</button>
+            <button class="btn-start" (click)="startGame()" type="button">RÉESSAYER</button>
+            <button class="btn-secondary" (click)="backToMenu()" type="button">MENU PRINCIPAL</button>
+            <button class="btn-tertiary" (click)="goToPlay()" type="button">QUITTER</button>
           </div>
         </div>
       }

@@ -7,7 +7,6 @@ import { CardgameComponent } from './game/cardgame/cardgame.component';
 import { ChordComponent } from './game/chord/chord.component';
 import { FretboardComponent } from './game/fretboard/fretboard.component';
 import { KronosComponent } from './game/kronos/kronos.component';
-import { LykoComponent } from './game/lyko/lyko.component';
 import { LykomodeComponent } from './game/lykomode/lykomode.component';
 import { MemoryComponent } from './game/memory/memory.component';
 import { MetronomeComponent } from './game/metronome/metronome.component';
@@ -200,7 +199,7 @@ export const routes: Routes = [
     component: PourpreComponent,
     canActivate: [AuthGuard]
   },
-  
+
   {
     path: 'violet',
     component: VioletComponent,
@@ -276,12 +275,6 @@ export const routes: Routes = [
   {
     path: 'again',
     component: AgainComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'lyko',
-    component: LykoComponent,
     canActivate: [AuthGuard]
   },
 

@@ -1,72 +1,33 @@
 <div class="game-wrapper">
 
-  <!-- ============================================================
-       DÉCOR ANIMÉ EN ARRIÈRE-PLAN
-       ============================================================ -->
-  <div class="bg-decor" aria-hidden="true">
-    <div class="glow glow-1"></div>
-    <div class="glow glow-2"></div>
-    <div class="glow glow-3"></div>
-    <div class="cyber-grid"></div>
-    <div class="particles">
-      <span class="particle"
-            *ngFor="let p of particles"
-            [style.left.%]="p.left"
-            [style.animation-delay.s]="p.delay"
-            [style.animation-duration.s]="p.duration"
-            [style.width.px]="p.size"
-            [style.height.px]="p.size"
-            [style.background]="p.color"
-            [style.box-shadow]="'0 0 12px ' + p.color"></span>
-    </div>
-    <div class="floating-coins">
-      <span class="coin" *ngFor="let c of coins"
-            [style.left.%]="c.left"
-            [style.animation-delay.s]="c.delay"
-            [style.animation-duration.s]="c.duration">{{ c.symbol }}</span>
-    </div>
-  </div>
-
   <div class="main-content">
 
-    <!-- ============================================================
+    <!-- ═══════════════════════════════════════════════════════
          ZONE DE JEU
-         ============================================================ -->
+         ═══════════════════════════════════════════════════════ -->
     <section class="game-section">
 
-      <!-- Header du jeu -->
       <header class="game-header">
-        <div class="header-badge">
-          <span class="badge-dot"></span>
-          <span>CHASSE AU TRÉSOR</span>
+        <div class="header-top-row">
+
+          <button class="btn-floating-back" (click)="goToPlay()" type="button" aria-label="Retour au menu des jeux"
+            title="Retour au menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Retour</span>
+          </button>
+
+          <h1 class="header-title">
+            <span class="title-text">BOUBOUNI</span>
+          </h1>
         </div>
-        <h1 class="header-title">
-          <span class="title-icon">🃏</span>
-          <span class="title-text">BOUBOUNI</span>
-        </h1>
+
         <p class="header-subtitle">
           Retrouvez toutes les paires pour gagner !
         </p>
       </header>
-
-      <!-- Barre de stats rapide -->
-      <div class="quick-stats" *ngIf="oncontinue()">
-        <div class="quick-stat">
-          <span class="qs-icon">🎯</span>
-          <span class="qs-label">Paires</span>
-          <span class="qs-value">{{ matchedCount }} / {{ cardImages.length }}</span>
-        </div>
-        <div class="quick-stat">
-          <span class="qs-icon">🎴</span>
-          <span class="qs-label">Coups</span>
-          <span class="qs-value">{{ moves }}</span>
-        </div>
-        <div class="quick-stat">
-          <span class="qs-icon">💖</span>
-          <span class="qs-label">PV</span>
-          <span class="qs-value">{{ pointdevies | number }}</span>
-        </div>
-      </div>
 
       <!-- Plateau -->
       <div class="game-area-card" *ngIf="oncontinue()">
@@ -78,32 +39,62 @@
         </mat-grid-list>
       </div>
 
-      <!-- Écran Limite Atteinte -->
-      <div class="limit-reached-card" *ngIf="casuffit()">
-        <div class="limit-glow"></div>
-        <div class="limit-icon">🏆</div>
-        <h2 class="limit-title">TRÉSOR MAXIMAL ATTEINT !</h2>
-        <p class="limit-text">
-          Le Gardien BOUBOUNI s'incline devant votre talent.<br>
-          Le plafond de <strong>10 000 points de vie</strong> est franchi avec panache !
-        </p>
-        <div class="limit-actions">
-          <button class="btn-cyber-primary pulse" (click)="onrecommencer()">
-            🚀 Passer au jeu suivant
-          </button>
-          <button class="btn-cyber-secondary" (click)="onrecommencer()">
-            ⚔️ Retour au Menu
-          </button>
-        </div>
-      </div>
     </section>
 
-    <!-- ============================================================
-         SIDEBAR DASHBOARD
-         ============================================================ -->
+    <!-- ═══════════════════════════════════════════════════════
+         SIDEBAR
+         ═══════════════════════════════════════════════════════ -->
     <aside class="dashboard-section">
 
-      <!-- Carte des gains -->
+      <!-- Bouton Nouvelle partie -->
+      <button class="btn-cyber-secondary" (click)="restart()">
+        🔄 Nouvelle partie
+      </button>
+
+      <br><br>
+
+      <!-- ═══════════════════════════════════════════════════════
+           STATS RAPIDES (avec chronos)
+           ═══════════════════════════════════════════════════════ -->
+      <div class="quick-stats" *ngIf="oncontinue()">
+
+        <div class="quick-stat">
+          <span class="qs-icon">🎯</span>
+          <span class="qs-label">Paires</span>
+          <span class="qs-value">{{ matchedCount }} / {{ cardImages.length }}</span>
+        </div>
+
+        <div class="quick-stat">
+          <span class="qs-icon">🎴</span>
+          <span class="qs-label">Coups</span>
+          <span class="qs-value">{{ moves }}</span>
+        </div>
+      </div>
+
+      <div class="quick-stats" *ngIf="oncontinue()">
+        <!-- ⏱️ Chrono global -->
+        <div class="quick-stat timer-stat">
+          <span class="qs-icon">⏱️</span>
+          <span class="qs-label">Temps total</span>
+          <span class="qs-value timer-value">{{ globalTimerDisplay }}</span>
+        </div>
+
+        <!-- ⚡ Temps de la dernière trouvaille (affiché temporairement) -->
+        <div class="quick-stat match-timer-stat" [class.active]="lastMatchSeconds > 0">
+          <span class="qs-icon">⚡</span>
+          <span class="qs-label">Trouvaille</span>
+          <span class="qs-value match-timer-value">
+            @if (lastMatchSeconds > 0) {
+            {{ lastMatchSeconds }}s
+            } @else {
+            —
+            }
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Carte gains -->
       <div class="glass-card score-card">
         <div class="card-header">
           <span class="card-icon">💎</span>
@@ -114,10 +105,8 @@
           <span class="pv-label">Points de Vie</span>
           <span class="pv-value">{{ lavie | number }}</span>
           <div class="pv-bar">
-            <div class="pv-fill"
-                 [style.width.%]="(pointdevies / 10000) * 100"></div>
+            <div class="pv-fill" [style.width.%]="(pointdevies / 10000) * 100"></div>
           </div>
-          <span class="pv-max">Plafond : 10 000 PV</span>
         </div>
 
         <div class="stat-row">
@@ -126,21 +115,19 @@
             <span class="stat-label">Bonus</span>
             <span class="stat-value bonus-pts">+{{ lebonus }}</span>
           </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-icon">🏅</span>
-            <span class="stat-label">Niveau</span>
-            <span class="stat-value">{{ etapedujeu }}</span>
-          </div>
         </div>
       </div>
-<!-- 🔊 Bouton son -->
-  <button class="btn-sound" (click)="toggleSound()" type="button"
-          [attr.aria-label]="soundEnabled ? 'Couper le son' : 'Activer le son'">
-    <span class="sound-icon">{{ soundEnabled ? '🔊' : '🔇' }}</span>
-    <span class="sound-label">{{ soundEnabled ? 'Son activé' : 'Son coupé' }}</span>
-  </button><br><br>
-      <!-- Règles & Actions -->
+
+      <!-- Bouton son -->
+      <button class="btn-sound" (click)="toggleSound()" type="button"
+        [attr.aria-label]="soundEnabled ? 'Couper le son' : 'Activer le son'">
+        <span class="sound-icon">{{ soundEnabled ? '🔊' : '🔇' }}</span>
+        <span class="sound-label">{{ soundEnabled ? 'Son activé' : 'Son coupé' }}</span>
+      </button>
+
+      <br><br>
+
+      <!-- Règles -->
       <div class="glass-card info-card">
         <div class="card-header">
           <span class="card-icon">📜</span>
@@ -162,21 +149,12 @@
           </li>
           <li>
             <span class="rule-num">4</span>
-            <span>Trouve <strong>toutes les paires</strong> pour remporter le trésor !</span>
+            <span>Trouve <strong>toutes les paires</strong> le plus vite possible !</span>
           </li>
         </ul>
-
-        <div class="action-zone">
-          <button class="btn-cyber-primary" (click)="onrecommencer()">
-            ⚔️ Retour au Menu des Jeux
-          </button>
-          <button class="btn-cyber-secondary" (click)="restart()">
-            🔄 Nouvelle partie
-          </button>
-        </div>
       </div>
 
-      <!-- Astuce du Sage -->
+      <!-- Astuce -->
       <div class="glass-card tip-card">
         <div class="card-header">
           <span class="card-icon">🐵</span>

@@ -2,8 +2,13 @@ import {
   Component,
   HostListener,
   OnDestroy,
-  OnInit
+  OnInit,
+  inject,
+  signal
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import {
   GameResults,
   TapRecord,
@@ -13,53 +18,70 @@ import {
   DifficultyConfig,
   SessionHistory
 } from '../../models/metronome-challenge.model';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 @Component({
   selector: 'app-metronome',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './metronome.component.html',
   styleUrls: ['./metronome.component.scss']
 })
 export class MetronomeComponent implements OnInit, OnDestroy {
 
-  // ============================================================
-  // CONFIGURATION
-  // ============================================================
-  bpm: number = 100;
-  totalBeatsToPlay: number = 16;
-  beatsPerBar: number = 4;
-  difficulty: DifficultyMode = 'NORMAL';
-  latencyOffsetMs: number = 0;      // compensation manuelle (audio output delay)
-  subdivision: 1 | 2 | 4 = 1;       // 1 = temps, 2 = croches, 4 = doubles
+  /* ─── Router ─── */
+  private readonly router = inject(Router);
 
-  // ============================================================
-  // MODES DE DIFFICULTÉ
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     CONFIGURATION
+     ═══════════════════════════════════════════════════════════════════ */
+  bpm = 100;
+  totalBeatsToPlay = 16;
+  beatsPerBar = 4;
+  difficulty: DifficultyMode = 'NORMAL';
+  latencyOffsetMs = 0;
+  subdivision: 1 | 2 | 4 = 1;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MODES DE DIFFICULTÉ
+     ═══════════════════════════════════════════════════════════════════ */
   difficulties: DifficultyConfig[] = [
     {
-      mode: 'EASY', label: 'Facile', emoji: '🌱',
-      perfectThreshold: 50, greatThreshold: 100, okThreshold: 150,
+      mode: 'EASY',
+      label: 'Facile',
+      emoji: '🌱',
+      perfectThreshold: 50,
+      greatThreshold: 100,
+      okThreshold: 150,
       description: 'Tolérance large — pour découvrir'
     },
     {
-      mode: 'NORMAL', label: 'Normal', emoji: '🎯',
-      perfectThreshold: 25, greatThreshold: 50, okThreshold: 90,
+      mode: 'NORMAL',
+      label: 'Normal',
+      emoji: '🎯',
+      perfectThreshold: 25,
+      greatThreshold: 50,
+      okThreshold: 90,
       description: 'Équilibré — pour progresser'
     },
     {
-      mode: 'HARD', label: 'Difficile', emoji: '🔥',
-      perfectThreshold: 15, greatThreshold: 30, okThreshold: 60,
+      mode: 'HARD',
+      label: 'Difficile',
+      emoji: '🔥',
+      perfectThreshold: 15,
+      greatThreshold: 30,
+      okThreshold: 60,
       description: 'Précision requise — pour affiner'
     },
     {
-      mode: 'EXPERT', label: 'Expert', emoji: '💎',
-      perfectThreshold: 8, greatThreshold: 18, okThreshold: 40,
+      mode: 'EXPERT',
+      label: 'Expert',
+      emoji: '💎',
+      perfectThreshold: 8,
+      greatThreshold: 18,
+      okThreshold: 40,
       description: 'Millimétrique — pour les pros'
     }
   ];
@@ -68,47 +90,56 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     return this.difficulties.find(d => d.mode === this.difficulty)!;
   }
 
-  // ============================================================
-  // ÉTAT DU JEU
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     ÉTAT DU JEU
+     ═══════════════════════════════════════════════════════════════════ */
   gameState: GameState = 'IDLE';
-  countdownValue: number = 4;
-  currentBeatIndex: number = 0;
-  currentSubBeat: number = 0;
-  isBarAccent: boolean = true;
+  countdownValue = 4;
+  currentBeatIndex = 0;
+  currentSubBeat = 0;
+  isBarAccent = true;
 
-  // ============================================================
-  // CHRONOMÉTRAGE
-  // ============================================================
-  private startTime: number = 0;
-  private intervalId: any = null;
-  private countdownIntervalId: any = null;
-  private lastTapTime: number = 0;
-  private animationFrameId: number | null = null;
+  /* ═══════════════════════════════════════════════════════════════════
+     CHRONOMÉTRAGE
+     ═══════════════════════════════════════════════════════════════════ */
+  private startTime = 0;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
+  private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
+  private lastTapTime = 0;
 
-  // ============================================================
-  // RÉSULTATS
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     RÉSULTATS
+     ═══════════════════════════════════════════════════════════════════ */
   tapRecords: TapRecord[] = [];
   beatResults: BeatResult[] = [];
   gameResults: GameResults | null = null;
-  liveScore: number = 0;
-  liveStreak: number = 0;
-  bestStreak: number = 0;
+  liveScore = 0;
+  liveStreak = 0;
+  bestStreak = 0;
 
-  // Persistance
-  bestScoreEver: number = 0;
-  bestAvgDeltaEver: number = 0;
+  /* ═══════════════════════════════════════════════════════════════════
+     PERSISTANCE
+     ═══════════════════════════════════════════════════════════════════ */
+  bestScoreEver = 0;
+  bestAvgDeltaEver = 0;
   sessions: SessionHistory[] = [];
 
-  // Audio
+  /* ═══════════════════════════════════════════════════════════════════
+     SON — Signal + persistance
+     ═══════════════════════════════════════════════════════════════════ */
+  readonly soundEnabled = signal<boolean>(true);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     AUDIO
+     ═══════════════════════════════════════════════════════════════════ */
   private audioCtx: AudioContext | null = null;
 
-  // ============================================================
-  // CYCLE DE VIE
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     CYCLE DE VIE
+     ═══════════════════════════════════════════════════════════════════ */
   ngOnInit(): void {
     this.loadPersistedData();
+    this.loadSoundPreference();
   }
 
   ngOnDestroy(): void {
@@ -116,6 +147,9 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     this.audioCtx?.close();
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     PERSISTANCE
+     ═══════════════════════════════════════════════════════════════════ */
   private loadPersistedData(): void {
     try {
       this.bestScoreEver = Number(localStorage.getItem('metronome_bestScore') || 0);
@@ -123,6 +157,11 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       const raw = localStorage.getItem('metronome_sessions');
       this.sessions = raw ? JSON.parse(raw) : [];
     } catch { /* ignore */ }
+  }
+
+  private loadSoundPreference(): void {
+    const saved = localStorage.getItem('metronome_sound_enabled');
+    if (saved === 'false') this.soundEnabled.set(false);
   }
 
   private persistResults(): void {
@@ -149,13 +188,34 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       difficulty: this.difficulty
     };
     this.sessions.unshift(session);
-    this.sessions = this.sessions.slice(0, 10); // garde les 10 dernières
+    this.sessions = this.sessions.slice(0, 10);
     localStorage.setItem('metronome_sessions', JSON.stringify(this.sessions));
   }
 
-  // ============================================================
-  // CLAVIER
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     SON — Toggle
+     ═══════════════════════════════════════════════════════════════════ */
+  toggleSound(): void {
+    const next = !this.soundEnabled();
+    this.soundEnabled.set(next);
+    localStorage.setItem('metronome_sound_enabled', String(next));
+
+    if (next) {
+      this.playClickSound(880, 0.15, 0.05);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════════ */
+  goToPlay(): void {
+    this.stopGame();
+    this.router.navigate(['/play']);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CLAVIER
+     ═══════════════════════════════════════════════════════════════════ */
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent): void {
     if (event.code === 'Space' || event.code === 'Enter') {
@@ -173,11 +233,14 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ============================================================
-  // DÉMARRAGE
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     DÉMARRAGE
+     ═══════════════════════════════════════════════════════════════════ */
   startGame(): void {
-    this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const Ctor = window.AudioContext
+      || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    this.audioCtx = new Ctor();
+
     this.gameState = 'COUNTDOWN';
     this.countdownValue = 4;
     this.tapRecords = [];
@@ -197,7 +260,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       if (this.countdownValue > 0) {
         this.playClickSound(880, 0.12, 0.04);
       } else {
-        clearInterval(this.countdownIntervalId);
+        if (this.countdownIntervalId) clearInterval(this.countdownIntervalId);
         this.launchPlayback(beatIntervalMs);
       }
     }, beatIntervalMs);
@@ -205,14 +268,13 @@ export class MetronomeComponent implements OnInit, OnDestroy {
 
   private launchPlayback(beatIntervalMs: number): void {
     this.gameState = 'PLAYING';
-    // Petit délai pour laisser l'UI se stabiliser
+
     setTimeout(() => {
       this.startTime = performance.now();
       this.currentBeatIndex = 0;
       this.currentSubBeat = 0;
       this.playClickSound(1320, 0.18, 0.05);
 
-      // Grille de référence : on programme tous les clics à l'avance
       const totalSubBeats = this.totalBeatsToPlay * this.subdivision;
       const subInterval = beatIntervalMs / this.subdivision;
 
@@ -222,6 +284,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
         const isBarStart = beatIdx % this.beatsPerBar === 0 && subIdx === 0;
         const freq = isBarStart ? 1320 : (subIdx === 0 ? 990 : 660);
         const delay = i * subInterval;
+
         setTimeout(() => {
           if (this.gameState === 'PLAYING') {
             this.playClickSound(freq, isBarStart ? 0.2 : 0.12, 0.04);
@@ -232,16 +295,15 @@ export class MetronomeComponent implements OnInit, OnDestroy {
         }, delay);
       }
 
-      // Fin de partie
       setTimeout(() => {
         if (this.gameState === 'PLAYING') this.finishGame();
       }, totalSubBeats * subInterval + 200);
     }, 50);
   }
 
-  // ============================================================
-  // ENREGISTREMENT D'UN TAP
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     TAP
+     ═══════════════════════════════════════════════════════════════════ */
   registerTap(): void {
     if (this.gameState !== 'PLAYING') return;
 
@@ -250,19 +312,14 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     const beatIntervalMs = (60 / this.bpm) * 1000;
     const subInterval = beatIntervalMs / this.subdivision;
 
-    // Beat attendu le plus proche (en subdiv)
     const estimatedSubIndex = Math.round(elapsedTime / subInterval);
     const expectedTime = estimatedSubIndex * subInterval;
     const deltaMs = elapsedTime - expectedTime;
 
-    // Anti-double-tap : 80 ms minimum entre deux taps
     if (now - this.lastTapTime < 80) return;
     this.lastTapTime = now;
 
-    // Éviter doublons sur le même sub-beat
-    const alreadyRecorded = this.tapRecords.some(
-      r => r.beatNumber === estimatedSubIndex
-    );
+    const alreadyRecorded = this.tapRecords.some(r => r.beatNumber === estimatedSubIndex);
     if (alreadyRecorded) return;
 
     const absDelta = Math.abs(deltaMs);
@@ -282,7 +339,6 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       accuracy
     });
 
-    // Score live
     if (accuracy === 'PERFECT') {
       this.liveScore += 100;
       this.liveStreak++;
@@ -300,9 +356,9 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     this.bestStreak = Math.max(this.bestStreak, this.liveStreak);
   }
 
-  // ============================================================
-  // FIN DE PARTIE
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     FIN DE PARTIE
+     ═══════════════════════════════════════════════════════════════════ */
   private finishGame(): void {
     this.stopGame();
     this.gameState = 'FINISHED';
@@ -325,9 +381,9 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     this.countdownIntervalId = null;
   }
 
-  // ============================================================
-  // CONSTRUCTION DES RÉSULTATS PAR BEAT (avec taps manqués)
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     RÉSULTATS
+     ═══════════════════════════════════════════════════════════════════ */
   private buildBeatResults(): void {
     this.beatResults = [];
     const totalSub = this.totalBeatsToPlay * this.subdivision;
@@ -354,9 +410,6 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ============================================================
-  // CALCUL DES STATS
-  // ============================================================
   private calculateResults(): void {
     const totalBeats = this.totalBeatsToPlay * this.subdivision;
 
@@ -385,31 +438,26 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     const greats = this.tapRecords.filter(r => r.accuracy === 'GREAT').length;
     const oks = this.tapRecords.filter(r => r.accuracy === 'OK').length;
 
-    // Score pondéré
     const scorePoints = perfects * 100 + greats * 75 + oks * 40;
     const maxPoints = totalBeats * 100;
     const scorePercentage = Math.min(100, Math.round((scorePoints / maxPoints) * 100));
 
-    // Deltas absolus
     const deltas = this.tapRecords.map(r => Math.abs(r.deltaMs));
     const totalDelta = deltas.reduce((a, b) => a + b, 0);
     const avgDeltaMs = Math.round(totalDelta / deltas.length);
 
-    // Médiane
     const sorted = [...deltas].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
     const medianDeltaMs = sorted.length % 2 === 0
       ? Math.round((sorted[mid - 1] + sorted[mid]) / 2)
       : sorted[mid];
 
-    // Écart-type
     const variance = deltas.reduce((acc, d) => acc + Math.pow(d - avgDeltaMs, 2), 0) / deltas.length;
     const stdDeviationMs = Math.round(Math.sqrt(variance));
 
     const bestDeltaMs = Math.min(...deltas);
     const worstDeltaMs = Math.max(...deltas);
 
-    // Rang
     let rankTitle = 'Débutant Rythmique';
     let rankEmoji = '🥁';
     if (scorePercentage >= 95) { rankTitle = 'Horloge Suisse'; rankEmoji = '⏱️'; }
@@ -439,11 +487,12 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     };
   }
 
-  // ============================================================
-  // AUDIO
-  // ============================================================
-  private playClickSound(freq: number, gainValue: number = 0.15, duration: number = 0.04): void {
-    if (!this.audioCtx) return;
+  /* ═══════════════════════════════════════════════════════════════════
+     AUDIO
+     ═══════════════════════════════════════════════════════════════════ */
+  private playClickSound(freq: number, gainValue = 0.15, duration = 0.04): void {
+    if (!this.soundEnabled() || !this.audioCtx) return;
+
     try {
       const osc = this.audioCtx.createOscillator();
       const gain = this.audioCtx.createGain();
@@ -454,21 +503,25 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       osc.connect(gain).connect(this.audioCtx.destination);
       osc.start();
       osc.stop(this.audioCtx.currentTime + duration);
-    } catch (e) { /* silent */ }
+    } catch { /* silent */ }
   }
 
-  // ============================================================
-  // HELPERS POUR LE TEMPLATE
-  // ============================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     HELPERS TEMPLATE
+     ═══════════════════════════════════════════════════════════════════ */
   get progressPercent(): number {
     const total = this.totalBeatsToPlay * this.subdivision;
-    return total === 0 ? 0 : (this.currentBeatIndex * this.subdivision + this.currentSubBeat) / total * 100;
+    return total === 0
+      ? 0
+      : (this.currentBeatIndex * this.subdivision + this.currentSubBeat) / total * 100;
   }
 
   get liveAccuracy(): number {
     const played = this.tapRecords.length;
     if (played === 0) return 0;
-    const good = this.tapRecords.filter(r => r.accuracy !== 'MISSED' && r.accuracy !== 'EARLY' && r.accuracy !== 'LATE').length;
+    const good = this.tapRecords.filter(
+      r => r.accuracy !== 'MISSED' && r.accuracy !== 'EARLY' && r.accuracy !== 'LATE'
+    ).length;
     return Math.round((good / played) * 100);
   }
 
@@ -493,12 +546,8 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     localStorage.removeItem('metronome_sessions');
   }
 
-  /**
- * Calcule la hauteur de la barre (0-100%) à partir du décalage en ms.
- * Utilisé dans le template car `Math` n'est pas accessible en Angular.
- */
   getBeatBarHeight(deltaMs: number | null): number {
-    if (deltaMs === null) return 100; // tap manqué → barre pleine
+    if (deltaMs === null) return 100;
     return Math.min(100, Math.abs(deltaMs));
   }
 }

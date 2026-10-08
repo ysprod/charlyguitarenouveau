@@ -395,7 +395,6 @@ export class OffresComponent {
 
   selectCategory(id: Pack['category']): void {
     this.activeCategory.set(id);
-    // Scroll fluide vers les packs
     setTimeout(() => {
       document.querySelector('.packs-section')
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });

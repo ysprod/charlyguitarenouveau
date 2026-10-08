@@ -1,7 +1,40 @@
-<h2 mat-dialog-title>Felicitations!</h2>
+<h2 mat-dialog-title>
+  <span class="dialog-emoji">🎉</span>
+  Félicitations !
+</h2>
+
 <mat-dialog-content class="mat-typography">
-  Vous avez gagné!
+  <p class="dialog-message">
+    Vous avez gagné !
+  </p>
+  <p class="dialog-submessage">
+    Toutes les paires ont été trouvées. Bravo, offolandais !
+  </p>
 </mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-raised-button color="primary" [mat-dialog-close]="true" cdkFocusInitial>Rejouer</button>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+
+  <!-- 🏠 Retour au menu des jeux -->
+  <button mat-stroked-button
+          class="btn-back-menu"
+          [mat-dialog-close]="'menu'"
+          type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="btn-icon">
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </svg>
+    <span>Retour au menu</span>
+  </button>
+
+  <!-- 🔄 Rejouer -->
+  <button mat-raised-button
+          color="primary"
+          class="btn-replay"
+          [mat-dialog-close]="'replay'"
+          cdkFocusInitial
+          type="button">
+    <span class="btn-emoji">🔄</span>
+    <span>Rejouer</span>
+  </button>
+
 </mat-dialog-actions>

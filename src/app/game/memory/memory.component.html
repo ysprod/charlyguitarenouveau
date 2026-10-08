@@ -1,105 +1,26 @@
 <div class="molkky-container">
-  <div class="difficulty-banner" [style.--diff-color]="getCurrentDifficulty().couleur">
-    <span class="diff-name">NIVEAU {{ getCurrentDifficulty().nom }}</span>
-    <span class="diff-desc">{{ getCurrentDifficulty().description }}</span>
-  </div>
 
-  <header class="game-hud" *ngIf="gameState.isPlaying">
-    <div class="hud-box score-box">
-      <span class="label">SCORE</span>
-      <span class="value">{{ gameState.score }} <small>/ 50</small></span>
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER : Bouton retour + Titre sur la même ligne
+       ═══════════════════════════════════════════════════════ -->
+  <header class="game-header">
+    <div class="header-top-row">
+
+      <button class="btn-floating-back"
+              (click)="goToPlay()"
+              type="button"
+              aria-label="Retour au menu des jeux">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>Retour</span>
+      </button>
+
+      <h1 class="header-title">🪵 L'ESSENTIEL</h1>
     </div>
 
-    <div class="target-card" *ngIf="gameState.targetChord">
-      <span class="sub-text">🎯 VISER L'ACCORD :</span>
-      <h2 class="target-name">{{ gameState.targetChord.name }}</h2>
-      <span class="target-fullname">{{ gameState.targetChord.fullName }}</span>
-    </div>
-
-    <div class="hud-box strikes-box">
-      <span class="label">FAUTES</span>
-      <div class="strikes-count">
-        <span *ngFor="let s of [].constructor(getStrikeLimit()); let i = index" class="strike-dot"
-          [class.active]="i < gameState.strikes">
-          ❌
-        </span>
-      </div>
-    </div>
-  </header>
-
-  <!-- BARRE DE TEMPS -->
-  <div class="timer-bar-wrapper" *ngIf="gameState.isPlaying">
-    <div class="timer-bar" [style.width.%]="gameState.timeLeft" [style.background]="getTimerColor()"
-      [class.warning]="gameState.timeLeft < 30">
-    </div>
-  </div>
-
-  <!-- COMBO BADGE -->
-  <div class="combo-badge" *ngIf="gameState.perfectRounds >= 3">
-    🔥 COMBO x{{ gameState.perfectRounds }} • Bonus +50%
-  </div>
-
-  <!-- FEEDBACK -->
-  <div class="feedback-overlay" *ngIf="feedbackMessage">
-    <span class="feedback-badge" [class.success]="feedbackType === 'success'" [class.error]="feedbackType === 'error'">
-      {{ feedbackMessage }}
-    </span>
-  </div>
-
-  <!-- PARTICULES -->
-  <div class="particles-overlay" *ngIf="particles.length > 0">
-    <span *ngFor="let p of particles" class="particle" [style.left.%]="(p * 5) % 100"
-      [style.animation-delay]="(p * 0.05) + 's'"
-      [style.background]="p % 3 === 0 ? '#f59e0b' : (p % 3 === 1 ? '#fbbf24' : '#10b981')">
-    </span>
-  </div>
-
-  <!-- GRILLE DES QUILLES -->
-  <div class="pins-grid" *ngIf="gameState.isPlaying" [style.--pin-count]="pins.length">
-    <div *ngFor="let p of pins" class="molkky-pin" [class.down]="p.isDown" [class.revealed]="p.isRevealed"
-      [class.shaking]="p.isShaking" [class.target]="p.chord.id === gameState.targetChord?.id && !p.isDown"
-      (click)="onPinClick(p)">
-
-      <div class="pin-wood">
-        <!-- Numéro de la quille -->
-        <span class="pin-number">{{ p.chord.points }}</span>
-
-        <!-- Nom de l'accord (masqué si difficulté = 'difficile') -->
-        <span class="pin-chord-name" *ngIf="gameState.difficulty !== 'difficile'">
-          {{ p.chord.name }}
-        </span>
-
-        <!-- Diagramme miniature -->
-        <div class="chord-mini-diagram">
-          <div class="string-dot-row">
-            <span *ngFor="let fret of p.chord.frets" class="dot" [class.muted]="fret === -1" [class.open]="fret === 0">
-              {{ fret === -1 ? 'X' : (fret === 0 ? 'O' : fret) }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Catégorie -->
-        <span class="pin-category" *ngIf="gameState.difficulty !== 'difficile'">{{ p.chord.category }}</span>
-      </div>
-    </div>
-  </div>
-  <p class="modal-description">
-    Atteins <strong>exactement 50 points</strong> pour gagner.
-    Attention : si tu dépasses, tu redescends à 25 points !
-  </p>
-
-  <!-- HEADER avec 2 boutons retour -->
-  <header class="game-top-bar">
-    <button class="btn-back" (click)="goToPlay()" title="Retour au menu des jeux">
-      <span class="material-icons">arrow_back</span>
-      <span>RETOUR AUX JEUX</span>
-    </button>
-
-    <div class="logo-zone">
-      <span class="icon">🪵</span>
-      <h1>L'ESSENTIEL</h1>
-      <span class="subtitle">Méthode Charly Guitare</span>
-    </div>
+    <p class="header-subtitle">Méthode Charly Guitare · Atteins 50 points pile !</p>
 
     <div class="target-objective">
       <span class="material-icons">flag</span>
@@ -107,82 +28,223 @@
     </div>
   </header>
 
-
-
-  <!-- MODALES -->
-  <div class="overlay-screen" *ngIf="!gameState.isPlaying">
-
-    <!-- Écran d'accueil -->
-    <div class="card-modal" *ngIf="!gameState.isGameOver && !gameState.isVictory">
-
-      <h1>L'ESSENTIEL</h1>
-      <p class="modal-subtitle">Méthode Charly Guitare</p>
-
-
-      <!-- Sélecteur de difficulté -->
-      <div class="difficulty-selector">
-        <span class="selector-label">🎚️ CHOISIS TA DIFFICULTÉ :</span>
-        <div class="difficulty-buttons">
-          <button *ngFor="let d of difficulties" class="diff-btn" [class.active]="gameState.difficulty === d.id"
-            [style.--diff-color]="d.couleur" (click)="setDifficulty(d.id)">
-            <span class="diff-btn-icon">{{ d.icone }}</span>
-            <span class="diff-btn-name">{{ d.nom }}</span>
-            <span class="diff-btn-desc">{{ d.description }}</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="modal-actions-horizontal">
-        <button class="btn-secondary" (click)="goToPlay()">
-          <span class="material-icons">arrow_back</span>
-          RETOUR
-        </button>
-        <button class="btn-start" (click)="startGame()">
-          <span class="material-icons">play_arrow</span>
-          LANCER LA PARTIE
-        </button>
-      </div>
-    </div>
-
-    <!-- Game Over / Victoire -->
-    <div class="card-modal" *ngIf="gameState.isGameOver || gameState.isVictory">
-      <div class="modal-icon">{{ gameState.isVictory ? '🏆' : '💥' }}</div>
-      <h2>{{ gameState.isVictory ? 'VICTOIRE ÉPIQUE !' : 'PARTIE TERMINÉE' }}</h2>
-      <p class="modal-description">
-        {{ gameState.isVictory
-        ? 'Bravo ! Tu as atteint exactement 50 points !'
-        : (gameState.strikes >= getStrikeLimit()
-        ? 'Tu as accumulé trop de fautes.'
-        : 'Plus de quilles disponibles.')
-        }}
-      </p>
-
-      <div class="final-stats">
-        <div class="final-stat">
-          <span class="stat-label">Score Final</span>
-          <span class="stat-value">{{ gameState.score }} PTS</span>
-        </div>
-        <div class="final-stat">
-          <span class="stat-label">Manches jouées</span>
-          <span class="stat-value-small">{{ gameState.roundNumber }}</span>
-        </div>
-        <div class="final-stat">
-          <span class="stat-label">Combo max</span>
-          <span class="stat-value-small">{{ gameState.perfectRounds }} 🔥</span>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn-start" (click)="startGame()">
-          <span class="material-icons">refresh</span>
-          REJOUER
-        </button>
-        <button class="btn-secondary" (click)="goToPlay()">
-          <span class="material-icons">arrow_back</span>
-          RETOUR AU MENU DES JEUX
-        </button>
-      </div>
-    </div>
+  <!-- ═══════════════════════════════════════════════════════
+       BANNIÈRE DIFFICULTÉ
+       ═══════════════════════════════════════════════════════ -->
+  <div class="difficulty-banner" [style.--diff-color]="currentDifficulty().couleur">
+    <span class="diff-name">
+      <span class="diff-icon">{{ currentDifficulty().icone }}</span>
+      NIVEAU {{ currentDifficulty().nom }}
+    </span>
+    <span class="diff-sep">•</span>
+    <span class="diff-desc">{{ currentDifficulty().description }}</span>
   </div>
 
+  <!-- ═══════════════════════════════════════════════════════
+       HUD
+       ═══════════════════════════════════════════════════════ -->
+  @if (isPlaying()) {
+    <header class="game-hud">
+
+      <div class="hud-box score-box">
+        <span class="label">SCORE</span>
+        <span class="value">{{ score() }} <small>/ 50</small></span>
+      </div>
+
+      @if (targetChord(); as target) {
+        <div class="target-card">
+          <span class="sub-text">🎯 VISER L'ACCORD :</span>
+          <h2 class="target-name">{{ target.name }}</h2>
+          <span class="target-fullname">{{ target.fullName }}</span>
+        </div>
+      }
+
+      <div class="hud-box strikes-box">
+        <span class="label">FAUTES</span>
+        <div class="strikes-count">
+          @for (s of strikeArray(); track s; let i = $index) {
+            <span class="strike-dot" [class.active]="i < strikes()">❌</span>
+          }
+        </div>
+      </div>
+    </header>
+
+    <!-- Barre de temps -->
+    <div class="timer-bar-wrapper">
+      <div class="timer-bar"
+           [style.width.%]="timeLeft()"
+           [style.background]="timerColor()"
+           [class.warning]="timeLeft() < 30"></div>
+    </div>
+
+    <!-- Combo -->
+    @if (hasCombo()) {
+      <div class="combo-badge">
+        🔥 COMBO x{{ perfectRounds() }} • Bonus +50%
+      </div>
+    }
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       FEEDBACK
+       ═══════════════════════════════════════════════════════ -->
+  @if (feedbackMessage()) {
+    <div class="feedback-overlay">
+      <span class="feedback-badge"
+            [class.success]="feedbackType() === 'success'"
+            [class.error]="feedbackType() === 'error'">
+        {{ feedbackMessage() }}
+      </span>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       PARTICULES
+       ═══════════════════════════════════════════════════════ -->
+  @if (particles().length > 0) {
+    <div class="particles-overlay">
+      @for (p of particles(); track p) {
+        <span class="particle"
+              [style.left.%]="(p * 5) % 100"
+              [style.animation-delay]="(p * 0.05) + 's'"
+              [style.background]="p % 3 === 0 ? '#f59e0b' : (p % 3 === 1 ? '#fbbf24' : '#10b981')">
+        </span>
+      }
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       GRILLE DES QUILLES
+       ═══════════════════════════════════════════════════════ -->
+  @if (isPlaying()) {
+    <div class="pins-grid" [style.--pin-count]="pins().length">
+      @for (p of pins(); track p.chord.id; let i = $index) {
+        <div class="molkky-pin"
+             [class.down]="p.isDown"
+             [class.revealed]="p.isRevealed"
+             [class.shaking]="p.isShaking"
+             [class.target]="p.chord.id === targetChord()?.id && !p.isDown"
+             (click)="onPinClick(p, i)">
+
+          <div class="pin-wood">
+            <span class="pin-number">{{ p.chord.points }}</span>
+
+            @if (showNoteLabels()) {
+              <span class="pin-chord-name">{{ p.chord.name }}</span>
+            }
+
+            <div class="chord-mini-diagram">
+              <div class="string-dot-row">
+                @for (fret of p.chord.frets; track $index) {
+                  <span class="dot"
+                        [class.muted]="fret === -1"
+                        [class.open]="fret === 0">
+                    {{ fret === -1 ? 'X' : (fret === 0 ? 'O' : fret) }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            @if (showNoteLabels()) {
+              <span class="pin-category">{{ p.chord.category }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODALES
+       ═══════════════════════════════════════════════════════ -->
+  @if (!isPlaying()) {
+    <div class="overlay-screen">
+
+      <!-- Écran d'accueil -->
+      @if (!isGameOver() && !isVictory()) {
+        <div class="card-modal">
+          <div class="modal-icon">🪵</div>
+          <h1>L'ESSENTIEL</h1>
+          <p class="modal-subtitle">Méthode Charly Guitare</p>
+
+          <p class="modal-description">
+            Atteins <strong>exactement 50 points</strong> pour gagner.
+            Attention : si tu dépasses, tu redescends à 25 points !
+          </p>
+
+          <div class="difficulty-selector">
+            <span class="selector-label">🎚️ CHOISIS TA DIFFICULTÉ :</span>
+            <div class="difficulty-buttons">
+              @for (d of difficulties; track d.id) {
+                <button class="diff-btn"
+                        [class.active]="difficulty() === d.id"
+                        [style.--diff-color]="d.couleur"
+                        (click)="setDifficulty(d.id)"
+                        type="button">
+                  <span class="diff-btn-icon">{{ d.icone }}</span>
+                  <span class="diff-btn-name">{{ d.nom }}</span>
+                  <span class="diff-btn-desc">{{ d.description }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="modal-actions-horizontal">
+            <button class="btn-secondary" (click)="goToPlay()" type="button">
+              <span class="material-icons">arrow_back</span>
+              RETOUR
+            </button>
+            <button class="btn-start" (click)="startGame()" type="button">
+              <span class="material-icons">play_arrow</span>
+              LANCER LA PARTIE
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Fin de partie -->
+      @if (isGameOver() || isVictory()) {
+        <div class="card-modal">
+          <div class="modal-icon">{{ isVictory() ? '🏆' : '💥' }}</div>
+          <h2>{{ isVictory() ? 'VICTOIRE ÉPIQUE !' : 'PARTIE TERMINÉE' }}</h2>
+
+          <p class="modal-description">
+            @if (isVictory()) {
+              Bravo ! Tu as atteint exactement 50 points !
+            } @else if (strikes() >= strikeLimit()) {
+              Tu as accumulé trop de fautes.
+            } @else {
+              Plus de quilles disponibles.
+            }
+          </p>
+
+          <div class="final-stats">
+            <div class="final-stat">
+              <span class="stat-label">Score Final</span>
+              <span class="stat-value">{{ score() }} PTS</span>
+            </div>
+            <div class="final-stat">
+              <span class="stat-label">Manches jouées</span>
+              <span class="stat-value-small">{{ roundNumber() }}</span>
+            </div>
+            <div class="final-stat">
+              <span class="stat-label">Combo max</span>
+              <span class="stat-value-small">{{ perfectRounds() }} 🔥</span>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn-start" (click)="startGame()" type="button">
+              <span class="material-icons">refresh</span>
+              REJOUER
+            </button>
+            <button class="btn-secondary" (click)="goToPlay()" type="button">
+              <span class="material-icons">arrow_back</span>
+              RETOUR AU MENU
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
 </div>

@@ -1,42 +1,36 @@
 <div class="lyko-page">
 
-  <!-- ============================================================
+  <!-- ═══════════════════════════════════════════════════════
        DÉCOR ANIMÉ
-       ============================================================ -->
+       ═══════════════════════════════════════════════════════ -->
   <div class="bg-decor" aria-hidden="true">
     <div class="glow glow-primary"></div>
     <div class="glow glow-secondary"></div>
     <div class="magic-grid"></div>
     <div class="aurora"></div>
 
-    <!-- Particules -->
+    <!-- Particules flottantes -->
     <div class="particles">
-      <span class="particle"
-            *ngFor="let p of particles"
-            [style.left.%]="p.left"
-            [style.animation-delay.s]="p.delay"
-            [style.animation-duration.s]="p.duration"
-            [style.width.px]="p.size"
-            [style.height.px]="p.size"
-            [style.background]="p.color"
-            [style.box-shadow]="'0 0 10px ' + p.color"></span>
+      @for (p of particles(); track $index) {
+      <span class="particle" [style.left.%]="p.left" [style.animation-delay.s]="p.delay"
+        [style.animation-duration.s]="p.duration" [style.width.px]="p.size" [style.height.px]="p.size"
+        [style.background]="p.color" [style.box-shadow]="'0 0 10px ' + p.color"></span>
+      }
     </div>
 
-    <!-- Runes -->
+    <!-- Runes sacrées -->
     <div class="runes">
-      <span class="rune"
-            *ngFor="let r of runes"
-            [style.left.%]="r.left"
-            [style.top.%]="r.top"
-            [style.animation-delay.s]="r.delay"
-            [style.animation-duration.s]="r.duration">{{ r.symbol }}</span>
+      @for (r of runes(); track $index) {
+      <span class="rune" [style.left.%]="r.left" [style.top.%]="r.top" [style.animation-delay.s]="r.delay"
+        [style.animation-duration.s]="r.duration">{{ r.symbol }}</span>
+      }
     </div>
   </div>
 
-  <!-- ============================================================
+  <!-- ═══════════════════════════════════════════════════════
        BOÎTE DE DIALOGUE
-       ============================================================ -->
-  <div class="dialog-overlay" [class.show]="showDialog">
+       ═══════════════════════════════════════════════════════ -->
+  <div class="dialog-overlay" [class.show]="showDialog()">
 
     <div class="dialog-card">
 
@@ -63,23 +57,23 @@
         <span class="title-small">Le Gardien des Guitares Sacrées</span>
         <span class="title-big">LYKÖ LE SAGE</span>
         <span class="title-underline"></span>
-      </h1> 
+      </h1>
 
       <!-- Boutons d'action -->
       <div class="actions">
 
-        <!-- Jouer contre l'IA (Bouton Vedette) -->
+        <!-- 🔥 Défier OFFOWA -->
         <button type="button" class="btn-action btn-ia" (click)="playAgainstAI()">
           <span class="btn-glow"></span>
           <span class="btn-icon">🤖</span>
           <span class="btn-content">
-            <span class="btn-text">DÉFIER LYKO (IA)</span>
+            <span class="btn-text">DÉFIER OFFOWA</span>
             <span class="btn-sub">Affronte la sagesse du Gardien</span>
           </span>
           <span class="btn-arrow">→</span>
         </button>
 
-        <!-- Jouer avec un ami -->
+        <!-- 👥 Jouer avec un ami -->
         <button type="button" class="btn-action btn-friend" (click)="playWithFriend()">
           <span class="btn-glow"></span>
           <span class="btn-icon">👥</span>
@@ -90,7 +84,7 @@
           <span class="btn-arrow">→</span>
         </button>
 
-        <!-- Retour au menu -->
+        <!-- ↩ Retour au menu -->
         <button type="button" class="btn-action btn-back" (click)="backToMenu()">
           <span class="btn-glow"></span>
           <span class="btn-icon">↩</span>

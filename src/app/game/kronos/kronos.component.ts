@@ -1,294 +1,365 @@
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES
+   ═════════════════════════════════════════════════════════════════════ */
 interface PowerUp {
-	id: string;
-	name: string;
-	icon: string;
-	cost: number;
-	description: string;
-	cooldown: number;
-	currentCooldown: number;
-	active: boolean;
+  id: string;
+  name: string;
+  icon: string;
+  cost: number;
+  description: string;
+  cooldown: number;
+  currentCooldown: number;
+  active: boolean;
 }
 
+interface HistoryEntry {
+  face: number;
+  avant: number;
+  apres: number;
+  date: Date;
+}
+
+interface DiceFace {
+  value: number;
+  symbol: string;
+  name: string;
+}
+
+type SoundType = 'roll' | 'win' | 'power';
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 @Component({
-	selector: 'app-kronos',
-	standalone: true,
-	imports: [
-		DecimalPipe, CommonModule
-	],
-	templateUrl: './kronos.component.html',
-	styleUrls: ['./kronos.component.scss']
+  selector: 'app-kronos',
+  standalone: true,
+  imports: [DecimalPipe, CommonModule],
+  templateUrl: './kronos.component.html',
+  styleUrls: ['./kronos.component.scss']
 })
-export class KronosComponent implements OnInit {
-	rejouer = false;
-	isRolling = false;
-	etapedujeu: string = "0";
-	lavie: number = 0;
-	lebonus: number = 0;
-	randomnumber: number = 0;
-	pointdevies: number = 0;
-	pointdebonus: number = 0;
-	historique: { face: number, avant: number, apres: number, date: Date, powerUsed?: string }[] = [];
-	messageKronos: string = "Le Maître du Temps vous observe...";
-	derniereFace: number = 0;
-	comboStreak: number = 0;
-	multiplierBonus: number = 1;
+export class KronosComponent implements OnInit, OnDestroy {
 
-	private audioCtx?: AudioContext;
-	readonly SEUIL_LYKO = 1000000000;
-	readonly COUT_LANCER = 2000;
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
-	powers: PowerUp[] = [
-		{
-			id: 'shield',
-			name: 'Bouclier Temporel',
-			icon: 'shield',
-			cost: 300,
-			description: 'Annule la déduction de coût si la face est < 4.',
-			cooldown: 3,
-			currentCooldown: 0,
-			active: false
-		},
-		{
-			id: 'rewind',
-			name: 'Inversion Chrono',
-			icon: 'replay',
-			cost: 500,
-			description: 'Relance le dé si le résultat est inférieur à 5.',
-			cooldown: 4,
-			currentCooldown: 0,
-			active: false
-		},
-		{
-			id: 'presage',
-			name: 'Vision du Destin',
-			icon: 'visibility',
-			cost: 800,
-			description: 'Garantit un score entre 6 et 12 au prochain lancer.',
-			cooldown: 5,
-			currentCooldown: 0,
-			active: false
-		}
-	];
+  /* ═══════════════════════════════════════════════════════════════════
+     CONSTANTES
+     ═══════════════════════════════════════════════════════════════════ */
+  readonly SEUIL_LYKO = 1_000_000_000;
+  readonly COUT_LANCER = 2_000;
 
-	faces = [
-		{ value: 1, symbol: '⚀', name: 'Le Commencement' },
-		{ value: 2, symbol: '⚁', name: 'Le Doute' },
-		{ value: 3, symbol: '⚂', name: 'La Trinité' },
-		{ value: 4, symbol: '⚃', name: 'Les Fondations' },
-		{ value: 5, symbol: '⚄', name: 'Le Changement' },
-		{ value: 6, symbol: '⚅', name: 'L\'Harmonie' },
-		{ value: 7, symbol: '✦', name: 'La Chance' },
-		{ value: 8, symbol: '✧', name: 'L\'Infini' },
-		{ value: 9, symbol: '❂', name: 'La Sagesse' },
-		{ value: 10, symbol: '❖', name: 'La Puissance' },
-		{ value: 11, symbol: '✵', name: 'Le Destin' },
-		{ value: 12, symbol: '✹', name: 'L\'Apothéose' }
-	];
+  /* ═══════════════════════════════════════════════════════════════════
+     ÉTAT
+     ═══════════════════════════════════════════════════════════════════ */
+  readonly pointdevies = signal(5_000);
+  readonly pointdebonus = signal(100);
+  readonly randomnumber = signal(0);
+  readonly derniereFace = signal(0);
+  readonly isRolling = signal(false);
+  readonly messageKronos = signal('Le Maître du Temps vous observe...');
+  readonly comboStreak = signal(0);
+  readonly multiplierBonus = signal(1);
+  readonly historique = signal<HistoryEntry[]>([]);
+  readonly rejouer = signal(false);
+  readonly etapedujeu = signal('0');
 
-	constructor(private activatedRoute: ActivatedRoute, private router: Router) { }
+  /* ─── Son (persistance localStorage) ─── */
+  readonly soundEnabled = signal<boolean>(true);
 
-	ngOnInit(): void {
-		this.lavie = 5000;
-		this.lebonus = 100;
-		this.etapedujeu = this.activatedRoute.snapshot.queryParamMap.get('etape') || this.etapedujeu;
+  /* ─── Computed ─── */
+  readonly progressionSeuil = computed(() =>
+    Math.min((this.pointdevies() / this.SEUIL_LYKO) * 100, 100)
+  );
 
-		this.pointdevies = this.lavie;
-		this.pointdebonus = this.lebonus;
+  readonly gagnant = computed(() =>
+    this.rejouer() && this.randomnumber() >= 5
+  );
 
-		this.router.routeReuseStrategy.shouldReuseRoute = () => false;
-		this.router.onSameUrlNavigation = 'reload';
-		this.rejouer = false;
+  readonly casuffit = computed(() =>
+    this.pointdevies() >= this.SEUIL_LYKO
+  );
 
-		this.initAudio();
-	}
+  /* ═══════════════════════════════════════════════════════════════════
+     DONNÉES
+     ═══════════════════════════════════════════════════════════════════ */
+  readonly powers: PowerUp[] = [
+    {
+      id: 'shield',
+      name: 'Bouclier Temporel',
+      icon: 'shield',
+      cost: 300,
+      description: 'Annule la déduction de coût si la face est < 4.',
+      cooldown: 3,
+      currentCooldown: 0,
+      active: false
+    },
+    {
+      id: 'rewind',
+      name: 'Inversion Chrono',
+      icon: 'replay',
+      cost: 500,
+      description: 'Relance le dé si le résultat est inférieur à 5.',
+      cooldown: 4,
+      currentCooldown: 0,
+      active: false
+    },
+    {
+      id: 'presage',
+      name: 'Vision du Destin',
+      icon: 'visibility',
+      cost: 800,
+      description: 'Garantit un score entre 6 et 12 au prochain lancer.',
+      cooldown: 5,
+      currentCooldown: 0,
+      active: false
+    }
+  ];
 
-	private initAudio(): void {
-		const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-		if (AudioContextClass) {
-			this.audioCtx = new AudioContextClass();
-		}
-	}
+  readonly faces: DiceFace[] = [
+    { value: 1,  symbol: '⚀', name: 'Le Commencement' },
+    { value: 2,  symbol: '⚁', name: 'Le Doute' },
+    { value: 3,  symbol: '⚂', name: 'La Trinité' },
+    { value: 4,  symbol: '⚃', name: 'Les Fondations' },
+    { value: 5,  symbol: '⚄', name: 'Le Changement' },
+    { value: 6,  symbol: '⚅', name: 'L\'Harmonie' },
+    { value: 7,  symbol: '✦', name: 'La Chance' },
+    { value: 8,  symbol: '✧', name: 'L\'Infini' },
+    { value: 9,  symbol: '❂', name: 'La Sagesse' },
+    { value: 10, symbol: '❖', name: 'La Puissance' },
+    { value: 11, symbol: '✵', name: 'Le Destin' },
+    { value: 12, symbol: '✹', name: 'L\'Apothéose' }
+  ];
 
-	private playSound(type: 'roll' | 'win' | 'power'): void {
-		if (!this.audioCtx) return;
+  /* ─── Audio ─── */
+  private audioCtx?: AudioContext;
+  private rollIntervalId?: ReturnType<typeof setInterval>;
 
-		if (this.audioCtx.state === 'suspended') {
-			this.audioCtx.resume();
-		}
+  /* ═══════════════════════════════════════════════════════════════════
+     LIFECYCLE
+     ═══════════════════════════════════════════════════════════════════ */
+  ngOnInit(): void {
+    this.etapedujeu.set(
+      this.activatedRoute.snapshot.queryParamMap.get('etape') ?? '0'
+    );
 
-		const osc = this.audioCtx.createOscillator();
-		const gain = this.audioCtx.createGain();
-		osc.connect(gain);
-		gain.connect(this.audioCtx.destination);
+    this.router.routeReuseStrategy.shouldReuseRoute = () => false;
+    this.router.onSameUrlNavigation = 'reload';
 
-		const now = this.audioCtx.currentTime;
+    this.initAudio();
+    this.loadSoundPreference();
+  }
 
-		if (type === 'roll') {
-			osc.type = 'sawtooth';
-			osc.frequency.setValueAtTime(150, now);
-			osc.frequency.exponentialRampToValueAtTime(60, now + 0.1);
-			gain.gain.setValueAtTime(0.2, now);
-			gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-			osc.start(now);
-			osc.stop(now + 0.1);
-		} else if (type === 'win') {
-			osc.type = 'triangle';
-			osc.frequency.setValueAtTime(440, now);
-			osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
-			gain.gain.setValueAtTime(0.3, now);
-			gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-			osc.start(now);
-			osc.stop(now + 0.3);
-		} else if (type === 'power') {
-			osc.type = 'sine';
-			osc.frequency.setValueAtTime(300, now);
-			osc.frequency.linearRampToValueAtTime(600, now + 0.2);
-			gain.gain.setValueAtTime(0.25, now);
-			gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-			osc.start(now);
-			osc.stop(now + 0.2);
-		}
-	}
+  ngOnDestroy(): void {
+    if (this.rollIntervalId) clearInterval(this.rollIntervalId);
+    this.audioCtx?.close();
+  }
 
-	activatePower(power: PowerUp): void {
-		if (power.currentCooldown > 0 || this.pointdebonus < power.cost || power.active) return;
+  /* ═══════════════════════════════════════════════════════════════════
+     SON
+     ═══════════════════════════════════════════════════════════════════ */
+  private initAudio(): void {
+    const Ctor = window.AudioContext
+      || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (Ctor) this.audioCtx = new Ctor();
+  }
 
-		this.pointdebonus -= power.cost;
-		power.active = true;
-		this.playSound('power');
-		this.messageKronos = `Pouvoir activé : ${power.name} !`;
-	}
+  private loadSoundPreference(): void {
+    const saved = localStorage.getItem('kronos_sound_enabled');
+    if (saved === 'false') this.soundEnabled.set(false);
+  }
 
-	resetjeu(): void {
-		if (this.pointdevies < this.COUT_LANCER) {
-			this.messageKronos = "Vous n'avez pas assez de points de vie pour défier Kronos.";
-			return;
-		}
+  toggleSound(): void {
+    const next = !this.soundEnabled();
+    this.soundEnabled.set(next);
+    localStorage.setItem('kronos_sound_enabled', String(next));
 
-		this.isRolling = true;
-		this.messageKronos = "Les rouages du temps s'élancent...";
+    if (next) {
+      this.playSound('power'); // Feedback sonore à la réactivation
+    }
+  }
 
-		let compteur = 0;
-		const interval = setInterval(() => {
-			this.randomnumber = this.randomInteger(1, 12);
-			this.playSound('roll');
-			compteur++;
+  private playSound(type: SoundType): void {
+    if (!this.soundEnabled() || !this.audioCtx) return;  // ⬅️ Garde-fou son
 
-			if (compteur > 18) {
-				clearInterval(interval);
-				this.finaliserLancer();
-			}
-		}, 80);
-	}
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => { /* ignore */ });
+    }
 
-	private finaliserLancer(): void {
-		this.isRolling = false;
-		this.rejouer = true;
+    const osc = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(this.audioCtx.destination);
 
-		const avant = this.pointdevies;
-		const presageActive = this.powers.find(p => p.id === 'presage')?.active;
+    const now = this.audioCtx.currentTime;
 
-		// Calcul du tirage avec la règle du presage
-		let minRoll = presageActive ? 6 : 1;
-		this.randomnumber = this.randomInteger(minRoll, 12);
+    if (type === 'roll') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(60, now + 0.1);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'win') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (type === 'power') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.linearRampToValueAtTime(600, now + 0.2);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    }
+  }
 
-		// Verifier Inversion Chrono si tirage faible
-		const rewindPower = this.powers.find(p => p.id === 'rewind');
-		if (rewindPower?.active && this.randomnumber < 5) {
-			this.messageKronos = "Inversion Temporelle ! Nouveau tirage automatique...";
-			this.randomnumber = this.randomInteger(5, 12);
-		}
+  /* ═══════════════════════════════════════════════════════════════════
+     POUVOIRS
+     ═══════════════════════════════════════════════════════════════════ */
+  activatePower(power: PowerUp): void {
+    if (power.currentCooldown > 0 || this.pointdebonus() < power.cost || power.active) return;
 
-		this.derniereFace = this.randomnumber;
+    this.pointdebonus.update(v => v - power.cost);
+    power.active = true;
+    this.playSound('power');
+    this.messageKronos.set(`Pouvoir activé : ${power.name} !`);
+  }
 
-		// Gestion du bouclier
-		const shieldActive = this.powers.find(p => p.id === 'shield')?.active;
-		let coutEffectif = this.COUT_LANCER;
-		if (shieldActive && this.randomnumber < 4) {
-			coutEffectif = 0;
-			this.messageKronos = "Bouclier actif : Coût de lancer absorbé !";
-		}
+  /* ═══════════════════════════════════════════════════════════════════
+     LANCER
+     ═══════════════════════════════════════════════════════════════════ */
+  resetjeu(): void {
+    if (this.pointdevies() < this.COUT_LANCER) {
+      this.messageKronos.set('Vous n\'avez pas assez de points de vie pour défier Kronos.');
+      return;
+    }
 
-		// Calcul des PV et des combos
-		if (this.randomnumber >= 7) {
-			this.comboStreak++;
-			this.multiplierBonus = 1 + (this.comboStreak * 0.1);
-			this.playSound('win');
-		} else {
-			this.comboStreak = 0;
-			this.multiplierBonus = 1;
-		}
+    this.isRolling.set(true);
+    this.messageKronos.set('Les rouages du temps s\'élancent...');
 
-		const calculBrut = (this.pointdevies - coutEffectif) * this.randomnumber;
-		this.pointdevies = Math.round(calculBrut * this.multiplierBonus);
-		this.lavie = this.pointdevies;
+    let compteur = 0;
+    this.rollIntervalId = setInterval(() => {
+      this.randomnumber.set(this.randomInteger(1, 12));
+      this.playSound('roll');
+      compteur++;
 
-		// Réduction des temps de recharge
-		this.updateCooldowns();
+      if (compteur > 18) {
+        clearInterval(this.rollIntervalId);
+        this.finaliserLancer();
+      }
+    }, 80);
+  }
 
-		// Narration dynamique
-		const faceInfo = this.getFaceInfo(this.randomnumber);
-		if (this.randomnumber >= 10) {
-			this.messageKronos = `APOTHÉOSE ! Face ${this.randomnumber} (${faceInfo?.name}). Combo x${this.multiplierBonus.toFixed(1)} !`;
-		} else if (this.randomnumber >= 5) {
-			this.messageKronos = `Victoire ! Face ${this.randomnumber} (${faceInfo?.name}). Le temps vous favorise.`;
-		} else {
-			this.messageKronos = `Épreuve ! Face ${this.randomnumber} (${faceInfo?.name}). Persévérez.`;
-		}
+  private finaliserLancer(): void {
+    this.isRolling.set(false);
+    this.rejouer.set(true);
 
-		// Historique
-		this.historique.unshift({
-			face: this.randomnumber,
-			avant: avant,
-			apres: this.pointdevies,
-			date: new Date()
-		});
+    const avant = this.pointdevies();
+    const presageActive = this.powers.find(p => p.id === 'presage')?.active;
 
-		if (this.historique.length > 5) this.historique.pop();
+    /* Tirage avec Vision du Destin */
+    const minRoll = presageActive ? 6 : 1;
+    let roll = this.randomInteger(minRoll, 12);
 
-		if (this.pointdevies >= this.SEUIL_LYKO) {
-			this.messageKronos = "Seuil suprême atteint ! Lykö s'incline devant votre maestria.";
-		}
-	}
+    /* Inversion Chrono */
+    const rewindPower = this.powers.find(p => p.id === 'rewind');
+    if (rewindPower?.active && roll < 5) {
+      this.messageKronos.set('Inversion Temporelle ! Nouveau tirage automatique...');
+      roll = this.randomInteger(5, 12);
+    }
 
-	private updateCooldowns(): void {
-		this.powers.forEach(p => {
-			if (p.active) {
-				p.active = false;
-				p.currentCooldown = p.cooldown;
-			} else if (p.currentCooldown > 0) {
-				p.currentCooldown--;
-			}
-		});
-	}
+    this.randomnumber.set(roll);
+    this.derniereFace.set(roll);
 
-	onrecommencer(): void {
-		this.router.navigate(['/play'], {
-			queryParams: { vie: this.lavie, bonus: this.lebonus, etape: this.etapedujeu }
-		});
-	}
+    /* Bouclier Temporel */
+    const shieldActive = this.powers.find(p => p.id === 'shield')?.active;
+    let coutEffectif = this.COUT_LANCER;
+    if (shieldActive && roll < 4) {
+      coutEffectif = 0;
+      this.messageKronos.set('Bouclier actif : Coût de lancer absorbé !');
+    }
 
-	gagnant(): boolean {
-		return this.rejouer && this.randomnumber >= 5;
-	}
+    /* Combos */
+    if (roll >= 7) {
+      this.comboStreak.update(s => s + 1);
+      this.multiplierBonus.set(1 + (this.comboStreak() * 0.1));
+      this.playSound('win');
+    } else {
+      this.comboStreak.set(0);
+      this.multiplierBonus.set(1);
+    }
 
-	casuffit(): boolean {
-		return this.pointdevies >= this.SEUIL_LYKO;
-	}
+    /* Calcul des PV */
+    const calculBrut = (this.pointdevies() - coutEffectif) * roll;
+    const nouveauScore = Math.round(calculBrut * this.multiplierBonus());
+    this.pointdevies.set(nouveauScore);
 
-	get progressionSeuil(): number {
-		return Math.min((this.pointdevies / this.SEUIL_LYKO) * 100, 100);
-	}
+    /* Cooldowns */
+    this.updateCooldowns();
 
-	randomInteger(min: number, max: number): number {
-		return Math.floor(Math.random() * (max - min + 1)) + min;
-	}
+    /* Narration */
+    const faceInfo = this.getFaceInfo(roll);
+    if (roll >= 10) {
+      this.messageKronos.set(`APOTHÉOSE ! Face ${roll} (${faceInfo?.name}). Combo x${this.multiplierBonus().toFixed(1)} !`);
+    } else if (roll >= 5) {
+      this.messageKronos.set(`Victoire ! Face ${roll} (${faceInfo?.name}). Le temps vous favorise.`);
+    } else {
+      this.messageKronos.set(`Épreuve ! Face ${roll} (${faceInfo?.name}). Persévérez.`);
+    }
 
-	getFaceInfo(value: number) {
-		return this.faces.find(f => f.value === value);
-	}
+    /* Historique */
+    this.historique.update(list => {
+      const updated = [{ face: roll, avant, apres: nouveauScore, date: new Date() }, ...list];
+      return updated.slice(0, 5);
+    });
+
+    if (this.pointdevies() >= this.SEUIL_LYKO) {
+      this.messageKronos.set('Seuil suprême atteint ! Lykö s\'incline devant votre maestria.');
+    }
+  }
+
+  private updateCooldowns(): void {
+    this.powers.forEach(p => {
+      if (p.active) {
+        p.active = false;
+        p.currentCooldown = p.cooldown;
+      } else if (p.currentCooldown > 0) {
+        p.currentCooldown--;
+      }
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════════ */
+  onrecommencer(): void {
+    this.router.navigate(['/play'], {
+      queryParams: {
+        vie: this.pointdevies(),
+        bonus: this.pointdebonus(),
+        etape: this.etapedujeu()
+      }
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════════════════ */
+  randomInteger(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  getFaceInfo(value: number): DiceFace | undefined {
+    return this.faces.find(f => f.value === value);
+  }
 }

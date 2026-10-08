@@ -1,29 +1,30 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CardData } from './CardData';
-import { RdialogComponent } from './rdialog/rdialog.component';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { CardData } from './CardData';
+import { RdialogComponent, RdialogResult } from './rdialog/rdialog.component';
 import { GamecardComponent } from './gamecard/gamecard.component';
+import { VoiceService, SpeakOptions } from '../../services/voice.service';
 
-interface Particle {
-  left: number;
-  delay: number;
-  duration: number;
-  size: number;
-  color: string;
-}
-
-interface Coin {
-  left: number;
-  delay: number;
-  duration: number;
-  symbol: string;
-}
-
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES
+   ═════════════════════════════════════════════════════════════════════ */
 type SoundType = 'flip' | 'match' | 'wrong' | 'victory' | 'defeat';
 
+/* ═════════════════════════════════════════════════════════════════════
+   VOIX D'ENFANT — Paramètres dédiés à cette page
+   ═════════════════════════════════════════════════════════════════════ */
+const CHILD_VOICE: Required<Pick<SpeakOptions, 'pitch' | 'rate' | 'volume'>> = {
+  pitch: 1.7,
+  rate: 1.15,
+  volume: 1.0,
+};
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 @Component({
   selector: 'app-cardgame',
   standalone: true,
@@ -37,12 +38,19 @@ type SoundType = 'flip' | 'match' | 'wrong' | 'victory' | 'defeat';
 })
 export class CardgameComponent implements OnInit, OnDestroy {
 
-  etapedujeu: string = "0";
-  lavie: number = 0;
-  lebonus: number = 0;
-  pointdevies: number = 0;
+  /* ─── Dépendances ─── */
+  private readonly dialog = inject(MatDialog);
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly location = inject(Location);
+  private readonly voice = inject(VoiceService);
 
-  cardImages = [
+  /* ─── État de jeu ─── */
+  lavie = 0;
+  lebonus = 0;
+  pointdevies = 0;
+
+  readonly cardImages = [
     'assets/rouge.jpg',
     'assets/bleu.jpg',
     'assets/vert.jpg',
@@ -52,69 +60,184 @@ export class CardgameComponent implements OnInit, OnDestroy {
   ];
 
   cards: CardData[] = [];
-  flippedCards: CardData[] = [];
+  private flippedCards: CardData[] = [];
   matchedCount = 0;
   moves = 0;
-  isProcessing = false;
+  private isProcessing = false;
 
-  /* Décor */
-  particles: Particle[] = [];
-  coins: Coin[] = [];
+  /* ═══════════════════════════════════════════════════════════════════
+     ⏱️ CHRONOMÈTRES
+     ═══════════════════════════════════════════════════════════════════ */
 
-  private readonly PARTICLE_COLORS = ['#6366f1', '#10b981', '#facc15', '#f472b6', '#38bdf8'];
-  private readonly COIN_SYMBOLS = ['🪙', '💰', '💎', '⭐', '🍌', '🏆'];
+  /** Temps total écoulé depuis le démarrage de la partie (secondes) */
+  elapsedSeconds = 0;
 
-  /* Audio */
+  /** Temps de la dernière trouvaille (secondes) — affiché temporairement */
+  lastMatchSeconds = 0;
+
+  /** Affichage formaté "MM:SS" du chrono global */
+  get globalTimerDisplay(): string {
+    return this.formatTime(this.elapsedSeconds);
+  }
+
+  private globalTimerInterval?: ReturnType<typeof setInterval>;
+  private gameStartTime = 0;
+  private currentRoundStartTime = 0;
+  private lastMatchHideTimeout?: ReturnType<typeof setTimeout>;
+
+  /* ─── Audio ─── */
   private audioCtx?: AudioContext;
   soundEnabled = true;
 
-  constructor(
-    private dialog: MatDialog,
-    private activatedRoute: ActivatedRoute,
-    private router: Router
-  ) { }
+  /* ─── Constantes ─── */
+  private readonly PV_PAR_COUP = 100;
+  private readonly PV_PAR_PAIRE = 5000;
+  private readonly PV_MAX = 10_000_000;
+  private readonly FLIP_DELAY_MS = 800;
+  private readonly LAST_MATCH_HIDE_MS = 3000;
 
+  /* ─── Timers ─── */
+  private timeouts: number[] = [];
+  private hasAnnouncedIntro = false;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     LIFECYCLE
+     ═══════════════════════════════════════════════════════════════════ */
   ngOnInit(): void {
-    const queryVie = this.activatedRoute.snapshot.queryParamMap.get('vie');
-    const queryBonus = this.activatedRoute.snapshot.queryParamMap.get('bonus');
-    const queryEtape = this.activatedRoute.snapshot.queryParamMap.get('etape');
-
-    this.pointdevies = queryVie ? parseInt(queryVie, 10) : 1000;
+    const params = this.activatedRoute.snapshot.queryParamMap;
+    this.pointdevies = parseInt(params.get('vie') ?? '1000', 10);
     this.lavie = this.pointdevies;
-    this.lebonus = queryBonus ? parseInt(queryBonus, 10) : 0;
-    this.etapedujeu = queryEtape || "0";
+    this.lebonus = parseInt(params.get('bonus') ?? '0', 10);
 
     this.initAudio();
-    this.generateDecor();
     this.setupCards();
+    this.startGlobalTimer();
+    this.announceGameRules();
   }
 
   ngOnDestroy(): void {
-    // Fermer le contexte audio proprement
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      this.audioCtx.close().catch(() => { /* ignore */ });
+      this.audioCtx.close();
+    }
+    this.stopGlobalTimer();
+    if (this.lastMatchHideTimeout) clearTimeout(this.lastMatchHideTimeout);
+    this.timeouts.forEach(t => clearTimeout(t));
+    this.voice.stopSpeaking();
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     ⏱️ GESTION DES CHRONOMÈTRES
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /** Démarre (ou redémarre) le chrono global */
+  private startGlobalTimer(): void {
+    this.stopGlobalTimer();
+
+    this.gameStartTime = Date.now();
+    this.elapsedSeconds = 0;
+
+    this.globalTimerInterval = setInterval(() => {
+      this.elapsedSeconds = Math.floor((Date.now() - this.gameStartTime) / 1000);
+    }, 1000);
+  }
+
+  /** Arrête le chrono global */
+  private stopGlobalTimer(): void {
+    if (this.globalTimerInterval) {
+      clearInterval(this.globalTimerInterval);
+      this.globalTimerInterval = undefined;
     }
   }
 
-  /* ============================================================
-     AUDIO — Générateur de sons via Web Audio API
-     ============================================================ */
-  private initAudio(): void {
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-
-    if (AudioContextClass) this.audioCtx = new AudioContextClass();
+  /** Démarre le chrono de la réflexion en cours */
+  private startRoundTimer(): void {
+    this.currentRoundStartTime = Date.now();
   }
 
-  /**
-   * Joue un son prédéfini via oscillateurs + gain.
-   * Aucun fichier externe n'est nécessaire.
-   */
+  /** Capture le temps de la réflexion et l'expose temporairement */
+  private captureRoundTime(): void {
+    if (this.currentRoundStartTime === 0) return;
+
+    const duration = Math.floor((Date.now() - this.currentRoundStartTime) / 1000);
+    this.lastMatchSeconds = duration;
+
+    if (this.lastMatchHideTimeout) clearTimeout(this.lastMatchHideTimeout);
+    this.lastMatchHideTimeout = setTimeout(() => {
+      this.lastMatchSeconds = 0;
+    }, this.LAST_MATCH_HIDE_MS);
+  }
+
+  /** Formate un nombre de secondes en "MM:SS" */
+  formatTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     🎙️ HELPER VOIX D'ENFANT
+     ═══════════════════════════════════════════════════════════════════ */
+  private speakAsChild(
+    text: string,
+    overrides: Partial<typeof CHILD_VOICE> = {}
+  ): Promise<void> {
+    return this.voice.speak(text, {
+      ...CHILD_VOICE,
+      ...overrides,
+      interrupt: true,
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     ANNONCE VOCALE D'INTRODUCTION
+     ═══════════════════════════════════════════════════════════════════ */
+  private announceGameRules(): void {
+    if (this.hasAnnouncedIntro) return;
+    this.hasAnnouncedIntro = true;
+
+    const intro =
+      `Coucou ! Bienvenue dans Boubouni ! ` +
+      `Retrouve toutes les paires cachées pour gagner le trésor ! ` +
+      `Chaque coup te coûte cent points de vie, ` +
+      `mais une paire trouvée t'en rapporte cinq mille ! ` +
+      `Tu as ${this.pointdevies} points. ` +
+      `Le chrono tourne ! Allez, c'est parti !`;
+
+    const timerId = window.setTimeout(() => {
+      this.speakAsChild(intro, { rate: 1.05 });
+    }, 600);
+    this.timeouts.push(timerId);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════════ */
+  goToPlay(): void {
+    this.voice.stopSpeaking();
+    this.router.navigate(['/play']);
+  }
+
+  goBack(): void {
+    this.voice.stopSpeaking();
+    this.location.back();
+  }
+
+  onrecommencer(): void {
+    this.goToPlay();
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     AUDIO — Effets sonores
+     ═══════════════════════════════════════════════════════════════════ */
+  private initAudio(): void {
+    const Ctor = window.AudioContext
+      || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (Ctor) this.audioCtx = new Ctor();
+  }
+
   private playSound(type: SoundType): void {
     if (!this.soundEnabled || !this.audioCtx) return;
 
-    // Reprise du contexte si suspendu (politique navigateur)
     if (this.audioCtx.state === 'suspended') {
       this.audioCtx.resume().catch(() => { /* ignore */ });
     }
@@ -123,64 +246,31 @@ export class CardgameComponent implements OnInit, OnDestroy {
 
     switch (type) {
       case 'flip':
-        // Petit "blip" rapide et discret au retournement
-        this.tone({ freq: 660, type: 'sine', duration: 0.08, volume: 1, now });
+        this.tone({ freq: 660, type: 'sine', duration: 0.08, volume: 0.15, now });
         break;
 
       case 'match':
-        // Arpège ascendant joyeux quand une paire est trouvée
         [523.25, 659.25, 783.99].forEach((freq, i) => {
-          this.tone({
-            freq,
-            type: 'triangle',
-            duration: 0.15,
-            volume: 1,
-            now: now + i * 0.08
-          });
+          this.tone({ freq, type: 'triangle', duration: 0.15, volume: 0.18, now: now + i * 0.08 });
         });
         break;
 
       case 'wrong':
-        // Son descendant grave pour signaler l'erreur
-        this.tone({
-          freq: 300,
-          endFreq: 120,
-          type: 'sawtooth',
-          duration: 0.25,
-          volume: 1,
-          now
-        });
+        this.tone({ freq: 300, endFreq: 120, type: 'sawtooth', duration: 0.25, volume: 0.15, now });
         break;
 
       case 'victory':
-        // Fanfare victorieuse
         [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-          this.tone({
-            freq,
-            type: 'triangle',
-            duration: 0.3,
-            volume: 1,
-            now: now + i * 0.12
-          });
+          this.tone({ freq, type: 'triangle', duration: 0.3, volume: 0.2, now: now + i * 0.12 });
         });
         break;
 
       case 'defeat':
-        this.tone({
-          freq: 220,
-          endFreq: 80,
-          type: 'sawtooth',
-          duration: 0.4,
-          volume: 1,
-          now
-        });
+        this.tone({ freq: 220, endFreq: 80, type: 'sawtooth', duration: 0.4, volume: 0.18, now });
         break;
     }
   }
 
-  /**
-   * Générateur de note simple via OscillatorNode + GainNode.
-   */
   private tone(opts: {
     freq: number;
     endFreq?: number;
@@ -204,46 +294,33 @@ export class CardgameComponent implements OnInit, OnDestroy {
       );
     }
 
-    // Enveloppe ADSR simplifiée : attaque rapide + release exponentielle
     gain.gain.setValueAtTime(0.0001, opts.now);
     gain.gain.exponentialRampToValueAtTime(opts.volume, opts.now + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, opts.now + opts.duration);
 
     osc.connect(gain);
     gain.connect(this.audioCtx.destination);
-
     osc.start(opts.now);
     osc.stop(opts.now + opts.duration + 0.05);
   }
 
-  /* ============================================================
-     DÉCOR
-     ============================================================ */
-  private generateDecor(): void {
-    this.particles = Array.from({ length: 30 }, () => ({
-      left: Math.random() * 100,
-      delay: Math.random() * 8,
-      duration: 6 + Math.random() * 8,
-      size: 2 + Math.random() * 4,
-      color: this.PARTICLE_COLORS[
-        Math.floor(Math.random() * this.PARTICLE_COLORS.length)
-      ]
-    }));
+  /* ═══════════════════════════════════════════════════════════════════
+     TOGGLE SON
+     ═══════════════════════════════════════════════════════════════════ */
+  toggleSound(): void {
+    this.soundEnabled = !this.soundEnabled;
 
-    this.coins = Array.from({ length: 10 }, () => ({
-      left: Math.random() * 100,
-      delay: Math.random() * 10,
-      duration: 12 + Math.random() * 8,
-      symbol: this.COIN_SYMBOLS[
-        Math.floor(Math.random() * this.COIN_SYMBOLS.length)
-      ]
-    }));
+    if (!this.soundEnabled) {
+      this.voice.stopSpeaking();
+    } else {
+      this.speakAsChild('Son activé !');
+    }
   }
 
-  /* ============================================================
-     JEU
-     ============================================================ */
-  shuffleArray<T>(array: T[]): T[] {
+  /* ═══════════════════════════════════════════════════════════════════
+     LOGIQUE DU JEU
+     ═══════════════════════════════════════════════════════════════════ */
+  private shuffleArray<T>(array: T[]): T[] {
     return array
       .map(item => ({ sort: Math.random(), value: item }))
       .sort((a, b) => a.sort - b.sort)
@@ -252,28 +329,29 @@ export class CardgameComponent implements OnInit, OnDestroy {
 
   setupCards(): void {
     const cardPairs: CardData[] = [];
-    this.cardImages.forEach((image) => {
+    this.cardImages.forEach(image => {
       cardPairs.push({ imageId: image, state: 'default' });
       cardPairs.push({ imageId: image, state: 'default' });
     });
     this.cards = this.shuffleArray(cardPairs);
     this.flippedCards = [];
     this.isProcessing = false;
+    this.currentRoundStartTime = 0;
   }
 
   cardClicked(index: number): void {
     const cardInfo = this.cards[index];
+    if (this.isProcessing || cardInfo.state !== 'default') return;
 
-    if (this.isProcessing || cardInfo.state !== 'default') {
-      return;
-    }
-
-    // 🔊 Son au clic
     this.playSound('flip');
-
     this.decrementervie();
     cardInfo.state = 'flipped';
     this.flippedCards.push(cardInfo);
+
+    /* ⏱️ Démarre le chrono de la réflexion dès la 1ère carte retournée */
+    if (this.flippedCards.length === 1) {
+      this.startRoundTimer();
+    }
 
     if (this.flippedCards.length === 2) {
       this.moves++;
@@ -282,87 +360,130 @@ export class CardgameComponent implements OnInit, OnDestroy {
     }
   }
 
-  checkForCardMatch(): void {
-    setTimeout(() => {
+  private checkForCardMatch(): void {
+    const timerId = window.setTimeout(() => {
       const [cardOne, cardTwo] = this.flippedCards;
 
       if (cardOne.imageId === cardTwo.imageId) {
-        // ✅ Paire trouvée
+        /* ✅ Paire trouvée */
         this.playSound('match');
         cardOne.state = 'matched';
         cardTwo.state = 'matched';
         this.matchedCount++;
 
+        /* ⏱️ Capture le temps de la trouvaille */
+        this.captureRoundTime();
+
+        this.speakAsChild(this.pickMatchPhrase(), { pitch: 1.8, rate: 1.2 });
+
         if (this.matchedCount === this.cardImages.length) {
           this.incrementervie();
           this.playSound('victory');
-          this.openVictoryDialog();
+          this.stopGlobalTimer();
+
+          this.speakAsChild(
+            `Youpi ! Tu as trouvé toutes les paires ! ` +
+            `Tu gagnes cinq mille points bonus ! ` +
+            `Ton trésor est maintenant de ${this.pointdevies} points ! ` +
+            `Temps total : ${this.formatTime(this.elapsedSeconds)} !`,
+            { pitch: 1.85, rate: 1.15 }
+          ).then(() => {
+            this.openVictoryDialog();
+          });
         }
       } else {
-        // ❌ Mauvaise paire
+        /* ❌ Mauvaise paire */
         this.playSound('wrong');
         cardOne.state = 'default';
         cardTwo.state = 'default';
+
+        /* ⏱️ Réinitialise le chrono de round */
+        this.currentRoundStartTime = 0;
+
+        if (Math.random() < 0.5) {
+          this.speakAsChild(this.pickWrongPhrase(), { pitch: 1.5, rate: 1.1 });
+        }
       }
 
       this.flippedCards = [];
       this.isProcessing = false;
-    }, 800);
+    }, this.FLIP_DELAY_MS);
+
+    this.timeouts.push(timerId);
   }
 
-  openVictoryDialog(): void {
+  private pickMatchPhrase(): string {
+    const phrases = [
+      'Bien joué !',
+      'Super !',
+      'Trop fort !',
+      'Youpi !',
+      'Encore une !',
+      'Génial !',
+      'Bravo !',
+      'Wow, quelle mémoire !'
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
+
+  private pickWrongPhrase(): string {
+    const phrases = [
+      'Oups, raté !',
+      'Presque !',
+      'Essaie encore !',
+      'Pas grave, retente !',
+      'Hop, essaie encore !',
+      'Tu vas y arriver !'
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MODALE DE VICTOIRE — Gestion des 2 sorties
+     ═══════════════════════════════════════════════════════════════════ */
+  private openVictoryDialog(): void {
     const dialogRef = this.dialog.open(RdialogComponent, {
       disableClose: true,
       panelClass: 'victory-dialog-container'
     });
 
-    dialogRef.afterClosed().subscribe(() => {
+    dialogRef.afterClosed().subscribe((result: RdialogResult | undefined) => {
+      if (result === 'menu') {
+        /* Le joueur veut retourner au menu des jeux */
+        this.speakAsChild('Retour au menu ! À bientôt !', { pitch: 1.8 });
+        this.goToPlay();
+        return;
+      }
+
+      /* Par défaut (replay ou fermeture forcée) : nouvelle partie */
+      this.speakAsChild('Nouvelle partie ! C\'est reparti !', { pitch: 1.8 });
       this.restart();
     });
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     POINTS DE VIE
+     ═══════════════════════════════════════════════════════════════════ */
   incrementervie(): void {
-    this.pointdevies += 5000;
+    this.pointdevies += this.PV_PAR_PAIRE;
     this.lavie = this.pointdevies;
   }
 
   decrementervie(): void {
-    this.pointdevies = Math.max(0, this.pointdevies - 100);
+    this.pointdevies = Math.max(0, this.pointdevies - this.PV_PAR_COUP);
     this.lavie = this.pointdevies;
   }
 
   restart(): void {
     this.matchedCount = 0;
     this.moves = 0;
+    this.lastMatchSeconds = 0;
+    this.currentRoundStartTime = 0;
     this.setupCards();
-  }
-
-  /** 🔇 Bouton optionnel pour couper le son */
-  toggleSound(): void {
-    this.soundEnabled = !this.soundEnabled;
-  }
-
-  onrecommencer(): void {
-    if (this.lavie !== undefined && this.lebonus !== undefined) {
-      this.goToPlay(this.lavie, this.lebonus, this.etapedujeu);
-    }
-  }
-
-  goToPlay(lavie: number, lebonus: number, letape: string): void {
-    this.router.navigate(['/play'], {
-      queryParams: { vie: lavie, bonus: lebonus, etape: letape }
-    });
-  }
-
-  gagnant(): boolean {
-    return this.pointdevies > 0;
-  }
-
-  casuffit(): boolean {
-    return this.pointdevies >= 10000000;
+    this.startGlobalTimer();
   }
 
   oncontinue(): boolean {
-    return this.pointdevies < 10000000;
+    return this.pointdevies < this.PV_MAX;
   }
 }

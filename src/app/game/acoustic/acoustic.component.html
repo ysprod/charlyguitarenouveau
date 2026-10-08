@@ -1,137 +1,190 @@
 <div class="quiz-container">
 
-  <!-- EN-TÊTE -->
+  <!-- ═══════════════════════════════════════════════════════
+       EN-TÊTE : Bouton retour + Titre côte à côte
+       ═══════════════════════════════════════════════════════ -->
   <header class="quiz-header">
-    <div class="header-top">
-      <div class="badge-category" *ngIf="!quizState.isCompleted">
-        🔊 {{ currentQuestion.category }}
-        <span class="badge-difficulty" [ngClass]="currentQuestion.difficulty.toLowerCase()">
-          {{ currentQuestion.difficulty }}
-        </span>
-      </div>
-      <div class="streak" *ngIf="quizState.streak > 1 && !quizState.isCompleted">
-        🔥 Série : {{ quizState.streak }}
-      </div>
+
+    <!-- Ligne du haut : bouton retour + titre principal -->
+    <div class="header-top-row">
+
+      <!-- Bouton retour -->
+      <button class="btn-floating-back"
+              (click)="goToPlay()"
+              type="button"
+              aria-label="Retour à la liste des jeux"
+              title="Retour au menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>Retour</span>
+      </button>
+
+      <!-- Titre principal -->
+      <h1 class="header-title">Quiz Acoustique &amp; Lutherie</h1>
     </div>
-    <h1>Quiz Acoustique &amp; Lutherie</h1>
-    <p class="subtitle">Testez vos connaissances sur la physique et les secrets du son de la guitare</p>
+
+    <!-- Sous-titre centré -->
+    <p class="subtitle">
+      Testez vos connaissances sur la physique et les secrets du son de la guitare
+    </p>
+
+    <!-- Métadonnées (badge catégorie + streak) -->
+    <div class="header-meta">
+      @if (!isCompleted() && currentQuestion()) {
+        <div class="badge-category">
+          🔊 {{ currentQuestion()!.category }}
+          <span class="badge-difficulty"
+                [ngClass]="currentQuestion()!.difficulty.toLowerCase()">
+            {{ currentQuestion()!.difficulty }}
+          </span>
+        </div>
+      }
+
+      @if (streak() > 1 && !isCompleted()) {
+        <div class="streak">🔥 Série : {{ streak() }}</div>
+      }
+    </div>
   </header>
 
-  <!-- FILTRE DIFFICULTÉ -->
-  <div class="difficulty-filter" *ngIf="!quizState.isCompleted">
-    <button *ngFor="let d of difficulties"
-            class="chip"
-            [class.active]="selectedDifficulty === d"
-            (click)="filterByDifficulty(d)">
-      {{ d }}
-    </button>
-  </div>
+  <!-- ═══════════════════════════════════════════════════════
+       FILTRE DIFFICULTÉ
+       ═══════════════════════════════════════════════════════ -->
+  @if (!isCompleted()) {
+    <div class="difficulty-filter">
+      @for (d of difficulties; track d) {
+        <button class="chip"
+                [class.active]="selectedDifficulty() === d"
+                (click)="filterByDifficulty(d)"
+                type="button">
+          {{ d }}
+        </button>
+      }
+    </div>
+  }
 
-  <!-- ZONE DE JEU -->
-  <ng-container *ngIf="!quizState.isCompleted; else resultScreen">
+  <!-- ═══════════════════════════════════════════════════════
+       ZONE DE JEU
+       ═══════════════════════════════════════════════════════ -->
+  @if (!isCompleted()) {
 
-    <!-- BARRE DE PROGRESSION -->
+    <!-- Barre de progression -->
     <div class="progress-bar-container">
       <div class="progress-info">
-        <span>Question {{ quizState.currentQuestionIndex + 1 }} / {{ quizState.totalQuestions }}</span>
-        <span>Score : {{ quizState.score }} pt(s)</span>
+        <span>Question {{ currentQuestionIndex() + 1 }} / {{ totalQuestions() }}</span>
+        <span>Score : {{ score() }} pt(s)</span>
       </div>
       <div class="progress-track">
-        <div class="progress-fill" [style.width.%]="progressPercent"></div>
+        <div class="progress-fill" [style.width.%]="progressPercent()"></div>
       </div>
     </div>
 
-    <!-- CARTE QUESTION -->
-    <article class="question-card" [@fadeSlide]>
-      <h2 class="question-title">{{ currentQuestion.title }}</h2>
-      <p class="question-text">{{ currentQuestion.question }}</p>
+    <!-- Carte question -->
+    @if (currentQuestion(); as q) {
+      <article class="question-card">
 
-      <!-- PROPOSITIONS -->
-      <div class="options-grid">
-        <button *ngFor="let opt of currentQuestion.options; let i = index"
-                class="option-btn"
-                [class.selected]="quizState.selectedOptionIndex === i"
-                [class.correct]="quizState.isAnswerSubmitted && opt.isCorrect"
-                [class.wrong]="quizState.isAnswerSubmitted && quizState.selectedOptionIndex === i && !opt.isCorrect"
-                [disabled]="quizState.isAnswerSubmitted"
-                (click)="selectOption(i)">
-          <span class="option-prefix">{{ ['A','B','C','D'][i] }}</span>
-          <span class="option-label">{{ opt.label }}</span>
-        </button>
-      </div>
+        <h2 class="question-title">{{ q.title }}</h2>
+        <p class="question-text">{{ q.question }}</p>
 
-      <!-- FEEDBACK -->
-      <div class="feedback-box" *ngIf="quizState.isAnswerSubmitted"
-           [class.success]="currentQuestion.options[quizState.selectedOptionIndex!].isCorrect"
-           [class.error]="!currentQuestion.options[quizState.selectedOptionIndex!].isCorrect">
-        <h4>
-          {{ currentQuestion.options[quizState.selectedOptionIndex!].isCorrect
-              ? '✅ Bonne réponse !'
-              : '❌ Mauvaise réponse' }}
-        </h4>
-        <p>{{ currentQuestion.options[quizState.selectedOptionIndex!].explanation }}</p>
-        <p class="fun-fact" *ngIf="currentQuestion.funFact">
-          💡 <em>{{ currentQuestion.funFact }}</em>
-        </p>
-      </div>
+        <!-- Propositions -->
+        <div class="options-grid">
+          @for (opt of q.options; let i = $index; track i) {
+            <button class="option-btn"
+                    [class.selected]="selectedOptionIndex() === i"
+                    [class.correct]="isAnswerSubmitted() && opt.isCorrect"
+                    [class.wrong]="isAnswerSubmitted() && selectedOptionIndex() === i && !opt.isCorrect"
+                    [disabled]="isAnswerSubmitted()"
+                    (click)="selectOption(i)"
+                    type="button">
+              <span class="option-prefix">{{ letters[i] }}</span>
+              <span class="option-label">{{ opt.label }}</span>
+            </button>
+          }
+        </div>
 
-      <!-- ACTIONS -->
-      <div class="actions-row">
-        <button class="btn-primary"
-                *ngIf="!quizState.isAnswerSubmitted"
-                [disabled]="!canSubmit"
-                (click)="submitAnswer()">
-          Valider la réponse
-        </button>
+        <!-- Feedback -->
+        @if (isAnswerSubmitted() && selectedOptionIndex() !== null) {
+          <div class="feedback-box"
+               [class.success]="q.options[selectedOptionIndex()!].isCorrect"
+               [class.error]="!q.options[selectedOptionIndex()!].isCorrect">
 
-        <button class="btn-success"
-                *ngIf="quizState.isAnswerSubmitted"
-                (click)="nextQuestion()">
-          {{ quizState.currentQuestionIndex < quizState.totalQuestions - 1
-              ? 'Question suivante →'
-              : 'Voir les résultats' }}
-        </button>
-      </div>
-    </article>
-  </ng-container>
+            <h4>
+              @if (q.options[selectedOptionIndex()!].isCorrect) {
+                ✅ Bonne réponse !
+              } @else {
+                ❌ Mauvaise réponse
+              }
+            </h4>
 
-  <!-- RÉSULTATS -->
-  <ng-template #resultScreen>
+            <p>{{ q.options[selectedOptionIndex()!].explanation }}</p>
+
+            @if (q.funFact) {
+              <p class="fun-fact">💡 <em>{{ q.funFact }}</em></p>
+            }
+          </div>
+        }
+
+        <!-- Actions -->
+        <div class="actions-row">
+          @if (!isAnswerSubmitted()) {
+            <button class="btn-primary"
+                    [disabled]="!canSubmit()"
+                    (click)="submitAnswer()"
+                    type="button">
+              Valider la réponse
+            </button>
+          } @else {
+            <button class="btn-success"
+                    (click)="nextQuestion()"
+                    type="button">
+              @if (!isLastQuestion()) {
+                Question suivante →
+              } @else {
+                Voir les résultats
+              }
+            </button>
+          }
+        </div>
+      </article>
+    }
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       RÉSULTATS
+       ═══════════════════════════════════════════════════════ -->
+  @if (isCompleted()) {
     <div class="results-card">
-      <div class="result-icon">{{ getGradeEmoji() }}</div>
+      <div class="result-icon">{{ gradeEmoji() }}</div>
       <h2>Quiz Terminé !</h2>
+
       <div class="score-badge">
-        <span class="score-num">{{ quizState.score }} / {{ quizState.totalQuestions }}</span>
-        <span class="score-percent">({{ getScorePercentage() }}%)</span>
+        <span class="score-num">{{ score() }} / {{ totalQuestions() }}</span>
+        <span class="score-percent">({{ scorePercentage() }}%)</span>
       </div>
 
       <div class="stats-row">
         <div class="stat">
-          <span class="stat-value">🔥 {{ quizState.bestStreak }}</span>
+          <span class="stat-value">🔥 {{ bestStreak() }}</span>
           <span class="stat-label">Meilleure série</span>
         </div>
         <div class="stat">
-          <span class="stat-value">{{ quizState.score }}</span>
+          <span class="stat-value">{{ score() }}</span>
           <span class="stat-label">Bonnes réponses</span>
         </div>
         <div class="stat">
-          <span class="stat-value">{{ quizState.totalQuestions - quizState.score }}</span>
+          <span class="stat-value">{{ totalQuestions() - score() }}</span>
           <span class="stat-label">Erreurs</span>
         </div>
       </div>
 
-      <p class="result-message">{{ getScoreLabel() }}</p>
+      <p class="result-message">{{ scoreLabel() }}</p>
 
       <div class="results-actions">
-        <button class="btn-primary" (click)="resetQuiz()">🔄 Recommencer</button>
+        <button class="btn-primary" (click)="resetQuiz()" type="button">
+          🔄 Recommencer
+        </button>
       </div>
     </div>
-  </ng-template>
-<br><br><br><br><br>
-  <div class="back-button-container">
-    <button class="btn-back" (click)="goToPlay()">
-      ← Retour a la liste des jeux
-    </button>
-  </div>
-
+  }
 </div>

@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TictacduoService } from '../../services/tictacduo.service';
 import { CommonModule } from '@angular/common';
+import { TictacduoService } from '../../services/tictacduo.service';
+import { VoiceService } from '../../services/voice.service';
 
 @Component({
   selector: 'app-tictacduo',
@@ -12,30 +13,38 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./tictacduo.component.css']
 })
 export class TictacduoComponent implements OnInit, OnDestroy {
+
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
+  private readonly voice = inject(VoiceService);
+  public readonly gs = inject(TictacduoService);
+
+  /* ─── État ─── */
   lock = false;
   rejouer = false;
-  etapedujeu: string = "0";
-  lavie: number = 0;
-  lebonus: number = 0;
-  pointdevies: number = 0;
-  pointdebonus: number = 0;
-  messageLyko: string = "Au tour du Joueur 1...";
+  etapedujeu = '0';
+  lavie = 0;
+  lebonus = 0;
+  pointdevies = 0;
+  pointdebonus = 0;
+  messageLyko = 'Au tour du Joueur 1...';
   showConfetti = false;
   showVictoryOverlay = false;
   particles: number[] = [];
 
   readonly ALIGNMENT_REWARD = 10;
 
+  /* ─── Son (voix + effets) ─── */
+  readonly soundEnabled = signal<boolean>(true);
+  private readonly SOUND_PREF_KEY = 'tictacduo_sound_enabled';
+
   private audioCtx?: AudioContext;
   private timeouts: number[] = [];
 
-  constructor(
-    private activatedRoute: ActivatedRoute,
-    private snackBar: MatSnackBar,
-    public gs: TictacduoService,
-    private router: Router
-  ) { }
-
+  /* ═══════════════════════════════════════════════════════
+     LIFECYCLE
+     ═══════════════════════════════════════════════════════ */
   ngOnInit(): void {
     const vieParam = this.activatedRoute.snapshot.queryParamMap.get('vie');
     const bonusParam = this.activatedRoute.snapshot.queryParamMap.get('bonus');
@@ -48,7 +57,17 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     this.pointdebonus = this.lebonus;
 
     this.initAudio();
+    this.loadSoundPreference();
     this.resetjeu();
+
+    /* Message d'accueil vocal */
+    const timerId = window.setTimeout(() => {
+      this.voice.speak(
+        `Bienvenue dans Lyko Duel ! ` +
+        `Le Joueur 1 commence. Clique sur n'importe quelle case vide de la grille pour y déposer un pion. Alignez trois pions pour gagner des points. Bonne chance à vous deux !`
+      );
+    }, 700);
+    this.timeouts.push(timerId);
   }
 
   ngOnDestroy(): void {
@@ -56,17 +75,44 @@ export class TictacduoComponent implements OnInit, OnDestroy {
       this.audioCtx.close();
     }
     this.timeouts.forEach(t => clearTimeout(t));
+    this.voice.stopSpeaking();
   }
 
+  /* ═══════════════════════════════════════════════════════
+     SON — Toggle & persistance
+     ═══════════════════════════════════════════════════════ */
+  private loadSoundPreference(): void {
+    const saved = localStorage.getItem(this.SOUND_PREF_KEY);
+    if (saved === 'false') {
+      this.soundEnabled.set(false);
+    }
+  }
+
+  toggleSound(): void {
+    const next = !this.soundEnabled();
+    this.soundEnabled.set(next);
+    localStorage.setItem(this.SOUND_PREF_KEY, String(next));
+
+    if (!next) {
+      this.voice.stopSpeaking();
+    } else {
+      this.voice.speak('Son activé.');
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     AUDIO (effets sonores)
+     ═══════════════════════════════════════════════════════ */
   private initAudio(): void {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioContextClass = window.AudioContext
+      || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (AudioContextClass) {
       this.audioCtx = new AudioContextClass();
     }
   }
 
   private playSound(type: 'click' | 'win' | 'draw' | 'levelup'): void {
-    if (!this.audioCtx) return;
+    if (!this.soundEnabled() || !this.audioCtx) return;
     if (this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
     }
@@ -126,6 +172,9 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     }
   }
 
+  /* ═══════════════════════════════════════════════════════
+     JEU
+     ═══════════════════════════════════════════════════════ */
   resetjeu(): void {
     this.rejouer = false;
     this.lock = false;
@@ -143,6 +192,11 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     this.gs.nextLevel();
     this.resetjeu();
     this.snackBar.open(`🚀 Niveau Supérieur ! Grille ${this.gs.gridSize}x${this.gs.gridSize} !`, "Super !", { duration: 2500 });
+
+    /* Annonce vocale */
+    this.voice.speak(
+      `Niveau supérieur ! Nouvelle grille ${this.gs.gridSize} sur ${this.gs.gridSize}. Au tour du Joueur 1.`
+    );
   }
 
   precedentNiveau(): void {
@@ -151,6 +205,10 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     this.gs.previousLevel();
     this.resetjeu();
     this.snackBar.open(`⏪ Niveau Précédent ! Grille ${this.gs.gridSize}x${this.gs.gridSize} !`, "Retour !", { duration: 2500 });
+
+    this.voice.speak(
+      `Retour au niveau précédent. Grille ${this.gs.gridSize} sur ${this.gs.gridSize}.`
+    );
   }
 
   playerClick(i: number): void {
@@ -163,13 +221,13 @@ export class TictacduoComponent implements OnInit, OnDestroy {
 
     this.playSound('click');
 
-    // Détection d'éventuels alignements
+    /* Détection d'éventuels alignements */
     const newAlignments = this.gs.checkNewAlignments();
     if (newAlignments > 0) {
       this.handleAlignment(playerTurn, newAlignments);
     }
 
-    // Le jeu se termine UNIQUEMENT quand toutes les cases de la grille sont remplies
+    /* Fin de partie : toutes les cases remplies */
     if (this.gs.isGameOver) {
       const timerId = window.setTimeout(() => this.handleEndGame(), 500);
       this.timeouts.push(timerId);
@@ -186,10 +244,24 @@ export class TictacduoComponent implements OnInit, OnDestroy {
 
     this.playSound('win');
 
-    const joueur = playerTurn === 0 ? "JOUEUR 1" : "JOUEUR 2";
+    const joueur = playerTurn === 0 ? 'JOUEUR 1' : 'JOUEUR 2';
     this.messageLyko = `✨ ${count} alignement(s) pour ${joueur} ! +${gain} PV !`;
 
     this.snackBar.open(`🎯 ${count} alignement(s) ${joueur} : +${gain} PV`, "Bravo !", { duration: 2000 });
+
+    /* Annonce vocale personnalisée */
+    const plural = count > 1 ? 's' : '';
+    const phrases = [
+      'Bien joué',
+      'Excellent',
+      'Bravo',
+      'Superbe',
+      'Magnifique'
+    ];
+    const praise = phrases[Math.floor(Math.random() * phrases.length)];
+    this.voice.speak(
+      `${praise} ! ${count} alignement${plural} pour le ${joueur}. Plus ${gain} points de vie.`
+    );
 
     const timerId = window.setTimeout(() => this.gs.clearWinningHighlight(), 1200);
     this.timeouts.push(timerId);
@@ -210,14 +282,26 @@ export class TictacduoComponent implements OnInit, OnDestroy {
       this.showVictoryOverlay = true;
       this.messageLyko = `🏆 Le JOUEUR 1 remporte le duel (${scoreJ1} - ${scoreJ2}) !`;
       this.snackBar.open(`🏆 VICTOIRE JOUEUR 1 : ${scoreJ1} - ${scoreJ2} !`, "Félicitations !", { duration: 3500 });
+
+      this.voice.speak(
+        `Victoire du Joueur 1 ! ${scoreJ1} contre ${scoreJ2}. Félicitations !`
+      );
     } else if (scoreJ2 > scoreJ1) {
       this.triggerConfetti();
       this.showVictoryOverlay = true;
       this.messageLyko = `🏆 Le JOUEUR 2 remporte le duel (${scoreJ2} - ${scoreJ1}) !`;
       this.snackBar.open(`🏆 VICTOIRE JOUEUR 2 : ${scoreJ2} - ${scoreJ1} !`, "Félicitations !", { duration: 3500 });
+
+      this.voice.speak(
+        `Victoire du Joueur 2 ! ${scoreJ2} contre ${scoreJ1}. Félicitations !`
+      );
     } else {
       this.messageLyko = `⚖️ Égalité parfaite (${scoreJ1} - ${scoreJ2}) !`;
       this.snackBar.open(`⚖️ MATCH NUL ${scoreJ1} - ${scoreJ2}`, "Égalité", { duration: 3000 });
+
+      this.voice.speak(
+        `Match nul, ${scoreJ1} partout. Belle partie !`
+      );
     }
   }
 
@@ -234,18 +318,26 @@ export class TictacduoComponent implements OnInit, OnDestroy {
   private changeTurn(): void {
     const current = this.gs.changeTurn();
     this.messageLyko = current === 1
-      ? "🎯 Au tour du JOUEUR 2"
-      : "🎯 Au tour du JOUEUR 1";
+      ? '🎯 Au tour du JOUEUR 2'
+      : '🎯 Au tour du JOUEUR 1';
+
+    /* Annonce vocale du tour */
+    const joueur = current === 1 ? 'Joueur 2' : 'Joueur 1';
+    /* On évite de spammer : uniquement si la voix est active */
+    if (this.soundEnabled()) {
+      this.voice.speak(`Au tour du ${joueur}.`);
+    }
   }
 
-  /**
-   * Le bouton de niveau précédent s'affiche si la taille de la grille est supérieure à 4
-   */
   yaprecedent(): boolean {
     return this.gs.gridSize > 3;
   }
 
+  /* ═══════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════ */
   goToPlay(lavie: number, lebonus: number, letape: string): void {
+    this.voice.stopSpeaking();
     this.router.navigate(['/play'], { queryParams: { vie: lavie, bonus: lebonus, etape: letape } });
   }
 

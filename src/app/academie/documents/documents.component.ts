@@ -6,6 +6,10 @@ import { RouterLink } from '@angular/router';
 import { Observable, Subscription, of } from 'rxjs';
 import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES
+   ═════════════════════════════════════════════════════════════════════ */
+
 export interface DocumentItem {
   key?: string;
   title: string;
@@ -27,6 +31,23 @@ export interface DocumentItem {
   downloads?: number;
 }
 
+export type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'popular';
+export type ToastType = 'success' | 'info' | 'error';
+
+interface Toast {
+  show: boolean;
+  message: string;
+  type: ToastType;
+}
+
+interface FilterOption {
+  label: string;
+  icon: string;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 @Component({
   selector: 'app-documents',
   standalone: true,
@@ -39,50 +60,48 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   private readonly database = inject(Database);
   private readonly auth = inject(Auth);
 
-  /* ============================================================
-     SIGNAUX & ÉTAT UTILISATEUR
-     ============================================================ */
-  readonly selectedFilter = signal<string>('Tous les documents');
-  readonly searchTerm     = signal<string>('');
-  readonly sortBy         = signal<'recent' | 'price-asc' | 'price-desc' | 'popular'>('recent');
-  
-  readonly userCredit = signal<number>(0);
+  /* ─── État utilisateur ─── */
+  readonly userCredit = signal(0);
   readonly currentUserId = signal<string | null>(null);
-  
-  readonly selectedDocForPurchase = signal<DocumentItem | null>(null);
-  readonly showRechargeInModal = signal<boolean>(false);
-  readonly customRechargeAmount = signal<number>(5000);
-  
-  readonly toast = signal<{ show: boolean; message: string; type: 'success' | 'info' | 'error' }>(
-    { show: false, message: '', type: 'success' }
-  );
 
+  /* ─── Filtres, recherche, tri ─── */
+  readonly selectedFilter = signal('Tous les documents');
+  readonly searchTerm = signal('');
+  readonly sortBy = signal<SortOption>('recent');
+
+  /* ─── Modale & recharge ─── */
+  readonly selectedDocForPurchase = signal<DocumentItem | null>(null);
+  readonly showRechargeInModal = signal(false);
+  readonly customRechargeAmount = signal(5000);
+
+  /* ─── Toast ─── */
+  readonly toast = signal<Toast>({ show: false, message: '', type: 'success' });
+  private toastTimeout?: ReturnType<typeof setTimeout>;
   private userSub?: Subscription;
 
-  /* ============================================================
-     FILTRES AVEC ICÔNES ET MÉTADONNÉES
-     ============================================================ */
-  readonly filters: { label: string; icon: string }[] = [
+  /* ─── Filtres disponibles ─── */
+  readonly filters: FilterOption[] = [
     { label: 'Tous les documents', icon: '✨' },
-    { label: 'Méthodes',           icon: '📙' },
-    { label: 'Livres numériques',  icon: '📘' },
-    { label: 'Partitions',         icon: '🎼' },
+    { label: 'Méthodes', icon: '📙' },
+    { label: 'Livres numériques', icon: '📘' },
+    { label: 'Partitions', icon: '🎼' },
     { label: 'Supports pédagogiques', icon: '📑' }
   ];
 
-  /* ============================================================
-     DONNÉES & CALCULS
-     ============================================================ */
+  /* ─── Documents ─── */
   documents$: Observable<DocumentItem[]> = of([]);
   readonly allDocs = signal<DocumentItem[]>([]);
 
   readonly visibleDocuments = computed(() => {
     let docs = [...this.allDocs()];
 
-    if (this.selectedFilter() !== 'Tous les documents') {
-      docs = docs.filter(d => this.matchesCategory(d, this.selectedFilter()));
+    /* Filtre catégorie */
+    const filter = this.selectedFilter();
+    if (filter !== 'Tous les documents') {
+      docs = docs.filter(d => this.matchesCategory(d, filter));
     }
 
+    /* Recherche */
     const term = this.searchTerm().toLowerCase().trim();
     if (term) {
       docs = docs.filter(d =>
@@ -92,27 +111,13 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       );
     }
 
-    switch (this.sortBy()) {
-      case 'price-asc':
-        docs.sort((a, b) => (a.price || 0) - (b.price || 0));
-        break;
-      case 'price-desc':
-        docs.sort((a, b) => (b.price || 0) - (a.price || 0));
-        break;
-      case 'popular':
-        docs.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
-        break;
-      default:
-        docs.sort((a, b) => {
-          const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return db - da;
-        });
-    }
-
-    return docs;
+    /* Tri */
+    return this.sortDocuments(docs, this.sortBy());
   });
 
+  /* ═══════════════════════════════════════════════════════════════════
+     LIFECYCLE
+     ═══════════════════════════════════════════════════════════════════ */
   ngOnInit(): void {
     window.scrollTo({ top: 0, behavior: 'auto' });
     this.loadDocuments();
@@ -121,6 +126,25 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.userSub?.unsubscribe();
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CHARGEMENT DES DONNÉES
+     ═══════════════════════════════════════════════════════════════════ */
+  private loadDocuments(): void {
+    const documentsRef = ref(this.database, 'documents');
+
+    this.documents$ = listVal<DocumentItem>(documentsRef, { keyField: 'key' }).pipe(
+      map(docs => docs.map(d => ({ ...d, key: d.key }))),
+      catchError(err => {
+        console.error('Erreur Firebase:', err);
+        return of([]);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.documents$.subscribe(docs => this.allDocs.set(docs));
   }
 
   private listenToUserCredit(): void {
@@ -132,48 +156,29 @@ export class DocumentsComponent implements OnInit, OnDestroy {
           return of(null);
         }
         this.currentUserId.set(currentUser.uid);
-        const userCreditRef = ref(this.database, `users/${currentUser.uid}/credit`);
-        return objectVal<number>(userCreditRef);
+        return objectVal<number>(ref(this.database, `users/${currentUser.uid}/credit`));
       })
     ).subscribe({
-      next: (credit) => {
-        if (credit !== null && credit !== undefined) {
-          this.userCredit.set(credit);
-        }
+      next: credit => {
+        if (credit != null) this.userCredit.set(credit);
       },
-      error: (err) => console.error('Erreur de lecture du crédit:', err)
+      error: err => console.error('Erreur crédit:', err)
     });
   }
 
-  private loadDocuments(): void {
-    const documentsRef = ref(this.database, 'documents');
-
-    this.documents$ = listVal<DocumentItem>(documentsRef, { keyField: 'key' }).pipe(
-      map((documents: DocumentItem[]) =>
-        documents.map(d => ({ ...d, key: d.key }))
-      ),
-      catchError(err => {
-        console.error('Erreur Firebase:', err);
-        return of([]);
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
-
-    this.documents$.subscribe(docs => this.allDocs.set(docs));
-  }
-
+  /* ═══════════════════════════════════════════════════════════════════
+     FILTRAGE / TRI / RECHERCHE
+     ═══════════════════════════════════════════════════════════════════ */
   filterBy(category: string): void {
     this.selectedFilter.set(category);
   }
 
   onSearchInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.searchTerm.set(value);
+    this.searchTerm.set((event.target as HTMLInputElement).value);
   }
 
   onSortSelect(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.sortBy.set(value as any);
+    this.sortBy.set((event.target as HTMLSelectElement).value as SortOption);
   }
 
   resetAll(): void {
@@ -185,17 +190,34 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   private matchesCategory(doc: DocumentItem, category: string): boolean {
     const type = doc.type.toLowerCase().trim();
     switch (category) {
-      case 'Méthodes':             return type.includes('méthode');
-      case 'Livres numériques':   return type.includes('livre');
-      case 'Partitions':          return type.includes('partition');
+      case 'Méthodes': return type.includes('méthode');
+      case 'Livres numériques': return type.includes('livre');
+      case 'Partitions': return type.includes('partition');
       case 'Supports pédagogiques': return type.includes('support');
       default: return true;
     }
   }
 
+  private sortDocuments(docs: DocumentItem[], sort: SortOption): DocumentItem[] {
+    switch (sort) {
+      case 'price-asc': return docs.sort((a, b) => (a.price || 0) - (b.price || 0));
+      case 'price-desc': return docs.sort((a, b) => (b.price || 0) - (a.price || 0));
+      case 'popular': return docs.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+      default: return docs.sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tb - ta;
+      });
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     ACHAT / RECHARGE
+     ═══════════════════════════════════════════════════════════════════ */
   initiatePurchase(doc: DocumentItem, event?: Event): void {
     event?.stopPropagation();
 
+    /* Gratuit → téléchargement direct */
     if (!doc.price || doc.price === 0) {
       window.open(doc.downloadUrl, '_blank');
       this.showToast(`Téléchargement de "${doc.title}" initié`, 'success');
@@ -224,13 +246,11 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
     try {
       const newBalance = this.userCredit() + amount;
-      const userRef = ref(this.database, `users/${uid}`);
-      await update(userRef, { credit: newBalance });
-
-      this.showToast(`Compte rechargé de ${this.formatPrice(amount)} avec succès !`, 'success');
+      await update(ref(this.database, `users/${uid}`), { credit: newBalance });
+      this.showToast(`Compte rechargé de ${this.formatPrice(amount)} !`, 'success');
       this.showRechargeInModal.set(false);
     } catch (error) {
-      console.error('Erreur lors du rechargement:', error);
+      console.error('Erreur rechargement:', error);
       this.showToast('Échec du rechargement. Veuillez réessayer.', 'error');
     }
   }
@@ -240,7 +260,6 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     const uid = this.currentUserId();
 
     if (!doc) return;
-
     if (!uid) {
       this.showToast('Veuillez vous connecter pour effectuer un achat.', 'error');
       return;
@@ -256,21 +275,27 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
     try {
       const newBalance = currentBalance - docPrice;
-      const userRef = ref(this.database, `users/${uid}`);
-      await update(userRef, { credit: newBalance });
+      await update(ref(this.database, `users/${uid}`), { credit: newBalance });
 
       this.selectedDocForPurchase.set(null);
       this.showToast(`Achat réussi ! Téléchargement de "${doc.title}"...`, 'success');
       window.open(doc.downloadUrl, '_blank');
     } catch (error) {
-      console.error('Erreur lors de la transaction:', error);
+      console.error('Erreur transaction:', error);
       this.showToast('Une erreur est survenue lors du paiement.', 'error');
     }
   }
 
-  private showToast(message: string, type: 'success' | 'info' | 'error' = 'success'): void {
+  /* ═══════════════════════════════════════════════════════════════════
+     UTILITAIRES
+     ═══════════════════════════════════════════════════════════════════ */
+  private showToast(message: string, type: ToastType = 'success'): void {
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toast.set({ show: true, message, type });
-    setTimeout(() => this.toast.update(t => ({ ...t, show: false })), 4000);
+    this.toastTimeout = setTimeout(
+      () => this.toast.update(t => ({ ...t, show: false })),
+      4000
+    );
   }
 
   formatPrice(price: number | undefined): string {

@@ -9,28 +9,46 @@
     <div class="bg-scanlines"></div>
   </div>
 
-  <!-- Barre supérieure -->
-  <header class="game-top-bar">
-    <button type="button" class="btn-action" (click)="goBack()" aria-label="Retour au menu">
-      <span class="material-icons" aria-hidden="true">arrow_back</span>
-      <span>RETOUR</span>
-    </button>
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER : Bouton retour + Titre + Bouton son
+       ═══════════════════════════════════════════════════════ -->
+  <header class="game-header">
+    <div class="header-top-row">
 
-    <div class="logo-zone">
-      <span class="logo-icon" aria-hidden="true">🎹</span>
-      <h1>PIANO</h1>
-      <div class="logo-glow"></div>
-    </div>
+      <button type="button"
+              class="btn-floating-back"
+              (click)="goBack()"
+              aria-label="Retour au menu des jeux">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>Retour</span>
+      </button>
 
-    <div class="right-actions">
-      <button type="button" class="btn-action" (click)="toggleMute()" [class.active]="audio.isMuted()" aria-label="Activer ou désactiver le son">
-        <span class="material-icons" aria-hidden="true">{{ audio.isMuted() ? 'volume_off' : 'volume_up' }}</span>
+      <h1 class="header-title">
+        <span class="header-icon">🎹</span>
+        <span class="title-text">CHARLY PIANO STUDIO</span>
+      </h1>
+
+      <!-- Bouton son -->
+      <button type="button"
+              class="btn-sound"
+              (click)="toggleMute()"
+              [class.active]="audio.isMuted()"
+              [attr.aria-label]="audio.isMuted() ? 'Activer le son' : 'Couper le son'"
+              [attr.title]="audio.isMuted() ? 'Activer tous les sons' : 'Couper tous les sons'">
+        <span class="sound-icon">{{ audio.isMuted() ? '🔇' : '🔊' }}</span>
+        <span class="sound-label">{{ audio.isMuted() ? 'Son coupé' : 'Son activé' }}</span>
       </button>
     </div>
   </header>
 
-  <!-- Workstation -->
+  <!-- ═══════════════════════════════════════════════════════
+       WORKSTATION
+       ═══════════════════════════════════════════════════════ -->
   <section class="workstation-panel">
+
     <!-- Sélecteur d'instrument -->
     <div class="widget-card instrument-card">
       <div class="widget-header">
@@ -39,9 +57,9 @@
       <div class="instrument-body">
         @for (inst of instruments; track inst.type) {
           <button type="button"
-            class="btn-instrument"
-            [class.active]="audio.instrument() === inst.type"
-            (click)="selectInstrument(inst.type)">
+                  class="btn-instrument"
+                  [class.active]="audio.instrument() === inst.type"
+                  (click)="selectInstrument(inst.type)">
             {{ inst.label }}
           </button>
         }
@@ -52,7 +70,10 @@
     <div class="widget-card metronome-card">
       <div class="widget-header">
         <span class="widget-title">MÉTRONOME</span>
-        <button type="button" class="btn-toggle" [class.on]="isMetronomeActive()" (click)="toggleMetronome()">
+        <button type="button"
+                class="btn-toggle"
+                [class.on]="isMetronomeActive()"
+                (click)="toggleMetronome()">
           {{ isMetronomeActive() ? 'STOP' : 'LANCER' }}
         </button>
       </div>
@@ -64,7 +85,9 @@
         </div>
         <div class="beat-indicators">
           @for (i of beatArray; track i) {
-            <span class="beat-dot" [class.active]="metronomeBeat() === i" [class.first]="i === 1"></span>
+            <span class="beat-dot"
+                  [class.active]="metronomeBeat() === i"
+                  [class.first]="i === 1"></span>
           }
         </div>
       </div>
@@ -74,12 +97,16 @@
     <div class="widget-card recorder-card">
       <div class="widget-header">
         <span class="widget-title">ENREGISTREMENT</span>
-        <button type="button" class="btn-rec" [class.recording]="isRecording()" (click)="toggleRecording()">
+        <button type="button"
+                class="btn-rec"
+                [class.recording]="isRecording()"
+                (click)="toggleRecording()">
           <span class="rec-dot"></span>
           {{ isRecording() ? 'ENREGISTRE…' : 'ENREGISTRER' }}
         </button>
       </div>
       <div class="recorder-body">
+
         @if (!isRecording() && recordedNotes().length > 0 && !savedSong()) {
           <button type="button" class="btn-save" (click)="saveCurrentRecording()">
             💾 SAUVEGARDER LA SESSION
@@ -93,22 +120,29 @@
               <span class="song-meta">{{ song.date }} · {{ song.notes.length }} notes</span>
             </div>
             <div class="song-actions">
-              <button type="button" class="btn-icon play" (click)="playSavedSong()" [disabled]="isPlayingBack()" title="Lire">
-                ▶
-              </button>
-              <button type="button" class="btn-icon del" (click)="deleteSavedSong()" title="Effacer">
-                🗑
-              </button>
+              <button type="button"
+                      class="btn-icon play"
+                      (click)="playSavedSong()"
+                      [disabled]="isPlayingBack()"
+                      title="Lire">▶</button>
+              <button type="button"
+                      class="btn-icon del"
+                      (click)="deleteSavedSong()"
+                      title="Effacer">🗑</button>
             </div>
           </div>
         } @else if (!isRecording()) {
-          <p class="recorder-hint">Enregistrez puis sauvegardez votre composition (1 seul slot disponible).</p>
+          <p class="recorder-hint">
+            Enregistrez puis sauvegardez votre composition (1 seul slot disponible).
+          </p>
         }
       </div>
     </div>
   </section>
 
-  <!-- Clavier -->
+  <!-- ═══════════════════════════════════════════════════════
+       CLAVIER
+       ═══════════════════════════════════════════════════════ -->
   <div class="piano-wrapper" [class.disabled]="!audio.isReady()">
     <div class="piano-scroll"
          #pianoScroll
@@ -123,12 +157,13 @@
       <div class="piano">
         <div class="white-keys">
           @for (key of whiteKeys(); track key.index) {
-            <div class="white-key" [class.pressed]="isPressed(key.note)"
-              (pointerdown)="onPointerDown(key, $event)"
-              (pointerenter)="onPointerEnter(key, $event)"
-              (pointerup)="onPointerUp($event)"
-              (pointercancel)="onPointerCancel($event)"
-              (contextmenu)="$event.preventDefault()">
+            <div class="white-key"
+                 [class.pressed]="isPressed(key.note)"
+                 (pointerdown)="onPointerDown(key, $event)"
+                 (pointerenter)="onPointerEnter(key, $event)"
+                 (pointerup)="onPointerUp($event)"
+                 (pointercancel)="onPointerCancel($event)"
+                 (contextmenu)="$event.preventDefault()">
               <div class="key-top"></div>
               <span class="note-label">{{ key.frenchNote }}</span>
               <div class="key-glow"></div>
@@ -137,13 +172,14 @@
         </div>
         <div class="black-keys">
           @for (key of blackKeys(); track key.index) {
-            <div class="black-key" [style.--white-index]="key.whiteIndex"
-              [class.pressed]="isPressed(key.note)"
-              (pointerdown)="onPointerDown(key, $event)"
-              (pointerenter)="onPointerEnter(key, $event)"
-              (pointerup)="onPointerUp($event)"
-              (pointercancel)="onPointerCancel($event)"
-              (contextmenu)="$event.preventDefault()">
+            <div class="black-key"
+                 [style.--white-index]="key.whiteIndex"
+                 [class.pressed]="isPressed(key.note)"
+                 (pointerdown)="onPointerDown(key, $event)"
+                 (pointerenter)="onPointerEnter(key, $event)"
+                 (pointerup)="onPointerUp($event)"
+                 (pointercancel)="onPointerCancel($event)"
+                 (contextmenu)="$event.preventDefault()">
               <div class="key-top"></div>
               <span class="note-label">{{ key.frenchNote }}</span>
               <div class="key-glow"></div>
@@ -153,7 +189,7 @@
       </div>
     </div>
 
-    <!-- Flèches de scroll cliquables -->
+    <!-- Flèches scroll -->
     <button type="button"
             class="scroll-hint scroll-hint-left"
             (click)="scrollByAmount(-1)"

@@ -4,7 +4,7 @@ import { DocumentsComponent } from './documents/documents.component';
 
 @Component({
   selector: 'app-academie',
-  imports: [RouterLink,DocumentsComponent],
+  imports: [RouterLink, DocumentsComponent],
   templateUrl: './academie.component.html',
   styleUrls: ['./academie.component.scss']
 })

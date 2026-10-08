@@ -1,0 +1,128 @@
+/* ═════════════════════════════════════════════════════════════════════
+   RDialogue — Modale de victoire
+   ═════════════════════════════════════════════════════════════════════ */
+
+:host {
+  display: block;
+}
+
+/* ─── Titre ─── */
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.dialog-emoji {
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.8));
+  animation: emojiBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes emojiBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-4px) scale(1.1); }
+}
+
+/* ─── Contenu ─── */
+mat-dialog-content {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.dialog-message {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.dialog-submessage {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* ─── Actions ─── */
+.dialog-actions {
+  display: flex !important;
+  gap: 0.75rem;
+  padding-top: 1rem !important;
+  flex-wrap: wrap;
+}
+
+.dialog-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+/* ─── Bouton Retour menu ─── */
+.btn-back-menu {
+  color: #e9d5ff !important;
+  border-color: rgba(244, 114, 182, 0.4) !important;
+  background: transparent !important;
+}
+
+.btn-back-menu:hover {
+  color: #fff !important;
+  background: rgba(244, 114, 182, 0.15) !important;
+  border-color: #f472b6 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(244, 114, 182, 0.3);
+}
+
+.btn-back-menu .btn-icon {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.25s ease;
+}
+
+.btn-back-menu:hover .btn-icon {
+  transform: translateX(-3px);
+}
+
+/* ─── Bouton Rejouer ─── */
+.btn-replay {
+  background: linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #f472b6 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 20px rgba(217, 70, 239, 0.5) !important;
+}
+
+.btn-replay:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 12px 30px rgba(217, 70, 239, 0.6),
+    0 0 30px rgba(244, 114, 182, 0.4) !important;
+  filter: brightness(1.1);
+}
+
+.btn-replay .btn-emoji {
+  font-size: 1rem;
+}
+
+/* ─── Responsive : boutons empilés sur mobile ─── */
+@media (max-width: 480px) {
+  .dialog-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .dialog-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}

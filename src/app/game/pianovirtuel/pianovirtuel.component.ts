@@ -9,6 +9,9 @@ import { Router } from '@angular/router';
 import { PianoAudioService, InstrumentType } from 'src/app/services/piano-audio.service';
 import { PianoKey } from 'src/app/models/piano.model';
 
+/* ═════════════════════════════════════════════════════════════════════
+   CONSTANTES
+   ═════════════════════════════════════════════════════════════════════ */
 const AZERTY_MAP: Record<string, string> = {
   q: 'C3', s: 'C#3', d: 'D3', f: 'D#3', g: 'E3',
   h: 'F3', j: 'F#3', k: 'G3', l: 'G#3', m: 'A3',
@@ -16,33 +19,39 @@ const AZERTY_MAP: Record<string, string> = {
 };
 
 const PIANO_KEYS_DATA: PianoKey[] = [
-  { index: 0, note: 'C3', frenchNote: 'DO', octave: 3, isBlack: false, whiteIndex: 0 },
-  { index: 1, note: 'C#3', frenchNote: 'DO#', octave: 3, isBlack: true, whiteIndex: 0 },
-  { index: 2, note: 'D3', frenchNote: 'RÉ', octave: 3, isBlack: false, whiteIndex: 1 },
-  { index: 3, note: 'D#3', frenchNote: 'RÉ#', octave: 3, isBlack: true, whiteIndex: 1 },
-  { index: 4, note: 'E3', frenchNote: 'MI', octave: 3, isBlack: false, whiteIndex: 2 },
-  { index: 5, note: 'F3', frenchNote: 'FA', octave: 3, isBlack: false, whiteIndex: 3 },
-  { index: 6, note: 'F#3', frenchNote: 'FA#', octave: 3, isBlack: true, whiteIndex: 3 },
-  { index: 7, note: 'G3', frenchNote: 'SOL', octave: 3, isBlack: false, whiteIndex: 4 },
-  { index: 8, note: 'G#3', frenchNote: 'SOL#', octave: 3, isBlack: true, whiteIndex: 4 },
-  { index: 9, note: 'A3', frenchNote: 'LA', octave: 3, isBlack: false, whiteIndex: 5 },
-  { index: 10, note: 'A#3', frenchNote: 'LA#', octave: 3, isBlack: true, whiteIndex: 5 },
-  { index: 11, note: 'B3', frenchNote: 'SI', octave: 3, isBlack: false, whiteIndex: 6 },
-  { index: 12, note: 'C4', frenchNote: 'DO', octave: 4, isBlack: false, whiteIndex: 7 },
-  { index: 13, note: 'C#4', frenchNote: 'DO#', octave: 4, isBlack: true, whiteIndex: 7 },
-  { index: 14, note: 'D4', frenchNote: 'RÉ', octave: 4, isBlack: false, whiteIndex: 8 },
-  { index: 15, note: 'D#4', frenchNote: 'RÉ#', octave: 4, isBlack: true, whiteIndex: 8 },
-  { index: 16, note: 'E4', frenchNote: 'MI', octave: 4, isBlack: false, whiteIndex: 9 },
-  { index: 17, note: 'F4', frenchNote: 'FA', octave: 4, isBlack: false, whiteIndex: 10 },
-  { index: 18, note: 'F#4', frenchNote: 'FA#', octave: 4, isBlack: true, whiteIndex: 10 },
-  { index: 19, note: 'G4', frenchNote: 'SOL', octave: 4, isBlack: false, whiteIndex: 11 },
-  { index: 20, note: 'G#4', frenchNote: 'SOL#', octave: 4, isBlack: true, whiteIndex: 11 },
-  { index: 21, note: 'A4', frenchNote: 'LA', octave: 4, isBlack: false, whiteIndex: 12 },
-  { index: 22, note: 'A#4', frenchNote: 'LA#', octave: 4, isBlack: true, whiteIndex: 12 },
-  { index: 23, note: 'B4', frenchNote: 'SI', octave: 4, isBlack: false, whiteIndex: 13 },
-  { index: 24, note: 'C5', frenchNote: 'DO', octave: 5, isBlack: false, whiteIndex: 14 },
+  { index: 0,  note: 'C3',  frenchNote: 'DO',   octave: 3, isBlack: false, whiteIndex: 0 },
+  { index: 1,  note: 'C#3', frenchNote: 'DO#',  octave: 3, isBlack: true,  whiteIndex: 0 },
+  { index: 2,  note: 'D3',  frenchNote: 'RÉ',   octave: 3, isBlack: false, whiteIndex: 1 },
+  { index: 3,  note: 'D#3', frenchNote: 'RÉ#',  octave: 3, isBlack: true,  whiteIndex: 1 },
+  { index: 4,  note: 'E3',  frenchNote: 'MI',   octave: 3, isBlack: false, whiteIndex: 2 },
+  { index: 5,  note: 'F3',  frenchNote: 'FA',   octave: 3, isBlack: false, whiteIndex: 3 },
+  { index: 6,  note: 'F#3', frenchNote: 'FA#',  octave: 3, isBlack: true,  whiteIndex: 3 },
+  { index: 7,  note: 'G3',  frenchNote: 'SOL',  octave: 3, isBlack: false, whiteIndex: 4 },
+  { index: 8,  note: 'G#3', frenchNote: 'SOL#', octave: 3, isBlack: true,  whiteIndex: 4 },
+  { index: 9,  note: 'A3',  frenchNote: 'LA',   octave: 3, isBlack: false, whiteIndex: 5 },
+  { index: 10, note: 'A#3', frenchNote: 'LA#',  octave: 3, isBlack: true,  whiteIndex: 5 },
+  { index: 11, note: 'B3',  frenchNote: 'SI',   octave: 3, isBlack: false, whiteIndex: 6 },
+  { index: 12, note: 'C4',  frenchNote: 'DO',   octave: 4, isBlack: false, whiteIndex: 7 },
+  { index: 13, note: 'C#4', frenchNote: 'DO#',  octave: 4, isBlack: true,  whiteIndex: 7 },
+  { index: 14, note: 'D4',  frenchNote: 'RÉ',   octave: 4, isBlack: false, whiteIndex: 8 },
+  { index: 15, note: 'D#4', frenchNote: 'RÉ#',  octave: 4, isBlack: true,  whiteIndex: 8 },
+  { index: 16, note: 'E4',  frenchNote: 'MI',   octave: 4, isBlack: false, whiteIndex: 9 },
+  { index: 17, note: 'F4',  frenchNote: 'FA',   octave: 4, isBlack: false, whiteIndex: 10 },
+  { index: 18, note: 'F#4', frenchNote: 'FA#',  octave: 4, isBlack: true,  whiteIndex: 10 },
+  { index: 19, note: 'G4',  frenchNote: 'SOL',  octave: 4, isBlack: false, whiteIndex: 11 },
+  { index: 20, note: 'G#4', frenchNote: 'SOL#', octave: 4, isBlack: true,  whiteIndex: 11 },
+  { index: 21, note: 'A4',  frenchNote: 'LA',   octave: 4, isBlack: false, whiteIndex: 12 },
+  { index: 22, note: 'A#4', frenchNote: 'LA#',  octave: 4, isBlack: true,  whiteIndex: 12 },
+  { index: 23, note: 'B4',  frenchNote: 'SI',   octave: 4, isBlack: false, whiteIndex: 13 },
+  { index: 24, note: 'C5',  frenchNote: 'DO',   octave: 5, isBlack: false, whiteIndex: 14 },
 ];
 
+const STORAGE_KEY = 'charly_piano_song_v2';
+const SOUND_PREF_KEY = 'piano_sound_enabled';
+
+/* ═════════════════════════════════════════════════════════════════════
+   INTERFACES
+   ═════════════════════════════════════════════════════════════════════ */
 export interface RecordedNote {
   note: string;
   time: number;
@@ -66,8 +75,9 @@ interface Particle {
   color: string;
 }
 
-const STORAGE_KEY = 'charly_piano_song_v2';
-
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 @Component({
   selector: 'app-pianovirtuel',
   standalone: true,
@@ -77,19 +87,26 @@ const STORAGE_KEY = 'charly_piano_song_v2';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  /* ─── Dépendances ─── */
   private readonly router = inject(Router);
   readonly audio = inject(PianoAudioService);
 
   @ViewChild('particleCanvas') particleCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('pianoScroll') pianoScroll?: ElementRef<HTMLDivElement>;
 
+  /* ═══════════════════════════════════════════════════════════════════
+     CANVAS PARTICULES
+     ═══════════════════════════════════════════════════════════════════ */
   private ctxCanvas: CanvasRenderingContext2D | null = null;
   private animFrameId: number | null = null;
   private particles: Particle[] = [];
   private canvasWidth = 0;
   private canvasHeight = 0;
 
-  // ── INSTRUMENTS (10 timbres) ──────────────────────────────
+  /* ═══════════════════════════════════════════════════════════════════
+     INSTRUMENTS
+     ═══════════════════════════════════════════════════════════════════ */
   readonly instruments: { type: InstrumentType; label: string }[] = [
     { type: 'piano',       label: '🎹 Piano' },
     { type: 'organ',       label: '⛪ Orgue' },
@@ -103,13 +120,17 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     { type: 'sax',         label: '🎷 Saxophone' },
   ];
 
-  // ── CLAVIER ───────────────────────────────────────────────
+  /* ═══════════════════════════════════════════════════════════════════
+     CLAVIER
+     ═══════════════════════════════════════════════════════════════════ */
   readonly pianoKeys: PianoKey[] = PIANO_KEYS_DATA;
   readonly whiteKeys = computed(() => this.pianoKeys.filter(k => !k.isBlack));
   readonly blackKeys = computed(() => this.pianoKeys.filter(k => k.isBlack));
   readonly pressedNotes = signal<Set<string>>(new Set());
 
-  // ── MÉTRONOME ─────────────────────────────────────────────
+  /* ═══════════════════════════════════════════════════════════════════
+     MÉTRONOME
+     ═══════════════════════════════════════════════════════════════════ */
   readonly bpm = signal<number>(120);
   readonly isMetronomeActive = signal<boolean>(false);
   readonly metronomeBeat = signal<number>(0);
@@ -118,7 +139,9 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   private metronomeTimer: ReturnType<typeof setInterval> | null = null;
   private audioCtx: AudioContext | null = null;
 
-  // ── ENREGISTREMENT ────────────────────────────────────────
+  /* ═══════════════════════════════════════════════════════════════════
+     ENREGISTREMENT
+     ═══════════════════════════════════════════════════════════════════ */
   readonly isRecording = signal<boolean>(false);
   readonly isPlayingBack = signal<boolean>(false);
   readonly recordedNotes = signal<RecordedNote[]>([]);
@@ -127,11 +150,16 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   private noteStartTimes = new Map<string, number>();
   private playbackTimeouts: ReturnType<typeof setTimeout>[] = [];
 
+  /* ═══════════════════════════════════════════════════════════════════
+     GESTION CLAVIER / POINTER
+     ═══════════════════════════════════════════════════════════════════ */
   private readonly pointerToNote = new Map<number, string>();
   private readonly keyboardPressed = new Set<string>();
   private audioUnlocked = false;
 
-  // ── DRAG-SCROLL ───────────────────────────────────────────
+  /* ═══════════════════════════════════════════════════════════════════
+     DRAG-SCROLL
+     ═══════════════════════════════════════════════════════════════════ */
   readonly isDragging = signal<boolean>(false);
   private dragStartX = 0;
   private dragStartScrollLeft = 0;
@@ -139,7 +167,11 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   private dragMoved = false;
   private readonly DRAG_THRESHOLD_PX = 6;
 
+  /* ═══════════════════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════════════════ */
   constructor() {
+    /* Réagit aux changements du métronome */
     effect(() => {
       const active = this.isMetronomeActive();
       const bpm = this.bpm();
@@ -151,9 +183,13 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     LIFECYCLE
+     ═══════════════════════════════════════════════════════════════════ */
   ngOnInit(): void {
     void this.audio.init();
     this.loadSavedSong();
+    this.loadSoundPreference();
   }
 
   ngAfterViewInit(): void {
@@ -173,11 +209,25 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // DRAG-SCROLL MANUEL DU CLAVIER
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
+     SON — Préférence persistante
+     ═══════════════════════════════════════════════════════════════════ */
+  private loadSoundPreference(): void {
+    const saved = localStorage.getItem(SOUND_PREF_KEY);
+    if (saved === 'false' && !this.audio.isMuted()) {
+      this.audio.toggleMute();
+    }
+  }
+
+  toggleMute(): void {
+    this.audio.toggleMute();
+    localStorage.setItem(SOUND_PREF_KEY, String(this.audio.isMuted()));
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     DRAG-SCROLL MANUEL DU CLAVIER
+     ═══════════════════════════════════════════════════════════════════ */
   onScrollPointerDown(event: PointerEvent): void {
-    // On ne démarre le drag QUE si la cible est le conteneur (pas une touche)
     const target = event.target as HTMLElement;
     if (target.closest('.white-key, .black-key')) return;
 
@@ -216,18 +266,15 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isDragging.set(false);
   }
 
-  /** Molette : défile horizontalement (utile avec souris). */
   onWheel(event: WheelEvent): void {
     const el = this.pianoScroll?.nativeElement;
     if (!el) return;
-    // Si l'utilisateur scrolle verticalement, on convertit en horizontal
     if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
       el.scrollLeft += event.deltaY;
       event.preventDefault();
     }
   }
 
-  /** Flèches latérales : défile d'une largeur d'écran. */
   scrollByAmount(direction: -1 | 1): void {
     const el = this.pianoScroll?.nativeElement;
     if (!el) return;
@@ -235,16 +282,16 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     el.scrollBy({ left: amount, behavior: 'smooth' });
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // INSTRUMENTS
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
+     INSTRUMENTS
+     ═══════════════════════════════════════════════════════════════════ */
   selectInstrument(type: InstrumentType): void {
     this.audio.setInstrument(type);
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // CANVAS PARTICULES
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
+     CANVAS PARTICULES
+     ═══════════════════════════════════════════════════════════════════ */
   private initCanvas(): void {
     const canvas = this.particleCanvas.nativeElement;
     this.ctxCanvas = canvas.getContext('2d');
@@ -265,7 +312,8 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
 
     for (let i = 0; i < 12; i++) {
       this.particles.push({
-        x, y,
+        x,
+        y,
         vx: (Math.random() - 0.5) * 8,
         vy: (Math.random() - 1) * 5 - 2,
         alpha: 1,
@@ -319,9 +367,9 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // MÉTRONOME
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
+     MÉTRONOME
+     ═══════════════════════════════════════════════════════════════════ */
   toggleMetronome(): void {
     this.isMetronomeActive.update(v => !v);
   }
@@ -349,7 +397,8 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private playClickSound(isHighPitch: boolean): void {
     if (!this.audioCtx) {
-      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtxClass = window.AudioContext
+        || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.audioCtx = new AudioCtxClass();
     }
 
@@ -372,9 +421,9 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     osc.stop(now + 0.05);
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ENREGISTREMENT & LECTURE
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
+     ENREGISTREMENT & LECTURE
+     ═══════════════════════════════════════════════════════════════════ */
   toggleRecording(): void {
     if (this.isRecording()) {
       this.isRecording.set(false);
@@ -469,9 +518,9 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.playbackTimeouts = [];
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // ÉVÉNEMENTS CLAVIER / POINTER (avec glissando tactile)
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
+     CLAVIER / POINTER
+     ═══════════════════════════════════════════════════════════════════ */
   onPointerDown(key: PianoKey, event: PointerEvent): void {
     if (!this.audioUnlocked) {
       this.audioUnlocked = true;
@@ -486,7 +535,6 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.captureNoteStart(key.note);
   }
 
-  /** Glissando : le doigt passe d'une touche à l'autre sans relâcher. */
   onPointerEnter(key: PianoKey, event: PointerEvent): void {
     if (!this.pointerToNote.has(event.pointerId)) return;
     const previousNote = this.pointerToNote.get(event.pointerId);
@@ -517,7 +565,6 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.onPointerUp(event);
   }
 
-  /** Rattrape les pointerup qui arrivent en dehors d'une touche */
   @HostListener('window:pointerup', ['$event'])
   @HostListener('window:pointercancel', ['$event'])
   onGlobalPointerUp(event: PointerEvent): void {
@@ -556,9 +603,9 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.audio.allNotesOff();
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // CAPTURE DES DURÉES DE NOTES
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
+     CAPTURE DES DURÉES DE NOTES
+     ═══════════════════════════════════════════════════════════════════ */
   private captureNoteStart(note: string): void {
     if (!this.isRecording()) return;
     const t = performance.now() - this.recordStartTime;
@@ -586,9 +633,9 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // HELPERS
-  // ═══════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════════════════ */
   isPressed(note: string): boolean {
     return this.pressedNotes().has(note);
   }
@@ -596,13 +643,10 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   private markPressed(note: string, pressed: boolean): void {
     this.pressedNotes.update(set => {
       const next = new Set(set);
-      if (pressed) next.add(note); else next.delete(note);
+      if (pressed) next.add(note);
+      else next.delete(note);
       return next;
     });
-  }
-
-  toggleMute(): void {
-    this.audio.toggleMute();
   }
 
   goBack(): void {

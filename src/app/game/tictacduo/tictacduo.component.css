@@ -1,6 +1,6 @@
-/* ==========================================================================
-   THEME CYBER-GOLD & ÉMERAUDE (SOLAIRE FUTURISTE)
-   ========================================================================== */
+/* ═════════════════════════════════════════════════════════════════════
+   LYKO DUEL — Thème Cyber-Gold & Émeraude
+   ═════════════════════════════════════════════════════════════════════ */
 
 :host {
   display: block;
@@ -15,15 +15,133 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  padding-top: 80px;
 }
 
-/* HEADER */
-.temple-header {
+/* ═════════════════════════════════════════════════════════════════════
+   HEADER — Bouton retour + Titre + Bouton son
+   ═════════════════════════════════════════════════════════════════════ */
+.game-header {
   position: relative;
-  padding: 20px;
+  z-index: 10;
+  padding: 1rem 0 1.5rem;
+  text-align: center;
 }
 
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+/* ─── Bouton retour ─── */
+.btn-floating-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffc107;
+  background: rgba(5, 10, 8, 0.85);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-floating-back svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.3s ease;
+}
+
+.btn-floating-back:hover {
+  color: #050a08;
+  background: linear-gradient(135deg, #ffc107, #00e676);
+  border-color: transparent;
+  transform: translateX(-3px);
+  box-shadow: 0 8px 24px rgba(255, 193, 7, 0.5);
+}
+
+.btn-floating-back:hover svg {
+  transform: translateX(-2px);
+}
+
+.btn-floating-back:active {
+  transform: translateX(-1px) scale(0.97);
+}
+
+/* ─── Titre ─── */
+.header-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  font-weight: 900;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+.header-title .header-icon {
+  font-size: 1.4em;
+  filter: drop-shadow(0 0 10px #ffc107);
+}
+
+.header-title .title-text {
+  background: linear-gradient(135deg, #ffd54f 0%, #00e676 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(255, 193, 7, 0.4));
+}
+
+/* ─── Bouton son ─── */
+.btn-sound {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #a7f3d0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.btn-sound .sound-icon {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.btn-sound:hover {
+  color: #ffc107;
+  background: rgba(255, 193, 7, 0.12);
+  border-color: #ffc107;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 193, 7, 0.3);
+}
+
+.btn-sound.active {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
+}
+
+/* ─── Badge niveau ─── */
 .level-badge {
   display: inline-flex;
   align-items: center;
@@ -39,36 +157,36 @@
   box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
 }
 
-.title-glow {
-  font-size: 2.2rem;
-  font-weight: 900;
-  background: linear-gradient(135deg, #ffd54f 0%, #00e676 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(255, 193, 7, 0.3);
-  margin: 0;
-  letter-spacing: 2px;
-}
-
-.lyko-message {
-  color: #a7f3d0;
-  font-style: italic;
-  margin-top: 10px;
+.badge-icon {
   font-size: 1rem;
 }
 
-/* BOARD WRAPPER */
+/* ─── Message Lyko ─── */
+.lyko-message {
+  color: #a7f3d0;
+  font-style: italic;
+  margin: 10px 0 0;
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   BOARD WRAPPER
+   ═════════════════════════════════════════════════════════════════════ */
 .board-wrapper {
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 193, 7, 0.25);
   border-radius: 25px;
   padding: 25px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(255, 193, 7, 0.08);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 0 30px rgba(255, 193, 7, 0.08);
 }
 
-/* TURN INDICATOR */
+/* ═════════════════════════════════════════════════════════════════════
+   TURN INDICATOR
+   ═════════════════════════════════════════════════════════════════════ */
 .turn-indicator {
   display: flex;
   justify-content: center;
@@ -105,13 +223,25 @@
   box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
 }
 
+.player-tag .avatar {
+  font-size: 1.4rem;
+}
+
+.player-tag .name {
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
 .vs {
   font-weight: 900;
   color: #00e676;
   font-size: 0.85rem;
 }
 
-/* GRILLE DYNAMIQUE */
+/* ═════════════════════════════════════════════════════════════════════
+   GRILLE DYNAMIQUE
+   ═════════════════════════════════════════════════════════════════════ */
 .dynamic-grid {
   display: grid;
   grid-template-columns: repeat(var(--grid-size, 3), minmax(0, 1fr));
@@ -164,30 +294,96 @@
   color: rgba(255, 193, 7, 0.4);
 }
 
-/* CELLULE GAGNANTE */
+.pop-in {
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2) rotate(10deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.cell-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cell-particles span {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #ffc107;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  animation: particleBurst 0.6s ease-out forwards;
+}
+
+.cell-particles span:nth-child(1) { --x:  40px; --y: -40px; animation-delay: 0s;    }
+.cell-particles span:nth-child(2) { --x: -40px; --y: -40px; animation-delay: 0.05s; background: #00e676; }
+.cell-particles span:nth-child(3) { --x:  40px; --y:  40px; animation-delay: 0.1s;  background: #ffd54f; }
+.cell-particles span:nth-child(4) { --x: -40px; --y:  40px; animation-delay: 0.15s; background: #ffffff; }
+
+@keyframes particleBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   CELLULE GAGNANTE
+   ═════════════════════════════════════════════════════════════════════ */
 .winning-cell {
   animation: winningGlow 0.8s infinite alternate;
   border: 2px solid #00e5ff !important;
   background: rgba(0, 229, 255, 0.2) !important;
+  z-index: 10;
 }
 
 @keyframes winningGlow {
   0% {
     box-shadow: 0 0 15px #00e5ff;
   }
-
   100% {
     box-shadow: 0 0 35px #00e5ff;
   }
 }
 
-/* PANNEAU LATÉRAL & STATS */
+/* ═════════════════════════════════════════════════════════════════════
+   PANNEAU LATÉRAL & STATS
+   ═════════════════════════════════════════════════════════════════════ */
 .stats-panel {
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 20px;
+}
+
+.panel-header {
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+  color: #ffc107;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+  margin-bottom: 12px;
 }
 
 .alignment-counter {
@@ -205,14 +401,18 @@
 .alignment-counter .cyan,
 .alignment-counter .amber {
   color: #ffc107;
+  font-weight: 900;
 }
 
 .alignment-counter .magenta,
 .alignment-counter .emerald {
   color: #00e676;
+  font-weight: 900;
 }
 
-/* BOUTONS DE NAVIGATION & ACTIONS */
+/* ═════════════════════════════════════════════════════════════════════
+   BOUTONS DE NAVIGATION
+   ═════════════════════════════════════════════════════════════════════ */
 .actions-grid {
   display: flex;
   flex-direction: column;
@@ -227,6 +427,7 @@
   padding: 12px 18px;
   border: none;
   border-radius: 10px;
+  font-family: inherit;
   font-weight: bold;
   font-size: 0.85rem;
   letter-spacing: 1px;
@@ -272,7 +473,14 @@
   border: 1px solid #ffc107;
 }
 
-/* TABLEAU DES SCORES */
+.btn-cyber-secondary:hover {
+  background: rgba(255, 193, 7, 0.2);
+  transform: translateY(-2px);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   TABLEAU DES SCORES
+   ═════════════════════════════════════════════════════════════════════ */
 .score-table {
   display: flex;
   flex-direction: column;
@@ -348,7 +556,13 @@
   color: #00e676;
 }
 
-/* LORE PANEL */
+.score-value.gray {
+  color: #6b7280;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   LORE PANEL
+   ═════════════════════════════════════════════════════════════════════ */
 .lore-panel {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -372,7 +586,9 @@
   color: #00e676;
 }
 
-/* OVERLAYS & CONFETTI */
+/* ═════════════════════════════════════════════════════════════════════
+   OVERLAYS & CONFETTI
+   ═════════════════════════════════════════════════════════════════════ */
 .overlay {
   position: fixed;
   inset: 0;
@@ -386,20 +602,51 @@
 
 .overlay-content {
   text-align: center;
+  animation: overlayZoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes overlayZoomIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .overlay-icon {
   font-size: 5rem;
   margin-bottom: 15px;
+  animation: iconBounce 1s infinite alternate;
+}
+
+@keyframes iconBounce {
+  from {
+    transform: translateY(0) scale(1);
+  }
+  to {
+    transform: translateY(-20px) scale(1.1);
+  }
 }
 
 .overlay-content h1 {
   font-size: 2.5rem;
   font-weight: 900;
+  letter-spacing: 5px;
   background: linear-gradient(135deg, #ffc107, #00e676);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 40px rgba(255, 193, 7, 0.65);
+  margin-bottom: 15px;
+}
+
+.overlay-content p {
+  color: #cbd5e1;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
 }
 
 .confetti-wrapper {
@@ -407,6 +654,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 9999;
+  overflow: hidden;
 }
 
 .confetti-piece {
@@ -416,31 +664,31 @@
   top: -20px;
   opacity: 0.8;
   animation: fall 3.5s infinite linear;
+  box-shadow: 0 0 6px currentColor;
 }
 
 @keyframes fall {
   0% {
     transform: translateY(0) rotate(0deg);
   }
-
   100% {
     transform: translateY(105vh) rotate(720deg);
   }
 }
 
-/* ============================================================
+/* ═════════════════════════════════════════════════════════════════════
    SECTION "COMMENT JOUER"
-   ============================================================ */
+   ═════════════════════════════════════════════════════════════════════ */
 .how-to-play {
   margin-top: 1.5rem;
   padding: 1.25rem 1.25rem 1rem;
-  background: linear-gradient(145deg, rgba(0, 242, 254, 0.06), rgba(168, 85, 247, 0.04));
-  border: 1px solid rgba(0, 242, 254, 0.25);
+  background: linear-gradient(145deg, rgba(255, 193, 7, 0.06), rgba(0, 230, 118, 0.04));
+  border: 1px solid rgba(255, 193, 7, 0.25);
   border-radius: 18px;
   backdrop-filter: blur(12px);
   box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.35),
-    inset 0 0 30px rgba(0, 242, 254, 0.05);
+    inset 0 0 30px rgba(255, 193, 7, 0.05);
   animation: fadeSlideIn 0.7s ease both;
 }
 
@@ -449,7 +697,6 @@
     opacity: 0;
     transform: translateY(15px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -464,9 +711,9 @@
   font-weight: 800;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #00f2fe;
+  color: #ffc107;
   margin: 0 0 1rem;
-  text-shadow: 0 0 12px rgba(0, 242, 254, 0.6);
+  text-shadow: 0 0 12px rgba(255, 193, 7, 0.6);
 }
 
 .howto-icon {
@@ -475,12 +722,9 @@
 }
 
 @keyframes howtoBob {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0) rotate(-4deg);
   }
-
   50% {
     transform: translateY(-3px) rotate(4deg);
   }
@@ -495,7 +739,7 @@
   position: relative;
   padding: 0.9rem 1rem 0.9rem 1.1rem;
   background: rgba(0, 0, 0, 0.35);
-  border-left: 3px solid var(--card-color, #00f2fe);
+  border-left: 3px solid var(--card-color, #ffc107);
   border-radius: 10px;
   transition: transform 0.25s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
@@ -503,19 +747,19 @@
 .howto-card:hover {
   transform: translateX(4px);
   background: rgba(0, 0, 0, 0.5);
-  box-shadow: 0 6px 20px rgba(0, 242, 254, 0.2);
+  box-shadow: 0 6px 20px rgba(255, 193, 7, 0.2);
 }
 
 .card-objective {
-  --card-color: #00f2fe;
+  --card-color: #ffc107;
 }
 
 .card-placement {
-  --card-color: #a855f7;
+  --card-color: #00e676;
 }
 
 .card-end {
-  --card-color: #00ff88;
+  --card-color: #00b0ff;
 }
 
 .howto-header {
@@ -527,8 +771,8 @@
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 1.5px;
-  color: var(--card-color, #00f2fe);
-  text-shadow: 0 0 10px var(--card-color, #00f2fe);
+  color: var(--card-color, #ffc107);
+  text-shadow: 0 0 10px var(--card-color, #ffc107);
   opacity: 0.95;
 }
 
@@ -545,14 +789,84 @@
 }
 
 .howto-card p em {
-  color: var(--card-color, #00f2fe);
+  color: var(--card-color, #ffc107);
   font-style: italic;
 }
 
-/* ============================================================
+/* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
-   ============================================================ */
+   ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+  .temple-container {
+    padding: 12px;
+  }
+
+  .board-wrapper {
+    padding: 16px;
+  }
+
+  /* Header */
+  .header-top-row {
+    gap: 0.6rem;
+  }
+
+  .btn-floating-back {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.7rem;
+  }
+
+  .header-title {
+    font-size: 1rem;
+    letter-spacing: 1.5px;
+  }
+
+  .header-title .header-icon {
+    font-size: 1.2em;
+  }
+
+  .btn-sound {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.7rem;
+  }
+
+  /* Turn indicator */
+  .turn-indicator {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .player-tag {
+    padding: 6px 12px;
+  }
+
+  .player-tag .name {
+    font-size: 0.7rem;
+  }
+
+  .player-tag .avatar {
+    font-size: 1.2rem;
+  }
+
+  /* Boutons */
+  .btn-cyber-next,
+  .btn-cyber-prev,
+  .btn-cyber-primary,
+  .btn-cyber-secondary {
+    padding: 10px 14px;
+    font-size: 0.78rem;
+  }
+
+  /* Overlay */
+  .overlay-icon {
+    font-size: 3.5rem;
+  }
+
+  .overlay-content h1 {
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+  }
+
+  /* How to play */
   .how-to-play {
     padding: 1rem;
   }
@@ -567,10 +881,110 @@
   }
 }
 
+@media (max-width: 480px) {
+  .temple-container {
+    padding: 8px;
+  }
+
+  .board-wrapper {
+    padding: 12px;
+  }
+
+  /* Header */
+  .btn-floating-back {
+    padding: 0.45rem 0.75rem;
+  }
+
+  .btn-floating-back span:not(.material-icons) {
+    display: none;
+  }
+
+  .header-title {
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+  }
+
+  .header-title .header-icon {
+    font-size: 1em;
+  }
+
+  .btn-sound {
+    padding: 0.45rem 0.75rem;
+  }
+
+  .btn-sound .sound-label {
+    display: none;
+  }
+
+  .level-badge {
+    font-size: 0.65rem;
+    padding: 6px 14px;
+  }
+
+  .lyko-message {
+    font-size: 0.85rem;
+  }
+
+  /* Turn indicator */
+  .turn-indicator {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .vs {
+    font-size: 0.7rem;
+  }
+
+  /* Score table */
+  .score-name {
+    font-size: 0.75rem;
+  }
+
+  .score-value {
+    font-size: 1rem;
+  }
+
+  /* Buttons */
+  .btn-cyber-next,
+  .btn-cyber-prev,
+  .btn-cyber-primary,
+  .btn-cyber-secondary {
+    padding: 9px 12px;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+  }
+
+  /* Overlay */
+  .overlay-icon {
+    font-size: 3rem;
+  }
+
+  .overlay-content h1 {
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+  }
+
+  .overlay-content p {
+    font-size: 0.9rem;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 
   .howto-icon,
-  .how-to-play {
+  .how-to-play,
+  .confetti-piece,
+  .overlay-icon {
     animation: none !important;
   }
 }

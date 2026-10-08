@@ -1,5 +1,3 @@
-// src/app/features/piano/piano.component.ts
-
 import {
   Component, OnInit, OnDestroy, signal, computed, inject, effect,
   ChangeDetectionStrategy, ElementRef, viewChild
@@ -119,6 +117,12 @@ export class PianoComponent implements OnInit, OnDestroy {
     'LA':  '#B266FF', 'LA#': '#B266FF',
     'SI':  '#FF8CC8'
   };
+
+  // ═══════════════════════════════════════════════════════
+  // SON — Préférence persistante
+  // ═══════════════════════════════════════════════════════
+  readonly soundEnabled = signal<boolean>(true);
+  private readonly SOUND_PREF_KEY = 'piano_hero_sound_enabled';
 
   // ═══════════════════════════════════════════════════════
   // ÉTAT DU JEU
@@ -295,6 +299,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     void this.audio.init();
     this.loadHighScore();
+    this.loadSoundPreference();
   }
 
   ngOnDestroy(): void {
@@ -312,6 +317,52 @@ export class PianoComponent implements OnInit, OnDestroy {
       fn();
     }, delayMs);
     this.timeouts.add(id);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // SON — Toggle & persistance
+  // ═══════════════════════════════════════════════════════
+  private loadSoundPreference(): void {
+    const saved = localStorage.getItem(this.SOUND_PREF_KEY);
+    if (saved === 'false') {
+      this.soundEnabled.set(false);
+      this.audio.setMuted(true);
+    }
+  }
+
+  toggleSound(): void {
+    const next = !this.soundEnabled();
+    this.soundEnabled.set(next);
+    localStorage.setItem(this.SOUND_PREF_KEY, String(next));
+    this.audio.setMuted(!next);
+
+    if (next) {
+      this.playUiSound('click');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // FLÈCHES DE SCROLL DU CLAVIER
+  // ═══════════════════════════════════════════════════════
+  scrollKeyboard(direction: -1 | 1): void {
+    const scroll = this.keyboardScrollRef()?.nativeElement;
+    if (!scroll) return;
+
+    const amount = scroll.clientWidth * 0.7 * direction;
+    scroll.scrollBy({ left: amount, behavior: 'smooth' });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // RETOUR AU SÉLECTEUR DE DIFFICULTÉ
+  // ═══════════════════════════════════════════════════════
+  backToDifficultySelect(): void {
+    this.isGameOver.set(false);
+    this.isPlaying.set(false);
+    this.score.set(0);
+    this.targetNote.set('');
+    this.stopMelody();
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.starPowerInterval) clearInterval(this.starPowerInterval);
   }
 
   // ═══════════════════════════════════════════════════════
@@ -420,6 +471,8 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   isTargetKey(keyIndex: number): boolean {
+    // En mode difficile : AUCUN indice visuel sur le clavier
+    if (this.difficulty() === 'hardcore') return false;
     return this.shouldHighlightTarget() && this.targetKeyIndex() === keyIndex;
   }
 
@@ -458,6 +511,9 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   private scrollToTargetKey(): void {
+    // En mode difficile : on ne scroll PAS vers la cible
+    if (this.difficulty() === 'hardcore') return;
+
     this.schedule(() => {
       const scroll = this.keyboardScrollRef()?.nativeElement;
       const idx = this.targetKeyIndex();
@@ -763,6 +819,8 @@ export class PianoComponent implements OnInit, OnDestroy {
   private playUiSound(
     type: 'click' | 'error' | 'gameover' | 'start' | 'perfect' | 'starpower'
   ): void {
+    if (!this.soundEnabled()) return;  // Garde-fou son
+
     const ctx = this.getUiCtx();
     if (!ctx) return;
     if (ctx.state === 'suspended') void ctx.resume();
@@ -840,6 +898,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   shouldShowNoteLabel(): boolean {
+    // En mode difficile : AUCUN label sur les touches
     return this.difficulty() !== 'hardcore';
   }
 

@@ -1,6 +1,8 @@
 <div class="confetti-wrapper" *ngIf="showConfetti">
-  <div class="confetti-piece" *ngFor="let p of particles" [style.left.%]="(p * 7) % 100"
-    [style.animation-delay]="(p * 0.05) + 's'" [style.background]="p % 2 === 0 ? '#8a2be2' : '#ffaa00'">
+  <div class="confetti-piece" *ngFor="let p of particles"
+       [style.left.%]="(p * 7) % 100"
+       [style.animation-delay]="(p * 0.05) + 's'"
+       [style.background]="p % 2 === 0 ? '#8a2be2' : '#ffaa00'">
   </div>
 </div>
 
@@ -13,14 +15,59 @@
 </div>
 
 <div class="temple-container py-4">
+
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER : Bouton retour + Titre + Bouton son
+       ═══════════════════════════════════════════════════════ -->
+  <header class="game-header">
+    <div class="header-top-row">
+
+      <button class="btn-floating-back"
+              (click)="onrecommencer()"
+              type="button"
+              aria-label="Retour au menu des jeux">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>Retour</span>
+      </button>
+
+      <h1 class="header-title">
+        <span class="header-icon">⚔️</span>
+        <span class="title-text">LYKO DUEL</span>
+      </h1>
+
+      <button class="btn-sound"
+              (click)="toggleSound()"
+              type="button"
+              [class.active]="!soundEnabled()"
+              [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'">
+        <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
+        <span class="sound-label">{{ soundEnabled() ? 'Son activé' : 'Son coupé' }}</span>
+      </button>
+    </div>
+
+    <div class="level-badge">
+      <span class="badge-icon">⚔️</span>
+      NIVEAU {{ gs.gridSize - 2 }} • GRILLE {{ gs.gridSize }}x{{ gs.gridSize }}
+    </div>
+
+    <p class="lyko-message">{{ messageLyko }}</p>
+  </header>
+
   <div class="row g-4 align-items-start">
-    <!-- GRILLE DE JEU -->
+
+    <!-- ═══════════ GRILLE DE JEU ═══════════ -->
     <div class="col-12 col-lg-7">
       <div class="board-wrapper">
         <div class="dynamic-grid" [style.--grid-size]="gs.gridSize">
-          <div *ngFor="let block of gs.blocks; let i = index" (click)="playerClick(i)"
-            [class.disabled]="!block.free || lock" [class.winning-cell]="block.isWinningCell"
-            [class.new-cell]="block.isNew" class="grid-cell">
+          <div *ngFor="let block of gs.blocks; let i = index"
+               (click)="playerClick(i)"
+               [class.disabled]="!block.free || lock"
+               [class.winning-cell]="block.isWinningCell"
+               [class.new-cell]="block.isNew"
+               class="grid-cell">
 
             <div class="cell-content">
               <img [src]="block.urlimg()" *ngIf="block.value" alt="Symbole" class="cell-icon pop-in" />
@@ -35,11 +82,11 @@
       </div>
     </div>
 
-    <!-- PANNEAU LATÉRAL -->
+    <!-- ═══════════ PANNEAU LATÉRAL ═══════════ -->
     <div class="col-12 col-lg-5">
       <div class="stats-panel mb-4">
 
-        <!-- INDICATEUR DE TOUR -->
+        <!-- Indicateur de tour -->
         <div class="turn-indicator" [class.p2-turn]="gs.turn === 1">
           <div class="player-tag" [class.active]="gs.turn === 0">
             <span class="avatar">🎸</span>
@@ -52,33 +99,32 @@
           </div>
         </div>
 
-        <!-- COMPTEUR D'ALIGNEMENTS -->
+        <!-- Compteur d'alignements -->
         <div class="alignment-counter">
           🎯 Alignements — J1 : <strong class="purple">{{ gs.players[0].score }}</strong>
           | J2 : <strong class="amber">{{ gs.players[1].score }}</strong>
         </div>
 
-        <!-- BOUTONS DE NAVIGATION ET ACTION -->
+        <!-- Boutons -->
         <div class="actions-grid">
-          <button class="btn-cyber-secondary" (click)="resetjeu()" *ngIf="rejouer">
+          <button class="btn-cyber-secondary" (click)="resetjeu()" *ngIf="rejouer" type="button">
             🔄 Rejouer la grille
           </button>
 
-          <button class="btn-cyber-next" (click)="prochainNiveau()">
+          <button class="btn-cyber-next" (click)="prochainNiveau()" type="button">
             🚀 NIVEAU SUIVANT ({{ gs.gridSize + 1 }}x{{ gs.gridSize + 1 }})
           </button>
 
-          <!-- Affiche si la grille est supérieure à 4x4 (gridSize > 4) -->
-          <button class="btn-cyber-prev" (click)="precedentNiveau()" *ngIf="yaprecedent()">
+          <button class="btn-cyber-prev" (click)="precedentNiveau()" *ngIf="yaprecedent()" type="button">
             ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize - 1 }}x{{ gs.gridSize - 1 }})
           </button>
 
-          <button class="btn-cyber-primary" (click)="onrecommencer()">
+          <button class="btn-cyber-primary" (click)="onrecommencer()" type="button">
             ⚔️ Retour au Menu des Jeux
           </button>
         </div>
 
-        <!-- TABLEAU DES SCORES -->
+        <!-- Tableau des scores -->
         <div class="panel-header mt-4">
           <span>📊 STATISTIQUES DU DUEL</span>
         </div>
@@ -99,20 +145,7 @@
         </div>
       </div>
 
-      <!-- HEADER ÉPIQUE -->
-      <div class="temple-header text-center mb-4">
-        <div class="level-badge">
-          <span class="badge-icon">⚔️</span>
-          NIVEAU {{ gs.gridSize - 2 }} • GRILLE {{ gs.gridSize }}x{{ gs.gridSize }}
-        </div>
-        <h1 class="title-glow">LYKO DUEL</h1>
-        <p class="lyko-message">{{ messageLyko }}</p>
-      </div>
-
-      
-      <!-- ============================================================
-           📖 COMMENT JOUER — Aide rapide pour le joueur
-           ============================================================ -->
+      <!-- Comment jouer -->
       <div class="how-to-play">
         <h5 class="howto-title">
           <span class="howto-icon">📖</span>
@@ -120,8 +153,6 @@
         </h5>
 
         <div class="howto-grid">
-
-          <!-- Bloc 1 : Objectif -->
           <div class="howto-card card-objective">
             <div class="howto-header">
               <span class="howto-badge">🎯 OBJECTIF</span>
@@ -133,7 +164,6 @@
             </p>
           </div>
 
-          <!-- Bloc 2 : Placement -->
           <div class="howto-card card-placement">
             <div class="howto-header">
               <span class="howto-badge">👆 PLACEMENT</span>
@@ -141,11 +171,9 @@
             <p>
               <strong>Clique sur n'importe quelle case vide</strong> de la grille pour y déposer ton pion.
               Le jeu alterne automatiquement entre les joueurs — chacun son tour, <em>une case à la fois</em>.
-              Une fois posée, un pion ne bouge plus : la case reste occupée pour le reste de la manche.
             </p>
           </div>
 
-          <!-- Bloc 3 : Fin de manche -->
           <div class="howto-card card-end">
             <div class="howto-header">
               <span class="howto-badge">🏁 FIN DE MANCHE</span>
@@ -153,10 +181,8 @@
             <p>
               La manche se termine uniquement quand <strong>toutes les cases sont occupées</strong>.
               Celui qui a réalisé le <strong>plus d'alignements</strong> remporte le duel.
-              À toi de bloquer l'adversaire tout en construisant tes propres lignes ! 🎯
             </p>
           </div>
-
         </div>
       </div>
     </div>

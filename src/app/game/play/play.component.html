@@ -32,6 +32,26 @@
          ═══════════════════════════════════════════════════════ -->
     <section class="games-selector-section">
       <div class="game-buttons-grid">
+    <!-- 🐵 LYKO DUEL -->
+        <button type="button"
+                class="btn-game btn-lyko btn-duo"
+                data-category="multi"
+                (click)="onSelectLykoduo()"
+                aria-label="Lancer Lyko le Sage">
+          <span class="btn-glow"></span>
+          <span class="btn-border-anim"></span>
+          <span class="btn-icon">🐵</span>
+          <span class="btn-content">
+            <span class="btn-tag tag-new">DUEL</span>
+            <span class="btn-text">LYKO LE SAGE</span>
+            <span class="btn-sub">Jouez avec vos amis ou contre OFFOWA</span>
+          </span>
+          <span class="btn-arrow">→</span>
+          <span class="corner corner-tl"></span>
+          <span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span>
+          <span class="corner corner-br"></span>
+        </button>
 
         <!-- 🔮 L'ORACLE -->
         <button type="button"
@@ -52,28 +72,7 @@
           <span class="corner corner-tr"></span>
           <span class="corner corner-bl"></span>
           <span class="corner corner-br"></span>
-        </button>
-
-        <!-- 🐵 LYKO DUEL -->
-        <button type="button"
-                class="btn-game btn-lyko btn-duo"
-                data-category="multi"
-                (click)="onSelectLykoduo()"
-                aria-label="Lancer Lyko le Sage">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🐵</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-new">DUEL</span>
-            <span class="btn-text">LYKO LE SAGE</span>
-            <span class="btn-sub">Jouez avec vos amis ou contre l'IA</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </button>
+        </button>    
 
         <!-- 🎸 GUITARE LIVE -->
         <a [routerLink]="['/guitar-live']"

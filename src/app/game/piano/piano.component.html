@@ -1,7 +1,8 @@
 <div class="piano-game-container"
      [class.star-power-active]="isStarPowerActive()"
      [class.screen-shake]="screenShake()"
-     [class.melody-mode]="melodyPlaying()">
+     [class.melody-mode]="melodyPlaying()"
+     [class.hardcore-mode]="difficulty() === 'hardcore'">
 
   <!-- ═══════════ FOND ANIMÉ ═══════════ -->
   <div class="animated-background">
@@ -16,17 +17,37 @@
     }
   </div>
 
-  <!-- ═══════════ BARRE SUPÉRIEURE ═══════════ -->
-  <header class="game-top-bar">
-    <button class="btn-back" (click)="goToPlay()">
-      <span class="material-icons">arrow_back</span>
-      <span>RETOUR</span>
-    </button>
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER : Bouton retour + Titre + Bouton son
+       ═══════════════════════════════════════════════════════ -->
+  <header class="game-header">
+    <div class="header-top-row">
 
-    <div class="logo-zone">
-      <span class="icon">🎹</span>
-      <h1>CHARLY PIANO HERO</h1>
-      <div class="logo-glow"></div>
+      <button class="btn-floating-back"
+              (click)="goToPlay()"
+              type="button"
+              aria-label="Retour au menu des jeux">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>Retour</span>
+      </button>
+
+      <h1 class="header-title">
+        <span class="header-icon">🎹</span>
+        <span class="title-text">CHARLY PIANO HERO</span>
+      </h1>
+
+      <button class="btn-sound"
+              (click)="toggleSound()"
+              type="button"
+              [class.active]="!soundEnabled()"
+              [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
+              [attr.title]="soundEnabled() ? 'Couper tous les sons' : 'Activer tous les sons'">
+        <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
+        <span class="sound-label">{{ soundEnabled() ? 'Son activé' : 'Son coupé' }}</span>
+      </button>
     </div>
 
     @if (highScore() > 0) {
@@ -46,14 +67,24 @@
         <div class="score-glow"></div>
       </div>
 
-      <div class="target-card" [@starPowerPulse]="isStarPowerActive() ? 'active' : 'inactive'">
+      <div class="target-card"
+           [@starPowerPulse]="isStarPowerActive() ? 'active' : 'inactive'"
+           [class.hardcore]="difficulty() === 'hardcore'">
         <div class="target-rings">
           <div class="ring ring-1"></div>
           <div class="ring ring-2"></div>
           <div class="ring ring-3"></div>
         </div>
-        <span class="sub-text">JOUE LA NOTE :</span>
-        <h2 class="target-note pulse-target">{{ targetNoteDisplay() }}</h2>
+        <span class="sub-text">
+          {{ difficulty() === 'hardcore' ? 'NOTE MYSTÈRE :' : 'JOUE LA NOTE :' }}
+        </span>
+        <h2 class="target-note pulse-target">
+          @if (difficulty() === 'hardcore') {
+            <span class="mystery-mark">?</span>
+          } @else {
+            {{ targetNoteDisplay() }}
+          }
+        </h2>
         <div class="target-glow"></div>
       </div>
 
@@ -89,7 +120,8 @@
               [class.charging]="starPowerGauge() < 100"
               [class.ready]="starPowerGauge() >= 100 && !isStarPowerActive()"
               [class.active]="isStarPowerActive()"
-              (click)="activateStarPower()">
+              (click)="activateStarPower()"
+              type="button">
         @if (isStarPowerActive()) {
           <span class="btn-icon">⚡</span>
           <span class="btn-text">ACTIF {{ starPowerTimeLeft().toFixed(1) }}s</span>
@@ -236,6 +268,20 @@
           }
         </div>
       </div>
+
+      <!-- ═══════════ FLÈCHES DE SCROLL CLICKABLES ═══════════ -->
+      <button type="button"
+              class="scroll-arrow scroll-arrow-left"
+              (click)="scrollKeyboard(-1)"
+              aria-label="Défiler le clavier vers la gauche">
+        ‹
+      </button>
+      <button type="button"
+              class="scroll-arrow scroll-arrow-right"
+              (click)="scrollKeyboard(1)"
+              aria-label="Défiler le clavier vers la droite">
+        ›
+      </button>
     </div>
   }
 
@@ -254,6 +300,7 @@
   @if (!isPlaying()) {
     <div class="overlay-screen">
 
+      <!-- Écran d'accueil -->
       @if (!isGameOver()) {
         <div class="card-modal" [@modalAnim]>
           <div class="modal-bg-effects">
@@ -270,27 +317,36 @@
           <div class="difficulty-selector">
             <span class="selector-label">DIFFICULTÉ :</span>
             <div class="difficulty-buttons">
-              <button class="diff-btn" [class.active]="difficulty() === 'facile'" (click)="setDifficulty('facile')">
+              <button class="diff-btn"
+                      [class.active]="difficulty() === 'facile'"
+                      (click)="setDifficulty('facile')"
+                      type="button">
                 <span class="diff-icon">🌱</span>
                 <span class="diff-name">FACILE</span>
-                <span class="diff-desc">5 vies · Lent</span>
+                <span class="diff-desc">5 vies · Notes visibles</span>
               </button>
-              <button class="diff-btn" [class.active]="difficulty() === 'normal'" (click)="setDifficulty('normal')">
+              <button class="diff-btn"
+                      [class.active]="difficulty() === 'normal'"
+                      (click)="setDifficulty('normal')"
+                      type="button">
                 <span class="diff-icon">🔥</span>
                 <span class="diff-name">NORMAL</span>
                 <span class="diff-desc">3 vies · Moyen</span>
               </button>
-              <button class="diff-btn" [class.active]="difficulty() === 'hardcore'" (click)="setDifficulty('hardcore')">
+              <button class="diff-btn"
+                      [class.active]="difficulty() === 'hardcore'"
+                      (click)="setDifficulty('hardcore')"
+                      type="button">
                 <span class="diff-icon">⚡</span>
                 <span class="diff-name">DIFFICILE</span>
-                <span class="diff-desc">2 vies · Rapide</span>
+                <span class="diff-desc">2 vies · Aucun indice</span>
               </button>
             </div>
           </div>
 
           <div class="modal-actions-horizontal">
-            <button class="btn-secondary" (click)="goToPlay()">RETOUR</button>
-            <button class="btn-start" (click)="startChallenge()">
+            <button class="btn-secondary" (click)="goToPlay()" type="button">RETOUR</button>
+            <button class="btn-start" (click)="startChallenge()" type="button">
               <span class="btn-glow"></span>
               <span>LANCER LE DÉFI</span>
             </button>
@@ -298,6 +354,7 @@
         </div>
       }
 
+      <!-- Fin de partie -->
       @if (isGameOver()) {
         <div class="card-modal game-over-modal" [@modalAnim]>
           <div class="game-over-header">
@@ -328,12 +385,24 @@
             <div class="new-record">🎉 NOUVEAU RECORD ! 🎉</div>
           }
 
-          <div class="modal-actions">
-            <button class="btn-start" (click)="startChallenge()">
+          <!-- ═══════════ 3 ACTIONS : Rejouer / Changer difficulté / Quitter ═══════════ -->
+          <div class="modal-actions-extended">
+
+            <button class="btn-start" (click)="startChallenge()" type="button">
               <span class="btn-glow"></span>
-              <span>RÉESSAYER</span>
+              <span class="material-icons">refresh</span>
+              <span>REJOUER MÊME DIFFICULTÉ</span>
             </button>
-            <button class="btn-secondary" (click)="goToPlay()">RETOUR AU MENU</button>
+
+            <button class="btn-change-diff" (click)="backToDifficultySelect()" type="button">
+              <span class="material-icons">tune</span>
+              <span>CHANGER DE DIFFICULTÉ</span>
+            </button>
+
+            <button class="btn-secondary" (click)="goToPlay()" type="button">
+              <span class="material-icons">arrow_back</span>
+              <span>RETOUR AU MENU DES JEUX</span>
+            </button>
           </div>
         </div>
       }
