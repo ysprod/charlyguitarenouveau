@@ -1,7 +1,34 @@
-import { animate, keyframes, style, transition, trigger, state } from '@angular/animations';
-import { Component, OnDestroy, OnInit, signal, computed, inject, effect } from '@angular/core';
+import {
+  animate,
+  keyframes,
+  style,
+  transition,
+  trigger,
+  state
+} from '@angular/animations';
+
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked
+} from '@angular/core';
+
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+
+/* ═══════════════════════════════════════════════════════
+   TYPES
+   ═══════════════════════════════════════════════════════ */
+
+type Difficulty = 'facile' | 'normal' | 'hardcore';
+type FeedbackKind = 'success' | 'error' | 'perfect';
+type UiSoundKind = 'click' | 'error' | 'gameover' | 'start' | 'perfect' | 'starpower';
 
 interface MelodyChord {
   name: string;
@@ -44,30 +71,85 @@ interface PlayingVoice {
   startTime: number;
 }
 
+interface DifficultyOption {
+  id: Difficulty;
+  icon: string;
+  name: string;
+  desc: string;
+  lives: number;
+  timeMultiplier: number;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CONSTANTES (hors classe — évite allocations inutiles)
+   ═══════════════════════════════════════════════════════ */
+
+const CHROMATIC_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
+
+const FRENCH_NOTE_SEQUENCE = [
+  'DO', 'DO#', 'RÉ', 'RÉ#', 'MI', 'FA',
+  'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'
+] as const;
+
+const NOTE_TO_MIDI_OFFSET: Record<string, number> = {
+  C: 0, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5,
+  'F#': 6, G: 7, 'G#': 8, A: 9, 'A#': 10, B: 11
+};
+
+const CONFETTI_COLORS = [
+  '#FFD700', '#FF6B9D', '#00D4FF', '#00FF88',
+  '#B266FF', '#FF4500', '#FFB347', '#9D4EDD'
+] as const;
+
+const DIFFICULTIES: readonly DifficultyOption[] = [
+  { id: 'facile',   icon: '🌱', name: 'FACILE',   desc: '5 vies · Lent',    lives: 5, timeMultiplier: 0.8 },
+  { id: 'normal',   icon: '🔥', name: 'NORMAL',   desc: '3 vies · Moyen',   lives: 3, timeMultiplier: 1.5 },
+  { id: 'hardcore', icon: '🌟', name: 'DIFFICILE', desc: '2 vies · Rapide',  lives: 2, timeMultiplier: 2.2 }
+] as const;
+
+const DIFFICULTY_MAP: Record<Difficulty, DifficultyOption> = {
+  facile:   DIFFICULTIES[0],
+  normal:   DIFFICULTIES[1],
+  hardcore: DIFFICULTIES[2]
+};
+
+const MAX_TIME = 200;
+const STAR_POWER_DURATION = 8;
+const STAR_POWER_DRAIN_PER_TICK = 1.25;
+const STAR_POWER_GAIN_ON_HIT = 12;
+const COMBO_MELODY_TRIGGER = 7;
+const COMBO_SHAKE_TRIGGER = 10;
+const PERFECT_TIME_THRESHOLD = 0.7;
+
+/* ═══════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════ */
+
 @Component({
   selector: 'app-fretboard',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './fretboard.component.html',
   styleUrls: ['./fretboard.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('feedbackAnim', [
       transition(':enter', [
         animate('700ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', keyframes([
           style({ transform: 'scale(0.2) rotate(-15deg)', opacity: 0, offset: 0 }),
-          style({ transform: 'scale(1.4) rotate(8deg)', opacity: 1, offset: 0.35 }),
+          style({ transform: 'scale(1.4) rotate(8deg)',   opacity: 1, offset: 0.35 }),
           style({ transform: 'scale(0.95) rotate(-3deg)', opacity: 1, offset: 0.6 }),
-          style({ transform: 'scale(1.05) rotate(0deg)', opacity: 1, offset: 0.8 }),
-          style({ transform: 'scale(1.2) rotate(0deg)', opacity: 0, offset: 1 })
+          style({ transform: 'scale(1.05) rotate(0deg)',  opacity: 1, offset: 0.8 }),
+          style({ transform: 'scale(1.2) rotate(0deg)',   opacity: 0, offset: 1 })
         ]))
       ])
     ]),
     trigger('modalAnim', [
       transition(':enter', [
         animate('600ms cubic-bezier(0.34, 1.56, 0.64, 1)', keyframes([
-          style({ transform: 'scale(0.5) translateY(80px) rotateX(20deg)', opacity: 0, offset: 0 }),
+          style({ transform: 'scale(0.5) translateY(80px) rotateX(20deg)',   opacity: 0, offset: 0 }),
           style({ transform: 'scale(1.08) translateY(-10px) rotateX(-2deg)', opacity: 1, offset: 0.7 }),
-          style({ transform: 'scale(1) translateY(0) rotateX(0)', opacity: 1, offset: 1 })
+          style({ transform: 'scale(1) translateY(0) rotateX(0)',           opacity: 1, offset: 1 })
         ]))
       ])
     ]),
@@ -76,7 +158,7 @@ interface PlayingVoice {
         animate('800ms cubic-bezier(0.22, 1, 0.36, 1)', keyframes([
           style({ transform: 'scale(0.3) translateY(-60px)', opacity: 0, offset: 0 }),
           style({ transform: 'scale(1.15) translateY(10px)', opacity: 1, offset: 0.5 }),
-          style({ transform: 'scale(1) translateY(0)', opacity: 1, offset: 1 })
+          style({ transform: 'scale(1) translateY(0)',       opacity: 1, offset: 1 })
         ]))
       ]),
       transition(':leave', [
@@ -85,24 +167,27 @@ interface PlayingVoice {
     ]),
     trigger('starPowerPulse', [
       state('inactive', style({ transform: 'scale(1)' })),
-      state('active', style({ transform: 'scale(1.02)' })),
+      state('active',   style({ transform: 'scale(1.02)' })),
       transition('inactive <=> active', animate('400ms ease-in-out'))
     ]),
     trigger('comboFlash', [
       transition('* => *', [
         animate('500ms ease-out', keyframes([
-          style({ transform: 'scale(1)', offset: 0 }),
+          style({ transform: 'scale(1)',   offset: 0 }),
           style({ transform: 'scale(1.5)', color: '#FFD700', offset: 0.3 }),
-          style({ transform: 'scale(1)', offset: 1 })
+          style({ transform: 'scale(1)',   offset: 1 })
         ]))
       ])
     ])
   ]
 })
 export class FretboardComponent implements OnInit, OnDestroy {
-  private router = inject(Router);
 
-  readonly strings: GuitarString[] = [
+  /* ─── Injection ─── */
+  private readonly router = inject(Router);
+
+  /* ─── Constantes exposées au template ─── */
+  readonly strings: readonly GuitarString[] = [
     { index: 1, name: 'E', gaugeMm: 0.30, baseMidi: 64 },
     { index: 2, name: 'B', gaugeMm: 0.41, baseMidi: 59 },
     { index: 3, name: 'G', gaugeMm: 0.61, baseMidi: 55 },
@@ -115,120 +200,132 @@ export class FretboardComponent implements OnInit, OnDestroy {
   readonly frets = Array.from({ length: 13 }, (_, i) => i);
   readonly stringColors = ['#E6C280', '#D4AF37', '#B8860B', '#CD7F32', '#8B5A2B', '#5C4033'];
 
-  readonly singleDotFrets = [3, 5, 7, 9];
-  readonly doubleDotFret = 12;
+  readonly DIFFICULTIES = DIFFICULTIES;
+  readonly STAR_POWER_STARS = Array.from({ length: 10 }, (_, i) => i);
+  readonly SPARKLES = [1, 2, 3, 4, 5, 6];
+  readonly LIVES_INDICES = [0, 1, 2, 3, 4];
 
-  // ─── État de jeu ───
-  score = signal(0);
-  combo = signal(0);
-  maxCombo = signal(0);
-  lives = signal(7);
-  targetNote = signal('');
-  timeLeft = signal(200);
-  isPlaying = signal(false);
-  isGameOver = signal(false);
-  isTimerPaused = signal(false);
-  notesHit = signal(0);
-  notesMissed = signal(0);
-  streak = signal(0);
+  /* ─── État de jeu ─── */
+  readonly score = signal(0);
+  readonly combo = signal(0);
+  readonly maxCombo = signal(0);
+  readonly lives = signal(DIFFICULTY_MAP.normal.lives);
+  readonly targetNote = signal('');
+  readonly timeLeft = signal(MAX_TIME);
+  readonly isPlaying = signal(false);
+  readonly isGameOver = signal(false);
+  readonly isTimerPaused = signal(false);
+  readonly notesHit = signal(0);
+  readonly notesMissed = signal(0);
+  readonly streak = signal(0);
 
-  // ─── Star Power ───
-  starPowerGauge = signal(0);
-  isStarPowerActive = signal(false);
-  starPowerTimeLeft = signal(0);
+  /* ─── Star Power ─── */
+  readonly starPowerGauge = signal(0);
+  readonly isStarPowerActive = signal(false);
+  readonly starPowerTimeLeft = signal(0);
 
-  multiplier = computed(() => {
+  /* ─── UI / Feedback ─── */
+  readonly feedbackMessage = signal<string | null>(null);
+  readonly feedbackType = signal<FeedbackKind>('success');
+  readonly feedbackKey = signal(0);
+  readonly highScore = signal(0);
+  readonly difficulty = signal<Difficulty>('normal');
+  readonly screenShake = signal(false);
+  readonly comboFlashKey = signal(0);
+
+  /* ─── Effets visuels ─── */
+  readonly particles = signal<Particle[]>([]);
+  readonly correctFretIndex = signal(-1);
+  readonly correctStringIndex = signal(-1);
+  readonly activeVibratingString = signal(-1);
+  readonly hitEffects = signal<Set<string>>(new Set());
+  readonly confettiParticles = signal<ConfettiParticle[]>([]);
+
+  /* ─── Mélodie ─── */
+  readonly melodyPlaying = signal(false);
+  readonly melodyChordIndex = signal(-1);
+  readonly melodyChordName = signal('');
+  readonly melodyChordFrench = signal('');
+  readonly melodyChordColor = signal('#FFD700');
+  readonly melodyActiveNote = signal<{ stringIdx: number; fretIdx: number } | null>(null);
+  readonly melodySequence = signal<MelodyChord[]>([]);
+
+  /* ─── Computed ─── */
+  readonly multiplier = computed(() => {
     const c = this.combo();
     if (c >= 20) return 6;
     if (c >= 15) return 5;
     if (c >= 12) return 4;
-    if (c >= 8) return 3;
-    if (c >= 4) return 2;
+    if (c >= 8)  return 3;
+    if (c >= 4)  return 2;
     return 1;
   });
 
-  effectiveMultiplier = computed(() =>
+  readonly effectiveMultiplier = computed(() =>
     this.multiplier() * (this.isStarPowerActive() ? 2 : 1)
   );
 
-  accuracy = computed(() => {
+  readonly accuracy = computed(() => {
     const total = this.notesHit() + this.notesMissed();
     return total === 0 ? 100 : Math.round((this.notesHit() / total) * 100);
   });
 
-  // ─── UI & Feedback ───
-  feedbackMessage = signal<string | null>(null);
-  feedbackType = signal<'success' | 'error' | 'perfect'>('success');
-  feedbackKey = signal(0);
-  highScore = signal(0);
-  difficulty = signal<'facile' | 'normal' | 'hardcore'>('normal');
-  screenShake = signal(false);
-  comboFlashKey = signal(0);
+  readonly timerPercent = computed(() =>
+    (this.timeLeft() / MAX_TIME) * 100
+  );
 
-  // ─── Effets visuels ───
-  particles = signal<Particle[]>([]);
-  correctFretIndex = signal(-1);
-  correctStringIndex = signal(-1);
-  activeVibratingString = signal(-1);
-  hitEffects = signal<{ id: number; stringIdx: number; fretIdx: number }[]>([]);
-  confettiParticles = signal<ConfettiParticle[]>([]);
+  readonly timerColor = computed(() => {
+    const pct = this.timerPercent();
+    if (pct < 20) return 'linear-gradient(90deg, #ef4444, #f59e0b)';
+    if (pct < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24, #10b981)';
+    return 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)';
+  });
 
-  // ─── Mélodie ───
-  melodyPlaying = signal(false);
-  melodyChordIndex = signal(-1);
-  melodyChordName = signal('');
-  melodyChordFrench = signal('');
-  melodyChordColor = signal('#FFD700');
-  melodyActiveNote = signal<{ stringIdx: number; fretIdx: number } | null>(null);
-
-  readonly chordPool: MelodyChord[] = [
-    { name: 'Am', frenchName: 'La mineur', color: '#B266FF', bassNote: 'A2',
+  /* ─── Chords disponibles ─── */
+  private readonly chordPool: readonly MelodyChord[] = [
+    { name: 'Am', frenchName: 'La mineur',  color: '#B266FF', bassNote: 'A2',
       arpeggio: [{ stringIdx: 5, fretIdx: 0 }, { stringIdx: 4, fretIdx: 2 }, { stringIdx: 3, fretIdx: 2 }, { stringIdx: 2, fretIdx: 1 }, { stringIdx: 1, fretIdx: 0 }] },
-    { name: 'C', frenchName: 'Do majeur', color: '#FFD700', bassNote: 'C3',
+    { name: 'C',  frenchName: 'Do majeur',  color: '#FFD700', bassNote: 'C3',
       arpeggio: [{ stringIdx: 5, fretIdx: 3 }, { stringIdx: 4, fretIdx: 2 }, { stringIdx: 3, fretIdx: 0 }, { stringIdx: 2, fretIdx: 1 }, { stringIdx: 1, fretIdx: 0 }] },
-    { name: 'G', frenchName: 'Sol majeur', color: '#00FF88', bassNote: 'G2',
+    { name: 'G',  frenchName: 'Sol majeur', color: '#00FF88', bassNote: 'G2',
       arpeggio: [{ stringIdx: 6, fretIdx: 3 }, { stringIdx: 5, fretIdx: 2 }, { stringIdx: 4, fretIdx: 0 }, { stringIdx: 3, fretIdx: 0 }, { stringIdx: 2, fretIdx: 0 }] },
-    { name: 'Dm', frenchName: 'Ré mineur', color: '#00D4FF', bassNote: 'D3',
+    { name: 'Dm', frenchName: 'Ré mineur',  color: '#00D4FF', bassNote: 'D3',
       arpeggio: [{ stringIdx: 4, fretIdx: 0 }, { stringIdx: 3, fretIdx: 2 }, { stringIdx: 2, fretIdx: 3 }, { stringIdx: 1, fretIdx: 1 }] },
-    { name: 'Em', frenchName: 'Mi mineur', color: '#FF6B9D', bassNote: 'E2',
+    { name: 'Em', frenchName: 'Mi mineur',  color: '#FF6B9D', bassNote: 'E2',
       arpeggio: [{ stringIdx: 6, fretIdx: 0 }, { stringIdx: 5, fretIdx: 2 }, { stringIdx: 4, fretIdx: 2 }, { stringIdx: 3, fretIdx: 0 }, { stringIdx: 2, fretIdx: 0 }, { stringIdx: 1, fretIdx: 0 }] },
-    { name: 'F', frenchName: 'Fa majeur', color: '#FFB347', bassNote: 'F2',
+    { name: 'F',  frenchName: 'Fa majeur',  color: '#FFB347', bassNote: 'F2',
       arpeggio: [{ stringIdx: 6, fretIdx: 1 }, { stringIdx: 5, fretIdx: 3 }, { stringIdx: 4, fretIdx: 3 }, { stringIdx: 3, fretIdx: 2 }, { stringIdx: 2, fretIdx: 1 }, { stringIdx: 1, fretIdx: 1 }] },
-    { name: 'E', frenchName: 'Mi majeur', color: '#FF4500', bassNote: 'E2',
+    { name: 'E',  frenchName: 'Mi majeur',  color: '#FF4500', bassNote: 'E2',
       arpeggio: [{ stringIdx: 6, fretIdx: 0 }, { stringIdx: 5, fretIdx: 2 }, { stringIdx: 4, fretIdx: 2 }, { stringIdx: 3, fretIdx: 1 }, { stringIdx: 2, fretIdx: 0 }, { stringIdx: 1, fretIdx: 0 }] },
-    { name: 'A', frenchName: 'La majeur', color: '#9D4EDD', bassNote: 'A2',
-      arpeggio: [{ stringIdx: 5, fretIdx: 0 }, { stringIdx: 4, fretIdx: 2 }, { stringIdx: 3, fretIdx: 2 }, { stringIdx: 2, fretIdx: 2 }, { stringIdx: 1, fretIdx: 0 }] },
+    { name: 'A',  frenchName: 'La majeur',  color: '#9D4EDD', bassNote: 'A2',
+      arpeggio: [{ stringIdx: 5, fretIdx: 0 }, { stringIdx: 4, fretIdx: 2 }, { stringIdx: 3, fretIdx: 2 }, { stringIdx: 2, fretIdx: 2 }, { stringIdx: 1, fretIdx: 0 }] }
   ];
 
-  readonly melodieOrigines: MelodyChord[] = this.chordPool.slice(0, 4);
-
-  private timerInterval: any;
-  private starPowerInterval: any;
-  private readonly maxTime = 200;
+  /* ─── Intervals & timers ─── */
+  private timerInterval?: ReturnType<typeof setInterval>;
+  private starPowerInterval?: ReturnType<typeof setInterval>;
+  private melodyTimeoutIds: ReturnType<typeof setTimeout>[] = [];
+  private confettiTimeoutIds: ReturnType<typeof setTimeout>[] = [];
   private isMelodyPlaying = false;
-  private melodyTimeoutIds: any[] = [];
   private particleId = 0;
   private effectId = 0;
   private confettiId = 0;
-  private confettiTimeoutIds: any[] = [];
 
-  // ─── Audio (synthèse pure) ───
+  /* ─── Audio ─── */
   private audioCtx?: AudioContext;
-  private activeVoices: Map<number, PlayingVoice> = new Map();
-  private melodyVoices: Set<OscillatorNode> = new Set();
-
-  private readonly noteToMidiOffset: Record<string, number> = {
-    'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5,
-    'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
-  };
+  private readonly activeVoices = new Map<number, PlayingVoice>();
+  private readonly melodyVoices = new Set<OscillatorNode>();
 
   constructor() {
+    // Flash combo tous les 4 points
     effect(() => {
       const c = this.combo();
-      if (c > 0 && c % 4 === 0) {
-        this.comboFlashKey.update(k => k + 1);
-      }
-    }, { allowSignalWrites: true });
+      untracked(() => {
+        if (c > 0 && c % 4 === 0) {
+          this.comboFlashKey.update(k => k + 1);
+        }
+      });
+    });
   }
 
   ngOnInit(): void {
@@ -236,11 +333,23 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.loadHighScore();
   }
 
+  ngOnDestroy(): void {
+    this.clearIntervals();
+    this.stopMelody();
+    this.stopConfetti();
+    this.activeVoices.forEach(v => {
+      try { v.source.stop(); } catch { /* noop */ }
+    });
+    this.activeVoices.clear();
+    void this.audioCtx?.close();
+  }
+
   /* ═══════════════════════════════════════════════════════
-     MOTEUR AUDIO — SYNTHÈSE PURE
+     AUDIO — SYNTHÈSE PURE
      ═══════════════════════════════════════════════════════ */
+
   private initAudioContext(): void {
-    const Ctor = window.AudioContext || (window as any).webkitAudioContext;
+    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (Ctor) this.audioCtx = new Ctor();
   }
 
@@ -250,18 +359,16 @@ export class FretboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Note → index MIDI absolu. */
   private noteToMidiIndex(note: string): number {
-    const match = note.match(/^([A-G]#?)(\d+)$/);
+    const match = /^([A-G]#?)(\d+)$/.exec(note);
     if (!match) return 60;
     const [, pitch, octaveStr] = match;
-    return (parseInt(octaveStr, 10) + 1) * 12 + (this.noteToMidiOffset[pitch] ?? 0);
+    return (Number(octaveStr) + 1) * 12 + (NOTE_TO_MIDI_OFFSET[pitch] ?? 0);
   }
 
   /**
-   * Synthèse réaliste de guitare acoustique :
-   * - 3 oscillateurs (fondamentale + 2 harmoniques) pour un son riche
-   * - Filtre passe-bas pour simuler la caisse de résonance
-   * - Enveloppe ADSR réaliste (attaque rapide + decay naturel)
+   * Joue une note de guitare acoustique (corde unique, avec damping).
    */
   private playAcousticGuitarNote(
     stringIdx: number,
@@ -274,31 +381,21 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
     this.dampPreviousStringNote(stringIdx);
 
-    const targetMidi = this.noteToMidiIndex(toneNote);
-    const targetFreq = 440 * Math.pow(2, (targetMidi - 69) / 12);
-    const startTime = this.audioCtx.currentTime + delaySeconds;
-
-    // ─── Nœuds audio ───
+    const { freq, startTime } = this.getFreqAndStart(toneNote, delaySeconds);
     const gainNode = this.audioCtx.createGain();
     const bodyFilter = this.audioCtx.createBiquadFilter();
     const pickFilter = this.audioCtx.createBiquadFilter();
 
-    // Filtre caisse (résonance bois)
     bodyFilter.type = 'lowpass';
-    bodyFilter.frequency.setValueAtTime(targetFreq * 4, startTime);
-    bodyFilter.frequency.exponentialRampToValueAtTime(
-      targetFreq * 1.5,
-      startTime + duration * 0.6
-    );
+    bodyFilter.frequency.setValueAtTime(freq * 4, startTime);
+    bodyFilter.frequency.exponentialRampToValueAtTime(freq * 1.5, startTime + duration * 0.6);
     bodyFilter.Q.value = 1.2;
 
-    // Filtre médiator (brillance)
     pickFilter.type = 'peaking';
-    pickFilter.frequency.value = targetFreq * 6;
+    pickFilter.frequency.value = freq * 6;
     pickFilter.Q.value = 0.8;
     pickFilter.gain.value = 4;
 
-    // Enveloppe ADSR
     const isBassString = stringIdx >= 5;
     const attack = isBassString ? 0.004 : 0.002;
     const decay = 0.08;
@@ -306,49 +403,15 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
     gainNode.gain.setValueAtTime(0.0001, startTime);
     gainNode.gain.linearRampToValueAtTime(volume, startTime + attack);
-    gainNode.gain.exponentialRampToValueAtTime(
-      volume * sustainLevel,
-      startTime + attack + decay
-    );
+    gainNode.gain.exponentialRampToValueAtTime(volume * sustainLevel, startTime + attack + decay);
     gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
-    // ─── 3 oscillateurs (harmoniques) ───
-    const harmonics: Array<{ type: OscillatorType; ratio: number; gain: number }> = [
-      { type: 'triangle', ratio: 1,     gain: 0.6 },
-      { type: 'sine',     ratio: 2,     gain: 0.25 },
-      { type: 'sine',     ratio: 3.01,  gain: 0.15 }
-    ];
+    const oscillators = this.buildHarmonics(freq, startTime, duration, [
+      { type: 'triangle', ratio: 1,    gain: 0.6 },
+      { type: 'sine',     ratio: 2,    gain: 0.25 },
+      { type: 'sine',     ratio: 3.01, gain: 0.15 }
+    ], pickFilter, true);
 
-    const oscillators: OscillatorNode[] = [];
-
-    harmonics.forEach(({ type, ratio, gain: hGain }) => {
-      const osc = this.audioCtx!.createOscillator();
-      const hGainNode = this.audioCtx!.createGain();
-
-      osc.type = type;
-      osc.frequency.setValueAtTime(targetFreq * ratio, startTime);
-
-      // Vibrato léger (naturel)
-      const lfo = this.audioCtx!.createOscillator();
-      const lfoGain = this.audioCtx!.createGain();
-      lfo.frequency.value = 4.5 + Math.random() * 1.5;
-      lfoGain.gain.value = targetFreq * 0.003;
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc.frequency);
-      lfo.start(startTime);
-      lfo.stop(startTime + duration);
-
-      hGainNode.gain.value = hGain;
-
-      osc.connect(hGainNode);
-      hGainNode.connect(pickFilter);
-
-      osc.start(startTime);
-      osc.stop(startTime + duration + 0.05);
-      oscillators.push(osc);
-    });
-
-    // ─── Chaîne : osc → gain harmonique → pick → body → master → destination ───
     pickFilter.connect(bodyFilter);
     bodyFilter.connect(gainNode);
     gainNode.connect(this.audioCtx.destination);
@@ -362,7 +425,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Joue une note de mélodie (multi-voix, sans damper les autres)
+   * Joue une note de mélodie (multi-voix, sans damper les autres).
    */
   private playMelodyNote(
     stringIdx: number,
@@ -373,76 +436,111 @@ export class FretboardComponent implements OnInit, OnDestroy {
   ): void {
     if (!this.audioCtx || this.audioCtx.state !== 'running') return;
 
-    const targetMidi = this.noteToMidiIndex(toneNote);
-    const targetFreq = 440 * Math.pow(2, (targetMidi - 69) / 12);
-    const startTime = this.audioCtx.currentTime + delaySeconds;
-
+    const { freq, startTime } = this.getFreqAndStart(toneNote, delaySeconds);
     const gainNode = this.audioCtx.createGain();
     const filter = this.audioCtx.createBiquadFilter();
 
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(targetFreq * 5, startTime);
-    filter.frequency.exponentialRampToValueAtTime(
-      targetFreq * 1.8,
-      startTime + duration * 0.7
-    );
+    filter.frequency.setValueAtTime(freq * 5, startTime);
+    filter.frequency.exponentialRampToValueAtTime(freq * 1.8, startTime + duration * 0.7);
 
     gainNode.gain.setValueAtTime(0.0001, startTime);
     gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.008);
-    gainNode.gain.exponentialRampToValueAtTime(
-      volume * 0.4,
-      startTime + 0.15
-    );
+    gainNode.gain.exponentialRampToValueAtTime(volume * 0.4, startTime + 0.15);
     gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
-    const harmonics: Array<{ type: OscillatorType; ratio: number; gain: number }> = [
+    this.buildHarmonics(freq, startTime, duration, [
       { type: 'triangle', ratio: 1,    gain: 0.7 },
       { type: 'sine',     ratio: 2,    gain: 0.2 },
       { type: 'sine',     ratio: 3.01, gain: 0.1 }
-    ];
-
-    harmonics.forEach(({ type, ratio, gain: hGain }) => {
-      const osc = this.audioCtx!.createOscillator();
-      const hGainNode = this.audioCtx!.createGain();
-
-      osc.type = type;
-      osc.frequency.setValueAtTime(targetFreq * ratio, startTime);
-      hGainNode.gain.value = hGain;
-
-      osc.connect(hGainNode);
-      hGainNode.connect(filter);
-
-      osc.start(startTime);
-      osc.stop(startTime + duration + 0.05);
-
-      this.melodyVoices.add(osc);
-      osc.onended = () => this.melodyVoices.delete(osc);
-    });
+    ], filter, true, /* trackMelody */ true);
 
     filter.connect(gainNode);
     gainNode.connect(this.audioCtx.destination);
   }
 
+  private getFreqAndStart(toneNote: string, delaySeconds: number) {
+    const targetMidi = this.noteToMidiIndex(toneNote);
+    const freq = 440 * Math.pow(2, (targetMidi - 69) / 12);
+    const startTime = this.audioCtx!.currentTime + delaySeconds;
+    return { freq, startTime };
+  }
+
+  /**
+   * Construit les oscillateurs harmoniques + LFO de vibrato.
+   * Retourne le tableau des oscillateurs créés.
+   */
+  private buildHarmonics(
+    freq: number,
+    startTime: number,
+    duration: number,
+    harmonics: readonly { type: OscillatorType; ratio: number; gain: number }[],
+    output: AudioNode,
+    withVibrato = false,
+    trackMelody = false
+  ): OscillatorNode[] {
+    const ctx = this.audioCtx!;
+    const oscillators: OscillatorNode[] = [];
+
+    for (const { type, ratio, gain } of harmonics) {
+      const osc = ctx.createOscillator();
+      const hGain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq * ratio, startTime);
+      hGain.gain.value = gain;
+
+      if (withVibrato) {
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = 4.5 + Math.random() * 1.5;
+        lfoGain.gain.value = freq * 0.003;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        lfo.start(startTime);
+        lfo.stop(startTime + duration);
+      }
+
+      osc.connect(hGain);
+      hGain.connect(output);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+
+      oscillators.push(osc);
+
+      if (trackMelody) {
+        this.melodyVoices.add(osc);
+        osc.onended = () => this.melodyVoices.delete(osc);
+      }
+    }
+
+    return oscillators;
+  }
+
   private dampPreviousStringNote(stringIdx: number, dampingDuration = 0.04): void {
     const existing = this.activeVoices.get(stringIdx);
-    if (existing && this.audioCtx) {
-      const now = this.audioCtx.currentTime;
-      existing.gainNode.gain.cancelScheduledValues(now);
-      existing.gainNode.gain.setValueAtTime(existing.gainNode.gain.value, now);
-      existing.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + dampingDuration);
-      setTimeout(() => {
-        try {
-          existing.source.stop();
-          existing.source.disconnect();
-        } catch {}
-      }, dampingDuration * 1000 + 10);
-      this.activeVoices.delete(stringIdx);
-    }
+    if (!existing || !this.audioCtx) return;
+
+    const now = this.audioCtx.currentTime;
+    existing.gainNode.gain.cancelScheduledValues(now);
+    existing.gainNode.gain.setValueAtTime(existing.gainNode.gain.value, now);
+    existing.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + dampingDuration);
+
+    setTimeout(() => {
+      try {
+        existing.source.stop();
+        existing.source.disconnect();
+      } catch { /* noop */ }
+    }, dampingDuration * 1000 + 10);
+
+    this.activeVoices.delete(stringIdx);
   }
 
   /* ═══════════════════════════════════════════════════════
-     LOGIQUE DU JEU
+     GAME LOOP
      ═══════════════════════════════════════════════════════ */
+
   async startGame(): Promise<void> {
     await this.ensureAudioContextRunning();
     this.stopMelody();
@@ -465,21 +563,22 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.nextRound();
   }
 
-  startTimer(): void {
+  private startTimer(): void {
     clearInterval(this.timerInterval);
-    this.timeLeft.set(this.maxTime);
+    this.timeLeft.set(MAX_TIME);
 
     this.timerInterval = setInterval(() => {
       if (!this.isPlaying()) return;
       if (this.isTimerPaused()) return;
+
       this.timeLeft.update(t => t - this.getTimeMultiplier());
       if (this.timeLeft() <= 0) this.handleMiss(true);
     }, 100);
   }
 
-  nextRound(): void {
-    const randomIndex = Math.floor(Math.random() * this.notesList.length);
-    this.targetNote.set(this.notesList[randomIndex]);
+  private nextRound(): void {
+    const idx = Math.floor(Math.random() * this.notesList.length);
+    this.targetNote.set(this.notesList[idx]);
     this.correctFretIndex.set(-1);
     this.correctStringIndex.set(-1);
     this.startTimer();
@@ -508,19 +607,19 @@ export class FretboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleSuccess(fretIdx: number, stringIdx: number): void {
+  private handleSuccess(fretIdx: number, stringIdx: number): void {
     this.combo.update(c => c + 1);
     this.streak.update(s => s + 1);
     this.notesHit.update(n => n + 1);
     if (this.combo() > this.maxCombo()) this.maxCombo.set(this.combo());
 
     const starPowerBonus = this.isStarPowerActive() ? 2 : 1;
-    const perfectBonus = this.timeLeft() > this.maxTime * 0.7 ? 1.5 : 1;
+    const perfectBonus = this.timeLeft() > MAX_TIME * PERFECT_TIME_THRESHOLD ? 1.5 : 1;
     const basePoints = Math.round(100 * this.multiplier() * starPowerBonus * perfectBonus);
     this.score.update(s => s + basePoints);
 
     if (!this.isStarPowerActive()) {
-      this.starPowerGauge.update(g => Math.min(100, g + 12));
+      this.starPowerGauge.update(g => Math.min(100, g + STAR_POWER_GAIN_ON_HIT));
     }
 
     this.correctFretIndex.set(fretIdx);
@@ -528,8 +627,9 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.triggerParticles(stringIdx, fretIdx);
     this.triggerHitEffect(stringIdx, fretIdx);
 
-    const isPerfect = this.timeLeft() > this.maxTime * 0.75;
+    const isPerfect = this.timeLeft() > MAX_TIME * 0.75;
     const comboText = this.effectiveMultiplier() > 1 ? ` x${this.effectiveMultiplier()}` : '';
+
     if (isPerfect) {
       this.showFeedback(`PARFAIT ! +${basePoints}${comboText}`, 'perfect');
       this.playUiSound('perfect');
@@ -537,18 +637,18 @@ export class FretboardComponent implements OnInit, OnDestroy {
       this.showFeedback(`BIEN ! +${basePoints}${comboText}`, 'success');
     }
 
-    if (this.combo() > 0 && this.combo() % 7 === 0) {
-      this.playMelodieDesOrigines();
+    if (this.combo() > 0 && this.combo() % COMBO_MELODY_TRIGGER === 0) {
+      void this.playMelodieDesOrigines();
     }
 
-    if (this.combo() > 0 && this.combo() % 10 === 0) {
+    if (this.combo() > 0 && this.combo() % COMBO_SHAKE_TRIGGER === 0) {
       this.triggerScreenShake();
     }
 
     this.nextRound();
   }
 
-  handleMiss(isTimeout: boolean): void {
+  private handleMiss(isTimeout: boolean): void {
     if (this.isTimerPaused() || this.isMelodyPlaying) return;
 
     this.combo.set(0);
@@ -557,7 +657,6 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.lives.update(l => l - 1);
     this.playUiSound('error');
     this.triggerScreenShake();
-
     this.showFeedback(isTimeout ? 'TEMPS ÉCOULÉ !' : 'RATÉ !', 'error');
 
     if (this.lives() <= 0) {
@@ -572,7 +671,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
     this.isStarPowerActive.set(true);
     this.starPowerGauge.set(100);
-    this.starPowerTimeLeft.set(8);
+    this.starPowerTimeLeft.set(STAR_POWER_DURATION);
     this.playUiSound('starpower');
     this.showFeedback('⚡ STAR POWER ACTIVÉ ! ⚡', 'perfect');
     this.triggerScreenShake();
@@ -586,7 +685,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
           this.isStarPowerActive.set(false);
           return 0;
         }
-        return g - 1.25;
+        return g - STAR_POWER_DRAIN_PER_TICK;
       });
     }, 100);
   }
@@ -594,6 +693,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      MÉLODIE DES ORIGINES
      ═══════════════════════════════════════════════════════ */
+
   private async playMelodieDesOrigines(): Promise<void> {
     if (this.isMelodyPlaying) return;
 
@@ -605,8 +705,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
     const shuffled = [...this.chordPool].sort(() => Math.random() - 0.5);
     const chosen = shuffled.slice(0, 4);
 
-    (this.melodieOrigines as MelodyChord[]).length = 0;
-    (this.melodieOrigines as MelodyChord[]).push(...chosen);
+    this.melodySequence.set(chosen);
 
     this.isMelodyPlaying = true;
     this.melodyPlaying.set(true);
@@ -617,53 +716,52 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.playUiSound('perfect');
     this.triggerScreenShake();
 
-    const chordSpacing = 1.6;
-    const arpeggioDelay = 0.09;
+    const CHORD_SPACING = 1.6;
+    const ARPEGGIO_DELAY = 0.09;
 
     chosen.forEach((chord, i) => {
-      const chordStart = i * chordSpacing + 0.3;
+      const chordStart = i * CHORD_SPACING + 0.3;
 
-      const bannerTimeout = setTimeout(() => {
+      this.pushMelodyTimeout(() => {
         this.melodyChordIndex.set(i);
         this.melodyChordName.set(chord.name);
         this.melodyChordFrench.set(chord.frenchName);
         this.melodyChordColor.set(chord.color);
       }, chordStart * 1000);
-      this.melodyTimeoutIds.push(bannerTimeout);
 
       this.playMelodyNote(6, chord.bassNote, 2.8, 0.55, chordStart);
 
       chord.arpeggio.forEach((note, nIdx) => {
-        const noteDelay = chordStart + 0.10 + nIdx * arpeggioDelay;
+        const noteDelay = chordStart + 0.10 + nIdx * ARPEGGIO_DELAY;
         const toneNote = this.getToneNoteForFret(note.stringIdx, note.fretIdx);
 
         this.playMelodyNote(note.stringIdx, toneNote, 2.4, 0.40, noteDelay);
 
-        const highlightTimeout = setTimeout(() => {
+        this.pushMelodyTimeout(() => {
           this.melodyActiveNote.set({ stringIdx: note.stringIdx, fretIdx: note.fretIdx });
           this.activeVibratingString.set(note.stringIdx);
           this.spawnMelodyParticle(note.stringIdx, note.fretIdx, chord.color);
         }, noteDelay * 1000);
-        this.melodyTimeoutIds.push(highlightTimeout);
 
-        const offTimeout = setTimeout(() => {
+        this.pushMelodyTimeout(() => {
           this.melodyActiveNote.set(null);
           if (this.activeVibratingString() === note.stringIdx) {
             this.activeVibratingString.set(-1);
           }
         }, (noteDelay + 0.45) * 1000);
-        this.melodyTimeoutIds.push(offTimeout);
       });
     });
 
-    const totalDuration = chosen.length * chordSpacing + 1.5;
-    const endTimeout = setTimeout(() => {
+    const totalDuration = chosen.length * CHORD_SPACING + 1.5;
+    this.pushMelodyTimeout(() => {
       this.stopMelody();
-      this.isTimerPaused.set(false);
-      this.timeLeft.set(this.maxTime);
+      this.timeLeft.set(MAX_TIME);
       this.showFeedback('🌟 MÉLODIE ACCOMPLIE 🌟', 'perfect');
     }, totalDuration * 1000);
-    this.melodyTimeoutIds.push(endTimeout);
+  }
+
+  private pushMelodyTimeout(fn: () => void, delayMs: number): void {
+    this.melodyTimeoutIds.push(setTimeout(fn, delayMs));
   }
 
   private spawnMelodyParticle(stringIdx: number, fretIdx: number, color: string): void {
@@ -686,7 +784,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.melodyTimeoutIds = [];
 
     this.melodyVoices.forEach(voice => {
-      try { voice.stop(); } catch {}
+      try { voice.stop(); } catch { /* noop */ }
     });
     this.melodyVoices.clear();
 
@@ -696,7 +794,6 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.melodyPlaying.set(false);
     this.melodyChordIndex.set(-1);
     this.melodyActiveNote.set(null);
-
     this.isTimerPaused.set(false);
   }
 
@@ -710,25 +807,24 @@ export class FretboardComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      CONFETTIS
      ═══════════════════════════════════════════════════════ */
-  private spawnConfetti(count: number = 60): void {
-    const colors = ['#FFD700', '#FF6B9D', '#00D4FF', '#00FF88', '#B266FF', '#FF4500', '#FFB347', '#9D4EDD'];
+
+  private spawnConfetti(count = 60): void {
     const newConfetti: ConfettiParticle[] = Array.from({ length: count }, () => ({
       id: this.confettiId++,
       x: Math.random() * 100,
-      color: colors[Math.floor(Math.random() * colors.length)],
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
       size: Math.random() * 8 + 6,
       delay: Math.random() * 1500,
       duration: Math.random() * 2000 + 2500,
       rotation: Math.random() * 360
     }));
+
     this.confettiParticles.update(c => [...c, ...newConfetti]);
 
-    const cleanupId = setTimeout(() => {
-      this.confettiParticles.update(c =>
-        c.filter(x => !newConfetti.find(n => n.id === x.id))
-      );
-    }, 6000);
-    this.confettiTimeoutIds.push(cleanupId);
+    const ids = new Set(newConfetti.map(n => n.id));
+    this.confettiTimeoutIds.push(setTimeout(() => {
+      this.confettiParticles.update(c => c.filter(x => !ids.has(x.id)));
+    }, 6000));
   }
 
   private stopConfetti(): void {
@@ -740,9 +836,9 @@ export class FretboardComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      NAVIGATION
      ═══════════════════════════════════════════════════════ */
+
   backToMenu(): void {
-    clearInterval(this.timerInterval);
-    clearInterval(this.starPowerInterval);
+    this.clearIntervals();
     this.stopMelody();
     this.stopConfetti();
     this.isTimerPaused.set(false);
@@ -752,46 +848,50 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   goToPlay(): void {
-    this.router.navigate(['/play']);
+    void this.router.navigate(['/play']);
   }
 
   /* ═══════════════════════════════════════════════════════
      THÉORIE MUSICALE
      ═══════════════════════════════════════════════════════ */
+
+  /** Nom français de la note (sans dièse) pour une case donnée. */
   getNoteAt(stringIndex: number, fret: number): string {
-    const noteSequence = ['DO', 'DO#', 'RÉ', 'RÉ#', 'MI', 'FA', 'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'];
     const str = this.strings.find(s => s.index === stringIndex);
     if (!str) return '';
     const midi = str.baseMidi + fret;
-    return noteSequence[midi % 12].replace('#', '');
+    return FRENCH_NOTE_SEQUENCE[midi % 12].replace('#', '');
   }
 
+  /** Nom scientifique + octave (ex: "A4") pour la synthèse audio. */
   private getToneNoteForFret(stringIndex: number, fret: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const str = this.strings.find(s => s.index === stringIndex);
     if (!str) return 'C4';
     const midi = str.baseMidi + fret;
     const octave = Math.floor(midi / 12) - 1;
-    return `${noteNames[midi % 12]}${octave}`;
-  }
-
-  getStringGauge(stringIdx: number): number {
-    const str = this.strings.find(s => s.index === stringIdx);
-    return str ? str.gaugeMm : 0.5;
+    return `${CHROMATIC_NOTES[midi % 12]}${octave}`;
   }
 
   getStringColor(stringIdx: number): string {
-    return this.stringColors[stringIdx - 1] || '#D4AF37';
+    return this.stringColors[stringIdx - 1] ?? '#D4AF37';
+  }
+
+  getAriaLabel(stringIdx: number, fret: number): string {
+    const note = this.getNoteAt(stringIdx, fret);
+    return fret === 0
+      ? `Corde ${stringIdx}, corde à vide, note ${note}`
+      : `Corde ${stringIdx}, case ${fret}, note ${note}`;
   }
 
   isHit(stringIdx: number, fretIdx: number): boolean {
-    return this.hitEffects().some(e => e.stringIdx === stringIdx && e.fretIdx === fretIdx);
+    return this.hitEffects().has(`${stringIdx}:${fretIdx}`);
   }
 
   /* ═══════════════════════════════════════════════════════
      EFFETS VISUELS
      ═══════════════════════════════════════════════════════ */
-  triggerParticles(stringIdx: number, fretIdx: number): void {
+
+  private triggerParticles(stringIdx: number, fretIdx: number): void {
     const newParticles: Particle[] = Array.from({ length: 16 }, () => ({
       id: this.particleId++,
       x: (fretIdx / 12) * 100,
@@ -800,89 +900,92 @@ export class FretboardComponent implements OnInit, OnDestroy {
       size: Math.random() * 8 + 4,
       rotation: Math.random() * 360
     }));
+
+    const ids = new Set(newParticles.map(p => p.id));
     this.particles.update(p => [...p, ...newParticles]);
     setTimeout(() => {
-      this.particles.update(p => p.filter(x => !newParticles.find(n => n.id === x.id)));
+      this.particles.update(p => p.filter(x => !ids.has(x.id)));
     }, 1200);
   }
 
-  triggerHitEffect(stringIdx: number, fretIdx: number): void {
-    const id = this.effectId++;
-    this.hitEffects.update(e => [...e, { id, stringIdx, fretIdx }]);
+  private triggerHitEffect(stringIdx: number, fretIdx: number): void {
+    const key = `${stringIdx}:${fretIdx}`;
+    this.hitEffects.update(set => new Set(set).add(key));
     setTimeout(() => {
-      this.hitEffects.update(e => e.filter(x => x.id !== id));
+      this.hitEffects.update(set => {
+        const copy = new Set(set);
+        copy.delete(key);
+        return copy;
+      });
     }, 700);
   }
 
-  triggerScreenShake(): void {
+  private triggerScreenShake(): void {
     this.screenShake.set(true);
     setTimeout(() => this.screenShake.set(false), 300);
   }
 
   /* ═══════════════════════════════════════════════════════
-     SONS UI (synthèse courte)
+     SONS UI
      ═══════════════════════════════════════════════════════ */
-  private playUiSound(type: 'click' | 'error' | 'gameover' | 'start' | 'perfect' | 'starpower'): void {
+
+  private playUiSound(type: UiSoundKind): void {
     if (!this.audioCtx) return;
-    if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+    if (this.audioCtx.state === 'suspended') void this.audioCtx.resume();
+
     const now = this.audioCtx.currentTime;
 
     if (type === 'error') {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.connect(gain); gain.connect(this.audioCtx.destination);
-      osc.frequency.setValueAtTime(140, now);
-      osc.frequency.linearRampToValueAtTime(60, now + 0.2);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-      osc.start(now); osc.stop(now + 0.2);
+      this.playTone('sawtooth', 140, 60, 0.12, now, 0.2);
     } else if (type === 'start') {
-      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-        const o = this.audioCtx!.createOscillator();
-        const g = this.audioCtx!.createGain();
-        o.type = 'sine';
-        o.connect(g); g.connect(this.audioCtx!.destination);
-        o.frequency.setValueAtTime(freq, now + idx * 0.05);
-        g.gain.setValueAtTime(0.08, now + idx * 0.05);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.2);
-        o.start(now + idx * 0.05); o.stop(now + idx * 0.05 + 0.2);
-      });
+      [523.25, 659.25, 783.99, 1046.50].forEach((f, i) =>
+        this.playTone('sine', f, f, 0.08, now + i * 0.05, 0.2)
+      );
     } else if (type === 'perfect') {
-      [1046.50, 1318.51, 1567.98].forEach((freq, idx) => {
-        const o = this.audioCtx!.createOscillator();
-        const g = this.audioCtx!.createGain();
-        o.type = 'sine';
-        o.connect(g); g.connect(this.audioCtx!.destination);
-        o.frequency.setValueAtTime(freq, now + idx * 0.04);
-        g.gain.setValueAtTime(0.06, now + idx * 0.04);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.18);
-        o.start(now + idx * 0.04); o.stop(now + idx * 0.04 + 0.18);
-      });
+      [1046.50, 1318.51, 1567.98].forEach((f, i) =>
+        this.playTone('sine', f, f, 0.06, now + i * 0.04, 0.18)
+      );
     } else if (type === 'starpower') {
-      [392, 523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-        const o = this.audioCtx!.createOscillator();
-        const g = this.audioCtx!.createGain();
-        o.type = 'square';
-        o.connect(g); g.connect(this.audioCtx!.destination);
-        o.frequency.setValueAtTime(freq, now + idx * 0.05);
-        g.gain.setValueAtTime(0.06, now + idx * 0.05);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.25);
-        o.start(now + idx * 0.05); o.stop(now + idx * 0.05 + 0.25);
-      });
+      [392, 523.25, 659.25, 783.99, 1046.50].forEach((f, i) =>
+        this.playTone('square', f, f, 0.06, now + i * 0.05, 0.25)
+      );
     }
   }
 
-  showFeedback(msg: string, type: 'success' | 'error' | 'perfect'): void {
+  private playTone(
+    type: OscillatorType,
+    startFreq: number,
+    endFreq: number,
+    volume: number,
+    startTime: number,
+    duration: number
+  ): void {
+    if (!this.audioCtx) return;
+    const osc = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+
+    osc.type = type;
+    osc.connect(gain);
+    gain.connect(this.audioCtx.destination);
+    osc.frequency.setValueAtTime(startFreq, startTime);
+    if (endFreq !== startFreq) {
+      osc.frequency.linearRampToValueAtTime(endFreq, startTime + duration);
+    }
+    gain.gain.setValueAtTime(volume, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  }
+
+  showFeedback(msg: string, type: FeedbackKind): void {
     this.feedbackKey.update(k => k + 1);
     this.feedbackMessage.set(msg);
     this.feedbackType.set(type);
     setTimeout(() => this.feedbackMessage.set(null), 900);
   }
 
-  endGame(): void {
-    clearInterval(this.timerInterval);
-    clearInterval(this.starPowerInterval);
+  private endGame(): void {
+    this.clearIntervals();
     this.stopMelody();
     this.stopConfetti();
     this.isTimerPaused.set(false);
@@ -892,7 +995,16 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.playUiSound('gameover');
   }
 
-  setDifficulty(d: 'facile' | 'normal' | 'hardcore'): void {
+  private clearIntervals(): void {
+    clearInterval(this.timerInterval);
+    clearInterval(this.starPowerInterval);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     DIFFICULTÉ / PERSISTANCE
+     ═══════════════════════════════════════════════════════ */
+
+  setDifficulty(d: Difficulty): void {
     this.difficulty.set(d);
     this.playUiSound('click');
   }
@@ -902,24 +1014,19 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   private getTimeMultiplier(): number {
-    switch (this.difficulty()) {
-      case 'facile': return 0.8;
-      case 'hardcore': return 2.2;
-      default: return 1.5;
-    }
+    return DIFFICULTY_MAP[this.difficulty()].timeMultiplier;
   }
 
   private getLivesStart(): number {
-    switch (this.difficulty()) {
-      case 'facile': return 5;
-      case 'hardcore': return 2;
-      default: return 3;
-    }
+    return DIFFICULTY_MAP[this.difficulty()].lives;
   }
 
   private loadHighScore(): void {
     const saved = localStorage.getItem('fretboard_highscore');
-    if (saved) this.highScore.set(parseInt(saved, 10));
+    if (saved) {
+      const parsed = Number.parseInt(saved, 10);
+      if (!Number.isNaN(parsed)) this.highScore.set(parsed);
+    }
   }
 
   private saveHighScore(): void {
@@ -929,34 +1036,11 @@ export class FretboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getTimerColor(): string {
-    const pct = (this.timeLeft() / this.maxTime) * 100;
-    if (pct < 20) return 'linear-gradient(90deg, #ef4444, #f59e0b)';
-    if (pct < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24, #10b981)';
-    return 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)';
-  }
-
-  getTimerPercent(): number {
-    return (this.timeLeft() / this.maxTime) * 100;
-  }
-
-  getStarPowerStars(): number[] {
-    return Array.from({ length: 10 }, (_, i) => i);
-  }
+  /* ═══════════════════════════════════════════════════════
+     STAR POWER — HELPERS
+     ═══════════════════════════════════════════════════════ */
 
   isStarFilled(i: number): boolean {
     return this.starPowerGauge() >= (i + 1) * 10;
-  }
-
-  ngOnDestroy(): void {
-    clearInterval(this.timerInterval);
-    clearInterval(this.starPowerInterval);
-    this.stopMelody();
-    this.stopConfetti();
-    this.activeVoices.forEach(v => {
-      try { v.source.stop(); } catch {}
-    });
-    this.activeVoices.clear();
-    if (this.audioCtx) this.audioCtx.close();
   }
 }

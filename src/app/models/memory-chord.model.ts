@@ -1,5 +1,3 @@
-// src/app/models/memory-chord.model.ts
-
 export interface ChordShape {
   id: string;
   name: string;

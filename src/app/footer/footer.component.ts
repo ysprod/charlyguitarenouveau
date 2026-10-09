@@ -11,12 +11,9 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 export class FooterComponent implements OnInit {
   currentYear: number = new Date().getFullYear();
 
-  constructor() {
-  }
+  constructor() { }
 
-  ngOnInit(): void {
-  }
-
+  ngOnInit(): void { }
 
   /**
    * Retour en haut de page avec scroll fluide
@@ -27,5 +24,4 @@ export class FooterComponent implements OnInit {
       behavior: 'smooth'
     });
   }
-
 }

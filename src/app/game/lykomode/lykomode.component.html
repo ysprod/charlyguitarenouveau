@@ -1,32 +1,5 @@
 <div class="lyko-page">
-
-  <!-- ═══════════════════════════════════════════════════════
-       DÉCOR ANIMÉ
-       ═══════════════════════════════════════════════════════ -->
-  <div class="bg-decor" aria-hidden="true">
-    <div class="glow glow-primary"></div>
-    <div class="glow glow-secondary"></div>
-    <div class="magic-grid"></div>
-    <div class="aurora"></div>
-
-    <!-- Particules flottantes -->
-    <div class="particles">
-      @for (p of particles(); track $index) {
-      <span class="particle" [style.left.%]="p.left" [style.animation-delay.s]="p.delay"
-        [style.animation-duration.s]="p.duration" [style.width.px]="p.size" [style.height.px]="p.size"
-        [style.background]="p.color" [style.box-shadow]="'0 0 10px ' + p.color"></span>
-      }
-    </div>
-
-    <!-- Runes sacrées -->
-    <div class="runes">
-      @for (r of runes(); track $index) {
-      <span class="rune" [style.left.%]="r.left" [style.top.%]="r.top" [style.animation-delay.s]="r.delay"
-        [style.animation-duration.s]="r.duration">{{ r.symbol }}</span>
-      }
-    </div>
-  </div>
-
+ 
   <!-- ═══════════════════════════════════════════════════════
        BOÎTE DE DIALOGUE
        ═══════════════════════════════════════════════════════ -->
@@ -36,13 +9,7 @@
 
       <!-- Ornement haut -->
       <div class="dialog-ornament top"></div>
-
-      <!-- Badge -->
-      <div class="dialog-badge">
-        <span class="badge-dot"></span>
-        <span>Carré Chinois</span>
-      </div>
-
+ 
       <!-- Avatar Lyko -->
       <div class="lyko-avatar">
         <div class="avatar-ring ring-1"></div>

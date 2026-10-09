@@ -2,17 +2,17 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-privacy',
-     standalone: true,
+  standalone: true,
   templateUrl: './privacy.component.html',
   styleUrls: ['./privacy.component.css']
 })
 export class PrivacyComponent implements OnInit {
-siteName = 'Charly Guitare';
+  siteName = 'Charly Guitare';
   siteUrl = 'https://charlyguitare.com';
   contactEmail = 'yayasidibeproduction@gmail.com';
-  lastUpdated = '21 Septembre 2026';
+  lastUpdated = '8 Août 2026';
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit(): void {
     window.scrollTo(0, 0);

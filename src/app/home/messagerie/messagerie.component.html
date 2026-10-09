@@ -17,61 +17,69 @@
       </div>
 
       <!-- 📊 Statistiques -->
-      <div class="stats-grid" *ngIf="stats$ | async as stats">
+      @if (stats$ | async; as stats) {
+      <div class="stats-grid">
         <div class="stat-card">
-          <span class="stat-icon">📨</span>
+          <span class="stat-icon" aria-hidden="true">📨</span>
           <span class="stat-value">{{ stats.total }}</span>
           <span class="stat-label">Messages</span>
         </div>
         <div class="stat-card accent-amber">
-          <span class="stat-icon">⏳</span>
+          <span class="stat-icon" aria-hidden="true">⏳</span>
           <span class="stat-value">{{ stats.unread }}</span>
           <span class="stat-label">En attente</span>
         </div>
         <div class="stat-card accent-emerald">
-          <span class="stat-icon">✓✓</span>
+          <span class="stat-icon" aria-hidden="true">✓✓</span>
           <span class="stat-value">{{ stats.replied }}</span>
           <span class="stat-label">Répondus</span>
         </div>
       </div>
+      }
     </div>
   </header>
 
-  <div *ngIf="messages$ | async as messages; else loading" class="content-wrapper">
+  @if (messages$ | async; as messages) {
+
+  <div class="content-wrapper">
 
     <!-- 📋 LISTE DES MESSAGES -->
     <aside class="messages-list-section" [class.hidden-mobile]="selectedMessage !== null">
 
-      <!-- 🔍 Barre de recherche -->
+      <!-- 🔍 Barre de recherche + filtres + tri -->
       <div class="list-toolbar">
         <div class="search-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <input
-            type="text"
-            placeholder="Rechercher un message..."
-            [value]="searchTerm"
-            (input)="updateSearch($any($event.target).value)"
-          />
-          <button *ngIf="searchTerm" class="clear-btn" (click)="updateSearch('')">×</button>
+          <input type="text" placeholder="Rechercher un message..." [value]="searchTerm"
+            (input)="updateSearch($any($event.target).value)" />
+          @if (searchTerm) {
+          <button type="button" class="clear-btn" aria-label="Effacer la recherche"
+            (click)="updateSearch('')">×</button>
+          }
         </div>
 
-        <!-- Filtres statut -->
-        <div class="filter-tabs">
-          <button [class.active]="activeFilter === 'all'" (click)="setFilter('all')">Tous</button>
-          <button [class.active]="activeFilter === 'unread'" (click)="setFilter('unread')">
+        <div class="filter-tabs" role="tablist">
+          <button type="button" role="tab" [class.active]="activeFilter === 'all'"
+            [attr.aria-selected]="activeFilter === 'all'" (click)="setFilter('all')">Tous</button>
+          <button type="button" role="tab" [class.active]="activeFilter === 'unread'"
+            [attr.aria-selected]="activeFilter === 'unread'" (click)="setFilter('unread')">
             En attente
-            <span class="count" *ngIf="(stats$ | async)?.unread">{{ (stats$ | async)?.unread }}</span>
+            @if (stats$ | async; as stats) {
+            @if (stats.unread) {
+            <span class="count">{{ stats.unread }}</span>
+            }
+            }
           </button>
-          <button [class.active]="activeFilter === 'replied'" (click)="setFilter('replied')">Répondus</button>
+          <button type="button" role="tab" [class.active]="activeFilter === 'replied'"
+            [attr.aria-selected]="activeFilter === 'replied'" (click)="setFilter('replied')">Répondus</button>
         </div>
 
-        <!-- Tri -->
         <div class="sort-row">
-          <label>Trier :</label>
-          <select [value]="sortMode" (change)="setSort($any($event.target).value)">
+          <label for="sort-select">Trier :</label>
+          <select id="sort-select" [value]="sortMode" (change)="setSort($any($event.target).value)">
             <option value="recent">Plus récents</option>
             <option value="oldest">Plus anciens</option>
             <option value="unread-first">En attente d'abord</option>
@@ -80,32 +88,35 @@
       </div>
 
       <!-- 📭 État vide -->
-      <div *ngIf="(filteredMessages$ | async)?.length === 0" class="empty-state">
-        <div class="empty-illustration">
+      @if ((filteredMessages$ | async)?.length === 0) {
+      <div class="empty-state">
+        <div class="empty-illustration" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </div>
-        <h3>{{ messages.length === 0 ? 'Aucun message envoyé' : 'Aucun résultat' }}</h3>
-        <p>{{ messages.length === 0 ? 'Vos échanges avec le support apparaîtront ici.' : 'Essayez d\'ajuster votre recherche ou vos filtres.' }}</p>
+        @if (messages.length === 0) {
+        <h3>Aucun message envoyé</h3>
+        <p>Vos échanges avec le support apparaîtront ici.</p>
+        } @else {
+        <h3>Aucun résultat</h3>
+        <p>Essayez d'ajuster votre recherche ou vos filtres.</p>
+        }
       </div>
+      }
 
       <!-- 💬 Liste -->
       <div class="messages-scroll">
-        <article
-          *ngFor="let msg of filteredMessages$ | async; trackBy: trackByKey"
-          class="message-card"
-          [class.active]="selectedMessage?.key === msg.key"
-          [class.unread]="msg.status === 'unread'"
-          (click)="selectMessage(msg)"
-        >
+        @for (msg of filteredMessages$ | async; track msg.key) {
+        <article class="message-card" [class.active]="selectedMessage?.key === msg.key"
+          [class.unread]="msg.status === 'unread'" (click)="selectMessage(msg)">
           <div class="card-top">
-            <span class="category-icon" [title]="msg.category || 'autre'">
-              {{ getCategoryIcon(msg.category) }}
+            <span class="category-icon" [title]="msg.category || 'autre'" aria-hidden="true">
+              {{ categoryIcon(msg.category) }}
             </span>
             <span class="subject">{{ msg.subject || '(Sans sujet)' }}</span>
-            <span class="status-badge" [ngClass]="getStatusBadgeClass(msg.status)">
-              {{ getStatusIcon(msg.status) }} {{ getStatusLabel(msg.status) }}
+            <span class="status-badge" [ngClass]="statusBadgeClass(msg.status)">
+              {{ statusIcon(msg.status) }} {{ statusLabel(msg.status) }}
             </span>
           </div>
 
@@ -113,162 +124,158 @@
 
           <div class="card-footer">
             <span class="date">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
               {{ msg.createdAt | date:'dd MMM, HH:mm' }}
             </span>
-            <span class="replies-count" *ngIf="msg.replies">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            @if (msg.replies) {
+            <span class="replies-count">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              {{ getRepliesArray(msg.replies).length }}
+              {{ repliesCount(msg.replies) }}
             </span>
+            }
           </div>
         </article>
+        }
       </div>
     </aside>
 
     <!-- 💭 FIL DE DISCUSSION -->
     <section class="thread-section" [class.active-mobile]="selectedMessage !== null">
-      <ng-container *ngIf="selectedMessage; else selectPrompt">
+      @if (selectedMessage; as selected) {
 
-        <!-- Header du fil -->
-        <div class="thread-header">
-          <button class="btn-back" (click)="closeThread()" aria-label="Retour">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="19" y1="12" x2="5" y2="12"/>
-              <polyline points="12 19 5 12 12 5"/>
-            </svg>
-          </button>
+      <!-- Header du fil -->
+      <div class="thread-header">
+        <button type="button" class="btn-back" (click)="closeThread()" aria-label="Retour à la liste">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+        </button>
 
-          <div class="thread-title">
-            <div class="thread-meta">
-              <span class="category-chip">
-                {{ getCategoryIcon(selectedMessage.category) }} {{ selectedMessage.category || 'autre' }}
-              </span>
-              <span class="status-badge" [ngClass]="getStatusBadgeClass(selectedMessage.status)">
-                {{ getStatusIcon(selectedMessage.status) }} {{ getStatusLabel(selectedMessage.status) }}
-              </span>
+        <div class="thread-title">
+          <div class="thread-meta">
+            <span class="category-chip">
+              <span aria-hidden="true">{{ categoryIcon(selected.category) }}</span>
+              {{ selected.category || 'autre' }}
+            </span>
+            <span class="status-badge" [ngClass]="statusBadgeClass(selected.status)">
+              {{ statusIcon(selected.status) }} {{ statusLabel(selected.status) }}
+            </span>
+          </div>
+          <h2>{{ selected.subject || '(Sans sujet)' }}</h2>
+        </div>
+      </div>
+
+      <!-- Corps du fil -->
+      <div class="thread-body" #threadBody>
+
+        <!-- Message initial -->
+        <div class="chat-bubble user-bubble">
+          <div class="avatar avatar-user">{{ userInitials }}</div>
+          <div class="bubble-content">
+            <div class="bubble-header">
+              <span class="author">Vous</span>
+              <span class="time">{{ selected.createdAt | date:'dd/MM/yyyy · HH:mm' }}</span>
             </div>
-            <h2>{{ selectedMessage.subject || '(Sans sujet)' }}</h2>
+            <p class="bubble-text">{{ selected.message }}</p>
           </div>
         </div>
 
-        <!-- Corps du fil -->
-        <div class="thread-body" #threadBody>
-
-          <!-- Message initial -->
-          <div class="chat-bubble user-bubble">
-            <div class="avatar avatar-user">{{ getInitials('Vous') }}</div>
-            <div class="bubble-content">
-              <div class="bubble-header">
-                <span class="author">Vous</span>
-                <span class="time">{{ selectedMessage.createdAt | date:'dd/MM/yyyy · HH:mm' }}</span>
-              </div>
-              <p class="bubble-text">{{ selectedMessage.message }}</p>
-            </div>
+        <!-- Réponses -->
+        @for (reply of repliesOf(selected); track reply.key) {
+        <div class="chat-bubble" [class.admin-bubble]="reply.senderRole === 'admin'"
+          [class.user-bubble]="reply.senderRole === 'user'">
+          <div class="avatar" [class.avatar-admin]="reply.senderRole === 'admin'">
+            @if (reply.senderRole === 'admin') {
+            <span aria-hidden="true">🎸</span>
+            } @else {
+            {{ userInitials }}
+            }
           </div>
-
-          <!-- Réponses -->
-          <ng-container *ngIf="getRepliesArray(selectedMessage.replies) as replies">
-            <div
-              *ngFor="let reply of replies; trackBy: trackByReplyKey"
-              class="chat-bubble"
-              [class.admin-bubble]="reply.senderRole === 'admin'"
-              [class.user-bubble]="reply.senderRole === 'user'"
-            >
-              <div class="avatar" [class.avatar-admin]="reply.senderRole === 'admin'">
-                {{ reply.senderRole === 'admin' ? '🎸' : getInitials('Vous') }}
-              </div>
-              <div class="bubble-content">
-                <div class="bubble-header">
-                  <span class="author">
-                    {{ reply.senderRole === 'admin' ? 'Charly Guitare · Support' : 'Vous' }}
-                  </span>
-                  <span class="time">{{ reply.createdAt | date:'dd/MM/yyyy · HH:mm' }}</span>
-                </div>
-                <p class="bubble-text">{{ reply.message }}</p>
-              </div>
-            </div>
-          </ng-container>
-
-          <!-- Indicateur d'attente -->
-          <div class="chat-bubble admin-bubble typing" *ngIf="selectedMessage.status === 'unread' && getRepliesArray(selectedMessage.replies).length > 0">
-            <div class="avatar avatar-admin">🎸</div>
-            <div class="bubble-content">
-              <div class="typing-dots">
-                <span></span><span></span><span></span>
-              </div>
-              <span class="typing-label">L'équipe a été notifiée de votre relance</span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Formulaire de réponse -->
-        <div class="thread-reply-form">
-          <div class="reply-box">
-            <textarea
-              [(ngModel)]="replyText"
-              rows="3"
-              maxlength="1500"
-              placeholder="Écrivez votre réponse... (Entrée pour envoyer, Maj+Entrée pour un saut de ligne)"
-              class="reply-textarea"
-              (keydown.enter)="!$any($event).shiftKey && sendReply(); $any($event).shiftKey || $event.preventDefault()"
-            ></textarea>
-
-            <div class="reply-footer">
-              <span class="char-count" [class.warning]="replyText.length > 1200">
-                {{ replyText.length }} / 1500
+          <div class="bubble-content">
+            <div class="bubble-header">
+              <span class="author">
+                {{ reply.senderRole === 'admin' ? 'Charly Guitare · Support' : 'Vous' }}
               </span>
-
-              <button
-                class="btn-send"
-                [disabled]="isSending || !replyText.trim()"
-                (click)="sendReply()"
-              >
-                <ng-container *ngIf="!isSending">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="send-icon">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                  <span>Envoyer</span>
-                </ng-container>
-                <ng-container *ngIf="isSending">
-                  <span class="mini-spinner"></span>
-                  <span>Envoi...</span>
-                </ng-container>
-              </button>
+              <span class="time">{{ reply.createdAt | date:'dd/MM/yyyy · HH:mm' }}</span>
             </div>
+            <p class="bubble-text">{{ reply.message }}</p>
           </div>
         </div>
+        }
 
-      </ng-container>
+        <!-- Indicateur d'attente -->
+        @if (selected.status === 'unread' && repliesOf(selected).length > 0) {
+        <div class="chat-bubble admin-bubble typing">
+          <div class="avatar avatar-admin"><span aria-hidden="true">🎸</span></div>
+          <div class="bubble-content">
+            <div class="typing-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="typing-label">L'équipe a été notifiée de votre relance</span>
+          </div>
+        </div>
+        }
 
+      </div>
+
+      <!-- Formulaire de réponse -->
+      <div class="thread-reply-form">
+        <div class="reply-box">
+          <textarea [(ngModel)]="replyText" rows="3" maxlength="1500"
+            placeholder="Écrivez votre réponse... (Entrée pour envoyer, Maj+Entrée pour un saut de ligne)"
+            class="reply-textarea" (keydown.enter)="onReplyEnter($event)"></textarea>
+
+          <div class="reply-footer">
+            <span class="char-count" [class.warning]="replyText.length > 1200">
+              {{ replyText.length }} / 1500
+            </span>
+
+            <button type="button" class="btn-send" [disabled]="isSending || !replyText.trim()" (click)="sendReply()">
+              @if (!isSending) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="send-icon"
+                aria-hidden="true">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+              <span>Envoyer</span>
+              } @else {
+              <span class="mini-spinner" aria-hidden="true"></span>
+              <span>Envoi...</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+
+      } @else {
       <!-- Prompt de sélection -->
-      <ng-template #selectPrompt>
-        <div class="select-prompt">
-          <div class="prompt-illustration">
-            <div class="pulse-ring"></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-          </div>
-          <h3>Choisissez une conversation</h3>
-          <p>Sélectionnez un message à gauche pour afficher le fil complet et échanger avec l'équipe Charly Guitare.</p>
+      <div class="select-prompt">
+        <div class="prompt-illustration" aria-hidden="true">
+          <div class="pulse-ring"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
         </div>
-      </ng-template>
+        <h3>Choisissez une conversation</h3>
+        <p>Sélectionnez un message à gauche pour afficher le fil complet et échanger avec l'équipe Charly Guitare.</p>
+      </div>
+      }
     </section>
 
   </div>
 
+  } @else {
   <!-- Loader -->
-  <ng-template #loading>
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>Chargement de votre messagerie...</p>
-    </div>
-  </ng-template>
+  <div class="loading-state">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Chargement de votre messagerie...</p>
+  </div>
+  }
+
 </div>

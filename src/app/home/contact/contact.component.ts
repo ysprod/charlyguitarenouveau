@@ -227,4 +227,3 @@ export class ContactComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 }
- 

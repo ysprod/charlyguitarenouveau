@@ -2,105 +2,143 @@
 <header class="navbar" [class.scrolled]="isScrolled">
   <div class="navbar-container">
 
-    <!-- 1. Gauche : Logo avec Marque -->
+    <!-- 1. Gauche : Logo -->
     <a [routerLink]="['/']" class="logo-link" title="CHARLY GUITARE - Accueil">
-      <div class="logo-wrapper">
-        <span class="logo-icon" aria-hidden="true">🎸</span>
-      </div>
+      <span class="logo-icon" aria-hidden="true">🎸</span>
     </a>
 
-    <!-- 2. Centre : Liens de navigation -->
-    <nav class="nav-links" [class.open]="isMobileMenuOpen" aria-label="Navigation principale">
-      <a [routerLink]="['/']" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
-        (click)="closeMobileMenu()">Accueil</a>
-      <a [routerLink]="['/live']" routerLinkActive="active" (click)="closeMobileMenu()">
-        <span class="live-dot"></span> Live
+    <!-- 2. Centre : Liens -->
+    <nav class="nav-links"
+         [class.open]="isMobileMenuOpen"
+         aria-label="Navigation principale">
+
+      <a [routerLink]="['/']"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{ exact: true }"
+         (click)="closeMobileMenu()">Accueil</a>
+
+      <a [routerLink]="['/live']"
+         routerLinkActive="active"
+         (click)="closeMobileMenu()">
+        <span class="live-dot" aria-hidden="true"></span> Live
       </a>
 
-      <!-- Inbox avec badge de cloche dans le menu -->
-      <a [routerLink]="['/inbox']" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link">
+      <a [routerLink]="['/inbox']"
+         routerLinkActive="active"
+         (click)="closeMobileMenu()"
+         class="nav-inbox-link">
         <span>Inbox</span>
-        <span class="nav-badge" *ngIf="(unreadCount$ | async) as unreadCount">
-          <span *ngIf="unreadCount > 0">{{ unreadCount }}</span>
-        </span>
+        @if (unreadCount$ | async; as unreadCount) {
+          @if (unreadCount > 0) {
+            <span class="nav-badge">{{ unreadCount }}</span>
+          }
+        }
       </a>
 
-      <a [routerLink]="['/academie']" routerLinkActive="active" (click)="closeMobileMenu()">Académie</a>
-      <a [routerLink]="['/abonnement']" routerLinkActive="active" (click)="closeMobileMenu()">Offres</a>
-      <a [routerLink]="['/offoland']" routerLinkActive="active" (click)="closeMobileMenu()">Offoland</a>
+      <a [routerLink]="['/academie']"
+         routerLinkActive="active"
+         (click)="closeMobileMenu()">Académie</a>
 
-      <!-- Optionnel pour le menu mobile -->
-      <div class="mobile-auth" *ngIf="!(auth.user$ | async)">
-        <a [routerLink]="['/login']" class="btn-login-mobile" (click)="closeMobileMenu()">Connexion</a>
-      </div>
+      <a [routerLink]="['/abonnement']"
+         routerLinkActive="active"
+         (click)="closeMobileMenu()">Offres</a>
+
+      <a [routerLink]="['/offoland']"
+         routerLinkActive="active"
+         (click)="closeMobileMenu()">Offoland</a>
+
+      @if (!(auth.user$ | async)) {
+        <div class="mobile-auth">
+          <a [routerLink]="['/login']"
+             class="btn-login-mobile"
+             (click)="closeMobileMenu()">Connexion</a>
+        </div>
+      }
     </nav>
 
-    <!-- 3. Droite : Authentification & Actions -->
+    <!-- 3. Droite : Auth & actions -->
     <div class="header-actions">
-      <!-- Si l'utilisateur est connecté -->
-      <ng-container *ngIf="auth.user$ | async as user; else loggedOut">
 
-        <!-- Bouton Cloche de Notification -->
-        <a [routerLink]="['/inbox']" class="notification-bell-btn" title="Voir mes messages">
-          <mat-icon>notifications</mat-icon>
-          <span class="bell-badge" *ngIf="unreadCount$ | async as unreadCount">
-            <span *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
-          </span>
+      @if (auth.user$ | async; as user) {
+
+        <!-- Cloche notification -->
+        <a [routerLink]="['/inbox']"
+           class="notification-bell-btn"
+           title="Voir mes messages"
+           aria-label="Voir mes messages">
+          <mat-icon aria-hidden="true">notifications</mat-icon>
+          @if (unreadCount$ | async; as unreadCount) {
+            @if (unreadCount > 0) {
+              <span class="bell-badge">
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            }
+          }
         </a>
 
-        <!-- Bouton Profile Avatar Uniquement (Sans texte) -->
-        <button mat-button [matMenuTriggerFor]="userMenu" class="user-avatar-btn" aria-label="Menu profil">
+        <!-- Avatar + menu -->
+        <button mat-button
+                [matMenuTriggerFor]="userMenu"
+                class="user-avatar-btn"
+                aria-label="Menu profil">
           <div class="avatar-ring">
             <div class="avatar">
-              <img *ngIf="user.photoURL; else defaultAvatar" [src]="user.photoURL"
-                [alt]="user.displayName || 'Utilisateur'" />
-              <ng-template #defaultAvatar>
+              @if (user.photoURL) {
+                <img [src]="user.photoURL" [alt]="user.displayName || 'Utilisateur'" />
+              } @else {
                 <span>{{ getInitials(user.displayName) }}</span>
-              </ng-template>
+              }
             </div>
           </div>
-          <mat-icon class="arrow-icon">expand_more</mat-icon>
+          <mat-icon class="arrow-icon" aria-hidden="true">expand_more</mat-icon>
         </button>
 
-        <!-- Menu déroulant profil enrichi -->
         <mat-menu #userMenu="matMenu" xPosition="before" class="custom-user-menu">
           <div class="menu-header">
             <div class="menu-avatar">
-              <img *ngIf="user.photoURL; else defaultMenuAvatar" [src]="user.photoURL" [alt]="user.displayName" />
-              <ng-template #defaultMenuAvatar>
+              @if (user.photoURL) {
+                <img [src]="user.photoURL" [alt]="user.displayName || 'Utilisateur'" />
+              } @else {
                 <span>{{ getInitials(user.displayName) }}</span>
-              </ng-template>
+              }
             </div>
             <div class="user-details">
               <p class="menu-user-name">{{ user.displayName || 'Guitariste' }}</p>
               <p class="menu-user-email">{{ user.email }}</p>
             </div>
           </div>
+
           <mat-divider></mat-divider>
+
           <button mat-menu-item [routerLink]="['/inbox']">
             <mat-icon>mail_outline</mat-icon>
             <span>Mes Messages</span>
           </button>
+
           <button mat-menu-item [routerLink]="['/profil']">
             <mat-icon>person_outline</mat-icon>
             <span>Mon Profil</span>
           </button>
+
           <mat-divider></mat-divider>
+
           <button mat-menu-item (click)="onLogout()" class="logout-item">
             <mat-icon>logout</mat-icon>
             <span>Déconnexion</span>
           </button>
         </mat-menu>
-      </ng-container>
 
-      <!-- Si l'utilisateur est déconnecté -->
-      <ng-template #loggedOut>
+      } @else {
         <a [routerLink]="['/login']" class="btn-login-desktop">Connexion</a>
-      </ng-template>
+      }
 
-      <!-- Bouton Menu Burger Mobile -->
-      <button class="burger-btn" (click)="toggleMobileMenu()" [class.is-active]="isMobileMenuOpen"
-        aria-label="Menu Mobile">
+      <!-- Burger mobile -->
+      <button class="burger-btn"
+              type="button"
+              (click)="toggleMobileMenu()"
+              [class.is-active]="isMobileMenuOpen"
+              [attr.aria-expanded]="isMobileMenuOpen"
+              aria-label="Menu Mobile">
         <span></span>
         <span></span>
         <span></span>
@@ -114,11 +152,12 @@
 <main class="main-content">
   <router-outlet></router-outlet>
 </main>
- <div class="contact-cta">
-  <a
-    [routerLink]="['/contact']"
-    routerLinkActive="active">
+
+<!-- CTA Contact -->
+<div class="contact-cta">
+  <a [routerLink]="['/contact']" routerLinkActive="active">
     DISCUTEZ AVEC CHARLY GUITARE
   </a>
 </div>
+
 <app-footer></app-footer>

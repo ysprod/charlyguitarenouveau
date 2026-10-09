@@ -13,7 +13,7 @@ export interface QuizQuestion {
   title: string;
   question: string;
   options: QuizOption[];
-  funFact?: string; // anecdote affichée après la réponse
+  funFact?: string;
 }
 
 export interface QuizState {

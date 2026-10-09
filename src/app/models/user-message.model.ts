@@ -2,23 +2,21 @@ export interface MessageReply {
   key?: string;
   senderId: string;
   senderRole: 'user' | 'admin';
-  senderName?: string;
-  senderAvatar?: string;
+  senderName: string;
   message: string;
   createdAt: string;
-  attachments?: { name: string; url: string; type: string }[];
 }
+
+export type MessageStatus = 'unread' | 'read' | 'replied' | 'archived';
+export type MessageCategory = 'technique' | 'abonnement' | 'contenu' | 'autre';
 
 export interface UserMessage {
   key?: string;
   userId: string;
-  userEmail?: string;
-  userName?: string;
   subject?: string;
+  category?: MessageCategory;
   message: string;
-  category?: 'technique' | 'abonnement' | 'contenu' | 'autre';
-  priority?: 'low' | 'normal' | 'high';
-  status: 'unread' | 'read' | 'replied' | 'archived';
+  status: MessageStatus;
   createdAt: string;
   updatedAt?: string;
   replies?: Record<string, MessageReply> | MessageReply[];

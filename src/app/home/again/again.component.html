@@ -1,18 +1,9 @@
-<div class="equipe-container">
-
-  <!-- Fond de particules -->
-  <div class="particles-bg">
-    <span *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"
-          class="particle"
-          [style.left.%]="(p * 5) % 100"
-          [style.animation-delay]="(p * 0.4) + 's'">
-    </span>
-  </div>
-
-  <!-- HEADER ÉPIQUE -->
+<div class="equipe-container"> 
+  
   <header class="equipe-header">
-    <h1 class="title-glow"><br>ÉQUIPE TECHNIQUE</h1>
-    <div class="header-divider">
+    <h1 class="title-glow">ÉQUIPE TECHNIQUE</h1>
+
+    <div class="header-divider" aria-hidden="true">
       <span class="line"></span>
       <span class="icon">⚔️</span>
       <span class="line"></span>
@@ -20,57 +11,66 @@
   </header>
 
   <!-- SECTION FEATURED (Les Piliers) -->
-  <section class="featured-section">
-    <h2 class="section-title">
-      <span class="material-icons">stars</span>
+  <section class="featured-section" aria-labelledby="piliers-title">
+    <h2 id="piliers-title" class="section-title">
+      <span class="material-icons" aria-hidden="true">stars</span>
       LES PILIERS DU PROJET
     </h2>
+
     <div class="featured-grid">
-      <div *ngFor="let membre of membresFeatured; let i = index"
-           class="featured-card"
-           [style.--accent]="membre.couleur"
-           [style.animation-delay]="(i * 0.15) + 's'">
-        <div class="card-glow"></div>
-        <div class="card-icon">{{ membre.icone }}</div>
-        <div class="card-role">{{ membre.role }}</div>
-        <div class="card-name">{{ membre.nom }}</div>
-        <div class="card-decoration">
-          <span></span><span></span><span></span>
-        </div>
-      </div>
+      @for (membre of membresFeatured; track membre.nom; let i = $index) {
+        <article
+          class="featured-card"
+          [style.--accent]="membre.couleur"
+          [style.animation-delay]="animationDelay(i, 0.15)"
+        >
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="card-icon" aria-hidden="true">{{ membre.icone }}</div>
+          <div class="card-role">{{ membre.role }}</div>
+          <div class="card-name">{{ membre.nom }}</div>
+          <div class="card-decoration" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        </article>
+      }
     </div>
   </section>
 
   <!-- SECTION GRILLE (Le reste de l'équipe) -->
-  <section class="team-section">
-    <h2 class="section-title">
-      <span class="material-icons">shield</span>
+  <section class="team-section" aria-labelledby="gardiens-title">
+    <h2 id="gardiens-title" class="section-title">
+      <span class="material-icons" aria-hidden="true">shield</span>
       LES GARDIENS DU PROJET
     </h2>
-    <div class="team-grid">
-      <div *ngFor="let membre of membresStandard; let i = index"
-           class="member-card"
-           [style.--accent]="membre.couleur"
-           [class.anonymous]="membre.anonyme"
-           [style.animation-delay]="(i * 0.1) + 's'">
-        
-        <div class="member-icon-wrapper">
-          <div class="member-icon">{{ membre.icone }}</div>
-          <div class="icon-ring"></div>
-        </div>
-        
-        <div class="member-info">
-          <span class="member-role">{{ membre.role }}</span>
-          <span class="member-name" [class.mystery]="membre.anonyme">
-            {{ membre.nom }}
-          </span>
-        </div>
 
-        <div class="member-badge" *ngIf="membre.anonyme">
-          <span class="material-icons">visibility_off</span>
-        </div>
-      </div>
+    <div class="team-grid">
+      @for (membre of membresStandard; track membre.nom; let i = $index) {
+        <article
+          class="member-card"
+          [class.anonymous]="membre.anonyme"
+          [style.--accent]="membre.couleur"
+          [style.animation-delay]="animationDelay(i, 0.1)"
+        >
+          <div class="member-icon-wrapper">
+            <div class="member-icon" aria-hidden="true">{{ membre.icone }}</div>
+            <div class="icon-ring" aria-hidden="true"></div>
+          </div>
+
+          <div class="member-info">
+            <span class="member-role">{{ membre.role }}</span>
+            <span class="member-name" [class.mystery]="membre.anonyme">
+              {{ membre.nom }}
+            </span>
+          </div>
+
+          @if (membre.anonyme) {
+            <div class="member-badge" aria-label="Membre anonyme">
+              <span class="material-icons" aria-hidden="true">visibility_off</span>
+            </div>
+          }
+        </article>
+      }
     </div>
-  </section> 
+  </section>
 
 </div>

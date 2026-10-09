@@ -200,7 +200,6 @@ export const DIMENSIONS: readonly Dimension[] = [
   }
 ];
 
-
 /* ═══════════════════════════════════════════════════════
    LES 7 QUÊTES (une par dimension)
    ═══════════════════════════════════════════════════════ */
@@ -291,14 +290,12 @@ export const QUESTS: readonly Quest[] = [
   }
 ];
 
-
 /* ═══════════════════════════════════════════════════════
    CONSTANTES DE JEU
    ═══════════════════════════════════════════════════════ */
 export const HINT_COST = 10;
 export const XP_PER_LEVEL = 100;
 export const MAX_ATTEMPTS_BEFORE_HINT = 3;
-
 export const STORAGE_KEY_XP = 'oracle_xp_v2';
 export const STORAGE_KEY_QUEST_INDEX = 'oracle_quest_index_v2';
 export const STORAGE_KEY_COMPLETED = 'oracle_completed_v2';

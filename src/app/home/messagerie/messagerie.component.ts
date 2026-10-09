@@ -1,6 +1,6 @@
-
 import {
   AfterViewChecked,
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
   EnvironmentInjector,
@@ -14,12 +14,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import {
-  Auth,
-  User,
-  authState
-} from '@angular/fire/auth';
-
+import { Auth, User, authState } from '@angular/fire/auth';
 import {
   Database,
   equalTo,
@@ -49,20 +44,18 @@ import {
 } from 'rxjs/operators';
 
 import {
+  MessageCategory,
   MessageReply,
+  MessageStatus,
   UserMessage
 } from '../../models/user-message.model';
 
-type FilterStatus =
-  | 'all'
-  | 'unread'
-  | 'read'
-  | 'replied';
+/* ============================================================
+   TYPES LOCAUX
+   ============================================================ */
 
-type SortMode =
-  | 'recent'
-  | 'oldest'
-  | 'unread-first';
+type FilterStatus = 'all' | 'unread' | 'read' | 'replied';
+type SortMode = 'recent' | 'oldest' | 'unread-first';
 
 interface MessageFilters {
   search: string;
@@ -77,15 +70,54 @@ interface MessageStats {
   avgResponseTime: string;
 }
 
+/* ============================================================
+   MAPS STATIQUES — évitent les switchs dans le template
+   ============================================================ */
+
+const STATUS_BADGE_CLASS: Record<MessageStatus, string> = {
+  unread:   'badge-unread',
+  read:     'badge-read',
+  replied:  'badge-replied',
+  archived: 'badge-archived'
+};
+
+const STATUS_LABEL: Record<MessageStatus, string> = {
+  unread:   'En attente',
+  read:     'Lu par l’équipe',
+  replied:  'Répondu',
+  archived: 'Archivé'
+};
+
+const STATUS_ICON: Record<MessageStatus, string> = {
+  unread:   '●',
+  read:     '✓',
+  replied:  '✓✓',
+  archived: '📦'
+};
+
+const CATEGORY_ICON: Record<MessageCategory, string> = {
+  technique:  '🛠️',
+  abonnement: '💳',
+  contenu:    '🎬',
+  autre:      '💬'
+};
+
+const DEFAULT_CATEGORY_ICON = '💬';
+const DEFAULT_STATUS_BADGE  = 'badge-unread';
+const DEFAULT_STATUS_LABEL  = 'En attente';
+const DEFAULT_STATUS_ICON   = '●';
+
+/* ============================================================
+   COMPOSANT
+   ============================================================ */
+
 @Component({
   selector: 'app-messagerie',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './messagerie.component.html',
-  styleUrls: ['./messagerie.component.scss']
+  styleUrls: ['./messagerie.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MessagerieComponent
   implements OnInit, OnDestroy, AfterViewChecked {
@@ -93,44 +125,43 @@ export class MessagerieComponent
   @ViewChild('threadBody')
   threadBody?: ElementRef<HTMLDivElement>;
 
+  /* ─── Flux ─── */
   messages$!: Observable<UserMessage[]>;
-
   filteredMessages$!: Observable<UserMessage[]>;
-
-  currentUser: User | null = null;
-
-  selectedMessage: UserMessage | null = null;
-
-  replyText = '';
-
-  isSending = false;
-
-  searchTerm = '';
-
-  activeFilter: FilterStatus = 'all';
-
-  sortMode: SortMode = 'recent';
-
   stats$!: Observable<MessageStats>;
 
+  /* ─── État UI ─── */
+  currentUser: User | null = null;
+  selectedMessage: UserMessage | null = null;
+  replyText = '';
+  isSending = false;
+  searchTerm = '';
+  activeFilter: FilterStatus = 'all';
+  sortMode: SortMode = 'recent';
+
+  /* ─── Injection ─── */
   private readonly auth = inject(Auth);
-
   private readonly database = inject(Database);
+  private readonly environmentInjector = inject(EnvironmentInjector);
 
-  private readonly environmentInjector =
-    inject(EnvironmentInjector);
-
-  private readonly destroy$ =
-    new Subject<void>();
-
-  private readonly filter$ =
-    new BehaviorSubject<MessageFilters>({
-      search: '',
-      status: 'all',
-      sort: 'recent'
-    });
+  /* ─── Internes ─── */
+  private readonly destroy$ = new Subject<void>();
+  private readonly filter$ = new BehaviorSubject<MessageFilters>({
+    search: '',
+    status: 'all',
+    sort: 'recent'
+  });
 
   private scrollNeeded = false;
+
+  /**
+   * Cache des réponses triées par clé de message.
+   * Évite de recalculer getRepliesArray() à chaque cycle CD
+   * (appelé plusieurs fois par template pour le même message).
+   */
+  private readonly repliesCache = new Map<string, MessageReply[]>();
+
+  /* ─── Cycle de vie ─── */
 
   ngOnInit(): void {
     this.initializeMessages();
@@ -138,556 +169,303 @@ export class MessagerieComponent
     this.initializeStats();
   }
 
-  /**
-   * Flux principal des messages
-   * appartenant à l'utilisateur connecté.
-   */
-  private initializeMessages(): void {
-
-    this.messages$ = runInInjectionContext(
-      this.environmentInjector,
-      () =>
-        authState(this.auth).pipe(
-
-          takeUntil(this.destroy$),
-
-          switchMap((user: User | null) => {
-
-            this.currentUser = user;
-
-            if (!user) {
-              this.selectedMessage = null;
-
-              return of([]);
-            }
-
-            const messagesRef =
-              ref(
-                this.database,
-                'messages'
-              );
-
-            const messagesQuery =
-              query(
-                messagesRef,
-                orderByChild('userId'),
-                equalTo(user.uid)
-              );
-
-            return listVal<UserMessage>(
-              messagesQuery,
-              {
-                keyField: 'key'
-              }
-            ).pipe(
-
-              map((messages) =>
-                this.sortByRecent(messages)
-              ),
-
-              tap((messages) => {
-                this.syncSelectedMessage(
-                  messages
-                );
-              })
-            );
-          }),
-
-          shareReplay({
-            bufferSize: 1,
-            refCount: true
-          })
-        )
-    );
-  }
-
-  /**
-   * Flux filtré et trié.
-   */
-  private initializeFilteredMessages(): void {
-
-    this.filteredMessages$ =
-      combineLatest([
-        this.messages$,
-        this.filter$
-      ]).pipe(
-
-        map(([messages, filters]) => {
-
-          let result = [...messages];
-
-          const search =
-            filters.search
-              .trim()
-              .toLowerCase();
-
-          if (search) {
-
-            result = result.filter(
-              (message) => {
-
-                const subject =
-                  message.subject
-                    ?.toLowerCase() ?? '';
-
-                const content =
-                  message.message
-                    .toLowerCase();
-
-                return (
-                  subject.includes(search) ||
-                  content.includes(search)
-                );
-              }
-            );
-          }
-
-          if (
-            filters.status !== 'all'
-          ) {
-
-            result = result.filter(
-              (message) =>
-                message.status ===
-                filters.status
-            );
-          }
-
-          return this.sortMessages(
-            result,
-            filters.sort
-          );
-        })
-      );
-  }
-
-  /**
-   * Statistiques.
-   */
-  private initializeStats(): void {
-
-    this.stats$ =
-      this.messages$.pipe(
-
-        map((messages): MessageStats => {
-
-          const total =
-            messages.length;
-
-          const unread =
-            messages.filter(
-              (message) =>
-                message.status ===
-                'unread'
-            ).length;
-
-          const replied =
-            messages.filter(
-              (message) =>
-                message.status ===
-                'replied'
-            ).length;
-
-          let totalResponseTimeMs = 0;
-
-          let responseCount = 0;
-
-          messages.forEach(
-            (message) => {
-
-              const replies =
-                this.getRepliesArray(
-                  message.replies
-                );
-
-              const firstAdminReply =
-                replies.find(
-                  (reply) =>
-                    reply.senderRole ===
-                    'admin'
-                );
-
-              if (
-                firstAdminReply &&
-                message.createdAt
-              ) {
-
-                const messageTime =
-                  this.getTimestamp(
-                    message.createdAt
-                  );
-
-                const replyTime =
-                  this.getTimestamp(
-                    firstAdminReply.createdAt
-                  );
-
-                const responseTime =
-                  replyTime -
-                  messageTime;
-
-                if (responseTime >= 0) {
-
-                  totalResponseTimeMs +=
-                    responseTime;
-
-                  responseCount++;
-                }
-              }
-            }
-          );
-
-          const average =
-            responseCount > 0
-              ? totalResponseTimeMs /
-              responseCount
-              : 0;
-
-          return {
-            total,
-            unread,
-            replied,
-            avgResponseTime:
-              this.formatResponseTime(
-                average
-              )
-          };
-        }),
-
-        startWith({
-          total: 0,
-          unread: 0,
-          replied: 0,
-          avgResponseTime: '—'
-        })
-      );
-  }
-
   ngAfterViewChecked(): void {
-
-    if (
-      this.scrollNeeded &&
-      this.threadBody
-    ) {
-
+    if (this.scrollNeeded && this.threadBody) {
       this.scrollToBottom();
-
       this.scrollNeeded = false;
     }
   }
 
   ngOnDestroy(): void {
-
     this.destroy$.next();
     this.destroy$.complete();
+    this.repliesCache.clear();
   }
 
-  /**
-   * Recherche.
-   */
-  updateSearch(
-    value: string
-  ): void {
+  /* ─── Initialisation des flux ─── */
 
+  private initializeMessages(): void {
+    this.messages$ = runInInjectionContext(
+      this.environmentInjector,
+      () =>
+        authState(this.auth).pipe(
+          takeUntil(this.destroy$),
+
+          switchMap((user: User | null) => {
+            this.currentUser = user;
+
+            if (!user) {
+              this.selectedMessage = null;
+              this.repliesCache.clear();
+              return of([]);
+            }
+
+            const messagesQuery = query(
+              ref(this.database, 'messages'),
+              orderByChild('userId'),
+              equalTo(user.uid)
+            );
+
+            return listVal<UserMessage>(messagesQuery, { keyField: 'key' }).pipe(
+              map((messages) => this.sortByRecent(messages)),
+              tap((messages) => this.syncSelectedMessage(messages))
+            );
+          }),
+
+          shareReplay({ bufferSize: 1, refCount: true })
+        )
+    );
+  }
+
+  private initializeFilteredMessages(): void {
+    this.filteredMessages$ = combineLatest([
+      this.messages$,
+      this.filter$
+    ]).pipe(
+      map(([messages, filters]) => {
+        let result = messages;
+
+        const search = filters.search.trim().toLowerCase();
+        if (search) {
+          result = result.filter((message) => {
+            const subject = message.subject?.toLowerCase() ?? '';
+            const content = message.message.toLowerCase();
+            return subject.includes(search) || content.includes(search);
+          });
+        }
+
+        if (filters.status !== 'all') {
+          result = result.filter((message) => message.status === filters.status);
+        }
+
+        return this.sortMessages(result, filters.sort);
+      })
+    );
+  }
+
+  private initializeStats(): void {
+    this.stats$ = this.messages$.pipe(
+      map((messages): MessageStats => {
+        const total = messages.length;
+        const unread = messages.filter((m) => m.status === 'unread').length;
+        const replied = messages.filter((m) => m.status === 'replied').length;
+
+        let totalResponseTimeMs = 0;
+        let responseCount = 0;
+
+        for (const message of messages) {
+          const replies = this.getRepliesArray(message.replies);
+          const firstAdminReply = replies.find((r) => r.senderRole === 'admin');
+
+          if (firstAdminReply && message.createdAt) {
+            const responseTime =
+              this.getTimestamp(firstAdminReply.createdAt) -
+              this.getTimestamp(message.createdAt);
+
+            if (responseTime >= 0) {
+              totalResponseTimeMs += responseTime;
+              responseCount++;
+            }
+          }
+        }
+
+        const average = responseCount > 0
+          ? totalResponseTimeMs / responseCount
+          : 0;
+
+        return {
+          total,
+          unread,
+          replied,
+          avgResponseTime: this.formatResponseTime(average)
+        };
+      }),
+
+      startWith({
+        total: 0,
+        unread: 0,
+        replied: 0,
+        avgResponseTime: '—'
+      })
+    );
+  }
+
+  /* ─── Actions UI ─── */
+
+  updateSearch(value: string): void {
     this.searchTerm = value;
-
-    this.filter$.next({
-      ...this.filter$.value,
-      search: value
-    });
+    this.filter$.next({ ...this.filter$.value, search: value });
   }
 
-  /**
-   * Filtre par statut.
-   */
-  setFilter(
-    status: FilterStatus
-  ): void {
-
+  setFilter(status: FilterStatus): void {
     this.activeFilter = status;
-
-    this.filter$.next({
-      ...this.filter$.value,
-      status
-    });
+    this.filter$.next({ ...this.filter$.value, status });
   }
 
-  /**
-   * Tri.
-   */
-  setSort(
-    sort: SortMode
-  ): void {
-
+  setSort(sort: SortMode): void {
     this.sortMode = sort;
-
-    this.filter$.next({
-      ...this.filter$.value,
-      sort
-    });
+    this.filter$.next({ ...this.filter$.value, sort });
   }
 
-  /**
-   * Sélection d'un message.
-   */
-  selectMessage(
-    message: UserMessage
-  ): void {
-
-    this.selectedMessage =
-      message;
-
+  selectMessage(message: UserMessage): void {
+    this.selectedMessage = message;
     this.replyText = '';
-
     this.scrollNeeded = true;
   }
 
-  /**
-   * Fermeture du thread.
-   */
   closeThread(): void {
-
     this.selectedMessage = null;
-
     this.replyText = '';
   }
 
   /**
-   * Convertit les réponses Firebase
-   * en tableau typé.
+   * Gestion de la touche Entrée dans le textarea :
+   * - Entrée         → envoie
+   * - Maj + Entrée   → saut de ligne
    */
-  getRepliesArray(
-    replies:
-      | Record<string, MessageReply>
-      | MessageReply[]
-      | undefined
-  ): MessageReply[] {
-
-    if (!replies) {
-      return [];
+  onReplyEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.shiftKey) {
+      return; // laisse le saut de ligne
     }
-
-    if (Array.isArray(replies)) {
-
-      return [...replies].sort(
-        (a, b) =>
-          this.getTimestamp(
-            a.createdAt
-          ) -
-          this.getTimestamp(
-            b.createdAt
-          )
-      );
+    keyboardEvent.preventDefault();
+    if (!this.isSending && this.replyText.trim()) {
+      void this.sendReply();
     }
-
-    return Object.entries(replies)
-      .map(
-        ([key, reply]) => ({
-          ...reply,
-          key
-        })
-      )
-      .sort(
-        (a, b) =>
-          this.getTimestamp(
-            a.createdAt
-          ) -
-          this.getTimestamp(
-            b.createdAt
-          )
-      );
   }
 
-  /**
-   * Envoie une réponse.
-   */
+  /* ─── Envoi ─── */
+
   async sendReply(): Promise<void> {
+    const message = this.selectedMessage;
+    const user = this.currentUser;
+    const content = this.replyText.trim();
 
-    const message =
-      this.selectedMessage;
-
-    const user =
-      this.currentUser;
-
-    const content =
-      this.replyText.trim();
-
-    if (
-      !message?.key ||
-      !content ||
-      !user
-    ) {
+    if (!message?.key || !content || !user) {
       return;
     }
 
     this.isSending = true;
 
     try {
-
-      const now =
-        new Date().toISOString();
+      const now = new Date().toISOString();
 
       const replyData: MessageReply = {
         senderId: user.uid,
         senderRole: 'user',
-        senderName:
-          user.displayName ??
-          'Vous',
+        senderName: user.displayName ?? 'Vous',
         message: content,
         createdAt: now
       };
 
-      await runInInjectionContext(
-        this.environmentInjector,
-        async () => {
+      await runInInjectionContext(this.environmentInjector, async () => {
+        await push(
+          ref(this.database, `messages/${message.key}/replies`),
+          replyData
+        );
 
-          const repliesRef =
-            ref(
-              this.database,
-              `messages/${message.key}/replies`
-            );
+        await update(
+          ref(this.database, `messages/${message.key}`),
+          { status: 'unread', updatedAt: now }
+        );
+      });
 
-          await push(
-            repliesRef,
-            replyData
-          );
-
-          const messageRef =
-            ref(
-              this.database,
-              `messages/${message.key}`
-            );
-
-          await update(
-            messageRef,
-            {
-              status: 'unread',
-              updatedAt: now
-            }
-          );
-        }
-      );
+      // Invalide le cache pour ce message
+      if (message.key) {
+        this.repliesCache.delete(message.key);
+      }
 
       this.replyText = '';
-
       this.scrollNeeded = true;
 
     } catch (error) {
-
-      console.error(
-        'Erreur lors de l’envoi de la réponse :',
-        error
-      );
-
-      window.alert(
-        'Impossible d’envoyer le message. Veuillez réessayer.'
-      );
-
+      console.error('Erreur lors de l’envoi de la réponse :', error);
+      window.alert('Impossible d’envoyer le message. Veuillez réessayer.');
     } finally {
-
       this.isSending = false;
     }
   }
 
+  /* ─── Helpers template ─── */
+
   /**
-   * Classe CSS du statut.
+   * Récupère les réponses d'un message depuis le cache.
+   * Utilisé plusieurs fois par template → mémoïsation cruciale.
    */
-  getStatusBadgeClass(
-    status: string | undefined
-  ): string {
-
-    switch (status) {
-
-      case 'replied':
-        return 'badge-replied';
-
-      case 'read':
-        return 'badge-read';
-
-      case 'archived':
-        return 'badge-archived';
-
-      default:
-        return 'badge-unread';
-    }
+  repliesOf(message: UserMessage): MessageReply[] {
+    return this.getRepliesArray(message.replies, message.key);
   }
 
-  /**
-   * Libellé du statut.
-   */
-  getStatusLabel(
-    status: string | undefined
-  ): string {
-
-    switch (status) {
-
-      case 'replied':
-        return 'Répondu';
-
-      case 'read':
-        return 'Lu par l’équipe';
-
-      case 'archived':
-        return 'Archivé';
-
-      default:
-        return 'En attente';
-    }
+  /** Nombre de réponses (pour la carte liste). */
+  repliesCount(
+    replies: Record<string, MessageReply> | MessageReply[] | undefined
+  ): number {
+    return this.getRepliesArray(replies).length;
   }
 
-  /**
-   * Icône du statut.
-   */
-  getStatusIcon(
-    status: string | undefined
-  ): string {
-
-    switch (status) {
-
-      case 'replied':
-        return '✓✓';
-
-      case 'read':
-        return '✓';
-
-      case 'archived':
-        return '📦';
-
-      default:
-        return '●';
-    }
+  /** Initiales de l'utilisateur connecté (mémoïsé via getter). */
+  get userInitials(): string {
+    return this.getInitials(this.currentUser?.displayName ?? 'Vous');
   }
 
-  /**
-   * Icône de catégorie.
-   */
-  getCategoryIcon(
-    category?: string
-  ): string {
+  /* ─── Maps statiques (accessibles au template) ─── */
 
-    switch (category) {
-
-      case 'technique':
-        return '🛠️';
-
-      case 'abonnement':
-        return '💳';
-
-      case 'contenu':
-        return '🎬';
-
-      default:
-        return '💬';
-    }
+  statusBadgeClass(status: string | undefined): string {
+    return STATUS_BADGE_CLASS[status as MessageStatus] ?? DEFAULT_STATUS_BADGE;
   }
 
-  /**
-   * Initiales utilisateur.
-   */
-  getInitials(
-    name?: string | null
-  ): string {
+  statusLabel(status: string | undefined): string {
+    return STATUS_LABEL[status as MessageStatus] ?? DEFAULT_STATUS_LABEL;
+  }
 
+  statusIcon(status: string | undefined): string {
+    return STATUS_ICON[status as MessageStatus] ?? DEFAULT_STATUS_ICON;
+  }
+
+  categoryIcon(category: string | undefined): string {
+    return CATEGORY_ICON[category as MessageCategory] ?? DEFAULT_CATEGORY_ICON;
+  }
+
+  /* ─── Helpers internes ─── */
+
+  private getRepliesArray(
+    replies: Record<string, MessageReply> | MessageReply[] | undefined,
+    cacheKey?: string
+  ): MessageReply[] {
+    if (!replies) {
+      return [];
+    }
+
+    // Si on a une clé de cache et un objet (non tableau), on mémoïse
+    if (cacheKey && !Array.isArray(replies)) {
+      const cached = this.repliesCache.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    let result: MessageReply[];
+
+    if (Array.isArray(replies)) {
+      result = [...replies].sort(
+        (a, b) => this.getTimestamp(a.createdAt) - this.getTimestamp(b.createdAt)
+      );
+    } else {
+      result = Object.entries(replies)
+        .map(([key, reply]) => ({ ...reply, key }))
+        .sort(
+          (a, b) => this.getTimestamp(a.createdAt) - this.getTimestamp(b.createdAt)
+        );
+    }
+
+    if (cacheKey && !Array.isArray(replies)) {
+      this.repliesCache.set(cacheKey, result);
+    }
+
+    return result;
+  }
+
+  private getInitials(name?: string | null): string {
     if (!name?.trim()) {
       return '?';
     }
@@ -696,252 +474,99 @@ export class MessagerieComponent
       .trim()
       .split(/\s+/)
       .filter(Boolean)
-      .map(
-        (part) =>
-          part.charAt(0)
-      )
+      .map((part) => part.charAt(0))
       .join('')
       .slice(0, 2)
       .toUpperCase();
   }
 
-  /**
-   * TrackBy pour les listes Angular.
-   */
-  trackByKey(
-    index: number,
-    item: UserMessage
-  ): string {
-
-    return item.key ??
-      index.toString();
-  }
-
-  /** * TrackBy pour les réponses. */
-   trackByReplyKey(index: number, item: MessageReply): string { return item.key ?? index.toString(); }
-
-  /**
-   * Tri du plus récent au plus ancien.
-   */
-  private sortByRecent(
-    messages: UserMessage[]
-  ): UserMessage[] {
-
+  private sortByRecent(messages: UserMessage[]): UserMessage[] {
     return [...messages].sort(
-      (a, b) =>
-        this.getTimestamp(
-          b.createdAt
-        ) -
-        this.getTimestamp(
-          a.createdAt
-        )
+      (a, b) => this.getTimestamp(b.createdAt) - this.getTimestamp(a.createdAt)
     );
   }
 
-  /**
-   * Tri selon le mode choisi.
-   */
-  private sortMessages(
-    messages: UserMessage[],
-    mode: SortMode
-  ): UserMessage[] {
-
-    const result =
-      [...messages];
-
+  private sortMessages(messages: UserMessage[], mode: SortMode): UserMessage[] {
     switch (mode) {
-
       case 'oldest':
-
-        return result.sort(
-          (a, b) =>
-            this.getTimestamp(
-              a.createdAt
-            ) -
-            this.getTimestamp(
-              b.createdAt
-            )
+        return [...messages].sort(
+          (a, b) => this.getTimestamp(a.createdAt) - this.getTimestamp(b.createdAt)
         );
 
       case 'unread-first':
-
-        return result.sort(
-          (a, b) => {
-
-            const rankA =
-              this.getStatusRank(
-                a.status
-              );
-
-            const rankB =
-              this.getStatusRank(
-                b.status
-              );
-
-            if (
-              rankA !== rankB
-            ) {
-              return rankA - rankB;
-            }
-
-            return (
-              this.getTimestamp(
-                b.createdAt
-              ) -
-              this.getTimestamp(
-                a.createdAt
-              )
-            );
-          }
-        );
+        return [...messages].sort((a, b) => {
+          const rankA = this.getStatusRank(a.status);
+          const rankB = this.getStatusRank(b.status);
+          if (rankA !== rankB) return rankA - rankB;
+          return this.getTimestamp(b.createdAt) - this.getTimestamp(a.createdAt);
+        });
 
       case 'recent':
       default:
-
-        return result.sort(
-          (a, b) =>
-            this.getTimestamp(
-              b.createdAt
-            ) -
-            this.getTimestamp(
-              a.createdAt
-            )
+        return [...messages].sort(
+          (a, b) => this.getTimestamp(b.createdAt) - this.getTimestamp(a.createdAt)
         );
     }
   }
 
-  /**
-   * Priorité des statuts.
-   */
-  private getStatusRank(
-    status: UserMessage['status']
-  ): number {
-
+  private getStatusRank(status: UserMessage['status']): number {
     switch (status) {
-
-      case 'unread':
-        return 0;
-
-      case 'replied':
-        return 1;
-
-      case 'read':
-        return 2;
-
-      case 'archived':
-        return 3;
+      case 'unread':   return 0;
+      case 'replied':  return 1;
+      case 'read':     return 2;
+      case 'archived': return 3;
+      default:         return 4;
     }
   }
 
-  /**
-   * Synchronise le message sélectionné
-   * avec les données Firebase.
-   */
-  private syncSelectedMessage(
-    messages: UserMessage[]
-  ): void {
-
-    const selected =
-      this.selectedMessage;
-
+  private syncSelectedMessage(messages: UserMessage[]): void {
+    const selected = this.selectedMessage;
     if (!selected?.key) {
       return;
     }
 
-    const updated =
-      messages.find(
-        (message) =>
-          message.key ===
-          selected.key
-      );
-
+    const updated = messages.find((m) => m.key === selected.key);
     if (!updated) {
       return;
     }
 
-    const previousReplies =
-      this.getRepliesArray(
-        selected.replies
-      );
+    const previousRepliesCount = this.getRepliesArray(selected.replies).length;
+    const updatedRepliesCount = this.getRepliesArray(updated.replies).length;
 
-    const updatedReplies =
-      this.getRepliesArray(
-        updated.replies
-      );
+    // Invalide le cache si le nombre de réponses a changé
+    if (updatedRepliesCount !== previousRepliesCount && updated.key) {
+      this.repliesCache.delete(updated.key);
+    }
 
-    const hasNewReply =
-      updatedReplies.length >
-      previousReplies.length;
+    this.selectedMessage = updated;
 
-    this.selectedMessage =
-      updated;
-
-    if (hasNewReply) {
+    if (updatedRepliesCount > previousRepliesCount) {
       this.scrollNeeded = true;
     }
   }
 
-  /**
-   * Timestamp robuste.
-   */
-  private getTimestamp(
-    value: string
-  ): number {
-
-    const timestamp =
-      new Date(value).getTime();
-
-    return Number.isNaN(timestamp)
-      ? 0
-      : timestamp;
+  private getTimestamp(value: string): number {
+    const ts = new Date(value).getTime();
+    return Number.isNaN(ts) ? 0 : ts;
   }
 
-  /**
-   * Format du temps de réponse.
-   */
-  private formatResponseTime(
-    milliseconds: number
-  ): string {
-
+  private formatResponseTime(milliseconds: number): string {
     if (milliseconds <= 0) {
       return '—';
     }
 
-    const minutes =
-      Math.floor(
-        milliseconds / 60000
-      );
+    const minutes = Math.floor(milliseconds / 60_000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-    const hours =
-      Math.floor(minutes / 60);
-
-    const days =
-      Math.floor(hours / 24);
-
-    if (days > 0) {
-      return `${days} j`;
-    }
-
-    if (hours > 0) {
-      return `${hours} h`;
-    }
-
+    if (days > 0) return `${days} j`;
+    if (hours > 0) return `${hours} h`;
     return `${minutes} min`;
   }
 
-  /**
-   * Scroll vers le dernier message.
-   */
   private scrollToBottom(): void {
-
-    const element =
-      this.threadBody?.nativeElement;
-
-    if (!element) {
-      return;
-    }
-
-    element.scrollTop =
-      element.scrollHeight;
+    const element = this.threadBody?.nativeElement;
+    if (!element) return;
+    element.scrollTop = element.scrollHeight;
   }
-} 
+}

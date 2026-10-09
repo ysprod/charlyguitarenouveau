@@ -1,19 +1,33 @@
 import { CommonModule } from '@angular/common';
 import {
-  Component, EnvironmentInjector, HostListener, OnDestroy,
-  OnInit, runInInjectionContext, inject
+  ChangeDetectionStrategy,
+  Component,
+  EnvironmentInjector,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  inject,
+  runInInjectionContext
 } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Database, equalTo, listVal, orderByChild, query, ref } from '@angular/fire/database';
+import {
+  Database,
+  equalTo,
+  listVal,
+  orderByChild,
+  query,
+  ref
+} from '@angular/fire/database';
 import { Observable, Subject, of } from 'rxjs';
 import { map, switchMap, takeUntil } from 'rxjs/operators';
+
 import { AuthService } from './services/auth.service';
 import { UserMessage } from './models/user-message.model';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { FooterComponent } from './features/footer/footer.component';
+import { FooterComponent } from './footer/footer.component';
 import { VoiceService } from './services/voice.service';
 
 @Component({
@@ -31,12 +45,14 @@ import { VoiceService } from './services/voice.service';
     FooterComponent
   ],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit, OnDestroy {
 
-  title = 'CHARLY GUITARE';
-  currentYear = new Date().getFullYear();
+  readonly title = 'CHARLY GUITARE';
+  readonly currentYear = new Date().getFullYear();
+
   isMobileMenuOpen = false;
   isScrolled = false;
   unreadCount$: Observable<number> = of(0);
@@ -44,17 +60,10 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly voice = inject(VoiceService);
 
-  /**
-   * Dernier nombre de messages non lus connu.
-   * Sert à détecter une AUGMENTATION (nouveau message) et non
-   * une simple émission du flux Firebase.
-   */
+  /** Dernier compteur connu, pour ne pas re-parler à chaque émission. */
   private lastUnreadCount = 0;
 
-  /**
-   * Évite d'annoncer la première valeur du flux
-   * (sinon on parle à chaque rechargement de page).
-   */
+  /** Évite d'annoncer la valeur initiale du flux (rechargement de page). */
   private hasSeenFirstValue = false;
 
   constructor(
@@ -63,99 +72,77 @@ export class AppComponent implements OnInit, OnDestroy {
     private readonly snackBar: MatSnackBar,
     private readonly database: Database,
     private readonly environmentInjector: EnvironmentInjector
-  ) { }
+  ) {}
 
   ngOnInit(): void {
+    this.watchUnreadMessages();
+    this.watchNewMessages();
+  }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     FLUX : compteur de messages "replied"
+     ═══════════════════════════════════════════════════════ */
+
+  private watchUnreadMessages(): void {
     this.unreadCount$ = this.auth.user$.pipe(
-
       takeUntil(this.destroy$),
-
       switchMap(user => {
-
         if (!user) {
-          // Déconnexion : reset du compteur
           this.lastUnreadCount = 0;
           this.hasSeenFirstValue = false;
           return of(0);
         }
 
-        return runInInjectionContext(
-          this.environmentInjector,
-          () => {
+        return runInInjectionContext(this.environmentInjector, () => {
+          const messagesQuery = query(
+            ref(this.database, 'messages'),
+            orderByChild('userId'),
+            equalTo(user.uid)
+          );
 
-            const messagesRef = ref(
-              this.database,
-              'messages'
-            );
-
-            const messagesQuery = query(
-              messagesRef,
-              orderByChild('userId'),
-              equalTo(user.uid)
-            );
-
-            return listVal<UserMessage>(
-              messagesQuery
-            ).pipe(
-
-              map(messages =>
-                messages.filter(
-                  message =>
-                    message.status === 'replied'
-                ).length
-              )
-
-            );
-          }
-        );
+          return listVal<UserMessage>(messagesQuery).pipe(
+            map(messages =>
+              messages.filter(m => m.status === 'replied').length
+            )
+          );
+        });
       })
-
     );
-
-    // Abonnement séparé pour surveiller les CHANGEMENTS de compteur
-    this.watchNewMessages();
-  }
-
-  ngOnDestroy(): void {
-
-    this.destroy$.next();
-
-    this.destroy$.complete();
   }
 
   /* ═══════════════════════════════════════════════════════
      ANNONCE VOCALE DES NOUVEAUX MESSAGES
      ═══════════════════════════════════════════════════════ */
+
   private watchNewMessages(): void {
     this.unreadCount$
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => {
 
         // Première valeur : on la mémorise sans parler
-        // (évite d'annoncer "3 messages" à chaque rechargement de page)
         if (!this.hasSeenFirstValue) {
           this.hasSeenFirstValue = true;
           this.lastUnreadCount = count;
           return;
         }
 
-        // Nouveau(x) message(s) reçu(s)
+        // Nouveau(x) message(s)
         if (count > this.lastUnreadCount) {
           const diff = count - this.lastUnreadCount;
-
           const message = diff === 1
-            ? `Tu as reçu un nouveau message de Charly Guitare.`
+            ? 'Tu as reçu un nouveau message de Charly Guitare.'
             : `Tu as reçu ${diff} nouveaux messages de Charly Guitare.`;
 
-          // Léger délai pour laisser le DOM se stabiliser
           setTimeout(async () => {
-            // Attend poliment que la voix actuelle termine avant d'annoncer
             await this.voice.waitForSpeechEnd();
-
             await this.voice.speak(message, {
               pitch: 1.05,
-              rate: 0.95,
+              rate: 0.95
             });
           }, 300);
         }
@@ -164,64 +151,49 @@ export class AppComponent implements OnInit, OnDestroy {
       });
   }
 
+  /* ═══════════════════════════════════════════════════════
+     SCROLL / MENU
+     ═══════════════════════════════════════════════════════ */
+
   @HostListener('window:scroll')
   onWindowScroll(): void {
-
-    this.isScrolled =
-      window.scrollY > 20;
+    this.isScrolled = window.scrollY > 20;
   }
 
   toggleMobileMenu(): void {
-
-    this.isMobileMenuOpen =
-      !this.isMobileMenuOpen;
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
 
   closeMobileMenu(): void {
-
     this.isMobileMenuOpen = false;
   }
 
+  /* ═══════════════════════════════════════════════════════
+     AUTH
+     ═══════════════════════════════════════════════════════ */
+
   onLogout(): void {
-
     this.closeMobileMenu();
-
     this.auth.logout();
 
-    this.snackBar.open(
-      'Déconnexion réussie',
-      'Fermer',
-      {
-        duration: 3000
-      }
-    );
+    this.snackBar.open('Déconnexion réussie', 'Fermer', { duration: 3000 });
 
     void this.router.navigate(['/home']);
   }
 
-  getInitials(
-    name: string | null | undefined
-  ): string {
+  /* ═══════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════ */
 
-    if (!name) {
-      return 'U';
-    }
+  getInitials(name: string | null | undefined): string {
+    if (!name) return 'U';
 
-    const parts = name
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
+    const parts = name.trim().split(/\s+/).filter(Boolean);
 
     if (parts.length >= 2) {
-
-      return `${parts[0][0]}${parts[1][0]}`
-        .toUpperCase();
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     }
 
-    return name
-      .substring(0, 2)
-      .toUpperCase();
+    return name.substring(0, 2).toUpperCase();
   }
-
-  
 }

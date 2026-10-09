@@ -1,6 +1,5 @@
 import {
-  ApplicationConfig,
-  importProvidersFrom
+  ApplicationConfig
 } from '@angular/core';
 
 import {
@@ -17,18 +16,18 @@ import {
 } from '@angular/service-worker';
 
 import {
-  provideFirebaseApp,
-  initializeApp
+  initializeApp,
+  provideFirebaseApp
 } from '@angular/fire/app';
 
 import {
-  provideAuth,
-  getAuth
+  getAuth,
+  provideAuth
 } from '@angular/fire/auth';
 
 import {
-  provideDatabase,
-  getDatabase
+  getDatabase,
+  provideDatabase
 } from '@angular/fire/database';
 
 import {
@@ -82,11 +81,8 @@ export const appConfig: ApplicationConfig = {
         registrationStrategy: 'registerWhenStable:30000'
       }
     ),
-
     CookieService,
-
     TictactoeserviceService,
-
     GameService
   ]
 }; 

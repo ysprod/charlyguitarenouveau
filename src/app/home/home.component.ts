@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Auth, authState, signOut } from '@angular/fire/auth';
@@ -10,19 +9,15 @@ import { HomeconnectComponent } from './homeconnect/homeconnect.component';
   selector: 'app-home',
   standalone: true,
   imports: [
-    CommonModule,
     RouterLink,
-    HomeconnectComponent  
+    HomeconnectComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
 
-  private auth = inject(Auth);
-
-  /** 👤 Utilisateur Firebase (null si déconnecté) */
-  readonly currentUser = toSignal(authState(this.auth), { initialValue: null });
+  private readonly auth = inject(Auth);
 
   /** ✅ Signal : connecté ou non */
   readonly isLoggedIn = toSignal(

@@ -5,7 +5,7 @@
 
     <!-- HERO -->
     <section class="hero-section">
-      <div class="hero-particles">
+      <div class="hero-particles" aria-hidden="true">
         <span class="particle"></span>
         <span class="particle"></span>
         <span class="particle"></span>
@@ -17,7 +17,11 @@
       </div>
 
       <div class="hero-bg">
-        <img src="assets/charly-guitare-hero.jpg" alt="Charly Guitare" class="hero-image" />
+        <img
+          src="assets/charly-guitare-hero.jpg"
+          alt="Charly Guitare"
+          class="hero-image"
+        />
       </div>
 
       <div class="hero-content">
@@ -28,20 +32,41 @@
           </h1>
           <div class="hero-divider"></div>
           <p class="hero-subtitle">
-            La musique est une école<br>
+            La musique est une école<br />
             <span class="subtitle-accent">de vie.</span>
           </p>
           <div class="hero-actions">
-            <button class="cta-button cta-primary" [routerLink]="['/play']">
+            <button
+              type="button"
+              class="cta-button cta-primary"
+              [routerLink]="['/play']"
+            >
               <span>Jouer à Charly Guitare Hero</span>
-              <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <svg
+                class="arrow-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
               </svg>
             </button>
 
-            <button class="cta-button cta-secondary" [routerLink]="['/academie']">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <button
+              type="button"
+              class="cta-button cta-secondary"
+              [routerLink]="['/academie']"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
               <span>Découvrir l'académie</span>
@@ -51,16 +76,24 @@
       </div>
     </section>
 
-    <br><br>
-
     <!-- SECTION FEATURES — RANGÉE 1 -->
-    <section class="features-section">
-   <!-- 🎓 ACADÉMIE -->
+    <section class="features-section" aria-label="Découvrir nos univers">
+      <!-- 🎓 ACADÉMIE -->
       <article class="feature-card">
-        <a [routerLink]="['/academie']" class="feature-image-link" title="Découvrir l'Académie">
-          <div class="feature-image-wrapper2">
-            <img src="assets/academie.jpg" alt="L'Académie Charly Guitare" class="feature-image" loading="lazy" />
-            <div class="feature-overlay"></div>
+        <a
+          [routerLink]="['/academie']"
+          class="feature-image-link"
+          title="Découvrir l'Académie"
+          aria-label="Découvrir l'Académie Charly Guitare"
+        >
+          <div class="feature-image-wrapper feature-image-wrapper--tall">
+            <img
+              src="assets/academie.jpg"
+              alt="L'Académie Charly Guitare"
+              class="feature-image"
+              loading="lazy"
+            />
+            <div class="feature-overlay" aria-hidden="true"></div>
             <span class="feature-tag">Formation</span>
           </div>
         </a>
@@ -71,31 +104,13 @@
           </p>
           <a [routerLink]="['/academie']" class="feature-link">
             <span>En savoir plus</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
-        </div>
-      </article> 
-    
-    <!-- 👑 ABONNEMENT PREMIUM -->
-      <article class="feature-card feature-card-accent">
-        <a [routerLink]="['/offres']" class="feature-image-link" title="Découvrir l'Abonnement Premium">
-          <div class="feature-image-wrapper">
-            <img src="assets/abonnement.jpg" alt="Abonnement Charly Guitare" class="feature-image" loading="lazy" />
-            <div class="feature-overlay"></div>
-            <span class="feature-tag feature-tag-gold">Cours de Guitare</span>
-          </div>
-        </a>
-        <div class="feature-content">
-          <h3 class="feature-title">Decouvrez nos offres</h3>
-          <p class="feature-desc">
-         Choisis ton pack pédagogique
-          </p>
-          <a [routerLink]="['/offres']" class="feature-link feature-link-gold">
-            <span>Decouvrir</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>
@@ -103,29 +118,88 @@
         </div>
       </article>
 
-
+      <!-- 👑 ABONNEMENT PREMIUM -->
+      <article class="feature-card feature-card-accent">
+        <a
+          [routerLink]="['/offres']"
+          class="feature-image-link"
+          title="Découvrir l'Abonnement Premium"
+          aria-label="Découvrir les offres d'abonnement"
+        >
+          <div class="feature-image-wrapper">
+            <img
+              src="assets/abonnement.jpg"
+              alt="Abonnement Charly Guitare"
+              class="feature-image"
+              loading="lazy"
+            />
+            <div class="feature-overlay" aria-hidden="true"></div>
+            <span class="feature-tag feature-tag-gold">Cours de Guitare</span>
+          </div>
+        </a>
+        <div class="feature-content">
+          <h3 class="feature-title">Découvrez nos offres</h3>
+          <p class="feature-desc">
+            Choisis ton pack pédagogique
+          </p>
+          <a
+            [routerLink]="['/offres']"
+            class="feature-link feature-link-gold"
+          >
+            <span>Découvrir</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+        </div>
+      </article>
     </section>
 
     <!-- SECTION FEATURES — RANGÉE 2 -->
-    <section class="features-section">
-  <!-- 🎮 JEUX -->
+    <section class="features-section" aria-label="Jeux et vidéos">
+      <!-- 🎮 JEUX -->
       <article class="feature-card">
-        <a [routerLink]="['/play']" class="feature-image-link" title="Accéder aux jeux">
-          <div class="feature-image-wrapper2">
-            <img src="assets/jeuxnouveau.jpg" alt="Espace Jeux" class="feature-image" loading="lazy" />
-            <div class="feature-overlay"></div>
+        <a
+          [routerLink]="['/play']"
+          class="feature-image-link"
+          title="Accéder aux jeux"
+          aria-label="Accéder à l'espace de jeux"
+        >
+          <div class="feature-image-wrapper feature-image-wrapper--tall">
+            <img
+              src="assets/jeuxnouveau.jpg"
+              alt="Espace Jeux"
+              class="feature-image"
+              loading="lazy"
+            />
+            <div class="feature-overlay" aria-hidden="true"></div>
             <span class="feature-tag feature-tag-live">
               <span class="live-dot"></span>
-              GAMES
+              Games
             </span>
           </div>
         </a>
         <div class="feature-content">
           <h3 class="feature-title">Jeux</h3>
-          <p class="feature-desc">Jouez, apprenez, progressez… et surtout, amusez-vous !</p>
+          <p class="feature-desc">
+            Jouez, apprenez, progressez… et surtout, amusez-vous !
+          </p>
           <a [routerLink]="['/play']" class="feature-link">
             <span>Jouer maintenant</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>
@@ -135,10 +209,20 @@
 
       <!-- 🔴 LIVE -->
       <article class="feature-card">
-        <a [routerLink]="['/live']" class="feature-image-link" title="Rejoindre le Live">
+        <a
+          [routerLink]="['/live']"
+          class="feature-image-link"
+          title="Rejoindre le Live"
+          aria-label="Rejoindre les sessions live"
+        >
           <div class="feature-image-wrapper">
-            <img src="assets/live.jpg" alt="Live" class="feature-image" loading="lazy" />
-            <div class="feature-overlay"></div>
+            <img
+              src="assets/live.jpg"
+              alt="Live"
+              class="feature-image"
+              loading="lazy"
+            />
+            <div class="feature-overlay" aria-hidden="true"></div>
             <span class="feature-tag feature-tag-live">
               <span class="live-dot"></span>
               Live
@@ -146,38 +230,57 @@
           </div>
         </a>
         <div class="feature-content">
-          <h3 class="feature-title">Videos</h3>
+          <h3 class="feature-title">Vidéos</h3>
           <p class="feature-desc">
             Rejoignez-nous pour des sessions interactives.
           </p>
           <a [routerLink]="['/live']" class="feature-link">
             <span>Rejoindre le live</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </a>
         </div>
-      </article> 
-
-     
+      </article>
     </section>
 
     <!-- CTA FINAL -->
     <section class="cta-section">
-      <div class="cta-glow"></div>
+      <div class="cta-glow" aria-hidden="true"></div>
       <div class="cta-content">
         <h2 class="cta-title">Aller dans le futur</h2>
         <p class="cta-text">Rejoignez-nous !</p>
         <div class="cta-actions">
-          <button class="cta-button cta-primary" [routerLink]="['/academie']">
+          <button
+            type="button"
+            class="cta-button cta-primary"
+            [routerLink]="['/academie']"
+          >
             <span>Commencer maintenant</span>
-            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <svg
+              class="arrow-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              aria-hidden="true"
+            >
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </button>
-          <button class="cta-button cta-secondary" [routerLink]="['/contact']">
+          <button
+            type="button"
+            class="cta-button cta-secondary"
+            [routerLink]="['/contact']"
+          >
             <span>Nous contacter</span>
           </button>
         </div>

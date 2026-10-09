@@ -1,6 +1,6 @@
 <footer class="app-footer">
   <!-- Décor lumineux supérieur -->
-  <div class="footer-glow"></div>
+  <div class="footer-glow" aria-hidden="true"></div>
 
   <div class="footer-container">
 
@@ -11,7 +11,7 @@
       <a routerLink="/" class="brand-logo">
         <div class="logo-icon-wrapper">
           <span class="logo-icon">🎸</span>
-          <span class="logo-ring"></span>
+          <span class="logo-ring" aria-hidden="true"></span>
         </div>
         <div class="logo-text-wrapper">
           <span class="logo-text">CHARLY</span>
@@ -20,28 +20,25 @@
       </a>
 
       <p class="brand-description">
-        L'Académie & l'Univers Offoland. Apprenez la guitare, le Coupé-Décalé
+        Apprenez la musique
         et accédez aux ressources pédagogiques exclusives.
       </p>
 
       <!-- Réseaux Sociaux -->
       <div class="social-links">
-        <a href="https://www.youtube.com/@CharlyGuitare"
-           target="_blank" rel="noopener noreferrer"
-           aria-label="YouTube" class="social-link social-youtube">
-          <img src="assets/youtube.png" alt="" class="social-img">
+        <a href="https://www.youtube.com/@CharlyGuitare" target="_blank" rel="noopener noreferrer" aria-label="YouTube"
+          class="social-link social-youtube">
+          <img src="assets/youtube.png" alt="" class="social-img" loading="lazy" />
           <span class="social-tooltip">YouTube</span>
         </a>
-        <a href="https://facebook.com/charlyguitare2020"
-           target="_blank" rel="noopener noreferrer"
-           aria-label="Facebook" class="social-link social-facebook">
-          <img src="assets/facebook.png" alt="" class="social-img">
+        <a href="https://facebook.com/charlyguitare2020" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
+          class="social-link social-facebook">
+          <img src="assets/facebook.png" alt="" class="social-img" loading="lazy" />
           <span class="social-tooltip">Facebook</span>
         </a>
-        <a href="https://www.instagram.com/charlyguitare"
-           target="_blank" rel="noopener noreferrer"
-           aria-label="Instagram" class="social-link social-instagram">
-          <img src="assets/instagram.png" alt="" class="social-img">
+        <a href="https://www.instagram.com/charlyguitare" target="_blank" rel="noopener noreferrer"
+          aria-label="Instagram" class="social-link social-instagram">
+          <img src="assets/instagram.png" alt="" class="social-img" loading="lazy" />
           <span class="social-tooltip">Instagram</span>
         </a>
       </div>
@@ -50,58 +47,58 @@
     <!-- ═══════════════════════════════════════════
          COLONNE 2 : NAVIGATION
          ═══════════════════════════════════════════ -->
-    <div class="footer-column">
+    <nav class="footer-column" aria-label="Navigation principale">
       <h4 class="column-title">
-        <span class="title-dot"></span>
+        <span class="title-dot" aria-hidden="true"></span>
         Navigation
       </h4>
-      <nav class="footer-nav">
+      <div class="footer-nav">
         <a [routerLink]="['/']" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-          <span class="nav-dot"></span>
+          <span class="nav-dot" aria-hidden="true"></span>
           Accueil
         </a>
         <a [routerLink]="['/accueil']" routerLinkActive="active">
-          <span class="nav-dot"></span>
+          <span class="nav-dot" aria-hidden="true"></span>
           Qui est Charly Guitare ?
         </a>
         <a [routerLink]="['/academie']" routerLinkActive="active">
-          <span class="nav-dot"></span>
+          <span class="nav-dot" aria-hidden="true"></span>
           Formations
         </a>
         <a [routerLink]="['/again']" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          Equipe technique
+          <span class="nav-dot" aria-hidden="true"></span>
+          Équipe technique
         </a>
-      </nav>
-    </div>
+      </div>
+    </nav>
 
     <!-- ═══════════════════════════════════════════
          COLONNE 3 : DÉCOUVRIR
          ═══════════════════════════════════════════ -->
-    <div class="footer-column">
+    <nav class="footer-column" aria-label="Découvrir">
       <h4 class="column-title">
-        <span class="title-dot"></span>
+        <span class="title-dot" aria-hidden="true"></span>
         Découvrir
       </h4>
-      <nav class="footer-nav">
+      <div class="footer-nav">
         <a [routerLink]="['/play']" routerLinkActive="active">
-          <span class="nav-dot"></span>
+          <span class="nav-dot" aria-hidden="true"></span>
           Jeux
         </a>
         <a [routerLink]="['/academie']" routerLinkActive="active">
-          <span class="nav-dot"></span>
+          <span class="nav-dot" aria-hidden="true"></span>
           L'Académie
         </a>
         <a [routerLink]="['/live']" routerLinkActive="active">
-          <span class="nav-dot"></span>
+          <span class="nav-dot" aria-hidden="true"></span>
           Live
         </a>
         <a [routerLink]="['/contact']" routerLinkActive="active">
-          <span class="nav-dot"></span>
-          Contact 
+          <span class="nav-dot" aria-hidden="true"></span>
+          Contact
         </a>
-      </nav>
-    </div>
+      </div>
+    </nav>
 
   </div><!-- /.footer-container -->
 
@@ -113,22 +110,20 @@
       <p class="copyright">
         &copy; {{ currentYear }}
         <strong class="brand-highlight">CHARLY GUITARE</strong>
-        <span class="separator-dot">•</span>
+        <span class="separator-dot" aria-hidden="true">•</span>
         Tous droits réservés.
       </p>
 
       <div class="legal-links">
         <a [routerLink]="['/mentions']">Mentions légales</a>
-        <span class="link-separator">/</span>
+        <span class="link-separator" aria-hidden="true">/</span>
         <a [routerLink]="['/privacy']">Confidentialité</a>
       </div>
 
-      <button class="back-to-top"
-              (click)="scrollToTop()"
-              aria-label="Retour en haut"
-              title="Retour en haut">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="18 15 12 9 6 15"/>
+      <button type="button" class="back-to-top" (click)="scrollToTop()" aria-label="Retour en haut de page"
+        title="Retour en haut">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <polyline points="18 15 12 9 6 15" />
         </svg>
       </button>
     </div>
