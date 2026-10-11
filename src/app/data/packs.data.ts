@@ -2,6 +2,9 @@ import { PackCategory } from '../models/pack.model';
 
 /* ============================================================
    DONNÉES — 4 catégories de packs pédagogiques
+   ═══════════════════════════════════════════════════════════
+   ⚠️ Couleurs d'accent assombries pour contraste AA sur fond blanc
+   (voir commentaires à côté de chaque accentColor)
    ============================================================ */
 
 export const PACK_CATEGORIES: PackCategory[] = [
@@ -14,7 +17,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
         subtitle: 'Faire ses premiers pas sur la guitare',
         objective: 'Apprendre les bases, prendre confiance et jouer ses premières chansons.',
         icon: '🎯',
-        accentColor: '#00D4FF',
+        accentColor: '#053095', // 🔵 Cyan foncé — contraste AA sur fond blanc
         image: 'assets/images/packs/debutant.jpg',
         packs: [
             {
@@ -85,7 +88,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
         subtitle: 'Gagner en fluidité et en autonomie',
         objective: 'Maîtriser les transitions, les rythmes avancés et commencer à jouer en autonomie.',
         icon: '🎸',
-        accentColor: '#FFD700',
+        accentColor: '#b8860b', // 🟠 Doré foncé — contraste AA sur fond blanc
         image: 'assets/images/packs/intermediaire.jpg',
         packs: [
             {
@@ -157,7 +160,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
         subtitle: 'Développer son jeu personnel',
         objective: "Explorer les gammes, le bend, l'improvisation et les techniques avancées.",
         icon: '⚡',
-        accentColor: '#B266FF',
+        accentColor: '#7c3aed', // 🟣 Violet foncé — contraste AA sur fond blanc
         image: 'assets/images/packs/solo.jpg',
         packs: [
             {
@@ -230,7 +233,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
         subtitle: 'Jouer et chanter ses morceaux préférés',
         objective: "Maîtriser l'accompagnement, le chant et se produire en public.",
         icon: '🎤',
-        accentColor: '#FF6B6B',
+        accentColor: '#dc2626', // 🔴 Rouge foncé — contraste AA sur fond blanc
         image: 'assets/images/packs/chansons.jpg',
         packs: [
             {

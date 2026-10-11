@@ -31,9 +31,14 @@
       <!-- Sélecteur de catégorie -->
       <nav class="category-nav" aria-label="Catégories de packs">
         @for (cat of categories; track cat.id) {
-        <button type="button" class="category-tab" [class.active]="activeCategory() === cat.id"
-          [style.--tab-color]="cat.accentColor" [attr.aria-pressed]="activeCategory() === cat.id"
-          (click)="selectCategory(cat.id)">
+        <button
+          type="button"
+          class="category-tab"
+          [class.active]="activeCategory() === cat.id"
+          [style.--tab-color]="cat.accentColor"
+          [attr.aria-pressed]="activeCategory() === cat.id"
+          (click)="selectCategory(cat.id)"
+        >
           <span class="tab-icon" aria-hidden="true">{{ cat.icon }}</span>
           <span class="tab-label">{{ cat.title | slice:5 }}</span>
         </button>
@@ -46,7 +51,12 @@
        PACKS — CATÉGORIE ACTIVE
        ═══════════════════════════════════════════════════════ -->
   @if (currentCategory(); as category) {
-  <section class="packs-section" [style.--accent]="category.accentColor" @fadeInUp>
+  <section
+    #packsSection
+    class="packs-section"
+    [style.--accent]="category.accentColor"
+    @fadeInUp
+  >
 
     <!-- En-tête de catégorie -->
     <header class="category-header">
@@ -64,9 +74,14 @@
     <!-- Grille des 3 packs -->
     <div class="packs-grid" @staggerPacks>
       @for (pack of category.packs; track pack.id) {
-      <article class="pack-card" [class.highlight]="pack.highlight" [class.premium]="pack.premium"
-        [class.hovered]="hoveredPack() === pack.id" (mouseenter)="onPackHover(pack.id)"
-        (mouseleave)="onPackHover(null)">
+      <article
+        class="pack-card"
+        [class.highlight]="pack.highlight"
+        [class.premium]="pack.premium"
+        [class.hovered]="hoveredPack() === pack.id"
+        (mouseenter)="onPackHover(pack.id)"
+        (mouseleave)="onPackHover(null)"
+      >
 
         <!-- Glow décoratif -->
         <div class="pack-glow" aria-hidden="true"></div>
@@ -110,7 +125,11 @@
 
         <!-- CTA -->
         <footer class="pack-footer">
-          <a class="pack-cta" [routerLink]="['/contact']" [queryParams]="{ pack: pack.id }">
+          <a
+            class="pack-cta"
+            [routerLink]="['/contact']"
+            [queryParams]="{ pack: pack.id }"
+          >
             <span>Choisir ce pack</span>
             <span class="cta-arrow" aria-hidden="true">→</span>
           </a>

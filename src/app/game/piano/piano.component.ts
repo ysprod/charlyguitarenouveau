@@ -1,15 +1,61 @@
 import {
-  Component, OnInit, OnDestroy, signal, computed, inject, effect,
-  ChangeDetectionStrategy, ElementRef, viewChild
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild
 } from '@angular/core';
-import { Router } from '@angular/router';
 import {
-  trigger, transition, style, animate, keyframes, state
+  animate,
+  keyframes,
+  state,
+  style,
+  transition,
+  trigger
 } from '@angular/animations';
+import { Router } from '@angular/router';
+
 import {
-  PianoKey, MelodyChord, Particle, HitEffect, GameDifficulty, FeedbackType
+  FeedbackType,
+  GameDifficulty,
+  HitEffect,
+  MelodyChord,
+  Particle,
+  PianoKey
 } from '../../models/piano.model';
-import { PianoAudioService, InstrumentType } from '../../services/piano-audio.service';
+
+import {
+  InstrumentType,
+  PianoAudioService
+} from '../../services/piano-audio.service';
+
+import { GameAudioService } from '../../services/game-audio.service';
+import { StorageService } from '../../services/storage.service';
+import { randomElement, randomFloat } from '../../utils/random.utils';
+
+/* ═══════════════════════════════════════════════════════
+   CONSTANTES DE JEU
+   ═══════════════════════════════════════════════════════ */
+
+const MAX_TIME = 200;
+const STAR_POWER_DURATION = 8;
+const STAR_POWER_GAIN_PER_HIT = 12;
+const STAR_POWER_GAIN_MAX = 100;
+const COMBO_MELODY_TRIGGER = 12;
+const COMBO_SHAKE_TRIGGER = 10;
+const TAP_THRESHOLD_PX = 8;
+
+const STORAGE_KEYS = {
+  HIGH_SCORE: 'charly_piano_highscore',
+  SOUND_ENABLED: 'piano_hero_sound_enabled'
+} as const;
 
 @Component({
   selector: 'app-piano',
@@ -23,19 +69,19 @@ import { PianoAudioService, InstrumentType } from '../../services/piano-audio.se
       transition(':enter', [
         animate('700ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', keyframes([
           style({ transform: 'scale(0.2) rotate(-15deg)', opacity: 0, offset: 0 }),
-          style({ transform: 'scale(1.4) rotate(8deg)', opacity: 1, offset: 0.35 }),
+          style({ transform: 'scale(1.4) rotate(8deg)',   opacity: 1, offset: 0.35 }),
           style({ transform: 'scale(0.95) rotate(-3deg)', opacity: 1, offset: 0.6 }),
-          style({ transform: 'scale(1.05) rotate(0deg)', opacity: 1, offset: 0.8 }),
-          style({ transform: 'scale(1.2) rotate(0deg)', opacity: 0, offset: 1 })
+          style({ transform: 'scale(1.05) rotate(0deg)',  opacity: 1, offset: 0.8 }),
+          style({ transform: 'scale(1.2) rotate(0deg)',   opacity: 0, offset: 1 })
         ]))
       ])
     ]),
     trigger('modalAnim', [
       transition(':enter', [
         animate('600ms cubic-bezier(0.34, 1.56, 0.64, 1)', keyframes([
-          style({ transform: 'scale(0.5) translateY(80px) rotateX(20deg)', opacity: 0, offset: 0 }),
+          style({ transform: 'scale(0.5) translateY(80px) rotateX(20deg)',   opacity: 0, offset: 0 }),
           style({ transform: 'scale(1.08) translateY(-10px) rotateX(-2deg)', opacity: 1, offset: 0.7 }),
-          style({ transform: 'scale(1) translateY(0) rotateX(0)', opacity: 1, offset: 1 })
+          style({ transform: 'scale(1) translateY(0) rotateX(0)',           opacity: 1, offset: 1 })
         ]))
       ])
     ]),
@@ -44,7 +90,7 @@ import { PianoAudioService, InstrumentType } from '../../services/piano-audio.se
         animate('800ms cubic-bezier(0.22, 1, 0.36, 1)', keyframes([
           style({ transform: 'scale(0.3) translateY(-60px)', opacity: 0, offset: 0 }),
           style({ transform: 'scale(1.15) translateY(10px)', opacity: 1, offset: 0.5 }),
-          style({ transform: 'scale(1) translateY(0)', opacity: 1, offset: 1 })
+          style({ transform: 'scale(1) translateY(0)',       opacity: 1, offset: 1 })
         ]))
       ]),
       transition(':leave', [
@@ -53,32 +99,36 @@ import { PianoAudioService, InstrumentType } from '../../services/piano-audio.se
     ]),
     trigger('starPowerPulse', [
       state('inactive', style({ transform: 'scale(1)' })),
-      state('active', style({ transform: 'scale(1.02)' })),
+      state('active',   style({ transform: 'scale(1.02)' })),
       transition('inactive <=> active', animate('400ms ease-in-out'))
     ]),
     trigger('comboFlash', [
       transition('* => *', [
         animate('500ms ease-out', keyframes([
-          style({ transform: 'scale(1)', offset: 0 }),
+          style({ transform: 'scale(1)',   offset: 0 }),
           style({ transform: 'scale(1.5)', color: '#FFD700', offset: 0.3 }),
-          style({ transform: 'scale(1)', offset: 1 })
+          style({ transform: 'scale(1)',   offset: 1 })
         ]))
       ])
     ])
   ]
 })
 export class PianoComponent implements OnInit, OnDestroy {
+
+  /* ─── Injection ─── */
   private readonly router = inject(Router);
-  /** ✅ Service de synthèse audio — aucun fichier sample */
   private readonly audio = inject(PianoAudioService);
+  private readonly uiAudio = inject(GameAudioService);
+  private readonly storage = inject(StorageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly keyboardScrollRef =
     viewChild<ElementRef<HTMLDivElement>>('keyboardScroll');
 
-  // ═══════════════════════════════════════════════════════
-  // CLAVIER (C3 → C5)
-  // ═══════════════════════════════════════════════════════
-  readonly pianoKeys: PianoKey[] = [
+  /* ═══════════════════════════════════════════════════════
+     CLAVIER (C3 → C5)
+     ═══════════════════════════════════════════════════════ */
+  readonly pianoKeys: readonly PianoKey[] = [
     { index: 0,  note: 'C3',  frenchNote: 'DO',   octave: 3, isBlack: false, whiteIndex: 0 },
     { index: 1,  note: 'C#3', frenchNote: 'DO#',  octave: 3, isBlack: true,  whiteIndex: 0 },
     { index: 2,  note: 'D3',  frenchNote: 'RÉ',   octave: 3, isBlack: false, whiteIndex: 1 },
@@ -108,7 +158,7 @@ export class PianoComponent implements OnInit, OnDestroy {
 
   readonly whiteNotesList = ['DO', 'RÉ', 'MI', 'FA', 'SOL', 'LA', 'SI'];
 
-  readonly noteColors: Record<string, string> = {
+  readonly noteColors: Readonly<Record<string, string>> = {
     'DO':  '#FF3366', 'DO#': '#FF3366',
     'RÉ':  '#FFD700', 'RÉ#': '#FFD700',
     'MI':  '#00D4FF',
@@ -118,76 +168,50 @@ export class PianoComponent implements OnInit, OnDestroy {
     'SI':  '#FF8CC8'
   };
 
-  // ═══════════════════════════════════════════════════════
-  // SON — Préférence persistante
-  // ═══════════════════════════════════════════════════════
-  readonly soundEnabled = signal<boolean>(true);
-  private readonly SOUND_PREF_KEY = 'piano_hero_sound_enabled';
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT DU JEU
+     ═══════════════════════════════════════════════════════ */
+  readonly soundEnabled = signal(true);
+  readonly score = signal(0);
+  readonly combo = signal(0);
+  readonly maxCombo = signal(0);
+  readonly lives = signal(3);
+  readonly targetNote = signal('');
+  readonly targetOctave = signal(4);
+  readonly timeLeft = signal(MAX_TIME);
+  readonly isPlaying = signal(false);
+  readonly isGameOver = signal(false);
+  readonly notesHit = signal(0);
+  readonly notesMissed = signal(0);
+  readonly streak = signal(0);
 
-  // ═══════════════════════════════════════════════════════
-  // ÉTAT DU JEU
-  // ═══════════════════════════════════════════════════════
-  readonly score = signal<number>(0);
-
-  private readonly _combo = signal<number>(0);
-  readonly combo = this._combo.asReadonly();
-
-  readonly maxCombo = signal<number>(0);
-  readonly lives = signal<number>(3);
-  readonly targetNote = signal<string>('');
-  readonly targetOctave = signal<number>(4);
-  readonly timeLeft = signal<number>(200);
-  readonly isPlaying = signal<boolean>(false);
-  readonly isGameOver = signal<boolean>(false);
-  readonly notesHit = signal<number>(0);
-  readonly notesMissed = signal<number>(0);
-  readonly streak = signal<number>(0);
-
-  readonly starPowerGauge = signal<number>(0);
-  readonly isStarPowerActive = signal<boolean>(false);
-  readonly starPowerTimeLeft = signal<number>(0);
-
-  readonly multiplier = computed(() => {
-    const c = this.combo();
-    if (c >= 20) return 6;
-    if (c >= 15) return 5;
-    if (c >= 12) return 4;
-    if (c >= 8)  return 3;
-    if (c >= 4)  return 2;
-    return 1;
-  });
-
-  readonly effectiveMultiplier = computed(() =>
-    this.multiplier() * (this.isStarPowerActive() ? 2 : 1)
-  );
-
-  readonly accuracy = computed(() => {
-    const total = this.notesHit() + this.notesMissed();
-    return total === 0 ? 100 : Math.round((this.notesHit() / total) * 100);
-  });
-
-  readonly activeKeyIndexes = signal<Set<number>>(new Set());
+  readonly starPowerGauge = signal(0);
+  readonly isStarPowerActive = signal(false);
+  readonly starPowerTimeLeft = signal(0);
 
   readonly feedbackMessage = signal<string | null>(null);
   readonly feedbackType = signal<FeedbackType>('success');
-  readonly feedbackKey = signal<number>(0);
-  readonly highScore = signal<number>(0);
+  readonly feedbackKey = signal(0);
+  readonly highScore = signal(0);
   readonly difficulty = signal<GameDifficulty>('normal');
-  readonly screenShake = signal<boolean>(false);
-  readonly comboFlashKey = signal<number>(0);
+  readonly screenShake = signal(false);
+  readonly comboFlashKey = signal(0);
 
   readonly particles = signal<Particle[]>([]);
-  readonly correctKeyIndex = signal<number>(-1);
+  readonly correctKeyIndex = signal(-1);
   readonly hitEffects = signal<HitEffect[]>([]);
 
-  readonly melodyPlaying = signal<boolean>(false);
-  readonly melodyChordIndex = signal<number>(-1);
-  readonly melodyChordName = signal<string>('');
-  readonly melodyChordFrench = signal<string>('');
-  readonly melodyChordColor = signal<string>('#FFD700');
-  readonly melodyCurrentTitle = signal<string>('');
+  readonly melodyPlaying = signal(false);
+  readonly melodyChordIndex = signal(-1);
+  readonly melodyChordName = signal('');
+  readonly melodyChordFrench = signal('');
+  readonly melodyChordColor = signal('#FFD700');
+  readonly melodyCurrentTitle = signal('');
 
-  readonly melodyProgressions: MelodyChord[][] = [
+  readonly activeKeyIndexes = signal<Set<number>>(new Set());
+
+  /* ─── Melody progressions ─── */
+  readonly melodyProgressions: readonly MelodyChord[][] = [
     [
       { name: 'Am', frenchName: 'La mineur',  color: '#B266FF', notes: ['A3','C4','E4'], bassNote: 'A2' },
       { name: 'Dm', frenchName: 'Ré mineur',  color: '#00D4FF', notes: ['D4','F4','A4'], bassNote: 'D3' },
@@ -214,41 +238,48 @@ export class PianoComponent implements OnInit, OnDestroy {
     ]
   ];
 
-  readonly melodyTitles: string[] = [
+  readonly melodyTitles = [
     '✨ ORIGINES ✨',
     '⭐ ÉTOILES ⭐',
     '⚔️ HÉROS ⚔️',
     '🌙 RÊVE 🌙'
-  ];
+  ] as const;
 
-  /** Instrument utilisé pour chaque mélodie */
-  readonly melodyInstruments: InstrumentType[] = [
-    'strings',
-    'bells',
-    'trumpet',
-    'flute',
+  readonly melodyInstruments: readonly InstrumentType[] = [
+    'strings', 'bells', 'trumpet', 'flute'
   ];
 
   private melodyProgressionIndex = 0;
+
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED
+     ═══════════════════════════════════════════════════════ */
+
+  readonly multiplier = computed(() => {
+    const c = this.combo();
+    if (c >= 20) return 6;
+    if (c >= 15) return 5;
+    if (c >= 12) return 4;
+    if (c >= 8)  return 3;
+    if (c >= 4)  return 2;
+    return 1;
+  });
+
+  readonly effectiveMultiplier = computed(() =>
+    this.multiplier() * (this.isStarPowerActive() ? 2 : 1)
+  );
+
+  readonly accuracy = computed(() => {
+    const total = this.notesHit() + this.notesMissed();
+    return total === 0 ? 100 : Math.round((this.notesHit() / total) * 100);
+  });
 
   readonly currentMelodyProgression = computed<MelodyChord[]>(() => {
     if (!this.melodyPlaying()) return [];
     const idx = (this.melodyProgressionIndex - 1 + this.melodyProgressions.length)
       % this.melodyProgressions.length;
-    return this.melodyProgressions[idx];
+    return [...this.melodyProgressions[idx]];
   });
-
-  // ═══════════════════════════════════════════════════════
-  // RESSOURCES
-  // ═══════════════════════════════════════════════════════
-  private readonly timeouts = new Set<ReturnType<typeof setTimeout>>();
-  private timerInterval?: ReturnType<typeof setInterval>;
-  private starPowerInterval?: ReturnType<typeof setInterval>;
-  private readonly maxTime = 200;
-  private isMelodyPlaying = false;
-  private particleId = 0;
-  private effectId = 0;
-  private lastTargetKey = '';
 
   readonly keyColorsByIndex = computed<Record<number, string>>(() => {
     const map: Record<number, string> = {};
@@ -261,9 +292,6 @@ export class PianoComponent implements OnInit, OnDestroy {
   readonly whiteKeys = computed(() => this.pianoKeys.filter(k => !k.isBlack));
   readonly blackKeys = computed(() => this.pianoKeys.filter(k => k.isBlack));
 
-  // ═══════════════════════════════════════════════════════
-  // GUIDAGE VISUEL
-  // ═══════════════════════════════════════════════════════
   readonly targetKeyIndex = computed<number>(() => {
     const note = this.targetNote();
     const oct = this.targetOctave();
@@ -287,12 +315,65 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.isPlaying() && !this.melodyPlaying()
   );
 
+  /**
+   * ✅ Computed pour le pourcentage du timer.
+   * (Avant : méthode appelée dans le template → non réactive.)
+   */
+  readonly timerPercent = computed(() =>
+    (this.timeLeft() / MAX_TIME) * 100
+  );
+
+  /**
+   * ✅ Computed pour la couleur du timer.
+   */
+  readonly timerColor = computed(() => {
+    const pct = this.timerPercent();
+    if (pct < 20) return 'linear-gradient(90deg, #ef4444, #f59e0b)';
+    if (pct < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24, #10b981)';
+    return 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)';
+  });
+
+  readonly isTimerCritical = computed(() => this.timerPercent() < 20);
+
+  /**
+   * ✅ Indices des étoiles Star Power (constante calculée une fois).
+   */
+  readonly starPowerStars = Array.from({ length: 10 }, (_, i) => i);
+
+  /* ═══════════════════════════════════════════════════════
+     RESSOURCES INTERNES
+     ═══════════════════════════════════════════════════════ */
+  private readonly timeouts = new Set<ReturnType<typeof setTimeout>>();
+  private readonly melodyTimeouts = new Set<ReturnType<typeof setTimeout>>();
+  private timerInterval?: ReturnType<typeof setInterval>;
+  private starPowerInterval?: ReturnType<typeof setInterval>;
+  private isMelodyPlaying = false;
+  private particleId = 0;
+  private effectId = 0;
+  private lastTargetKey = '';
+
+  /* ═══════════════════════════════════════════════════════
+     POINTER
+     ═══════════════════════════════════════════════════════ */
+  private readonly activePointer = new Map<number, {
+    keyIndex: number;
+    startX: number;
+    startY: number;
+    moved: boolean;
+  }>();
+
+  /* ═══════════════════════════════════════════════════════
+     CYCLE DE VIE
+     ═══════════════════════════════════════════════════════ */
+
   constructor() {
     effect(() => {
       const c = this.combo();
-      if (c > 0 && c % 4 === 0) {
-        this.comboFlashKey.update(k => k + 1);
-      }
+      untracked(() => {
+        if (c > 0 && c % 4 === 0) {
+          this.comboFlashKey.update(k => k + 1);
+        }
+      });
     });
   }
 
@@ -303,10 +384,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.timerInterval) clearInterval(this.timerInterval);
-    if (this.starPowerInterval) clearInterval(this.starPowerInterval);
-    this.timeouts.forEach(id => clearTimeout(id));
-    this.timeouts.clear();
+    this.clearAllTimers();
     this.stopMelody();
     this.audio.allNotesOff();
   }
@@ -319,31 +397,60 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.timeouts.add(id);
   }
 
-  // ═══════════════════════════════════════════════════════
-  // SON — Toggle & persistance
-  // ═══════════════════════════════════════════════════════
+  private clearAllTimers(): void {
+    clearInterval(this.timerInterval);
+    clearInterval(this.starPowerInterval);
+    this.timerInterval = undefined;
+    this.starPowerInterval = undefined;
+
+    this.timeouts.forEach(id => clearTimeout(id));
+    this.timeouts.clear();
+
+    this.melodyTimeouts.forEach(id => clearTimeout(id));
+    this.melodyTimeouts.clear();
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     PERSISTANCE
+     ═══════════════════════════════════════════════════════ */
+
   private loadSoundPreference(): void {
-    const saved = localStorage.getItem(this.SOUND_PREF_KEY);
-    if (saved === 'false') {
-      this.soundEnabled.set(false);
-      this.audio.setMuted(true);
+    const enabled = this.storage.getBoolean(STORAGE_KEYS.SOUND_ENABLED, true);
+    this.soundEnabled.set(enabled);
+    this.audio.setMuted(!enabled);
+  }
+
+  private loadHighScore(): void {
+    const saved = this.storage.getNumber(STORAGE_KEYS.HIGH_SCORE, 0);
+    if (saved > 0) this.highScore.set(saved);
+  }
+
+  private saveHighScore(): void {
+    if (this.score() > this.highScore()) {
+      this.highScore.set(this.score());
+      this.storage.setNumber(STORAGE_KEYS.HIGH_SCORE, this.score());
     }
   }
+
+  /* ═══════════════════════════════════════════════════════
+     SON
+     ═══════════════════════════════════════════════════════ */
 
   toggleSound(): void {
     const next = !this.soundEnabled();
     this.soundEnabled.set(next);
-    localStorage.setItem(this.SOUND_PREF_KEY, String(next));
+    this.storage.setBoolean(STORAGE_KEYS.SOUND_ENABLED, next);
     this.audio.setMuted(!next);
 
     if (next) {
-      this.playUiSound('click');
+      this.uiAudio.play('click');
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  // FLÈCHES DE SCROLL DU CLAVIER
-  // ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
+     FLÈCHES SCROLL CLAVIER
+     ═══════════════════════════════════════════════════════ */
+
   scrollKeyboard(direction: -1 | 1): void {
     const scroll = this.keyboardScrollRef()?.nativeElement;
     if (!scroll) return;
@@ -352,30 +459,34 @@ export class PianoComponent implements OnInit, OnDestroy {
     scroll.scrollBy({ left: amount, behavior: 'smooth' });
   }
 
-  // ═══════════════════════════════════════════════════════
-  // RETOUR AU SÉLECTEUR DE DIFFICULTÉ
-  // ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════ */
+
+  goToPlay(): void {
+    void this.router.navigate(['/play']);
+  }
+
   backToDifficultySelect(): void {
+    this.clearAllTimers();
     this.isGameOver.set(false);
     this.isPlaying.set(false);
     this.score.set(0);
     this.targetNote.set('');
     this.stopMelody();
-    if (this.timerInterval) clearInterval(this.timerInterval);
-    if (this.starPowerInterval) clearInterval(this.starPowerInterval);
   }
 
-  // ═══════════════════════════════════════════════════════
-  // POINTER / TACTILE (avec glissando tactile)
-  // ═══════════════════════════════════════════════════════
-  private readonly activePointer = new Map<number, {
-    keyIndex: number;
-    startX: number;
-    startY: number;
-    moved: boolean;
-  }>();
+  quitToMenu(): void {
+    this.clearAllTimers();
+    this.stopMelody();
+    this.isPlaying.set(false);
+    this.isGameOver.set(false);
+    this.targetNote.set('');
+  }
 
-  private readonly TAP_THRESHOLD_PX = 8;
+  /* ═══════════════════════════════════════════════════════
+     POINTER / TACTILE (glissando)
+     ═══════════════════════════════════════════════════════ */
 
   onPointerDown(key: PianoKey, event: PointerEvent): void {
     event.preventDefault();
@@ -397,7 +508,6 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.audio.noteOn(key.note, 0.9);
   }
 
-  /** Glissando : le doigt passe d'une touche à l'autre. */
   onPointerEnter(key: PianoKey, event: PointerEvent): void {
     if (!this.activePointer.has(event.pointerId)) return;
     const info = this.activePointer.get(event.pointerId)!;
@@ -424,7 +534,7 @@ export class PianoComponent implements OnInit, OnDestroy {
     const dx = Math.abs(event.clientX - info.startX);
     const dy = Math.abs(event.clientY - info.startY);
 
-    if (!info.moved && (dx > this.TAP_THRESHOLD_PX || dy > this.TAP_THRESHOLD_PX)) {
+    if (!info.moved && (dx > TAP_THRESHOLD_PX || dy > TAP_THRESHOLD_PX)) {
       info.moved = true;
     }
   }
@@ -471,79 +581,33 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   isTargetKey(keyIndex: number): boolean {
-    // En mode difficile : AUCUN indice visuel sur le clavier
     if (this.difficulty() === 'hardcore') return false;
     return this.shouldHighlightTarget() && this.targetKeyIndex() === keyIndex;
   }
 
-  // ═══════════════════════════════════════════════════════
-  // COMBO
-  // ═══════════════════════════════════════════════════════
-  private incrementCombo(): void {
-    this._combo.update(c => c + 1);
+  isHit(keyIndex: number): boolean {
+    return this.hitEffects().some(e => e.keyIndex === keyIndex);
   }
 
-  private resetComboForNewGame(): void {
-    this._combo.set(0);
+  shouldShowNoteLabel(): boolean {
+    return this.difficulty() !== 'hardcore';
   }
 
-  // ═══════════════════════════════════════════════════════
-  // POOL & SCROLL
-  // ═══════════════════════════════════════════════════════
-  private getNotePool(): { frenchNote: string; octave: number }[] {
-    const diff = this.difficulty();
-
-    if (diff === 'facile') {
-      return this.whiteNotesList.map(n => ({ frenchNote: n, octave: 4 }));
-    }
-
-    const octaves = [3, 4, 5];
-    const pool: { frenchNote: string; octave: number }[] = [];
-    for (const oct of octaves) {
-      for (const note of this.whiteNotesList) {
-        const exists = this.pianoKeys.some(k =>
-          !k.isBlack && k.frenchNote === note && k.octave === oct
-        );
-        if (exists) pool.push({ frenchNote: note, octave: oct });
-      }
-    }
-    return pool;
+  isStarFilled(i: number): boolean {
+    return this.starPowerGauge() >= (i + 1) * 10;
   }
 
-  private scrollToTargetKey(): void {
-    // En mode difficile : on ne scroll PAS vers la cible
-    if (this.difficulty() === 'hardcore') return;
+  /* ═══════════════════════════════════════════════════════
+     DÉMARRAGE
+     ═══════════════════════════════════════════════════════ */
 
-    this.schedule(() => {
-      const scroll = this.keyboardScrollRef()?.nativeElement;
-      const idx = this.targetKeyIndex();
-      if (!scroll || idx < 0) return;
-
-      const el = scroll.querySelector<HTMLElement>(`[data-key-index="${idx}"]`);
-      if (!el) return;
-
-      const elLeft = el.offsetLeft;
-      const elWidth = el.offsetWidth;
-      const scrollWidth = scroll.clientWidth;
-      const targetScrollLeft = elLeft - (scrollWidth / 2) + (elWidth / 2);
-
-      scroll.scrollTo({
-        left: Math.max(0, targetScrollLeft),
-        behavior: 'smooth'
-      });
-    }, 50);
-  }
-
-  // ═══════════════════════════════════════════════════════
-  // DÉMARRAGE
-  // ═══════════════════════════════════════════════════════
   async startChallenge(): Promise<void> {
     await this.audio.unlock();
     this.audio.setInstrument('piano');
     this.stopMelody();
 
     this.score.set(0);
-    this.resetComboForNewGame();
+    this.combo.set(0);
     this.maxCombo.set(0);
     this.lives.set(this.getLivesStart());
     this.starPowerGauge.set(0);
@@ -558,21 +622,13 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.nextRound();
   }
 
-  quitToMenu(): void {
-    if (this.timerInterval) clearInterval(this.timerInterval);
-    if (this.starPowerInterval) clearInterval(this.starPowerInterval);
-    this.stopMelody();
-    this.isPlaying.set(false);
-    this.isGameOver.set(false);
-    this.targetNote.set('');
-  }
+  /* ═══════════════════════════════════════════════════════
+     TIMER & ROUNDS
+     ═══════════════════════════════════════════════════════ */
 
-  // ═══════════════════════════════════════════════════════
-  // TIMER & ROUNDS
-  // ═══════════════════════════════════════════════════════
   private startTimer(): void {
     if (this.timerInterval) clearInterval(this.timerInterval);
-    this.timeLeft.set(this.maxTime);
+    this.timeLeft.set(MAX_TIME);
 
     this.timerInterval = setInterval(() => {
       if (!this.isPlaying()) return;
@@ -589,7 +645,7 @@ export class PianoComponent implements OnInit, OnDestroy {
     );
     const candidates = filtered.length > 0 ? filtered : pool;
 
-    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    const pick = randomElement(candidates);
     this.lastTargetKey = `${pick.frenchNote}-${pick.octave}`;
 
     this.targetNote.set(pick.frenchNote);
@@ -601,35 +657,41 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   private handleSuccess(keyIndex: number): void {
-    this.incrementCombo();
+    this.combo.update(c => c + 1);
     this.streak.update(s => s + 1);
     this.notesHit.update(n => n + 1);
     if (this.combo() > this.maxCombo()) this.maxCombo.set(this.combo());
 
     const starPowerBonus = this.isStarPowerActive() ? 2 : 1;
-    const perfectBonus = this.timeLeft() > this.maxTime * 0.7 ? 1.5 : 1;
+    const perfectBonus = this.timeLeft() > MAX_TIME * 0.7 ? 1.5 : 1;
     const basePoints = Math.round(100 * this.multiplier() * starPowerBonus * perfectBonus);
     this.score.update(s => s + basePoints);
 
     if (!this.isStarPowerActive()) {
-      this.starPowerGauge.update(g => Math.min(100, g + 12));
+      this.starPowerGauge.update(g =>
+        Math.min(STAR_POWER_GAIN_MAX, g + STAR_POWER_GAIN_PER_HIT)
+      );
     }
 
     this.correctKeyIndex.set(keyIndex);
     this.triggerParticles(keyIndex);
     this.triggerHitEffect(keyIndex);
 
-    const isPerfect = this.timeLeft() > this.maxTime * 0.75;
+    const isPerfect = this.timeLeft() > MAX_TIME * 0.75;
     const comboText = this.effectiveMultiplier() > 1 ? ` x${this.effectiveMultiplier()}` : '';
     if (isPerfect) {
       this.showFeedback(`PARFAIT ! +${basePoints}${comboText}`, 'perfect');
-      this.playUiSound('perfect');
+      this.uiAudio.play('perfect');
     } else {
       this.showFeedback(`BIEN ! +${basePoints}${comboText}`, 'success');
     }
 
-    if (this.combo() > 0 && this.combo() % 12 === 0) void this.playMelodieDesOrigines();
-    if (this.combo() > 0 && this.combo() % 10 === 0) this.triggerScreenShake();
+    if (this.combo() > 0 && this.combo() % COMBO_MELODY_TRIGGER === 0) {
+      void this.playMelodieDesOrigines();
+    }
+    if (this.combo() > 0 && this.combo() % COMBO_SHAKE_TRIGGER === 0) {
+      this.triggerScreenShake();
+    }
 
     this.nextRound();
   }
@@ -638,7 +700,7 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.streak.set(0);
     this.notesMissed.update(n => n + 1);
     this.lives.update(l => l - 1);
-    this.playUiSound('error');
+    this.uiAudio.play('error');
     this.triggerScreenShake();
 
     this.showFeedback(isTimeout ? 'TEMPS ÉCOULÉ !' : 'RATÉ !', 'error');
@@ -654,15 +716,15 @@ export class PianoComponent implements OnInit, OnDestroy {
     if (this.starPowerGauge() < 100 || this.isStarPowerActive()) return;
 
     this.isStarPowerActive.set(true);
-    this.starPowerTimeLeft.set(8);
-    this.playUiSound('starpower');
+    this.starPowerTimeLeft.set(STAR_POWER_DURATION);
+    this.uiAudio.play('starpower');
     this.showFeedback('⚡ STAR POWER ACTIVÉ ! ⚡', 'perfect');
     this.triggerScreenShake();
 
-    // Fanfare de trompette
+    /* Fanfare de trompette */
     this.audio.setInstrument('trumpet');
     this.schedule(() => {
-      ['C4', 'E4', 'G4', 'C5'].forEach((n) => {
+      ['C4', 'E4', 'G4', 'C5'].forEach(n => {
         this.audio.playNoteFor(n, 0.8, 0.7);
       });
     }, 0);
@@ -683,10 +745,9 @@ export class PianoComponent implements OnInit, OnDestroy {
     }, 100);
   }
 
-  // ═══════════════════════════════════════════════════════
-  // MÉLODIE DES ORIGINES — instruments tournants
-  // ═══════════════════════════════════════════════════════
-  private melodyTimeoutIds: ReturnType<typeof setTimeout>[] = [];
+  /* ═══════════════════════════════════════════════════════
+     MÉLODIE DES ORIGINES
+     ═══════════════════════════════════════════════════════ */
 
   private async playMelodieDesOrigines(): Promise<void> {
     if (this.isMelodyPlaying) return;
@@ -712,6 +773,7 @@ export class PianoComponent implements OnInit, OnDestroy {
       const delay = i * chordSpacing;
 
       const t = setTimeout(() => {
+        this.melodyTimeouts.delete(t);
         this.melodyChordIndex.set(i);
         this.melodyChordName.set(chord.name);
         this.melodyChordFrench.set(chord.frenchName);
@@ -719,38 +781,87 @@ export class PianoComponent implements OnInit, OnDestroy {
 
         this.audio.playNoteFor(chord.bassNote, 1.4, 0.6);
         chord.notes.forEach((note, nIdx) => {
-          setTimeout(() => this.audio.playNoteFor(note, 1.1, 0.5), nIdx * 40);
+          const noteTimeout = setTimeout(() => {
+            this.melodyTimeouts.delete(noteTimeout);
+            this.audio.playNoteFor(note, 1.1, 0.5);
+          }, nIdx * 40);
+          this.melodyTimeouts.add(noteTimeout);
         });
       }, delay * 1000);
-      this.melodyTimeoutIds.push(t);
+      this.melodyTimeouts.add(t);
     });
 
     const total = progression.length * chordSpacing + 1.2;
     const endT = setTimeout(() => {
+      this.melodyTimeouts.delete(endT);
       this.stopMelody();
       this.audio.setInstrument('piano');
       this.showFeedback('🌟 BRAVO ! 🌟', 'perfect');
     }, total * 1000);
-    this.melodyTimeoutIds.push(endT);
+    this.melodyTimeouts.add(endT);
   }
 
   private stopMelody(): void {
-    this.melodyTimeoutIds.forEach(id => clearTimeout(id));
-    this.melodyTimeoutIds = [];
+    this.melodyTimeouts.forEach(id => clearTimeout(id));
+    this.melodyTimeouts.clear();
     this.isMelodyPlaying = false;
     this.melodyPlaying.set(false);
     this.melodyChordIndex.set(-1);
   }
 
-  // ═══════════════════════════════════════════════════════
-  // VISUELS
-  // ═══════════════════════════════════════════════════════
-  getKeyColor(key: PianoKey): string {
-    return this.noteColors[key.frenchNote] ?? '#FFFFFF';
+  /* ═══════════════════════════════════════════════════════
+     POOL & SCROLL
+     ═══════════════════════════════════════════════════════ */
+
+  private getNotePool(): { frenchNote: string; octave: number }[] {
+    const diff = this.difficulty();
+
+    if (diff === 'facile') {
+      return this.whiteNotesList.map(n => ({ frenchNote: n, octave: 4 }));
+    }
+
+    const octaves = [3, 4, 5];
+    const pool: { frenchNote: string; octave: number }[] = [];
+    for (const oct of octaves) {
+      for (const note of this.whiteNotesList) {
+        const exists = this.pianoKeys.some(k =>
+          !k.isBlack && k.frenchNote === note && k.octave === oct
+        );
+        if (exists) pool.push({ frenchNote: note, octave: oct });
+      }
+    }
+    return pool;
   }
 
-  isHit(keyIndex: number): boolean {
-    return this.hitEffects().some(e => e.keyIndex === keyIndex);
+  private scrollToTargetKey(): void {
+    if (this.difficulty() === 'hardcore') return;
+
+    this.schedule(() => {
+      const scroll = this.keyboardScrollRef()?.nativeElement;
+      const idx = this.targetKeyIndex();
+      if (!scroll || idx < 0) return;
+
+      const el = scroll.querySelector<HTMLElement>(`[data-key-index="${idx}"]`);
+      if (!el) return;
+
+      const elLeft = el.offsetLeft;
+      const elWidth = el.offsetWidth;
+      const scrollWidth = scroll.clientWidth;
+      const targetScrollLeft = elLeft - (scrollWidth / 2) + (elWidth / 2);
+
+      scroll.scrollTo({
+        left: Math.max(0, targetScrollLeft),
+        behavior: 'smooth'
+      });
+    }, 50);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     VISUELS
+     ═══════════════════════════════════════════════════════ */
+
+  getKeyColor(key: PianoKey): string {
+    return this.noteColors[key.frenchNote] ?? '#FFFFFF';
   }
 
   private getKeyCenter(key: PianoKey): { x: number; y: number } {
@@ -780,13 +891,14 @@ export class PianoComponent implements OnInit, OnDestroy {
       x,
       y,
       color: this.getKeyColor(key),
-      size: Math.random() * 8 + 4,
-      rotation: Math.random() * 360
+      size: randomFloat(4, 12),
+      rotation: randomFloat(0, 360)
     }));
 
+    const ids = new Set(newParticles.map(p => p.id));
     this.particles.update(p => [...p, ...newParticles]);
     this.schedule(() => {
-      this.particles.update(p => p.filter(x => !newParticles.some(n => n.id === x.id)));
+      this.particles.update(p => p.filter(x => !ids.has(x.id)));
     }, 1200);
   }
 
@@ -803,74 +915,9 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.schedule(() => this.screenShake.set(false), 300);
   }
 
-  // ═══════════════════════════════════════════════════════
-  // AUDIO UI (sons courts synthétisés)
-  // ═══════════════════════════════════════════════════════
-  private uiAudioCtx: AudioContext | null = null;
-
-  private getUiCtx(): AudioContext | null {
-    if (this.uiAudioCtx) return this.uiAudioCtx;
-    const Ctor = window.AudioContext
-      ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (Ctor) this.uiAudioCtx = new Ctor();
-    return this.uiAudioCtx;
-  }
-
-  private playUiSound(
-    type: 'click' | 'error' | 'gameover' | 'start' | 'perfect' | 'starpower'
-  ): void {
-    if (!this.soundEnabled()) return;  // Garde-fou son
-
-    const ctx = this.getUiCtx();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') void ctx.resume();
-    const now = ctx.currentTime;
-
-    if (type === 'error') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.linearRampToValueAtTime(70, now + 0.25);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-      osc.start(now); osc.stop(now + 0.25);
-    } else if (type === 'start') {
-      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = 'triangle';
-        o.connect(g); g.connect(ctx.destination);
-        o.frequency.setValueAtTime(freq, now + idx * 0.06);
-        g.gain.setValueAtTime(0.15, now + idx * 0.06);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.25);
-        o.start(now + idx * 0.06); o.stop(now + idx * 0.06 + 0.25);
-      });
-    } else if (type === 'perfect') {
-      [1046.50, 1318.51, 1567.98].forEach((freq, idx) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = 'sine';
-        o.connect(g); g.connect(ctx.destination);
-        o.frequency.setValueAtTime(freq, now + idx * 0.04);
-        g.gain.setValueAtTime(0.1, now + idx * 0.04);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.2);
-        o.start(now + idx * 0.04); o.stop(now + idx * 0.04 + 0.2);
-      });
-    } else if (type === 'starpower') {
-      [392, 523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = 'square';
-        o.connect(g); g.connect(ctx.destination);
-        o.frequency.setValueAtTime(freq, now + idx * 0.05);
-        g.gain.setValueAtTime(0.08, now + idx * 0.05);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.3);
-        o.start(now + idx * 0.05); o.stop(now + idx * 0.05 + 0.3);
-      });
-    }
-  }
+  /* ═══════════════════════════════════════════════════════
+     FEEDBACK
+     ═══════════════════════════════════════════════════════ */
 
   showFeedback(msg: string, type: FeedbackType): void {
     this.feedbackKey.update(k => k + 1);
@@ -879,77 +926,37 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.schedule(() => this.feedbackMessage.set(null), 900);
   }
 
-  // ═══════════════════════════════════════════════════════
-  // FIN DE PARTIE
-  // ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
+     FIN DE PARTIE
+     ═══════════════════════════════════════════════════════ */
+
   endGame(): void {
-    if (this.timerInterval) clearInterval(this.timerInterval);
-    if (this.starPowerInterval) clearInterval(this.starPowerInterval);
+    this.clearAllTimers();
     this.stopMelody();
     this.isPlaying.set(false);
     this.isGameOver.set(true);
     this.saveHighScore();
-    this.playUiSound('gameover');
+    this.uiAudio.play('over');
   }
 
   setDifficulty(d: GameDifficulty): void {
     this.difficulty.set(d);
-    this.playUiSound('click');
-  }
-
-  shouldShowNoteLabel(): boolean {
-    // En mode difficile : AUCUN label sur les touches
-    return this.difficulty() !== 'hardcore';
+    this.uiAudio.play('click');
   }
 
   private getTimeMultiplier(): number {
     switch (this.difficulty()) {
-      case 'facile': return 0.8;
+      case 'facile':   return 0.8;
       case 'hardcore': return 2.2;
-      default: return 1.5;
+      default:         return 1.5;
     }
   }
 
   private getLivesStart(): number {
     switch (this.difficulty()) {
-      case 'facile': return 5;
+      case 'facile':   return 5;
       case 'hardcore': return 2;
-      default: return 3;
+      default:         return 3;
     }
-  }
-
-  private loadHighScore(): void {
-    const saved = localStorage.getItem('charly_piano_highscore');
-    if (saved) this.highScore.set(parseInt(saved, 10));
-  }
-
-  private saveHighScore(): void {
-    if (this.score() > this.highScore()) {
-      this.highScore.set(this.score());
-      localStorage.setItem('charly_piano_highscore', this.score().toString());
-    }
-  }
-
-  getTimerColor(): string {
-    const pct = (this.timeLeft() / this.maxTime) * 100;
-    if (pct < 20) return 'linear-gradient(90deg, #ef4444, #f59e0b)';
-    if (pct < 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24, #10b981)';
-    return 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)';
-  }
-
-  getTimerPercent(): number {
-    return (this.timeLeft() / this.maxTime) * 100;
-  }
-
-  getStarPowerStars(): number[] {
-    return Array.from({ length: 10 }, (_, i) => i);
-  }
-
-  isStarFilled(i: number): boolean {
-    return this.starPowerGauge() >= (i + 1) * 10;
-  }
-
-  goToPlay(): void {
-    this.router.navigate(['/play']);
   }
 }

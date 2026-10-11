@@ -2,8 +2,8 @@
 // IMPORTS
 // ==========================================================================
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Playfair+Display:ital@1&display=swap');
-
-// ==========================================================================
+/* styles.scss (global) — à ajouter EN PREMIER */
+ // ==========================================================================
 // VARIABLES GLOBALES (une seule source de vérité)
 // ==========================================================================
 // Couleurs principales
@@ -805,4 +805,23 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
 
 app-footer {
   margin-top: auto;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   MODALE MATERIAL — Fond transparent pour modales custom
+   ═════════════════════════════════════════════════════════════════════ */
+
+.victory-dialog-container .mat-mdc-dialog-surface {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Backdrop sombre avec flou */
+.victory-dialog-container + .cdk-overlay-dark-backdrop,
+.cdk-overlay-dark-backdrop {
+  background: rgba(28, 25, 23, .45) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }

@@ -1,59 +1,112 @@
-import { trigger, state, style, transition, animate, keyframes } from '@angular/animations';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+} from '@angular/core';
+
+import {
+  animate,
+  keyframes,
+  state,
+  style,
+  transition,
+  trigger,
+} from '@angular/animations';
+
 import { CardData } from '../CardData';
-import { CommonModule } from '@angular/common';
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-gamecard',
   standalone: true,
-  imports: [
-    CommonModule
-  ],
+  imports: [],
   templateUrl: './gamecard.component.html',
   styleUrls: ['./gamecard.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('cardFlip', [
-      state('default', style({
-        transform: 'perspective(1200px) rotateY(0deg)',
-        opacity: 1
-      })),
-      state('flipped', style({
-        transform: 'perspective(1200px) rotateY(180deg)',
-        opacity: 1
-      })),
-      state('matched', style({
-        transform: 'perspective(1200px) rotateY(180deg) scale(0)',
-        opacity: 0,
-        pointerEvents: 'none'
-      })),
+      /* ─── États ─── */
+      state(
+        'default',
+        style({
+          transform: 'perspective(1200px) rotateY(0deg)',
+          opacity: 1,
+        })
+      ),
+      state(
+        'flipped',
+        style({
+          transform: 'perspective(1200px) rotateY(180deg)',
+          opacity: 1,
+        })
+      ),
+      state(
+        'matched',
+        style({
+          transform: 'perspective(1200px) rotateY(180deg) scale(0)',
+          opacity: 0,
+          pointerEvents: 'none',
+        })
+      ),
 
-      // Retournement fluide avec rebond
-      transition('default <=> flipped', [
+      /* ─── Retournement fluide ─── */
+      transition(
+        'default <=> flipped',
         animate('500ms cubic-bezier(0.34, 1.56, 0.64, 1)')
-      ]),
+      ),
 
-      // Animation WAHOU lors d'une paire trouvée
-      transition('* => matched', [
-        animate('800ms cubic-bezier(0.4, 0, 0.2, 1)', keyframes([
-          style({ transform: 'perspective(1200px) rotateY(180deg) scale(1)', filter: 'brightness(1)', offset: 0 }),
-          style({ transform: 'perspective(1200px) rotateY(200deg) scale(1.2)', filter: 'brightness(1.9) drop-shadow(0 0 30px #00f2fe)', offset: 0.4 }),
-          style({ transform: 'perspective(1200px) rotateY(280deg) scale(0.95)', filter: 'brightness(1.5)', offset: 0.7 }),
-          style({ transform: 'perspective(1200px) rotateY(360deg) scale(0)', opacity: 0, offset: 1 })
-        ]))
-      ])
-    ])
-  ]
+      /* ─── Animation « WAHOU » de la paire trouvée ─── */
+      transition(
+        '* => matched',
+        animate(
+          '800ms cubic-bezier(0.4, 0, 0.2, 1)',
+          keyframes([
+            style({
+              transform: 'perspective(1200px) rotateY(180deg) scale(1)',
+              filter: 'brightness(1)',
+              offset: 0,
+            }),
+            style({
+              transform: 'perspective(1200px) rotateY(200deg) scale(1.2)',
+              filter: 'brightness(1.5) drop-shadow(0 0 30px #b45309)',
+              offset: 0.4,
+            }),
+            style({
+              transform: 'perspective(1200px) rotateY(280deg) scale(0.95)',
+              filter: 'brightness(1.3)',
+              offset: 0.7,
+            }),
+            style({
+              transform: 'perspective(1200px) rotateY(360deg) scale(0)',
+              opacity: 0,
+              offset: 1,
+            }),
+          ])
+        )
+      ),
+    ]),
+  ],
 })
-export class GamecardComponent implements OnInit {
+export class GamecardComponent {
 
-  @Input() data!: CardData;
-  @Output() cardClicked = new EventEmitter<void>();
+  /** Données de la carte (obligatoire). */
+  readonly data = input.required<CardData>();
 
-  constructor() { }
+  /** Événement émis quand la carte est cliquée. */
+  readonly cardClicked = output<void>();
 
-  ngOnInit(): void { }
+  /** Retourne vrai si la carte doit être visible. */
+  isVisible(): boolean {
+    const state = this.data().state;
+    return state === 'flipped' || state === 'default';
+  }
 
-  estvisible(): boolean {
-    return this.data.state === 'flipped' || this.data.state === 'default';
+  /** Déclenche le clic (utilisé par le template). */
+  onClick(): void {
+    this.cardClicked.emit();
   }
 }

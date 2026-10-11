@@ -1,32 +1,42 @@
-<div class="confetti-wrapper" *ngIf="showConfetti">
-  <div class="confetti-piece" *ngFor="let p of particles"
-       [style.left.%]="(p * 7) % 100"
-       [style.animation-delay]="(p * 0.05) + 's'"
-       [style.background]="p % 2 === 0 ? '#8a2be2' : '#ffaa00'">
-  </div>
+<!-- ═══════════════════════════════════════════════════════
+     CONFETTI
+     ═══════════════════════════════════════════════════════ -->
+@if (showConfetti) {
+<div class="confetti-wrapper" aria-hidden="true">
+  @for (p of particles; track p) {
+  <div class="confetti-piece" [style.left.%]="(p * 7) % 100" [style.animation-delay]="(p * 0.05) + 's'"
+    [style.background]="p % 2 === 0 ? '#b45309' : '#d97706'"></div>
+  }
 </div>
+}
 
-<div class="overlay victory-overlay" *ngIf="showVictoryOverlay">
-  <div class="overlay-content">
-    <div class="overlay-icon">🏆</div>
-    <h1>VICTOIRE</h1>
+<!-- ═══════════════════════════════════════════════════════
+     OVERLAY VICTOIRE — Fermable
+     ═══════════════════════════════════════════════════════ -->
+@if (showVictoryOverlay) {
+<div class="overlay victory-overlay" (click)="dismissOverlay()" role="alert" aria-labelledby="victory-title">
+  <div class="overlay-content" (click)="$event.stopPropagation()">
+    <div class="overlay-icon" aria-hidden="true">🏆</div>
+    <h1 id="victory-title">VICTOIRE</h1>
     <p>{{ messageLyko }}</p>
+
+    <button class="btn-dismiss" (click)="dismissOverlay()" type="button">
+      Continuer
+    </button>
   </div>
 </div>
+}
 
 <div class="temple-container py-4">
 
   <!-- ═══════════════════════════════════════════════════════
-       HEADER : Bouton retour + Titre + Bouton son
+       HEADER
        ═══════════════════════════════════════════════════════ -->
   <header class="game-header">
     <div class="header-top-row">
 
-      <button class="btn-floating-back"
-              (click)="onrecommencer()"
-              type="button"
-              aria-label="Retour au menu des jeux">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <button class="btn-back" (click)="onrecommencer()" type="button" aria-label="Retour au menu des jeux">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
@@ -34,112 +44,128 @@
       </button>
 
       <h1 class="header-title">
-        <span class="header-icon">⚔️</span>
+        <span class="header-icon" aria-hidden="true">⚔️</span>
         <span class="title-text">LYKO DUEL</span>
       </h1>
 
-      <button class="btn-sound"
-              (click)="toggleSound()"
-              type="button"
-              [class.active]="!soundEnabled()"
-              [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'">
-        <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
-        <span class="sound-label">{{ soundEnabled() ? 'Son activé' : 'Son coupé' }}</span>
+      <button class="btn-sound" (click)="toggleSound()" type="button" [class.active]="!soundEnabled()"
+        [attr.aria-pressed]="soundEnabled()" [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'">
+        <span class="sound-icon" aria-hidden="true">
+          {{ soundEnabled() ? '🔊' : '🔇' }}
+        </span>
+        <span class="sound-label">
+          {{ soundEnabled() ? 'Son activé' : 'Son coupé' }}
+        </span>
       </button>
     </div>
-
-    <div class="level-badge">
-      <span class="badge-icon">⚔️</span>
-      NIVEAU {{ gs.gridSize - 2 }} • GRILLE {{ gs.gridSize }}x{{ gs.gridSize }}
-    </div>
-
-    <p class="lyko-message">{{ messageLyko }}</p>
   </header>
 
   <div class="row g-4 align-items-start">
 
-    <!-- ═══════════ GRILLE DE JEU ═══════════ -->
+    <!-- ═══════════ GRILLE ═══════════ -->
     <div class="col-12 col-lg-7">
       <div class="board-wrapper">
-        <div class="dynamic-grid" [style.--grid-size]="gs.gridSize">
-          <div *ngFor="let block of gs.blocks; let i = index"
-               (click)="playerClick(i)"
-               [class.disabled]="!block.free || lock"
-               [class.winning-cell]="block.isWinningCell"
-               [class.new-cell]="block.isNew"
-               class="grid-cell">
+        <div class="dynamic-grid" [style.--grid-size]="gs.gridSize" role="grid" aria-label="Grille de jeu Lyko Duel">
+          @for (block of gs.blocks; track $index; let i = $index) {
+          <div (click)="playerClick(i)" (keydown.enter)="playerClick(i)" (keydown.space)="playerClick(i)"
+            [class.disabled]="!block.free || lock" [class.winning-cell]="block.isWinningCell"
+            [class.new-cell]="block.isNew" class="grid-cell" role="gridcell" tabindex="0"
+            [attr.aria-label]="'Case ' + (i + 1) + (block.free ? ', libre' : ', occupée')">
 
             <div class="cell-content">
-              <img [src]="block.urlimg()" *ngIf="block.value" alt="Symbole" class="cell-icon pop-in" />
-              <span *ngIf="block.free && !lock" class="hover-hint">+</span>
+              @if (block.value) {
+              <img [src]="block.urlimg()" alt="Symbole" class="cell-icon pop-in" />
+              }
+              @if (block.free && !lock) {
+              <span class="hover-hint" aria-hidden="true">+</span>
+              }
             </div>
 
-            <div class="cell-particles" *ngIf="block.isNew">
-              <span *ngFor="let p of [1,2,3,4]"></span>
+            @if (block.isNew) {
+            <div class="cell-particles" aria-hidden="true">
+              @for (p of [1, 2, 3, 4]; track p) {
+              <span></span>
+              }
             </div>
+            }
           </div>
+          }
         </div>
       </div>
     </div>
 
     <!-- ═══════════ PANNEAU LATÉRAL ═══════════ -->
     <div class="col-12 col-lg-5">
+      <p class="lyko-message" aria-live="polite">{{ messageLyko }}</p>
       <div class="stats-panel mb-4">
 
         <!-- Indicateur de tour -->
         <div class="turn-indicator" [class.p2-turn]="gs.turn === 1">
           <div class="player-tag" [class.active]="gs.turn === 0">
-            <span class="avatar">🎸</span>
+            <span class="avatar" aria-hidden="true">🎸</span>
             <span class="name">JOUEUR 1</span>
           </div>
           <div class="vs">VS</div>
           <div class="player-tag" [class.active]="gs.turn === 1">
-            <span class="avatar">🎸</span>
+            <span class="avatar" aria-hidden="true">🎸</span>
             <span class="name">JOUEUR 2</span>
           </div>
         </div>
 
         <!-- Compteur d'alignements -->
-        <div class="alignment-counter">
-          🎯 Alignements — J1 : <strong class="purple">{{ gs.players[0].score }}</strong>
-          | J2 : <strong class="amber">{{ gs.players[1].score }}</strong>
+        <div class="alignment-counter" aria-live="polite">
+          🎯 Alignements — J1 : <strong class="p1">{{ gs.players[0].score }}</strong>
+          | J2 : <strong class="p2">{{ gs.players[1].score }}</strong>
         </div>
 
         <!-- Boutons -->
         <div class="actions-grid">
-          <button class="btn-cyber-secondary" (click)="resetjeu()" *ngIf="rejouer" type="button">
+
+          @if (rejouer || gs.isGameOver) {
+          <button class="btn-secondary" (click)="resetjeu()" type="button">
             🔄 Rejouer la grille
           </button>
+          }
 
-          <button class="btn-cyber-next" (click)="prochainNiveau()" type="button">
-            🚀 NIVEAU SUIVANT ({{ gs.gridSize + 1 }}x{{ gs.gridSize + 1 }})
+          <button class="btn-primary" (click)="prochainNiveau()" type="button">
+            🚀 NIVEAU SUIVANT ({{ gs.gridSize + 1 }}×{{ gs.gridSize + 1 }})
           </button>
 
-          <button class="btn-cyber-prev" (click)="precedentNiveau()" *ngIf="yaprecedent()" type="button">
-            ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize - 1 }}x{{ gs.gridSize - 1 }})
+          @if (yaprecedent()) {
+          <button class="btn-success" (click)="precedentNiveau()" type="button">
+            ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize - 1 }}×{{ gs.gridSize - 1 }})
           </button>
+          }
 
-          <button class="btn-cyber-primary" (click)="onrecommencer()" type="button">
-            ⚔️ Retour au Menu des Jeux
+          <button class="btn-neutral" (click)="onrecommencer()" type="button">
+            ⚔️ Retour au menu des jeux
           </button>
         </div>
 
-        <!-- Tableau des scores -->
+        <!-- Scores -->
         <div class="panel-header mt-4">
           <span>📊 STATISTIQUES DU DUEL</span>
         </div>
 
         <div class="score-table">
           <div class="score-row p1-row">
-            <div class="score-name"><span class="dot purple"></span> JOUEUR 1</div>
-            <div class="score-value purple">{{ gs.players[0].score }}</div>
+            <div class="score-name">
+              <span class="dot p1" aria-hidden="true"></span> JOUEUR 1
+            </div>
+            <div class="score-value p1">{{ gs.players[0].score }}</div>
           </div>
+
           <div class="score-row p2-row">
-            <div class="score-name"><span class="dot amber"></span> JOUEUR 2</div>
-            <div class="score-value amber">{{ gs.players[1].score }}</div>
+            <div class="score-name">
+              <span class="dot p2" aria-hidden="true"></span> JOUEUR 2
+            </div>
+            <div class="score-value p2">{{ gs.players[1].score }}</div>
           </div>
+
           <div class="score-row draw-row">
-            <div class="score-name"><span class="dot gray"></span> Égalités</div>
+            <div class="score-name">
+              <span class="dot gray" aria-hidden="true"></span> Égalités
+            </div>
             <div class="score-value gray">{{ gs.draw }}</div>
           </div>
         </div>
@@ -148,7 +174,7 @@
       <!-- Comment jouer -->
       <div class="how-to-play">
         <h5 class="howto-title">
-          <span class="howto-icon">📖</span>
+          <span class="howto-icon" aria-hidden="true">📖</span>
           COMMENT JOUER ?
         </h5>
 
@@ -158,9 +184,10 @@
               <span class="howto-badge">🎯 OBJECTIF</span>
             </div>
             <p>
-              Alignez <strong>3 pions consécutifs</strong> (horizontal, vertical ou diagonal) pour marquer
-              <strong>+10 PV</strong> — et recommencez autant de fois que possible ! Le plateau s'agrandit à
-              chaque niveau : <em>plus la grille est grande, plus les alignements sont nombreux</em>.
+              Alignez <strong>3 pions consécutifs</strong> (horizontal, vertical ou diagonal)
+              pour marquer <strong>+10 PV</strong> — et recommencez autant de fois que possible !
+              Le plateau s'agrandit à chaque niveau :
+              <em>plus la grille est grande, plus les alignements sont nombreux</em>.
             </p>
           </div>
 
@@ -170,7 +197,8 @@
             </div>
             <p>
               <strong>Clique sur n'importe quelle case vide</strong> de la grille pour y déposer ton pion.
-              Le jeu alterne automatiquement entre les joueurs — chacun son tour, <em>une case à la fois</em>.
+              Le jeu alterne automatiquement entre les joueurs —
+              chacun son tour, <em>une case à la fois</em>.
             </p>
           </div>
 
@@ -179,7 +207,8 @@
               <span class="howto-badge">🏁 FIN DE MANCHE</span>
             </div>
             <p>
-              La manche se termine uniquement quand <strong>toutes les cases sont occupées</strong>.
+              La manche se termine uniquement quand
+              <strong>toutes les cases sont occupées</strong>.
               Celui qui a réalisé le <strong>plus d'alignements</strong> remporte le duel.
             </p>
           </div>

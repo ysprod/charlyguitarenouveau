@@ -21,7 +21,7 @@ import {
   Auth,
   EmailAuthProvider,
   User,
-  user,
+  authState,
   reauthenticateWithCredential,
   updateEmail,
   updatePassword,
@@ -48,9 +48,18 @@ import { CommonModule } from '@angular/common';
 
 import { Router } from '@angular/router';
 
-import { Observable, Subject, of } from 'rxjs';
-import { map, switchMap, takeUntil } from 'rxjs/operators';
+import { Observable, Subject, of, timer } from 'rxjs';
+import {
+  filter,
+  map,
+  switchMap,
+  take,
+  takeUntil
+} from 'rxjs/operators';
 
+/* ═══════════════════════════════════════════════════════════
+   TYPES
+   ═══════════════════════════════════════════════════════════ */
 
 export interface UserProfile {
   uid: string;
@@ -83,6 +92,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 const PHONE_PATTERN = /^\+?[0-9\s\-()]{8,20}$/;
+const AUTH_GRACE_PERIOD_MS = 800;
 
 const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
   'auth/wrong-password': 'Mot de passe actuel incorrect.',
@@ -97,6 +107,9 @@ const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
   'storage/quota-exceeded': 'La capacité de stockage est dépassée.'
 };
 
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-profil',
@@ -117,9 +130,11 @@ export class ProfilComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
 
-  profileForm!: FormGroup<ProfileFormControls>;
-  currentUser$: Observable<User | null>;
+  readonly currentUser$: Observable<User | null> = authState(this.auth);
 
+  profileForm!: FormGroup<ProfileFormControls>;
+
+  /* ─── État profil ─── */
   selectedFile: File | null = null;
   avatarPreview: string | null = null;
   isSubmitting = false;
@@ -131,21 +146,14 @@ export class ProfilComponent implements OnInit, OnDestroy {
   private currentUid: string | null = null;
   private cachedProfile: Partial<UserProfile> = {};
 
-  constructor() {
-    this.currentUser$ = runInInjectionContext(
-      this.environmentInjector,
-      () => user(this.auth)
-    );
-  }
-
-  // =========================================================
-  // CYCLE DE VIE
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     CYCLE DE VIE
+     ═══════════════════════════════════════════════════════ */
 
   ngOnInit(): void {
     this.initForm();
     this.loadUserProfile();
-    this.redirectIfLoggedOut();
+    this.watchAuthState();
   }
 
   ngOnDestroy(): void {
@@ -153,26 +161,36 @@ export class ProfilComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // =========================================================
-  // REDIRECTION SI DÉCONNECTÉ
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     REDIRECTION DIFFÉRÉE
+     ═══════════════════════════════════════════════════════ */
 
-  private redirectIfLoggedOut(): void {
+  private watchAuthState(): void {
     this.currentUser$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((currentUser) => {
-        if (!currentUser) {
-          this.router.navigate(['/login'], {
-            queryParams: { returnUrl: '/profil' },
-            replaceUrl: true
-          });
-        }
+      .pipe(
+        filter((u): u is User => !!u),
+        take(1),
+        takeUntil(this.destroy$)
+      )
+      .subscribe();
+
+    timer(AUTH_GRACE_PERIOD_MS)
+      .pipe(
+        switchMap(() => this.currentUser$.pipe(take(1))),
+        filter((u) => !u),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        void this.router.navigate(['/login'], {
+          queryParams: { returnUrl: '/profil' },
+          replaceUrl: true
+        });
       });
   }
 
-  // =========================================================
-  // FORMULAIRE
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     FORMULAIRE
+     ═══════════════════════════════════════════════════════ */
 
   private initForm(): void {
     this.profileForm = this.formBuilder.group<ProfileFormControls>(
@@ -197,7 +215,6 @@ export class ProfilComponent implements OnInit, OnDestroy {
       { validators: this.passwordMatchValidator }
     );
 
-    // Le mot de passe actuel devient obligatoire si un nouveau est saisi
     this.profileForm.controls.newPassword.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe((newPassword) => {
@@ -219,9 +236,9 @@ export class ProfilComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  // =========================================================
-  // CHARGEMENT DU PROFIL
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     CHARGEMENT DU PROFIL
+     ═══════════════════════════════════════════════════════ */
 
   private loadUserProfile(): void {
     this.currentUser$
@@ -269,6 +286,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
 
             this.avatarPreview =
               profileData.photoURL ?? currentUser.photoURL ?? null;
+
           } else {
             this.cachedProfile = {};
             this.userRole = 'user';
@@ -296,9 +314,9 @@ export class ProfilComponent implements OnInit, OnDestroy {
     this.avatarPreview = null;
   }
 
-  // =========================================================
-  // VALIDATION DES CHAMPS
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     VALIDATION
+     ═══════════════════════════════════════════════════════ */
 
   isFieldInvalid(fieldName: keyof ProfileFormControls): boolean {
     const field = this.profileForm.controls[fieldName];
@@ -339,9 +357,9 @@ export class ProfilComponent implements OnInit, OnDestroy {
     return 'Champ invalide.';
   }
 
-  // =========================================================
-  // AVATAR
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     AVATAR
+     ═══════════════════════════════════════════════════════ */
 
   onAvatarSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -405,9 +423,9 @@ export class ProfilComponent implements OnInit, OnDestroy {
     this.showToast("✓ Photo retirée. N'oubliez pas d'enregistrer.", 'success');
   }
 
-  // =========================================================
-  // SOUMISSION
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     SOUMISSION DU FORMULAIRE PRINCIPAL
+     ═══════════════════════════════════════════════════════ */
 
   async onSubmit(): Promise<void> {
     if (this.profileForm.invalid) {
@@ -435,7 +453,6 @@ export class ProfilComponent implements OnInit, OnDestroy {
       const emailChanged = normalizedEmail !== (currentUser.email ?? '');
       const passwordChanged = newPassword.trim().length > 0;
 
-      // Réauthentification si nécessaire
       if (emailChanged || passwordChanged) {
         if (!currentPassword.trim()) {
           this.showToast('✕ Votre mot de passe actuel est requis.', 'error');
@@ -455,7 +472,6 @@ export class ProfilComponent implements OnInit, OnDestroy {
         );
       }
 
-      // Upload avatar
       let photoURL = this.avatarPreview ?? currentUser.photoURL ?? '';
 
       if (this.selectedFile) {
@@ -472,7 +488,6 @@ export class ProfilComponent implements OnInit, OnDestroy {
         );
       }
 
-      // Firebase Auth
       if (emailChanged) {
         await this.runInContext(() => updateEmail(currentUser, normalizedEmail));
       }
@@ -494,7 +509,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
         );
       }
 
-      // Realtime Database
+      /* ✅ On préserve les champs existants (rôle, createdAt…) */
       const updatedProfile: UserProfile = {
         ...this.cachedProfile,
         uid: this.currentUid,
@@ -510,7 +525,6 @@ export class ProfilComponent implements OnInit, OnDestroy {
         set(ref(this.database, `users/${this.currentUid}`), updatedProfile)
       );
 
-      // Reset champs sensibles
       this.profileForm.patchValue({
         currentPassword: '',
         newPassword: '',
@@ -541,9 +555,9 @@ export class ProfilComponent implements OnInit, OnDestroy {
     }
   }
 
-  // =========================================================
-  // RESET
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     RESET
+     ═══════════════════════════════════════════════════════ */
 
   onReset(): void {
     const currentUser = this.auth.currentUser;
@@ -570,9 +584,9 @@ export class ProfilComponent implements OnInit, OnDestroy {
     this.showToast('✓ Formulaire réinitialisé.', 'success');
   }
 
-  // =========================================================
-  // HELPERS
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════ */
 
   getInitials(): string {
     const name = this.profileForm.controls.fullName.value;
@@ -601,11 +615,10 @@ export class ProfilComponent implements OnInit, OnDestroy {
     });
   }
 
-  // =========================================================
-  // UTILITAIRES PRIVÉS
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════
+     UTILITAIRES PRIVÉS
+     ═══════════════════════════════════════════════════════ */
 
-  /** Enveloppe un appel Firebase dans le contexte d'injection Angular. */
   private runInContext<T>(fn: () => T): T {
     return runInInjectionContext(this.environmentInjector, fn);
   }

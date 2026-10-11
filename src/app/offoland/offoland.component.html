@@ -33,50 +33,46 @@
 
       <!-- 🎵 Mélodie des Origines (La m – Ré m – Fa M – Sol M) -->
       <div class="melodie-origines">
-        <span class="note" style="--note-color: #A0A0C0">La m</span>
-        <span class="note-sep">·</span>
-        <span class="note" style="--note-color: #FF6B6B">Ré m</span>
-        <span class="note-sep">·</span>
-        <span class="note" style="--note-color: #FFD700">Fa M</span>
-        <span class="note-sep">·</span>
-        <span class="note" style="--note-color: #00FF88">Sol M</span>
+        <span class="note" style="--note-color: #64748b">La m</span>
+        <span class="note-sep" aria-hidden="true">·</span>
+        <span class="note" style="--note-color: #dc2626">Ré m</span>
+        <span class="note-sep" aria-hidden="true">·</span>
+        <span class="note" style="--note-color: #b8860b">Fa M</span>
+        <span class="note-sep" aria-hidden="true">·</span>
+        <span class="note" style="--note-color: #16a34a">Sol M</span>
       </div>
 
       <!-- 🌈 Divider sacré -->
       <div class="hero-divider">
-        <span class="line"></span>
-        <span class="icon">🥁</span>
-        <span class="line"></span>
+        <span class="line" aria-hidden="true"></span>
+        <span class="icon" aria-hidden="true">🥁</span>
+        <span class="line" aria-hidden="true"></span>
       </div>
 
       <!-- 🏦 Portails vers les modules -->
       <div class="portails-grid">
 
         <a class="portail-btn portail-economie" [routerLink]="['/finance']">
-          <span class="portail-glow"></span>
-          <span class="portail-icon">🏦</span>
+          <span class="portail-glow" aria-hidden="true"></span>
+          <span class="portail-icon" aria-hidden="true">🏦</span>
           <span class="portail-label">ÉCONOMIE</span>
           <span class="portail-sub">Offo Money · BCO · Marché</span>
         </a>
 
         <a class="portail-btn portail-banque" [routerLink]="['/bco']">
-          <span class="portail-glow"></span>
-          <span class="portail-icon">⚖️</span>
+          <span class="portail-glow" aria-hidden="true"></span>
+          <span class="portail-icon" aria-hidden="true">⚖️</span>
           <span class="portail-label">BANQUE CENTRALE</span>
           <span class="portail-sub">Masse monétaire · Réserves</span>
         </a>
 
       </div>
 
-    </div> 
+    </div>
 
-  </section> 
+  </section>
 
-  <main class="main-content">
-    <section class="section-wrapper" appReveal>
-      <app-play></app-play>
-    </section>
-
+  <main class="main-content">  
     <section class="section-wrapper" appReveal>
       <app-charlyguitaregame></app-charlyguitaregame>
     </section>

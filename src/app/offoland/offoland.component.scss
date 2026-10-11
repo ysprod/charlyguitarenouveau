@@ -1,25 +1,38 @@
 /* ═════════════════════════════════════════════════════════════════════
-   OFFOLAND — Design immersif
+   OFFOLAND — Version claire (design immersif épuré)
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
-  --offo-blanc:   #F5F5FF;
-  --offo-rouge:   #FF3B3B;
-  --offo-vert:    #00FF88;
-  --offo-bleu:    #00D4FF;
-  --offo-noir:    #1A1A2E;
-  --offo-pourpre: #B266FF;
-  --offo-violet:  #7B00FF;
-  --offo-or:      #FFD700;
-  --offo-fond:    #06060F;
-  --offo-texte:   #F5F5FF;
-  --offo-texte-2: #A0A0C0;
+  /* Fonds — conformes consigne : blanc pour le contenu */
+  --offo-fond: #ffffff;
+  --offo-fond-2: #f8fafc;
+  --offo-surface: #ffffff;
+  --offo-border: rgba(15, 23, 42, .08);
+
+  /* Texte */
+  --offo-texte: #0f172a;
+  --offo-texte-2: #64748b;
+  --offo-texte-3: #94a3b8;
+
+  /* Identité dorée — assombrie pour contraste AA sur fond blanc */
+  --offo-or: #b8860b;
+  --offo-or-hover: #d4a017;
+  --offo-or-glow: rgba(184, 134, 11, .25);
+  --offo-or-soft: rgba(184, 134, 11, .08);
+
+  /* Palette fonctionnelle (pour les auras et portails) */
+  --offo-bleu: #2563eb;
+  --offo-vert: #16a34a;
+  --offo-rouge: #dc2626;
+  --offo-violet: #7c3aed;
+  --offo-pourpre: #9333ea;
 
   display: block;
   background: var(--offo-fond);
   color: var(--offo-texte);
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ─── Mixins locaux ─── */
@@ -30,9 +43,9 @@
   -webkit-text-fill-color: transparent;
 }
 
-// ═════════════════════════════════════════════════════════════════════
-// HERO — PORTAIL
-// ═════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
+   HERO — PORTAIL
+   ═════════════════════════════════════════════════════════════════════ */
 .hero-section {
   position: relative;
   display: flex;
@@ -43,13 +56,13 @@
   overflow: hidden;
   isolation: isolate;
   background:
-    radial-gradient(ellipse at 50% 0%,    rgba(255, 215, 0, 0.08) 0%, transparent 55%),
-    radial-gradient(ellipse at 0% 100%,   rgba(0, 212, 255, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, rgba(178, 102, 255, 0.06) 0%, transparent 50%),
-    linear-gradient(180deg, #06060F 0%, #0A0A1A 50%, #06060F 100%);
+    radial-gradient(ellipse at 50% 0%,    var(--offo-or-soft) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 100%,   rgba(37, 99, 235, .04) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, rgba(124, 58, 237, .04) 0%, transparent 50%),
+    linear-gradient(180deg, var(--offo-fond) 0%, var(--offo-fond-2) 50%, var(--offo-fond) 100%);
 }
 
-// ─── Auras : Sept couleurs des Dimensions ───
+/* ─── Auras : sept couleurs des Dimensions (assombries, opacité réduite) ─── */
 .hero-aura {
   position: absolute;
   inset: 0;
@@ -57,28 +70,16 @@
   z-index: 0;
 }
 
-/* Config des 7 auras : (size, colorVar, position, duration, delay) */
-$auras: (
-  (do:  420px, var: --offo-blanc,   top: -8%,   left: 50%,  tx: true, dur: 18s, delay: 0s),
-  (re:  320px, var: --offo-rouge,   top: 25%,   left: 5%,   tx: false, dur: 22s, delay: 1s),
-  (mi:  300px, var: --offo-vert,    top: 15%,   right: 8%,  tx: false, dur: 20s, delay: 2s),
-  (fa:  280px, var: --offo-bleu,    bottom: 30%, left: 12%, tx: false, dur: 24s, delay: 3s),
-  (sol: 260px, var: --offo-noir,    bottom: 15%, right: 10%, tx: false, dur: 26s, delay: 4s),
-  (la:  340px, var: --offo-pourpre, bottom: -5%, left: 40%, tx: false, dur: 28s, delay: 5s),
-  (si:  220px, var: --offo-violet,  top: 45%,   right: 40%, tx: false, dur: 30s, delay: 6s)
-);
-
 .aura {
   position: absolute;
   border-radius: 50%;
   filter: blur(140px);
-  opacity: 0.35;
-  mix-blend-mode: screen;
+  opacity: .08;
   animation: auraDrift 24s ease-in-out infinite;
 }
 
 .aura-do {
-  width: 420px; height: 420px; background: var(--offo-blanc);
+  width: 420px; height: 420px; background: var(--offo-texte-3);
   top: -8%; left: 50%; transform: translateX(-50%);
   animation-duration: 18s;
 }
@@ -98,7 +99,7 @@ $auras: (
   animation-duration: 24s; animation-delay: 3s;
 }
 .aura-sol {
-  width: 260px; height: 260px; background: var(--offo-noir);
+  width: 260px; height: 260px; background: var(--offo-texte-2);
   bottom: 15%; right: 10%;
   animation-duration: 26s; animation-delay: 4s;
 }
@@ -119,7 +120,7 @@ $auras: (
   66%      { transform: translate(-30px, 40px) scale(0.9); }
 }
 
-// ─── Premier Tambour : pulsation centrale ───
+/* ─── Premier Tambour : pulsation centrale (dorée) ─── */
 .premier-tambour {
   position: absolute;
   top: 50%;
@@ -135,7 +136,7 @@ $auras: (
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  border: 1px solid var(--offo-or-glow);
   animation: pulseExpand 4s ease-out infinite;
 
   &.ring-2 { animation-delay: 1.3s; }
@@ -143,17 +144,17 @@ $auras: (
 }
 
 @keyframes pulseExpand {
-  0%   { width: 100px; height: 100px; opacity: 0.8; border-color: rgba(255, 215, 0, 0.5); }
-  100% { width: 900px; height: 900px; opacity: 0;   border-color: rgba(255, 215, 0, 0); }
+  0%   { width: 100px; height: 100px; opacity: .8; border-color: var(--offo-or-glow); }
+  100% { width: 900px; height: 900px; opacity: 0;  border-color: transparent; }
 }
 
-// ─── Contenu sacré ───
+/* ─── Contenu sacré ─── */
 .hero-content {
   position: relative;
   z-index: 3;
   max-width: 880px;
   text-align: center;
-  animation: heroEnter 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: heroEnter 1.4s cubic-bezier(.22, 1, .36, 1);
 }
 
 @keyframes heroEnter {
@@ -161,28 +162,27 @@ $auras: (
   to   { opacity: 1; transform: translateY(0); }
 }
 
-// ─── Titre ───
+/* ─── Titre ─── */
 .hero-title {
   margin: 0 0 1.5rem;
   font-size: clamp(3rem, 10vw, 7rem);
   font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+  line-height: .95;
+  letter-spacing: -.04em;
 }
 
 .hero-title-gold {
   display: block;
   @include gradient-text(linear-gradient(
     135deg,
-    #FFD700 0%,
-    #FFA500 25%,
-    #00D4FF 50%,
-    #B266FF 75%,
-    #FFD700 100%
+    var(--offo-or) 0%,
+    var(--offo-or-hover) 30%,
+    var(--offo-bleu) 60%,
+    var(--offo-violet) 100%
   ));
   background-size: 300% 300%;
   animation: gradientFlow 8s ease infinite;
-  filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.3));
+  filter: drop-shadow(0 0 20px var(--offo-or-glow));
 }
 
 @keyframes gradientFlow {
@@ -190,27 +190,26 @@ $auras: (
   50%      { background-position: 100% 50%; }
 }
 
-// ─── Mélodie des Origines ───
+/* ─── Mélodie des Origines ─── */
 .melodie-origines {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.7rem 1.5rem;
+  gap: .6rem;
+  padding: .7rem 1.5rem;
   margin: 2rem auto;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--offo-fond-2);
+  border: 1px solid var(--offo-border);
   border-radius: 100px;
-  backdrop-filter: blur(10px);
   font-family: 'JetBrains Mono', 'Courier New', monospace;
 }
 
 .note {
   position: relative;
-  padding: 0 0.25rem;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 0 .25rem;
+  font-size: .8rem;
+  font-weight: 700;
   color: var(--note-color);
-  letter-spacing: 0.05em;
+  letter-spacing: .05em;
 
   &::before {
     content: '';
@@ -221,27 +220,27 @@ $auras: (
     height: 4px;
     background: var(--note-color);
     border-radius: 50%;
-    opacity: 0.6;
+    opacity: .6;
     animation: noteBlink 1.5s ease-in-out infinite;
   }
 
   &:nth-child(1)::before { animation-delay: 0s;   }
-  &:nth-child(3)::before { animation-delay: 0.3s; }
-  &:nth-child(5)::before { animation-delay: 0.6s; }
-  &:nth-child(7)::before { animation-delay: 0.9s; }
+  &:nth-child(3)::before { animation-delay: .3s;  }
+  &:nth-child(5)::before { animation-delay: .6s;  }
+  &:nth-child(7)::before { animation-delay: .9s;  }
 }
 
 @keyframes noteBlink {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.6); }
+  0%, 100% { opacity: .3; transform: scale(1); }
+  50%      { opacity: 1;  transform: scale(1.6); }
 }
 
 .note-sep {
-  color: rgba(160, 160, 192, 0.4);
-  font-size: 0.9rem;
+  color: var(--offo-texte-3);
+  font-size: .9rem;
 }
 
-// ─── Divider sacré ───
+/* ─── Divider sacré ─── */
 .hero-divider {
   display: flex;
   align-items: center;
@@ -256,27 +255,27 @@ $auras: (
     background: linear-gradient(
       to right,
       transparent 0%,
-      rgba(255, 215, 0, 0.5) 50%,
+      var(--offo-or-glow) 50%,
       transparent 100%
     );
   }
 
   .icon {
     font-size: 1.6rem;
-    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+    filter: drop-shadow(0 0 8px var(--offo-or-glow));
     animation: iconBreathe 3s ease-in-out infinite;
   }
 }
 
 @keyframes iconBreathe {
-  0%, 100% { transform: scale(1);    opacity: 0.9; }
-  50%      { transform: scale(1.15); opacity: 1;   }
+  0%, 100% { transform: scale(1);    opacity: .9; }
+  50%      { transform: scale(1.15); opacity: 1;  }
 }
 
-// ─── Portails (boutons) ───
+/* ─── Portails (boutons) ─── */
 .portails-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.25rem;
   max-width: 620px;
   margin: 2rem auto 0;
@@ -287,7 +286,7 @@ $auras: (
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
   padding: 1.5rem 1.5rem 1.75rem;
   border-radius: 20px;
   text-decoration: none;
@@ -295,7 +294,9 @@ $auras: (
   overflow: hidden;
   cursor: pointer;
   isolation: isolate;
-  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  background: var(--offo-surface);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
+  transition: all .4s cubic-bezier(.22, 1, .36, 1);
 
   /* Bordure dégradée en inner-border */
   &::before {
@@ -304,7 +305,7 @@ $auras: (
     inset: 0;
     padding: 1px;
     border-radius: inherit;
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(178, 102, 255, 0.2));
+    background: linear-gradient(135deg, var(--offo-or-glow), rgba(124, 58, 237, .25));
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
@@ -314,29 +315,33 @@ $auras: (
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
-    transition: background 0.4s ease;
+    transition: background .4s ease;
   }
 
   &:hover {
     transform: translateY(-6px);
+    box-shadow:
+      0 20px 40px rgba(15, 23, 42, .1),
+      0 0 30px var(--offo-or-glow);
 
     .portail-glow  { opacity: 1; }
     .portail-icon  { transform: translateY(-4px) scale(1.12); }
-    .portail-label { letter-spacing: 0.18em; }
+    .portail-label { letter-spacing: .18em; }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--offo-or);
+    outline-offset: 3px;
   }
 }
 
 .portail-economie {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.06) 0%, rgba(0, 212, 255, 0.04) 100%);
-
   &:hover::before {
     background: linear-gradient(135deg, var(--offo-or), var(--offo-bleu));
   }
 }
 
 .portail-banque {
-  background: linear-gradient(135deg, rgba(178, 102, 255, 0.06) 0%, rgba(255, 107, 107, 0.04) 100%);
-
   &:hover::before {
     background: linear-gradient(135deg, var(--offo-pourpre), var(--offo-rouge));
   }
@@ -348,32 +353,32 @@ $auras: (
   z-index: -1;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(circle at 50% 100%, rgba(255, 215, 0, 0.25) 0%, transparent 65%);
-  transition: opacity 0.4s ease;
+  background: radial-gradient(circle at 50% 100%, var(--offo-or-soft) 0%, transparent 65%);
+  transition: opacity .4s ease;
 }
 
 .portail-icon {
   font-size: 2.2rem;
-  margin-bottom: 0.25rem;
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  margin-bottom: .25rem;
+  transition: transform .4s cubic-bezier(.22, 1, .36, 1);
 }
 
 .portail-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  transition: letter-spacing 0.4s ease;
+  font-size: .85rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  transition: letter-spacing .4s ease;
 }
 
 .portail-sub {
-  font-size: 0.7rem;
+  font-size: .7rem;
   color: var(--offo-texte-2);
-  letter-spacing: 0.02em;
+  letter-spacing: .02em;
 }
 
-// ═════════════════════════════════════════════════════════════════════
-// MAIN CONTENT
-// ═════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
+   MAIN CONTENT
+   ═════════════════════════════════════════════════════════════════════ */
 .main-content {
   max-width: 1280px;
   margin: 0 auto;
@@ -384,9 +389,9 @@ $auras: (
   margin-bottom: 4rem;
 }
 
-// ═════════════════════════════════════════════════════════════════════
-// RESPONSIVE
-// ═════════════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .hero-section {
     padding: 4rem 1.25rem 5rem;
@@ -397,13 +402,26 @@ $auras: (
   }
 
   .melodie-origines {
-    gap: 0.4rem;
-    padding: 0.6rem 1rem;
-    font-size: 0.7rem;
+    gap: .4rem;
+    padding: .6rem 1rem;
+    font-size: .7rem;
   }
 
   .portails-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
   }
 }

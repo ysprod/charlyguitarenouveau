@@ -1,5 +1,7 @@
 import {
   Component,
+  ElementRef,
+  ViewChild,
   signal,
   computed,
   ChangeDetectionStrategy
@@ -68,6 +70,10 @@ import { PACK_CATEGORIES } from '../data/packs.data';
   ]
 })
 export class OffresComponent {
+
+  /** Référence au conteneur de la section packs (pour scroll fluide) */
+  @ViewChild('packsSection') packsSection?: ElementRef<HTMLElement>;
+
   /* ============================================================
      DONNÉES
      ============================================================ */
@@ -95,14 +101,28 @@ export class OffresComponent {
 
   selectCategory(id: PackCategoryId): void {
     this.activeCategory.set(id);
-    setTimeout(() => {
-      document
-        .querySelector('.packs-section')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
+    this.scrollToPacks();
   }
 
   onPackHover(id: string | null): void {
     this.hoveredPack.set(id);
+  }
+
+  /* ============================================================
+     SCROLL VERS LA SECTION PACKS (via ViewChild)
+     ============================================================ */
+
+  private scrollToPacks(): void {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    // Attend que le DOM soit mis à jour après le changement de signal
+    setTimeout(() => {
+      this.packsSection?.nativeElement?.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start'
+      });
+    }, 50);
   }
 }

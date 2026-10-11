@@ -1,23 +1,47 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { TictacduoService } from '../../services/tictacduo.service';
-import { VoiceService } from '../../services/voice.service';
+
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES
+   ═════════════════════════════════════════════════════════════════════ */
+
+type SoundType = 'click' | 'win' | 'draw' | 'levelup';
+
+const ALIGNMENT_REWARD = 10;
+const SOUND_PREF_KEY = 'tictacduo_sound_enabled';
+const CONFETTI_COUNT = 60;
+const CONFETTI_DURATION_MS = 4500;
+const END_GAME_DELAY_MS = 500;
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-tictacduo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './tictacduo.component.html',
-  styleUrls: ['./tictacduo.component.css']
+  styleUrls: ['./tictacduo.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TictacduoComponent implements OnInit, OnDestroy {
 
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
-  private readonly voice = inject(VoiceService);
+
   public readonly gs = inject(TictacduoService);
 
   /* ─── État ─── */
@@ -28,30 +52,29 @@ export class TictacduoComponent implements OnInit, OnDestroy {
   lebonus = 0;
   pointdevies = 0;
   pointdebonus = 0;
-  messageLyko = 'Au tour du Joueur 1...';
+  messageLyko = 'Au tour du Joueur 1…';
   showConfetti = false;
   showVictoryOverlay = false;
   particles: number[] = [];
 
-  readonly ALIGNMENT_REWARD = 10;
+  readonly alignmentReward = ALIGNMENT_REWARD;
 
-  /* ─── Son (voix + effets) ─── */
+  /* ─── Son ─── */
   readonly soundEnabled = signal<boolean>(true);
-  private readonly SOUND_PREF_KEY = 'tictacduo_sound_enabled';
 
   private audioCtx?: AudioContext;
-  private timeouts: number[] = [];
+  private readonly timeouts: ReturnType<typeof setTimeout>[] = [];
 
-  /* ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
      LIFECYCLE
-     ═══════════════════════════════════════════════════════ */
-  ngOnInit(): void {
-    const vieParam = this.activatedRoute.snapshot.queryParamMap.get('vie');
-    const bonusParam = this.activatedRoute.snapshot.queryParamMap.get('bonus');
+     ═══════════════════════════════════════════════════════════════════ */
 
-    this.lavie = parseInt(vieParam || '500', 10);
-    this.lebonus = parseInt(bonusParam || '0', 10);
-    this.etapedujeu = this.activatedRoute.snapshot.queryParamMap.get('etape') || this.etapedujeu;
+  ngOnInit(): void {
+    const params = this.activatedRoute.snapshot.queryParamMap;
+
+    this.lavie = parseInt(params.get('vie') ?? '500', 10);
+    this.lebonus = parseInt(params.get('bonus') ?? '0', 10);
+    this.etapedujeu = params.get('etape') ?? this.etapedujeu;
 
     this.pointdevies = this.lavie;
     this.pointdebonus = this.lebonus;
@@ -59,177 +82,223 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     this.initAudio();
     this.loadSoundPreference();
     this.resetjeu();
-
-    /* Message d'accueil vocal */
-    const timerId = window.setTimeout(() => {
-      this.voice.speak(
-        `Bienvenue dans Lyko Duel ! ` +
-        `Le Joueur 1 commence. Clique sur n'importe quelle case vide de la grille pour y déposer un pion. Alignez trois pions pour gagner des points. Bonne chance à vous deux !`
-      );
-    }, 700);
-    this.timeouts.push(timerId);
   }
 
   ngOnDestroy(): void {
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      this.audioCtx.close();
+      void this.audioCtx.close();
     }
+
     this.timeouts.forEach(t => clearTimeout(t));
-    this.voice.stopSpeaking();
   }
 
-  /* ═══════════════════════════════════════════════════════
-     SON — Toggle & persistance
-     ═══════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════════
+     SON
+     ═══════════════════════════════════════════════════════════════════ */
+
   private loadSoundPreference(): void {
-    const saved = localStorage.getItem(this.SOUND_PREF_KEY);
-    if (saved === 'false') {
-      this.soundEnabled.set(false);
+    try {
+      const saved = localStorage.getItem(SOUND_PREF_KEY);
+      if (saved === 'false') {
+        this.soundEnabled.set(false);
+      }
+    } catch {
+      /* silencieux */
     }
   }
 
   toggleSound(): void {
     const next = !this.soundEnabled();
     this.soundEnabled.set(next);
-    localStorage.setItem(this.SOUND_PREF_KEY, String(next));
 
-    if (!next) {
-      this.voice.stopSpeaking();
-    } else {
-      this.voice.speak('Son activé.');
+    try {
+      localStorage.setItem(SOUND_PREF_KEY, String(next));
+    } catch {
+      /* silencieux */
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     AUDIO (effets sonores)
-     ═══════════════════════════════════════════════════════ */
   private initAudio(): void {
-    const AudioContextClass = window.AudioContext
-      || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (AudioContextClass) {
-      this.audioCtx = new AudioContextClass();
+    const Ctor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (Ctor) {
+      this.audioCtx = new Ctor();
     }
   }
 
-  private playSound(type: 'click' | 'win' | 'draw' | 'levelup'): void {
-    if (!this.soundEnabled() || !this.audioCtx) return;
-    if (this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume();
+  private playSound(type: SoundType): void {
+    const ctx = this.audioCtx;
+    if (!this.soundEnabled() || !ctx) return;
+
+    if (ctx.state === 'suspended') {
+      void ctx.resume().catch(() => { /* silencieux */ });
     }
 
-    const osc = this.audioCtx.createOscillator();
-    const gain = this.audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
-    const now = this.audioCtx.currentTime;
+    const now = ctx.currentTime;
 
     switch (type) {
       case 'click':
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
-        osc.start(now);
-        osc.stop(now + 0.06);
+        this.tone(ctx, {
+          freq: 440,
+          endFreq: 880,
+          type: 'sine',
+          duration: 0.06,
+          volume: 0.15,
+          now,
+        });
         break;
 
       case 'win':
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((freq, idx) => {
-          const o = this.audioCtx!.createOscillator();
-          const g = this.audioCtx!.createGain();
-          o.type = 'triangle';
-          o.connect(g);
-          g.connect(this.audioCtx!.destination);
-          o.frequency.setValueAtTime(freq, now + idx * 0.1);
-          g.gain.setValueAtTime(0.2, now + idx * 0.1);
-          g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.3);
-          o.start(now + idx * 0.1);
-          o.stop(now + idx * 0.1 + 0.3);
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+          this.tone(ctx, {
+            freq,
+            type: 'triangle',
+            duration: 0.3,
+            volume: 0.2,
+            now: now + i * 0.1,
+          });
         });
         break;
 
       case 'draw':
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.setValueAtTime(180, now + 0.15);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-        osc.start(now);
-        osc.stop(now + 0.3);
+        this.tone(ctx, {
+          freq: 220,
+          endFreq: 180,
+          type: 'square',
+          duration: 0.3,
+          volume: 0.2,
+          now,
+        });
         break;
 
       case 'levelup':
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.5);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-        osc.start(now);
-        osc.stop(now + 0.5);
+        this.tone(ctx, {
+          freq: 300,
+          endFreq: 1200,
+          type: 'sine',
+          duration: 0.5,
+          volume: 0.3,
+          now,
+        });
         break;
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     JEU
-     ═══════════════════════════════════════════════════════ */
+  private tone(
+    ctx: AudioContext,
+    opts: {
+      freq: number;
+      endFreq?: number;
+      type: OscillatorType;
+      duration: number;
+      volume: number;
+      now: number;
+    }
+  ): void {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = opts.type;
+    osc.frequency.setValueAtTime(opts.freq, opts.now);
+
+    if (opts.endFreq !== undefined) {
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(0.01, opts.endFreq),
+        opts.now + opts.duration
+      );
+    }
+
+    gain.gain.setValueAtTime(0.0001, opts.now);
+    gain.gain.exponentialRampToValueAtTime(opts.volume, opts.now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, opts.now + opts.duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(opts.now);
+    osc.stop(opts.now + opts.duration + 0.05);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     OVERLAY
+     ═══════════════════════════════════════════════════════════════════ */
+
+  dismissOverlay(): void {
+    this.showConfetti = false;
+    this.showVictoryOverlay = false;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     JEU — Reset & niveaux
+     ═══════════════════════════════════════════════════════════════════ */
+
   resetjeu(): void {
+    /* État UI */
     this.rejouer = false;
     this.lock = false;
     this.showConfetti = false;
     this.showVictoryOverlay = false;
 
+    /* Service */
     this.gs.resetAll();
     this.gs.turn = 0;
 
-    this.messageLyko = `Niveau ${this.gs.gridSize - 2} : Grille ${this.gs.gridSize}x${this.gs.gridSize} — Alignez 3 pions pour gagner +${this.ALIGNMENT_REWARD} PV !`;
+    /* Message */
+    this.messageLyko =
+      `Niveau ${this.gs.gridSize - 2} — Grille ${this.gs.gridSize}×${this.gs.gridSize} · ` +
+      `Alignez 3 pions pour gagner +${this.alignmentReward} PV !`;
   }
 
   prochainNiveau(): void {
     this.playSound('levelup');
     this.gs.nextLevel();
     this.resetjeu();
-    this.snackBar.open(`🚀 Niveau Supérieur ! Grille ${this.gs.gridSize}x${this.gs.gridSize} !`, "Super !", { duration: 2500 });
 
-    /* Annonce vocale */
-    this.voice.speak(
-      `Niveau supérieur ! Nouvelle grille ${this.gs.gridSize} sur ${this.gs.gridSize}. Au tour du Joueur 1.`
+    this.snackBar.open(
+      `🚀 Niveau supérieur ! Grille ${this.gs.gridSize}×${this.gs.gridSize}`,
+      'Super !',
+      { duration: 2500 }
     );
   }
 
   precedentNiveau(): void {
     if (!this.yaprecedent()) return;
+
     this.playSound('levelup');
     this.gs.previousLevel();
     this.resetjeu();
-    this.snackBar.open(`⏪ Niveau Précédent ! Grille ${this.gs.gridSize}x${this.gs.gridSize} !`, "Retour !", { duration: 2500 });
 
-    this.voice.speak(
-      `Retour au niveau précédent. Grille ${this.gs.gridSize} sur ${this.gs.gridSize}.`
+    this.snackBar.open(
+      `⏪ Niveau précédent ! Grille ${this.gs.gridSize}×${this.gs.gridSize}`,
+      'Retour !',
+      { duration: 2500 }
     );
   }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     🎯 JOUEUR — Clic sur une case
+     ═══════════════════════════════════════════════════════════════════ */
 
   playerClick(i: number): void {
     if (this.lock || !this.gs.blocks[i].free) return;
 
     const playerTurn = this.gs.turn;
-    const played = this.gs.playMove(i);
 
-    if (!played) return;
+    const alignments = this.gs.playMove(i);
+
+    if (this.gs.blocks[i].free) return;
 
     this.playSound('click');
 
-    /* Détection d'éventuels alignements */
-    const newAlignments = this.gs.checkNewAlignments();
-    if (newAlignments > 0) {
-      this.handleAlignment(playerTurn, newAlignments);
+    if (alignments > 0) {
+      this.handleAlignment(playerTurn, alignments);
     }
 
-    /* Fin de partie : toutes les cases remplies */
     if (this.gs.isGameOver) {
-      const timerId = window.setTimeout(() => this.handleEndGame(), 500);
+      const timerId = setTimeout(() => this.handleEndGame(), END_GAME_DELAY_MS);
       this.timeouts.push(timerId);
       return;
     }
@@ -238,7 +307,7 @@ export class TictacduoComponent implements OnInit, OnDestroy {
   }
 
   private handleAlignment(playerTurn: number, count: number): void {
-    const gain = count * this.ALIGNMENT_REWARD;
+    const gain = count * this.alignmentReward;
     this.pointdevies += gain;
     this.lavie = this.pointdevies;
 
@@ -247,28 +316,22 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     const joueur = playerTurn === 0 ? 'JOUEUR 1' : 'JOUEUR 2';
     this.messageLyko = `✨ ${count} alignement(s) pour ${joueur} ! +${gain} PV !`;
 
-    this.snackBar.open(`🎯 ${count} alignement(s) ${joueur} : +${gain} PV`, "Bravo !", { duration: 2000 });
-
-    /* Annonce vocale personnalisée */
-    const plural = count > 1 ? 's' : '';
-    const phrases = [
-      'Bien joué',
-      'Excellent',
-      'Bravo',
-      'Superbe',
-      'Magnifique'
-    ];
-    const praise = phrases[Math.floor(Math.random() * phrases.length)];
-    this.voice.speak(
-      `${praise} ! ${count} alignement${plural} pour le ${joueur}. Plus ${gain} points de vie.`
+    this.snackBar.open(
+      `🎯 ${count} alignement(s) ${joueur} : +${gain} PV`,
+      'Bravo !',
+      { duration: 2000 }
     );
 
-    const timerId = window.setTimeout(() => this.gs.clearWinningHighlight(), 1200);
+    const timerId = setTimeout(
+      () => this.gs.clearWinningHighlight(),
+      1200
+    );
     this.timeouts.push(timerId);
   }
 
   private handleEndGame(): void {
     if (this.lock) return;
+
     this.lock = true;
     this.rejouer = true;
     this.gs.draw += 1;
@@ -281,37 +344,44 @@ export class TictacduoComponent implements OnInit, OnDestroy {
       this.triggerConfetti();
       this.showVictoryOverlay = true;
       this.messageLyko = `🏆 Le JOUEUR 1 remporte le duel (${scoreJ1} - ${scoreJ2}) !`;
-      this.snackBar.open(`🏆 VICTOIRE JOUEUR 1 : ${scoreJ1} - ${scoreJ2} !`, "Félicitations !", { duration: 3500 });
 
-      this.voice.speak(
-        `Victoire du Joueur 1 ! ${scoreJ1} contre ${scoreJ2}. Félicitations !`
+      this.snackBar.open(
+        `🏆 VICTOIRE JOUEUR 1 : ${scoreJ1} - ${scoreJ2}`,
+        'Félicitations !',
+        { duration: 3500 }
       );
     } else if (scoreJ2 > scoreJ1) {
       this.triggerConfetti();
       this.showVictoryOverlay = true;
       this.messageLyko = `🏆 Le JOUEUR 2 remporte le duel (${scoreJ2} - ${scoreJ1}) !`;
-      this.snackBar.open(`🏆 VICTOIRE JOUEUR 2 : ${scoreJ2} - ${scoreJ1} !`, "Félicitations !", { duration: 3500 });
 
-      this.voice.speak(
-        `Victoire du Joueur 2 ! ${scoreJ2} contre ${scoreJ1}. Félicitations !`
+      this.snackBar.open(
+        `🏆 VICTOIRE JOUEUR 2 : ${scoreJ2} - ${scoreJ1}`,
+        'Félicitations !',
+        { duration: 3500 }
       );
     } else {
       this.messageLyko = `⚖️ Égalité parfaite (${scoreJ1} - ${scoreJ2}) !`;
-      this.snackBar.open(`⚖️ MATCH NUL ${scoreJ1} - ${scoreJ2}`, "Égalité", { duration: 3000 });
 
-      this.voice.speak(
-        `Match nul, ${scoreJ1} partout. Belle partie !`
+      this.snackBar.open(
+        `⚖️ MATCH NUL ${scoreJ1} - ${scoreJ2}`,
+        'Égalité',
+        { duration: 3000 }
       );
     }
   }
 
   private triggerConfetti(): void {
     this.showConfetti = true;
-    this.particles = Array.from({ length: 60 }, (_, i) => i);
-    const timerId = window.setTimeout(() => {
-      this.showConfetti = false;
-      this.showVictoryOverlay = false;
-    }, 4500);
+    this.particles = Array.from({ length: CONFETTI_COUNT }, (_, i) => i);
+
+    const timerId = setTimeout(() => {
+      if (this.showVictoryOverlay) {
+        this.showConfetti = false;
+        this.showVictoryOverlay = false;
+      }
+    }, CONFETTI_DURATION_MS);
+
     this.timeouts.push(timerId);
   }
 
@@ -320,25 +390,20 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     this.messageLyko = current === 1
       ? '🎯 Au tour du JOUEUR 2'
       : '🎯 Au tour du JOUEUR 1';
-
-    /* Annonce vocale du tour */
-    const joueur = current === 1 ? 'Joueur 2' : 'Joueur 1';
-    /* On évite de spammer : uniquement si la voix est active */
-    if (this.soundEnabled()) {
-      this.voice.speak(`Au tour du ${joueur}.`);
-    }
   }
 
   yaprecedent(): boolean {
     return this.gs.gridSize > 3;
   }
 
-  /* ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
      NAVIGATION
-     ═══════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════════════════ */
+
   goToPlay(lavie: number, lebonus: number, letape: string): void {
-    this.voice.stopSpeaking();
-    this.router.navigate(['/play'], { queryParams: { vie: lavie, bonus: lebonus, etape: letape } });
+    void this.router.navigate(['/play'], {
+      queryParams: { vie: lavie, bonus: lebonus, etape: letape },
+    });
   }
 
   onrecommencer(): void {

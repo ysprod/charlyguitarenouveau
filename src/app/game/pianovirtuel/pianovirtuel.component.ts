@@ -1,24 +1,45 @@
 import {
-  Component, OnInit, OnDestroy, signal, computed, inject,
-  ChangeDetectionStrategy, HostListener, ElementRef, ViewChild,
-  AfterViewInit, effect,
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PianoAudioService, InstrumentType } from 'src/app/services/piano-audio.service';
+import { fromEvent } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import {
+  InstrumentType,
+  PianoAudioService
+} from 'src/app/services/piano-audio.service';
+import { GameAudioService } from 'src/app/services/game-audio.service';
+import { StorageService } from 'src/app/services/storage.service';
 import { PianoKey } from 'src/app/models/piano.model';
+import { randomFloat, randomInt } from 'src/app/utils/random.utils';
 
 /* ═════════════════════════════════════════════════════════════════════
    CONSTANTES
    ═════════════════════════════════════════════════════════════════════ */
-const AZERTY_MAP: Record<string, string> = {
-  q: 'C3', s: 'C#3', d: 'D3', f: 'D#3', g: 'E3',
-  h: 'F3', j: 'F#3', k: 'G3', l: 'G#3', m: 'A3',
-  w: 'C#3', x: 'D#3', c: 'F#3', v: 'G#3', b: 'A#3',
+
+const AZERTY_MAP: Readonly<Record<string, string>> = {
+  q: 'C3',  s: 'C#3', d: 'D3',  f: 'D#3', g: 'E3',
+  h: 'F3',  j: 'F#3', k: 'G3',  l: 'G#3', m: 'A3',
+  w: 'C#3', x: 'D#3', c: 'F#3', v: 'G#3', b: 'A#3'
 };
 
-const PIANO_KEYS_DATA: PianoKey[] = [
+const PIANO_KEYS_DATA: readonly PianoKey[] = [
   { index: 0,  note: 'C3',  frenchNote: 'DO',   octave: 3, isBlack: false, whiteIndex: 0 },
   { index: 1,  note: 'C#3', frenchNote: 'DO#',  octave: 3, isBlack: true,  whiteIndex: 0 },
   { index: 2,  note: 'D3',  frenchNote: 'RÉ',   octave: 3, isBlack: false, whiteIndex: 1 },
@@ -43,27 +64,33 @@ const PIANO_KEYS_DATA: PianoKey[] = [
   { index: 21, note: 'A4',  frenchNote: 'LA',   octave: 4, isBlack: false, whiteIndex: 12 },
   { index: 22, note: 'A#4', frenchNote: 'LA#',  octave: 4, isBlack: true,  whiteIndex: 12 },
   { index: 23, note: 'B4',  frenchNote: 'SI',   octave: 4, isBlack: false, whiteIndex: 13 },
-  { index: 24, note: 'C5',  frenchNote: 'DO',   octave: 5, isBlack: false, whiteIndex: 14 },
+  { index: 24, note: 'C5',  frenchNote: 'DO',   octave: 5, isBlack: false, whiteIndex: 14 }
 ];
 
-const STORAGE_KEY = 'charly_piano_song_v2';
-const SOUND_PREF_KEY = 'piano_sound_enabled';
+const STORAGE_KEYS = {
+  SONG: 'charly_piano_song_v2',
+  SOUND_ENABLED: 'piano_sound_enabled'
+} as const;
+
+const MIN_NOTE_DURATION_MS = 80;
+const DRAG_THRESHOLD_PX = 6;
 
 /* ═════════════════════════════════════════════════════════════════════
    INTERFACES
    ═════════════════════════════════════════════════════════════════════ */
+
 export interface RecordedNote {
-  note: string;
-  time: number;
-  duration: number;
+  readonly note: string;
+  readonly time: number;
+  readonly duration: number;
 }
 
 export interface SavedSong {
-  id: string;
-  title: string;
-  date: string;
-  bpm: number;
-  notes: RecordedNote[];
+  readonly id: string;
+  readonly title: string;
+  readonly date: string;
+  readonly bpm: number;
+  readonly notes: readonly RecordedNote[];
 }
 
 interface Particle {
@@ -73,41 +100,49 @@ interface Particle {
   vy: number;
   alpha: number;
   color: string;
+  size: number;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
    COMPOSANT
    ═════════════════════════════════════════════════════════════════════ */
+
 @Component({
   selector: 'app-pianovirtuel',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './pianovirtuel.component.html',
-  styleUrl: './pianovirtuel.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./pianovirtuel.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /* ─── Dépendances ─── */
   private readonly router = inject(Router);
   readonly audio = inject(PianoAudioService);
+  private readonly uiAudio = inject(GameAudioService);
+  private readonly storage = inject(StorageService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  @ViewChild('particleCanvas') particleCanvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('pianoScroll') pianoScroll?: ElementRef<HTMLDivElement>;
+  @ViewChild('particleCanvas', { static: true })
+  private readonly particleCanvas!: ElementRef<HTMLCanvasElement>;
+
+  @ViewChild('pianoScroll')
+  private readonly pianoScroll?: ElementRef<HTMLDivElement>;
 
   /* ═══════════════════════════════════════════════════════════════════
      CANVAS PARTICULES
      ═══════════════════════════════════════════════════════════════════ */
   private ctxCanvas: CanvasRenderingContext2D | null = null;
   private animFrameId: number | null = null;
-  private particles: Particle[] = [];
+  private readonly particles: Particle[] = [];
   private canvasWidth = 0;
   private canvasHeight = 0;
 
   /* ═══════════════════════════════════════════════════════════════════
      INSTRUMENTS
      ═══════════════════════════════════════════════════════════════════ */
-  readonly instruments: { type: InstrumentType; label: string }[] = [
+  readonly instruments: readonly { type: InstrumentType; label: string }[] = [
     { type: 'piano',       label: '🎹 Piano' },
     { type: 'organ',       label: '⛪ Orgue' },
     { type: 'strings',     label: '🎻 Cordes' },
@@ -117,13 +152,13 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     { type: 'eguitar',     label: '🎸 Guitare élec.' },
     { type: 'bells',       label: '🔔 Cloches' },
     { type: 'flute',       label: '🪈 Flûte' },
-    { type: 'sax',         label: '🎷 Saxophone' },
+    { type: 'sax',         label: '🎷 Saxophone' }
   ];
 
   /* ═══════════════════════════════════════════════════════════════════
      CLAVIER
      ═══════════════════════════════════════════════════════════════════ */
-  readonly pianoKeys: PianoKey[] = PIANO_KEYS_DATA;
+  readonly pianoKeys: readonly PianoKey[] = PIANO_KEYS_DATA;
   readonly whiteKeys = computed(() => this.pianoKeys.filter(k => !k.isBlack));
   readonly blackKeys = computed(() => this.pianoKeys.filter(k => k.isBlack));
   readonly pressedNotes = signal<Set<string>>(new Set());
@@ -131,24 +166,23 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════════════════
      MÉTRONOME
      ═══════════════════════════════════════════════════════════════════ */
-  readonly bpm = signal<number>(120);
-  readonly isMetronomeActive = signal<boolean>(false);
-  readonly metronomeBeat = signal<number>(0);
-  readonly beatsPerMeasure = signal<number>(4);
+  readonly bpm = signal(120);
+  readonly isMetronomeActive = signal(false);
+  readonly metronomeBeat = signal(0);
+  readonly beatsPerMeasure = signal(4);
   readonly beatArray = [1, 2, 3, 4];
   private metronomeTimer: ReturnType<typeof setInterval> | null = null;
-  private audioCtx: AudioContext | null = null;
 
   /* ═══════════════════════════════════════════════════════════════════
      ENREGISTREMENT
      ═══════════════════════════════════════════════════════════════════ */
-  readonly isRecording = signal<boolean>(false);
-  readonly isPlayingBack = signal<boolean>(false);
+  readonly isRecording = signal(false);
+  readonly isPlayingBack = signal(false);
   readonly recordedNotes = signal<RecordedNote[]>([]);
   readonly savedSong = signal<SavedSong | null>(null);
   private recordStartTime = 0;
-  private noteStartTimes = new Map<string, number>();
-  private playbackTimeouts: ReturnType<typeof setTimeout>[] = [];
+  private readonly noteStartTimes = new Map<string, number>();
+  private readonly playbackTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
   /* ═══════════════════════════════════════════════════════════════════
      GESTION CLAVIER / POINTER
@@ -160,12 +194,11 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════════════════
      DRAG-SCROLL
      ═══════════════════════════════════════════════════════════════════ */
-  readonly isDragging = signal<boolean>(false);
+  readonly isDragging = signal(false);
   private dragStartX = 0;
   private dragStartScrollLeft = 0;
   private dragPointerId: number | null = null;
   private dragMoved = false;
-  private readonly DRAG_THRESHOLD_PX = 6;
 
   /* ═══════════════════════════════════════════════════════════════════
      CONSTRUCTEUR
@@ -175,12 +208,43 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     effect(() => {
       const active = this.isMetronomeActive();
       const bpm = this.bpm();
-      if (active) {
-        this.startMetronomeLoop(bpm);
-      } else {
-        this.stopMetronomeLoop();
-      }
+
+      untracked(() => {
+        if (active) {
+          this.startMetronomeLoop(bpm);
+        } else {
+          this.stopMetronomeLoop();
+        }
+      });
     });
+
+    /* Écoute le redimensionnement de fenêtre */
+    fromEvent(window, 'resize')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.resizeCanvas());
+
+    /* Écoute les pointerup globaux pour libérer les notes */
+    fromEvent<PointerEvent>(window, 'pointerup')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => this.onPointerUp(event));
+
+    fromEvent<PointerEvent>(window, 'pointercancel')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => this.onPointerUp(event));
+
+    /* Écoute le clavier */
+    fromEvent<KeyboardEvent>(window, 'keydown')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => this.onKeyDown(event));
+
+    fromEvent<KeyboardEvent>(window, 'keyup')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => this.onKeyUp(event));
+
+    /* Écoute la perte de focus */
+    fromEvent(window, 'blur')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.onWindowBlur());
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -203,25 +267,21 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pointerToNote.clear();
     this.keyboardPressed.clear();
     this.audio.allNotesOff();
-
-    if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      void this.audioCtx.close();
-    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════
      SON — Préférence persistante
      ═══════════════════════════════════════════════════════════════════ */
   private loadSoundPreference(): void {
-    const saved = localStorage.getItem(SOUND_PREF_KEY);
-    if (saved === 'false' && !this.audio.isMuted()) {
+    const enabled = this.storage.getBoolean(STORAGE_KEYS.SOUND_ENABLED, true);
+    if (!enabled && !this.audio.isMuted()) {
       this.audio.toggleMute();
     }
   }
 
   toggleMute(): void {
     this.audio.toggleMute();
-    localStorage.setItem(SOUND_PREF_KEY, String(this.audio.isMuted()));
+    this.storage.setBoolean(STORAGE_KEYS.SOUND_ENABLED, !this.audio.isMuted());
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -250,7 +310,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!el) return;
 
     const dx = event.clientX - this.dragStartX;
-    if (!this.dragMoved && Math.abs(dx) > this.DRAG_THRESHOLD_PX) {
+    if (!this.dragMoved && Math.abs(dx) > DRAG_THRESHOLD_PX) {
       this.dragMoved = true;
     }
     el.scrollLeft = this.dragStartScrollLeft - dx;
@@ -290,7 +350,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     CANVAS PARTICULES
+     CANVAS PARTICULES (avec devicePixelRatio)
      ═══════════════════════════════════════════════════════════════════ */
   private initCanvas(): void {
     const canvas = this.particleCanvas.nativeElement;
@@ -298,12 +358,24 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resizeCanvas();
   }
 
-  @HostListener('window:resize')
-  resizeCanvas(): void {
-    if (!this.particleCanvas) return;
-    const canvas = this.particleCanvas.nativeElement;
-    this.canvasWidth = canvas.width = window.innerWidth;
-    this.canvasHeight = canvas.height = window.innerHeight;
+  private resizeCanvas(): void {
+    const canvas = this.particleCanvas?.nativeElement;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    this.canvasWidth = window.innerWidth;
+    this.canvasHeight = window.innerHeight;
+
+    canvas.width = Math.floor(this.canvasWidth * dpr);
+    canvas.height = Math.floor(this.canvasHeight * dpr);
+    canvas.style.width = `${this.canvasWidth}px`;
+    canvas.style.height = `${this.canvasHeight}px`;
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.ctxCanvas = ctx;
+    }
   }
 
   private triggerKeyParticles(event: PointerEvent): void {
@@ -314,10 +386,11 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
       this.particles.push({
         x,
         y,
-        vx: (Math.random() - 0.5) * 8,
-        vy: (Math.random() - 1) * 5 - 2,
+        vx: randomFloat(-4, 4),
+        vy: randomFloat(-7, -2),
         alpha: 1,
         color: Math.random() > 0.5 ? '#00f2fe' : '#ff0080',
+        size: randomFloat(3, 6)
       });
     }
 
@@ -326,7 +399,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private renderParticles = (): void => {
+  private readonly renderParticles = (): void => {
     const ctx = this.ctxCanvas;
 
     if (ctx) {
@@ -336,6 +409,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
         const p = this.particles[i];
         p.x += p.vx;
         p.y += p.vy;
+        p.vy += 0.15;
         p.alpha -= 0.025;
 
         if (p.alpha <= 0) {
@@ -344,13 +418,15 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.alpha;
         ctx.shadowBlur = 10;
         ctx.shadowColor = p.color;
         ctx.fill();
       }
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
     }
 
     if (this.particles.length > 0) {
@@ -381,9 +457,11 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
   private startMetronomeLoop(bpm: number): void {
     this.stopMetronomeLoop();
     const intervalMs = (60 / bpm) * 1000;
+
     this.metronomeTimer = setInterval(() => {
-      this.metronomeBeat.update(b => (b % this.beatsPerMeasure()) + 1);
-      this.playClickSound(this.metronomeBeat() === 1);
+      const nextBeat = (this.metronomeBeat() % this.beatsPerMeasure()) + 1;
+      this.metronomeBeat.set(nextBeat);
+      this.uiAudio.play(nextBeat === 1 ? 'perfect' : 'tick');
     }, intervalMs);
   }
 
@@ -393,32 +471,6 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
       this.metronomeTimer = null;
     }
     this.metronomeBeat.set(0);
-  }
-
-  private playClickSound(isHighPitch: boolean): void {
-    if (!this.audioCtx) {
-      const AudioCtxClass = window.AudioContext
-        || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.audioCtx = new AudioCtxClass();
-    }
-
-    if (this.audioCtx.state === 'suspended') {
-      void this.audioCtx.resume();
-    }
-
-    const osc = this.audioCtx.createOscillator();
-    const gain = this.audioCtx.createGain();
-    const now = this.audioCtx.currentTime;
-
-    osc.frequency.setValueAtTime(isHighPitch ? 1200 : 800, now);
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-
-    osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.05);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -441,7 +493,9 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.recordedNotes.update(notes =>
       notes.map(n => ({
         ...n,
-        duration: n.duration > 0 ? n.duration : (now - this.recordStartTime - n.time),
+        duration: n.duration > 0
+          ? n.duration
+          : Math.max(MIN_NOTE_DURATION_MS, now - this.recordStartTime - n.time)
       }))
     );
   }
@@ -451,20 +505,25 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     if (notes.length === 0) return;
 
     const song: SavedSong = {
-      id: 'session-' + Date.now(),
+      id: `session-${Date.now()}`,
       title: 'Ma composition',
-      date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      date: new Date().toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }),
       bpm: this.bpm(),
-      notes: [...notes],
+      notes: [...notes]
     };
 
     this.savedSong.set(song);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(song));
+    this.storage.setString(STORAGE_KEYS.SONG, JSON.stringify(song));
   }
 
   loadSavedSong(): void {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = this.storage.getString(STORAGE_KEYS.SONG, '');
     if (!stored) return;
+
     try {
       const song = JSON.parse(stored) as SavedSong;
       this.savedSong.set(song);
@@ -475,7 +534,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   deleteSavedSong(): void {
     this.savedSong.set(null);
-    localStorage.removeItem(STORAGE_KEY);
+    this.storage.remove(STORAGE_KEYS.SONG);
   }
 
   playSavedSong(): void {
@@ -484,38 +543,42 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.isPlayingBack.set(true);
     this.clearPlaybackTimeouts();
+
     let maxTime = 0;
 
     for (const item of song.notes) {
       const startDelay = item.time;
-      const dur = Math.max(80, item.duration);
+      const dur = Math.max(MIN_NOTE_DURATION_MS, item.duration);
       maxTime = Math.max(maxTime, startDelay + dur + 100);
 
       const t1 = setTimeout(() => {
+        this.playbackTimeouts.delete(t1);
         this.audio.noteOn(item.note);
         this.markPressed(item.note, true);
 
         const t2 = setTimeout(() => {
+          this.playbackTimeouts.delete(t2);
           this.audio.noteOff(item.note);
           this.markPressed(item.note, false);
         }, dur);
 
-        this.playbackTimeouts.push(t2);
+        this.playbackTimeouts.add(t2);
       }, startDelay);
 
-      this.playbackTimeouts.push(t1);
+      this.playbackTimeouts.add(t1);
     }
 
     const finalTimeout = setTimeout(() => {
+      this.playbackTimeouts.delete(finalTimeout);
       this.isPlayingBack.set(false);
     }, maxTime);
 
-    this.playbackTimeouts.push(finalTimeout);
+    this.playbackTimeouts.add(finalTimeout);
   }
 
   private clearPlaybackTimeouts(): void {
     this.playbackTimeouts.forEach(t => clearTimeout(t));
-    this.playbackTimeouts = [];
+    this.playbackTimeouts.clear();
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -528,6 +591,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     event.preventDefault();
     event.stopPropagation();
+
     this.triggerKeyParticles(event);
     this.audio.noteOn(key.note);
     this.pointerToNote.set(event.pointerId, key.note);
@@ -565,14 +629,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.onPointerUp(event);
   }
 
-  @HostListener('window:pointerup', ['$event'])
-  @HostListener('window:pointercancel', ['$event'])
-  onGlobalPointerUp(event: PointerEvent): void {
-    this.onPointerUp(event);
-  }
-
-  @HostListener('window:keydown', ['$event'])
-  onKeyDown(event: KeyboardEvent): void {
+  private onKeyDown(event: KeyboardEvent): void {
     if (event.repeat) return;
     const note = AZERTY_MAP[event.key.toLowerCase()];
     if (!note || this.keyboardPressed.has(note)) return;
@@ -584,8 +641,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.captureNoteStart(note);
   }
 
-  @HostListener('window:keyup', ['$event'])
-  onKeyUp(event: KeyboardEvent): void {
+  private onKeyUp(event: KeyboardEvent): void {
     const note = AZERTY_MAP[event.key.toLowerCase()];
     if (!note || !this.keyboardPressed.has(note)) return;
 
@@ -595,8 +651,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.captureNoteEnd(note);
   }
 
-  @HostListener('window:blur')
-  onWindowBlur(): void {
+  private onWindowBlur(): void {
     this.pointerToNote.clear();
     this.keyboardPressed.clear();
     this.pressedNotes.set(new Set());
@@ -625,7 +680,7 @@ export class PianovirtuelComponent implements OnInit, AfterViewInit, OnDestroy {
       const copy = [...notes];
       for (let i = copy.length - 1; i >= 0; i--) {
         if (copy[i].note === note && copy[i].duration === 0) {
-          copy[i] = { ...copy[i], duration: Math.max(80, dur) };
+          copy[i] = { ...copy[i], duration: Math.max(MIN_NOTE_DURATION_MS, dur) };
           break;
         }
       }

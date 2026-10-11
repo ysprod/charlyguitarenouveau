@@ -4,7 +4,7 @@
        HERO & SOLDE CLIENT
        ═══════════════════════════════════════════════════════ -->
   <header class="store-hero">
-    <div class="hero-backdrop"></div>
+    <div class="hero-backdrop" aria-hidden="true"></div>
 
     <div class="hero-content">
       <div class="hero-brand">
@@ -12,10 +12,10 @@
       </div>
 
       <div class="credit-card">
-        <div class="credit-card-glow"></div>
+        <div class="credit-card-glow" aria-hidden="true"></div>
 
         <div class="credit-header">
-          <div class="credit-icon-wrapper">
+          <div class="credit-icon-wrapper" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="5" width="20" height="14" rx="2" />
               <line x1="2" y1="10" x2="22" y2="10" />
@@ -27,7 +27,7 @@
         <div class="credit-body">
           <span class="credit-amount">{{ formatPrice(userCredit()) }}</span>
           <a routerLink="/recharge" class="btn-recharge" title="Recharger mon solde">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
@@ -41,20 +41,31 @@
   <!-- ═══════════════════════════════════════════════════════
        RECHERCHE & FILTRES
        ═══════════════════════════════════════════════════════ -->
-  <section class="toolbar-section">
+  <section class="toolbar-section" aria-label="Recherche et filtres">
 
     <div class="search-sort-bar">
       <div class="search-input-wrapper">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
 
-        <input type="text" [value]="searchTerm()" (input)="onSearchInput($event)"
-          placeholder="Rechercher une méthode, livre, auteur..." class="search-input" />
+        <input
+          type="text"
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)"
+          placeholder="Rechercher une méthode, livre, auteur..."
+          class="search-input"
+          aria-label="Rechercher un document"
+        />
 
         @if (searchTerm()) {
-        <button class="btn-clear-search" (click)="searchTerm.set('')" aria-label="Effacer">✕</button>
+        <button
+          type="button"
+          class="btn-clear-search"
+          (click)="searchTerm.set('')"
+          aria-label="Effacer la recherche"
+        >✕</button>
         }
       </div>
 
@@ -67,7 +78,7 @@
             <option value="price-asc">📈 Prix croissant</option>
             <option value="price-desc">📉 Prix décroissant</option>
           </select>
-          <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </div>
@@ -76,8 +87,13 @@
 
     <div class="categories-scroll">
       @for (filter of filters; track filter.label) {
-      <button class="filter-pill" [class.active]="selectedFilter() === filter.label" (click)="filterBy(filter.label)">
-        <span class="filter-icon">{{ filter.icon }}</span>
+      <button
+        type="button"
+        class="filter-pill"
+        [class.active]="selectedFilter() === filter.label"
+        (click)="filterBy(filter.label)"
+      >
+        <span class="filter-icon" aria-hidden="true">{{ filter.icon }}</span>
         <span class="filter-text">{{ filter.label }}</span>
       </button>
       }
@@ -91,7 +107,7 @@
       </p>
 
       @if (selectedFilter() !== 'Tous les documents' || searchTerm()) {
-      <button class="btn-reset-filters" (click)="resetAll()">
+      <button type="button" class="btn-reset-filters" (click)="resetAll()">
         🔄 Réinitialiser les filtres
       </button>
       }
@@ -101,121 +117,133 @@
   <!-- ═══════════════════════════════════════════════════════
        GRILLE PRODUITS
        ═══════════════════════════════════════════════════════ -->
-  @if (documents$ | async; as _) {
-  @if (visibleDocuments().length === 0) {
-  <div class="empty-state">
-    <div class="empty-icon-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-      </svg>
+  @if (allDocs().length === 0) {
+    <!-- Skeleton loader (tant qu'aucun document n'est chargé) -->
+    <div class="loading-grid" aria-hidden="true">
+      @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+      <div class="skeleton-card">
+        <div class="skeleton-media"></div>
+        <div class="skeleton-line title"></div>
+        <div class="skeleton-line desc"></div>
+        <div class="skeleton-line meta"></div>
+        <div class="skeleton-button"></div>
+      </div>
+      }
     </div>
-    <h3>Aucune ressource ne correspond à votre recherche</h3>
-    <p>Ajustez vos termes de recherche ou essayez d'explorer d'autres catégories.</p>
-    <button class="btn-action-primary" (click)="resetAll()">
-      Réinitialiser la recherche
-    </button>
-  </div>
-  } @else {
-  <section class="products-grid">
-    @for (doc of visibleDocuments(); track trackByDocumentKey($index, doc); let i = $index) {
-    <article class="product-card" [style.animation-delay]="(i % 10) * 0.06 + 's'">
-
-      <div class="product-media">
-        @if (doc.imageUrl) {
-        <img [src]="doc.imageUrl" [alt]="doc.title" class="product-img" loading="lazy" />
-        } @else {
-        <div class="product-img-placeholder">
-          <span class="placeholder-emoji">{{ doc.icon || '📄' }}</span>
-        </div>
-        }
-
-        <div class="media-overlay"></div>
-
-        <span class="badge-type" [ngClass]="doc.typeClass || 'type-default'">
-          {{ doc.type }}
-        </span>
-
-        <span class="badge-price" [class.free]="!doc.price || doc.price === 0">
-          {{ formatPrice(doc.price) }}
-        </span>
+  } @else if (visibleDocuments().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon-box" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+        </svg>
       </div>
-
-      <div class="product-body">
-        <h2 class="product-title" [title]="doc.title">{{ doc.title }}</h2>
-        <p class="product-description">{{ doc.description }}</p>
-
-        <div class="product-meta">
-          @if (doc.format) {
-          <span class="meta-chip">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-            </svg>
-            {{ doc.format }}
-          </span>
-          }
-
-          @if (doc.level) {
-          <span class="meta-chip level">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon
-                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            {{ doc.level }}
-          </span>
-          }
-
-          @if (doc.downloads !== undefined) {
-          <span class="meta-chip downloads">
-            📥 {{ doc.downloads }} téléchargements
-          </span>
-          }
-        </div>
-      </div>
-
-      <div class="product-footer">
-        <button class="btn-buy" [class.btn-free]="!doc.price || doc.price === 0"
-          (click)="initiatePurchase(doc, $event)">
-          <span>{{ doc.price ? 'Obtenir le document' : 'Téléchargement gratuit' }}</span>
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </button>
-      </div>
-
-    </article>
-    }
-  </section>
-  }
-  } @else {
-  <!-- Skeleton loader -->
-  <div class="loading-grid">
-    @for (item of [1, 2, 3, 4, 5, 6]; track item) {
-    <div class="skeleton-card">
-      <div class="skeleton-media"></div>
-      <div class="skeleton-line title"></div>
-      <div class="skeleton-line desc"></div>
-      <div class="skeleton-line meta"></div>
-      <div class="skeleton-button"></div>
+      <h3>Aucune ressource ne correspond à votre recherche</h3>
+      <p>Ajustez vos termes de recherche ou essayez d'explorer d'autres catégories.</p>
+      <button type="button" class="btn-action-primary" (click)="resetAll()">
+        Réinitialiser la recherche
+      </button>
     </div>
-    }
-  </div>
+  } @else {
+    <section class="products-grid" aria-label="Liste des produits">
+      @for (doc of visibleDocuments(); track trackByDocumentKey($index, doc); let i = $index) {
+      <article class="product-card" [style.animation-delay]="(i % 10) * 0.06 + 's'">
+
+        <div class="product-media">
+          @if (doc.imageUrl) {
+          <img [src]="doc.imageUrl" [alt]="doc.title" class="product-img" loading="lazy" />
+          } @else {
+          <div class="product-img-placeholder">
+            <span class="placeholder-emoji" aria-hidden="true">{{ doc.icon || '📄' }}</span>
+          </div>
+          }
+
+          <div class="media-overlay" aria-hidden="true"></div>
+
+          <span class="badge-type" [ngClass]="doc.typeClass || 'type-default'">
+            {{ doc.type }}
+          </span>
+
+          <span class="badge-price" [class.free]="!doc.price || doc.price === 0">
+            {{ formatPrice(doc.price) }}
+          </span>
+        </div>
+
+        <div class="product-body">
+          <h2 class="product-title" [title]="doc.title">{{ doc.title }}</h2>
+          <p class="product-description">{{ doc.description }}</p>
+
+          <div class="product-meta">
+            @if (doc.format) {
+            <span class="meta-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              {{ doc.format }}
+            </span>
+            }
+
+            @if (doc.level) {
+            <span class="meta-chip level">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              {{ doc.level }}
+            </span>
+            }
+
+            @if (doc.downloads !== undefined) {
+            <span class="meta-chip downloads">
+              <span aria-hidden="true">📥</span> {{ doc.downloads }} téléchargements
+            </span>
+            }
+          </div>
+        </div>
+
+        <div class="product-footer">
+          <button
+            type="button"
+            class="btn-buy"
+            [class.btn-free]="!doc.price || doc.price === 0"
+            (click)="initiatePurchase(doc, $event)"
+          >
+            <span>{{ doc.price ? 'Obtenir le document' : 'Téléchargement gratuit' }}</span>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </button>
+        </div>
+
+      </article>
+      }
+    </section>
   }
 
   <!-- ═══════════════════════════════════════════════════════
        MODALE ACHAT / RECHARGE
        ═══════════════════════════════════════════════════════ -->
   @if (selectedDocForPurchase(); as doc) {
-  <div class="modal-backdrop" (click)="cancelPurchase()">
+  <div
+    class="modal-backdrop"
+    (click)="cancelPurchase()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title"
+  >
     <div class="modal-card" (click)="$event.stopPropagation()">
 
-      <button class="modal-close" (click)="cancelPurchase()">✕</button>
+      <button
+        type="button"
+        class="modal-close"
+        (click)="cancelPurchase()"
+        aria-label="Fermer"
+      >✕</button>
 
       @if (!showRechargeInModal()) {
       <div class="modal-header">
         <span class="modal-badge">Confirmation d'Achat</span>
-        <h3>{{ doc.title }}</h3>
+        <h3 id="modal-title">{{ doc.title }}</h3>
       </div>
 
       <div class="modal-body">
@@ -237,54 +265,75 @@
           </div>
         </div>
 
-        @if (userCredit() < doc.price) { <div class="alert-warning">
-          ⚠️ Solde insuffisant pour finaliser la commande. Veuillez recharger votre compte.
+        @if (userCredit() < doc.price) {
+        <div class="alert-warning" role="alert">
+          <span aria-hidden="true">⚠️</span>
+          Solde insuffisant pour finaliser la commande. Veuillez recharger votre compte.
+        </div>
+        }
       </div>
-      }
-    </div>
 
-    <div class="modal-actions">
-      <button class="btn-secondary" (click)="cancelPurchase()">Annuler</button>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="cancelPurchase()">Annuler</button>
 
-      @if (userCredit() >= doc.price) {
-      <button class="btn-primary" (click)="confirmPurchase()">
-        Payer {{ formatPrice(doc.price) }}
-      </button>
+        @if (userCredit() >= doc.price) {
+        <button type="button" class="btn-primary" (click)="confirmPurchase()">
+          Payer {{ formatPrice(doc.price) }}
+        </button>
+        } @else {
+        <button type="button" class="btn-highlight" (click)="toggleRechargeView(true)">
+          <span aria-hidden="true">⚡</span> Recharger mon solde
+        </button>
+        }
+      </div>
       } @else {
-      <button class="btn-highlight" (click)="toggleRechargeView(true)">
-        ⚡ Recharger mon solde
-      </button>
+      <div class="modal-header">
+        <span class="modal-badge recharge">Recharge Rapide</span>
+        <h3 id="modal-title">Alimenter votre compte</h3>
+      </div>
+
+      <div class="modal-body">
+        <p class="recharge-desc">Choisissez un montant à ajouter instantanément :</p>
+        <div class="recharge-grid">
+          <button type="button" class="recharge-option" (click)="processQuickRecharge(2000)">+ 2 000 FCFA</button>
+          <button type="button" class="recharge-option active" (click)="processQuickRecharge(5000)">+ 5 000 FCFA</button>
+          <button type="button" class="recharge-option" (click)="processQuickRecharge(10000)">+ 10 000 FCFA</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="toggleRechargeView(false)">Retour</button>
+      </div>
       }
     </div>
-    } @else {
-    <div class="modal-header">
-      <span class="modal-badge recharge">Recharge Rapide</span>
-      <h3>Alimenter votre compte</h3>
-    </div>
-
-    <div class="modal-body">
-      <p class="recharge-desc">Choisissez un montant à ajouter instantanément :</p>
-      <div class="recharge-grid">
-        <button class="recharge-option" (click)="processQuickRecharge(2000)">+ 2 000 FCFA</button>
-        <button class="recharge-option active" (click)="processQuickRecharge(5000)">+ 5 000 FCFA</button>
-        <button class="recharge-option" (click)="processQuickRecharge(10000)">+ 10 000 FCFA</button>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-secondary" (click)="toggleRechargeView(false)">Retour</button>
-    </div>
-    }
   </div>
-  </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODALE CODE PROMO — OBLIGATOIRE POUR ACHAT
+       ═══════════════════════════════════════════════════════ -->
+  @if (showPromoModal()) {
+    <app-promo-modal
+      [isSaving]="isSavingPromo()"
+      [errorMessage]="promoError()"
+      title="Code Promo obligatoire"
+      message="Pour obtenir ce document, saisissez un code promo valide, puis cliquez sur Continuer."
+      (codeSubmitted)="onPromoCodeSubmitted($event)"
+      (closed)="closePromoModal()"
+    />
   }
 
   <!-- ═══════════════════════════════════════════════════════
        TOAST
        ═══════════════════════════════════════════════════════ -->
   @if (toast().show) {
-  <div class="toast-notification" [ngClass]="toast().type">
-    <span class="toast-icon">
+  <div
+    class="toast-notification"
+    [ngClass]="toast().type"
+    role="status"
+    aria-live="polite"
+  >
+    <span class="toast-icon" aria-hidden="true">
       @if (toast().type === 'success') { ✅ }
       @else if (toast().type === 'error') { ⚠️ }
       @else { ℹ️ }

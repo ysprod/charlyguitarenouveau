@@ -1,178 +1,187 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject,
+} from '@angular/core';
+
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
+
 import { TictactoeserviceService } from '../../services/tictactoeservice.service';
-import { VoiceService } from '../../services/voice.service';
-import { CommonModule } from '@angular/common';
+
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES
+   ═════════════════════════════════════════════════════════════════════ */
+
+type SoundType = 'click' | 'win' | 'lose' | 'draw' | 'levelup' | 'bot';
+
+const ALIGNMENT_REWARD = 10;
+const CONFETTI_COUNT = 60;
+const CONFETTI_DURATION_MS = 4500;
+const BOT_THINK_DELAY_MS = 700;
+const WINNING_HIGHLIGHT_MS = 1200;
+const END_GAME_DELAY_MS = 400;
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-tictactoe',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './tictactoe.component.html',
-  styleUrls: ['./tictactoe.component.css']
+  styleUrls: ['./tictactoe.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TictactoeComponent implements OnInit, OnDestroy {
 
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
+
+  public readonly gs = inject(TictactoeserviceService);
+
+  /* ─── État ─── */
   lock = false;
   rejouer = false;
-  etapedujeu: string = "0";
-  lavie: number = 0;
-  lebonus: number = 0;
-  pointdevies: number = 0;
-  pointdebonus: number = 0;
-  messageLyko: string = "Lyko le Sage observe votre stratégie...";
+  etapedujeu = '0';
+  lavie = 0;
+  lebonus = 0;
+  pointdevies = 0;
+  pointdebonus = 0;
+  messageLyko = 'Lykö le Sage observe votre stratégie…';
   showConfetti = false;
   showVictoryOverlay = false;
   showDefeatOverlay = false;
   particles: number[] = [];
 
-  /** PV gagnés par alignement (+10 PV par alignement) */
-  readonly ALIGNMENT_REWARD = 10;
+  readonly alignmentReward = ALIGNMENT_REWARD;
 
+  /* ─── Audio ─── */
   private audioCtx?: AudioContext;
-  private timeouts: number[] = [];
-  private hasAnnouncedIntro = false;
+  private readonly timeouts: ReturnType<typeof setTimeout>[] = [];
 
-  constructor(
-    private activatedRoute: ActivatedRoute,
-    private snackBar: MatSnackBar,
-    public gs: TictactoeserviceService,
-    private router: Router,
-    private voice: VoiceService
-  ) { }
+  /* ═══════════════════════════════════════════════════════════════════
+     LIFECYCLE
+     ═══════════════════════════════════════════════════════════════════ */
 
   ngOnInit(): void {
-    const vieParam = this.activatedRoute.snapshot.queryParamMap.get('vie');
-    const bonusParam = this.activatedRoute.snapshot.queryParamMap.get('bonus');
+    const params = this.activatedRoute.snapshot.queryParamMap;
 
-    this.lavie = parseInt(vieParam || '500', 10);
-    this.lebonus = parseInt(bonusParam || '0', 10);
-    this.etapedujeu = this.activatedRoute.snapshot.queryParamMap.get('etape') || this.etapedujeu;
+    this.lavie = parseInt(params.get('vie') ?? '500', 10);
+    this.lebonus = parseInt(params.get('bonus') ?? '0', 10);
+    this.etapedujeu = params.get('etape') ?? this.etapedujeu;
 
     this.pointdevies = this.lavie;
     this.pointdebonus = this.lebonus;
 
     this.initAudio();
     this.resetjeu();
-    this.announceGameRules();
   }
 
   ngOnDestroy(): void {
-    // 1. Fermeture propre de l'AudioContext pour éviter les fuites mémoire
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      this.audioCtx.close();
+      void this.audioCtx.close();
     }
-    // 2. Annulation de tous les timeouts actifs au moment de la destruction
+
     this.timeouts.forEach(t => clearTimeout(t));
-    // 3. Annulation de la lecture vocale en cours
-    this.voice.stopSpeaking();
   }
 
-  /* ═══════════════════════════════════════════════════════
-     ANNONCE VOCALE D'INTRODUCTION
-     ═══════════════════════════════════════════════════════ */
-  private announceGameRules(): void {
-    if (this.hasAnnouncedIntro) return;
-    this.hasAnnouncedIntro = true;
-
-    const intro =
-      `Bienvenu, offolandais ! ` +
-      `Le duel t'oppose à Lykö le Sage, sur une grille de ${this.gs.gridSize} sur ${this.gs.gridSize}. ` +
-      `Pour placer un pion, appuie simplement sur une case vide de la grille. ` +
-      `Chaque alignement de trois pions te rapporte dix points de vie. ` +
-      `La manche se termine lorsque toutes les cases sont remplies. ` +
-      `Que la stratégie guide ta main !`;
-
-    const timerId = window.setTimeout(() => {
-      this.voice.speak(intro);
-    }, 600);
-    this.timeouts.push(timerId);
-  }
+  /* ═══════════════════════════════════════════════════════════════════
+     AUDIO
+     ═══════════════════════════════════════════════════════════════════ */
 
   private initAudio(): void {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (AudioContextClass) this.audioCtx = new AudioContextClass();
+    const Ctor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (Ctor) {
+      this.audioCtx = new Ctor();
+    }
   }
 
-  private playSound(type: 'click' | 'win' | 'lose' | 'draw' | 'levelup' | 'bot'): void {
-    if (!this.audioCtx) return;
-    if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+  private playSound(type: SoundType): void {
+    const ctx = this.audioCtx;
+    if (!ctx) return;
 
-    const osc = this.audioCtx.createOscillator();
-    const gain = this.audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
-    const now = this.audioCtx.currentTime;
+    if (ctx.state === 'suspended') {
+      void ctx.resume().catch(() => { /* silencieux */ });
+    }
+
+    const now = ctx.currentTime;
 
     switch (type) {
       case 'click':
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
-        osc.start(now);
-        osc.stop(now + 0.06);
+        this.tone(ctx, { freq: 440, endFreq: 880, type: 'sine', duration: 0.06, volume: 0.15, now });
         break;
 
       case 'bot':
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.exponentialRampToValueAtTime(110, now + 0.15);
-        gain.gain.setValueAtTime(0.1, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-        osc.start(now);
-        osc.stop(now + 0.15);
+        this.tone(ctx, { freq: 220, endFreq: 110, type: 'triangle', duration: 0.15, volume: 0.1, now });
         break;
 
       case 'win':
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((freq, idx) => {
-          const o = this.audioCtx!.createOscillator();
-          const g = this.audioCtx!.createGain();
-          o.type = 'triangle';
-          o.connect(g);
-          g.connect(this.audioCtx!.destination);
-          o.frequency.setValueAtTime(freq, now + idx * 0.1);
-          g.gain.setValueAtTime(0.2, now + idx * 0.1);
-          g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.3);
-          o.start(now + idx * 0.1);
-          o.stop(now + idx * 0.1 + 0.3);
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+          this.tone(ctx, { freq, type: 'triangle', duration: 0.3, volume: 0.2, now: now + i * 0.1 });
         });
         break;
 
       case 'lose':
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.linearRampToValueAtTime(80, now + 0.4);
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-        osc.start(now);
-        osc.stop(now + 0.4);
+        this.tone(ctx, { freq: 300, endFreq: 80, type: 'sawtooth', duration: 0.4, volume: 0.25, now });
         break;
 
       case 'draw':
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.setValueAtTime(180, now + 0.15);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-        osc.start(now);
-        osc.stop(now + 0.3);
+        this.tone(ctx, { freq: 220, endFreq: 180, type: 'square', duration: 0.3, volume: 0.2, now });
         break;
 
       case 'levelup':
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.5);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-        osc.start(now);
-        osc.stop(now + 0.5);
+        this.tone(ctx, { freq: 300, endFreq: 1200, type: 'sine', duration: 0.5, volume: 0.3, now });
         break;
     }
   }
+
+  private tone(
+    ctx: AudioContext,
+    opts: {
+      freq: number;
+      endFreq?: number;
+      type: OscillatorType;
+      duration: number;
+      volume: number;
+      now: number;
+    }
+  ): void {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = opts.type;
+    osc.frequency.setValueAtTime(opts.freq, opts.now);
+
+    if (opts.endFreq !== undefined) {
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(0.01, opts.endFreq),
+        opts.now + opts.duration
+      );
+    }
+
+    gain.gain.setValueAtTime(0.0001, opts.now);
+    gain.gain.exponentialRampToValueAtTime(opts.volume, opts.now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, opts.now + opts.duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(opts.now);
+    osc.stop(opts.now + opts.duration + 0.05);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     RESET & NIVEAUX
+     ═══════════════════════════════════════════════════════════════════ */
 
   resetjeu(): void {
     this.rejouer = false;
@@ -183,30 +192,36 @@ export class TictactoeComponent implements OnInit, OnDestroy {
 
     this.gs.resetAll();
     this.gs.turn = 0;
+    this.gs.isBotThinking = false;
 
-    this.messageLyko = `Niveau ${this.gs.gridSize - 2} : Grille ${this.gs.gridSize}x${this.gs.gridSize} — Alignez ${this.gs.winningStreak} pions pour gagner +${this.ALIGNMENT_REWARD} PV !`;
+    this.messageLyko =
+      `Niveau ${this.gs.gridSize - 2} : Grille ${this.gs.gridSize}×${this.gs.gridSize} — ` +
+      `Alignez ${this.gs.winningStreak} pions pour gagner +${this.alignmentReward} PV !`;
   }
 
   prochainNiveau(): void {
     this.playSound('levelup');
     this.gs.nextLevel();
     this.resetjeu();
-    this.snackBar.open(`🚀 Niveau Supérieur ! Grille ${this.gs.gridSize}x${this.gs.gridSize} !`, "Sensationnel !", { duration: 3000 });
 
-    this.voice.speak(
-      `Niveau supérieur ! Nouvelle grille ${this.gs.gridSize} sur ${this.gs.gridSize}. Bonne chance !`
+    this.snackBar.open(
+      `🚀 Niveau supérieur ! Grille ${this.gs.gridSize}×${this.gs.gridSize} !`,
+      'Sensationnel !',
+      { duration: 3000 }
     );
   }
 
   precedentNiveau(): void {
     if (!this.yaprecedent()) return;
+
     this.playSound('levelup');
     this.gs.previousLevel();
     this.resetjeu();
-    this.snackBar.open(`⏪ Niveau Précédent ! Grille ${this.gs.gridSize}x${this.gs.gridSize} !`, "Retour !", { duration: 2500 });
 
-    this.voice.speak(
-      `Retour au niveau précédent. Grille ${this.gs.gridSize} sur ${this.gs.gridSize}.`
+    this.snackBar.open(
+      `⏪ Niveau précédent ! Grille ${this.gs.gridSize}×${this.gs.gridSize} !`,
+      'Retour !',
+      { duration: 2500 }
     );
   }
 
@@ -214,23 +229,20 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     return this.gs.gridSize > 3;
   }
 
-  /**
-   * Action au clic de l'utilisateur sur une case
-   */
+  /* ═══════════════════════════════════════════════════════════════════
+     JOUEUR — Clic sur une case
+     ═══════════════════════════════════════════════════════════════════ */
+
   playerClick(i: number): void {
     if (this.lock || !this.gs.blocks[i].free || this.gs.turn !== 0) return;
 
     this.executeMove(i);
   }
 
-  /**
-   * Exécute le coup joué (Joueur ou Bot)
-   */
   private executeMove(index: number): void {
     const currentTurn = this.gs.turn;
     const scoreBefore = this.gs.players[currentTurn].score;
 
-    // Execution centralisée dans le service
     const played = this.gs.playMove(index);
     if (!played) return;
 
@@ -240,7 +252,6 @@ export class TictactoeComponent implements OnInit, OnDestroy {
       this.playSound('bot');
     }
 
-    // Détection si de nouveaux alignements ont été formés
     const scoreAfter = this.gs.players[currentTurn].score;
     const newAlignments = scoreAfter - scoreBefore;
 
@@ -248,14 +259,12 @@ export class TictactoeComponent implements OnInit, OnDestroy {
       this.handleAlignment(currentTurn, newAlignments);
     }
 
-    // ✅ Vérification stricte : Fin de partie UNIQUEMENT si la grille est totalement pleine
     if (this.gs.isGameOver) {
-      const timerId = window.setTimeout(() => this.handleDraw(), 400);
+      const timerId = setTimeout(() => this.handleDraw(), END_GAME_DELAY_MS);
       this.timeouts.push(timerId);
       return;
     }
 
-    // Passage au tour suivant
     this.changeTurn();
   }
 
@@ -264,17 +273,17 @@ export class TictactoeComponent implements OnInit, OnDestroy {
 
     if (current === 1) {
       this.gs.isBotThinking = true;
-      this.messageLyko = "🔮 Lyko Le Sage prépare son sortilège...";
-      this.lock = true; // Empêche le clic joueur pendant la réflexion du bot
+      this.messageLyko = '🔮 Lykö Le Sage prépare son sortilège…';
+      this.lock = true;
 
-      const timerId = window.setTimeout(() => {
+      const timerId = setTimeout(() => {
         this.gs.isBotThinking = false;
         this.botTurn();
-      }, 700);
+      }, BOT_THINK_DELAY_MS);
       this.timeouts.push(timerId);
     } else {
       this.lock = false;
-      this.messageLyko = "🎯 À votre tour de jouer.";
+      this.messageLyko = '🎯 À votre tour de jouer.';
     }
   }
 
@@ -292,11 +301,13 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Un ou plusieurs alignements détectés (+10 PV par alignement) */
-  private handleAlignment(playerTurn: number, count: number): void {
-    const gain = count * this.ALIGNMENT_REWARD;
+  /* ═══════════════════════════════════════════════════════════════════
+     ALIGNEMENTS & FIN DE PARTIE
+     ═══════════════════════════════════════════════════════════════════ */
 
-    // Seul le Joueur (index 0) gagne des PV cumulables dans la partie globale
+  private handleAlignment(playerTurn: number, count: number): void {
+    const gain = count * this.alignmentReward;
+
     if (playerTurn === 0) {
       this.pointdevies += gain;
       this.lavie = this.pointdevies;
@@ -304,18 +315,25 @@ export class TictactoeComponent implements OnInit, OnDestroy {
 
     this.playSound('win');
 
-    const joueur = playerTurn === 0 ? "🎸 VOUS" : "🐵 LYKÖ LE SAGE";
+    const joueur = playerTurn === 0 ? '🎸 VOUS' : '🐵 LYKÖ LE SAGE';
     this.messageLyko = `✨ ${count} alignement(s) de 3 par ${joueur} ! +${gain} PV !`;
 
-    this.snackBar.open(`🎯 ${count} alignement(s) ${joueur} : +${gain} PV`, "Super !", { duration: 2000 });
+    this.snackBar.open(
+      `🎯 ${count} alignement(s) ${joueur} : +${gain} PV`,
+      'Super !',
+      { duration: 2000 }
+    );
 
-    const timerId = window.setTimeout(() => this.gs.clearWinningHighlight(), 1200);
+    const timerId = setTimeout(
+      () => this.gs.clearWinningHighlight(),
+      WINNING_HIGHLIGHT_MS
+    );
     this.timeouts.push(timerId);
   }
 
-  /** Fin de manche : grille pleine. On compare les scores d'alignements. */
   private handleDraw(): void {
     if (this.lock && this.rejouer) return;
+
     this.lock = true;
     this.rejouer = true;
     this.gs.draw += 1;
@@ -328,45 +346,51 @@ export class TictactoeComponent implements OnInit, OnDestroy {
       this.triggerConfetti();
       this.showVictoryOverlay = true;
       this.messageLyko = `🏆 Grille terminée ! Vous remportez le duel (${scoreVous} - ${scoreLyko}) !`;
-      this.snackBar.open(`🏆 VICTOIRE ${scoreVous} - ${scoreLyko} !`, "Bravo !", { duration: 3500 });
-      this.voice.speak(
-        `Victoire ! Tu remportes le duel ${scoreVous} à ${scoreLyko}. Bravo, offolandais !`
+      this.snackBar.open(
+        `🏆 VICTOIRE ${scoreVous} - ${scoreLyko} !`,
+        'Bravo !',
+        { duration: 3500 }
       );
     } else if (scoreLyko > scoreVous) {
       this.playSound('lose');
       this.showDefeatOverlay = true;
       this.messageLyko = `💀 Grille terminée ! Lykö le Sage l'emporte (${scoreLyko} - ${scoreVous}).`;
-      this.snackBar.open(`💀 DÉFAITE ${scoreLyko} - ${scoreVous}`, "Revanche !", { duration: 3000 });
-      this.voice.speak(
-        `Défaite. Lykö le Sage l'emporte ${scoreLyko} à ${scoreVous}. Prends ta revanche !`
+      this.snackBar.open(
+        `💀 DÉFAITE ${scoreLyko} - ${scoreVous}`,
+        'Revanche !',
+        { duration: 3000 }
       );
     } else {
       this.playSound('draw');
       this.messageLyko = `⚖️ Grille terminée ! Égalité parfaite (${scoreVous} - ${scoreLyko}).`;
-      this.snackBar.open(`⚖️ MATCH NUL ${scoreVous} - ${scoreLyko}`, "Égalité", { duration: 3000 });
-      this.voice.speak(
-        `Match nul, ${scoreVous} partout. Égalité parfaite !`
+      this.snackBar.open(
+        `⚖️ MATCH NUL ${scoreVous} - ${scoreLyko}`,
+        'Égalité',
+        { duration: 3000 }
       );
     }
   }
 
   private triggerConfetti(): void {
     this.showConfetti = true;
-    this.particles = Array.from({ length: 60 }, (_, i) => i);
-    const timerId = window.setTimeout(() => {
+    this.particles = Array.from({ length: CONFETTI_COUNT }, (_, i) => i);
+
+    const timerId = setTimeout(() => {
       this.showConfetti = false;
       this.showVictoryOverlay = false;
-    }, 4500);
+    }, CONFETTI_DURATION_MS);
+
     this.timeouts.push(timerId);
   }
 
-  incrementervie(): void {
-    this.pointdevies += 500 * (this.gs.gridSize - 2);
-    this.lavie = this.pointdevies;
-  }
+  /* ═══════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════════ */
 
   goToPlay(lavie: number, lebonus: number, letape: string): void {
-    this.router.navigate(['/play'], { queryParams: { vie: lavie, bonus: lebonus, etape: letape } });
+    void this.router.navigate(['/play'], {
+      queryParams: { vie: lavie, bonus: lebonus, etape: letape },
+    });
   }
 
   onrecommencer(): void {

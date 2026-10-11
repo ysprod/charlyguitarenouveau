@@ -7,21 +7,39 @@
          ═══════════════════════════════════════════════════════ -->
     <header class="hero-header">
       <div class="hero-badge">
-        <span class="badge-dot"></span>
-      <span>APPRENDRE EN JOUANT</span>
+        <span class="badge-dot" aria-hidden="true"></span>
+        <span>APPRENDRE EN JOUANT</span>
       </div>
     </header>
 
     <!-- ═══════════════════════════════════════════════════════
+         TOAST (succès / erreur)
+         ═══════════════════════════════════════════════════════ -->
+    @if (toastMessage()) {
+      <div
+        class="toast-banner"
+        [class.toast-success]="toastType() === 'success'"
+        [class.toast-error]="toastType() === 'error'"
+        role="status"
+      >
+        {{ toastMessage() }}
+      </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════
          FILTRES
          ═══════════════════════════════════════════════════════ -->
-    <div class="filter-bar">
+    <div class="filter-bar" role="tablist" aria-label="Filtrer les jeux">
       @for (f of filters; track f.id) {
-        <button class="filter-chip"
-                [class.active]="selectedFilter() === f.id"
-                (click)="selectFilter(f.id)"
-                [attr.aria-label]="'Filtrer : ' + f.label">
-          <span class="chip-icon">{{ f.icon }}</span>
+        <button
+          type="button"
+          class="filter-chip"
+          [class.active]="selectedFilter() === f.id"
+          (click)="selectFilter(f.id)"
+          [attr.aria-pressed]="selectedFilter() === f.id"
+          [attr.aria-label]="'Filtrer : ' + f.label"
+        >
+          <span class="chip-icon" aria-hidden="true">{{ f.icon }}</span>
           <span class="chip-label">{{ f.label }}</span>
         </button>
       }
@@ -30,272 +48,56 @@
     <!-- ═══════════════════════════════════════════════════════
          GRILLE DE JEUX
          ═══════════════════════════════════════════════════════ -->
-    <section class="games-selector-section">
-      <div class="game-buttons-grid">
-    <!-- 🐵 LYKO DUEL -->
-        <button type="button"
-                class="btn-game btn-lyko btn-duo"
-                data-category="multi"
-                (click)="onSelectLykoduo()"
-                aria-label="Lancer Lyko le Sage">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🐵</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-new">DUEL</span>
-            <span class="btn-text">LYKO LE SAGE</span>
-            <span class="btn-sub">Jouez avec vos amis ou contre OFFOWA</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </button>
+    <section class="games-selector-section" aria-label="Liste des jeux">
 
-        <!-- 🔮 L'ORACLE -->
-        <button type="button"
-                class="btn-game btn-oracle"
-                data-category="quiz"
-                (click)="onSelectOracle()"
-                aria-label="Consulter L'Oracle">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🔮</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-oracle">MATRIX</span>
-            <span class="btn-text">L'ORACLE</span>
-            <span class="btn-sub">Réponds à la question</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </button>    
-
-        <!-- 🎸 GUITARE LIVE -->
-        <a [routerLink]="['/guitar-live']"
-           class="btn-game btn-guitarlive"
-           data-category="live"
-           title="Guitare Live - Jouer pour le plaisir"
-           aria-label="Lancer Guitare Live">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🎸</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-live">LIVE</span>
-            <span class="btn-text">GUITARE LIVE</span>
-            <span class="btn-sub">Joue pour le plaisir</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </a>
-
-        <!-- 🎸 CHARLY GUITARE HERO -->
-        <a [routerLink]="['/fretboard']"
-           class="btn-game btn-fretboard"
-           data-category="music"
-           title="Chasse au Fretboard"
-           aria-label="Lancer Charly Guitare Hero">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🎸</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-speed">RAPIDITÉ</span>
-            <span class="btn-text">CHARLY GUITARE HERO</span>
-            <span class="btn-sub">Chasse au fretboard</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </a>
-
-        <!-- 🪵 MÉTHODE CHARLY GUITARE -->
-        <a [routerLink]="['/memory']"
-           class="btn-game btn-molkky"
-           data-category="learning"
-           title="Mölkky des Accords"
-           aria-label="Lancer la Méthode Charly Guitare">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🪵</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-new">NOUVEAU</span>
-            <span class="btn-text">METHODE CHARLY GUITARE</span>
-            <span class="btn-sub">Essentiel des accords</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </a>
-
-        <!-- 🔊 QUIZ ACOUSTIQUE -->
-        <a [routerLink]="['/acoustic']"
-           class="btn-game btn-quiz"
-           data-category="quiz"
-           title="Quiz Acoustique & Lutherie"
-           aria-label="Lancer le Quiz Acoustique">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🔊</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-quiz">QUIZ</span>
-            <span class="btn-text">QUIZ ACOUSTIQUE</span>
-            <span class="btn-sub">Physique & lutherie</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </a>
-
-        <!-- 🎼 SIMULATEUR -->
-        <a [routerLink]="['/chord']"
-           class="btn-game btn-simulator"
-           data-category="tools"
-           title="Décodeur & Simulateur de Grille"
-           aria-label="Lancer le Simulateur">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🎼</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-tool">OUTIL</span>
-            <span class="btn-text">EXO SIMULATION</span>
-            <span class="btn-sub">Décodeur & grille</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </a>
-
-        <!-- ⏱️ DÉFI MÉTRONOME -->
-        <a [routerLink]="['/metronome']"
-           class="btn-game btn-metronome"
-           data-category="music"
-           title="Défi Métronome"
-           aria-label="Lancer le Défi Métronome">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">⏱️</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-metro">DÉFI</span>
-            <span class="btn-text">DÉFI MÉTRONOME</span>
-            <span class="btn-sub">Precision groove</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </a>
-
-        <!-- 🃏 BOUBOUNI -->
-        <button type="button"
-                class="btn-game btn-boubouni"
-                data-category="multi"
-                (click)="onSelectBoubouni()"
-                aria-label="Lancer Boubouni">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🃏</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-card">CARTES</span>
-            <span class="btn-text">BOUBOUNI</span>
-            <span class="btn-sub">Jeu de cartes endiablé</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </button>
-
-        <!-- ⏳ DÉ DE KRONOS -->
-        <button type="button"
-                class="btn-game btn-kronos"
-                data-category="multi"
-                (click)="onSelectDeDeKronos()"
-                aria-label="Lancer le Dé de Kronos">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">⏳</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-time">TEMPS</span>
-            <span class="btn-text">DÉ DE KRONOS</span>
-            <span class="btn-sub">Maître du temps</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </button>
-
-        <!-- 🎹 PIANO HERO -->
-        <button type="button"
-                class="btn-game btn-piano"
-                data-category="tools"
-                (click)="onSelectPiano()"
-                aria-label="Lancer le Piano Hero">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🎹</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-tool">OUTIL</span>
-            <span class="btn-text">JEU DE PIANO</span>
-            <span class="btn-sub">Piano Hero</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </button>
-
-        <!-- 🎹 PIANO VIRTUEL -->
-        <button type="button"
-                class="btn-game btn-pianovirtuel"
-                data-category="tools"
-                (click)="onSelectPianovirtuel()"
-                aria-label="Lancer le Piano Virtuel">
-          <span class="btn-glow"></span>
-          <span class="btn-border-anim"></span>
-          <span class="btn-icon">🎹</span>
-          <span class="btn-content">
-            <span class="btn-tag tag-tool">OUTIL</span>
-            <span class="btn-text">APPRENDRE LE PIANO</span>
-            <span class="btn-sub">Piano Virtuel</span>
-          </span>
-          <span class="btn-arrow">→</span>
-          <span class="corner corner-tl"></span>
-          <span class="corner corner-tr"></span>
-          <span class="corner corner-bl"></span>
-          <span class="corner corner-br"></span>
-        </button>
-
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════
-           EMPTY STATE
-           ═══════════════════════════════════════════════════════ -->
       @if (visibleGameCount() === 0) {
         <div class="empty-state">
-          <span class="empty-icon">🎸</span>
+          <span class="empty-icon" aria-hidden="true">🎸</span>
           <p>Aucun jeu dans cette catégorie pour le moment...</p>
+        </div>
+      } @else {
+        <div class="game-buttons-grid">
+          @for (game of visibleGames(); track game.id) {
+            <button
+              type="button"
+              class="btn-game"
+              [ngClass]="game.btnClass"
+              (click)="tryLaunchGame(game)"
+              [attr.aria-label]="'Lancer ' + game.title"
+            >
+              <span class="btn-glow" aria-hidden="true"></span>
+              <span class="btn-border-anim" aria-hidden="true"></span>
+              <span class="btn-icon" aria-hidden="true">{{ game.icon }}</span>
+              <span class="btn-content">
+                <span class="btn-tag" [ngClass]="game.tagClass">{{ game.tag }}</span>
+                <span class="btn-text">{{ game.title }}</span>
+                <span class="btn-sub">{{ game.subtitle }}</span>
+              </span>
+              <span class="btn-arrow" aria-hidden="true">→</span>
+              <span class="corner corner-tl" aria-hidden="true"></span>
+              <span class="corner corner-tr" aria-hidden="true"></span>
+              <span class="corner corner-bl" aria-hidden="true"></span>
+              <span class="corner corner-br" aria-hidden="true"></span>
+            </button>
+          }
         </div>
       }
     </section>
 
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       🎁 MODALE CODE PROMO — Composant réutilisable
+       ═══════════════════════════════════════════════════════ -->
+  @if (showPromoModal()) {
+    <app-promo-modal
+      [isSaving]="isSavingPromo()"
+      [errorMessage]="promoError()"
+      title="Code Promo obligatoire"
+      message="Pour accéder aux jeux, saisissez un code promo valide, puis cliquez sur Continuer."
+      (codeSubmitted)="onPromoCodeSubmitted($event)"
+      (closed)="closePromoModal()"
+    />
+  }
+
 </div>

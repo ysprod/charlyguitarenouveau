@@ -1,7 +1,7 @@
 <div class="privacy-container">
   <header class="privacy-header">
     <div class="header-content">
-      <span class="badge">Engagement & Transparence</span>
+      <span class="badge">Engagement &amp; Transparence</span>
       <h1>Politique de Confidentialité</h1>
       <p class="subtitle">
         Chez <strong>{{ siteName }}</strong>, nous préférons consacrer notre énergie à la musique plutôt qu'à revendre vos données. Voici exactement comment nous protégeons vos informations.
@@ -13,7 +13,7 @@
   <main class="privacy-body">
     <!-- Section 1 -->
     <section class="privacy-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -28,7 +28,7 @@
 
     <!-- Section 2 -->
     <section class="privacy-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <path d="M12 16v-4M12 8h.01"/>
@@ -48,7 +48,7 @@
 
     <!-- Section 3 -->
     <section class="privacy-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
           <polyline points="22 4 12 14.01 9 11"/>
@@ -71,7 +71,7 @@
 
     <!-- Section 4 -->
     <section class="privacy-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0110 0v4"/>
@@ -87,7 +87,7 @@
 
     <!-- Section 5 -->
     <section class="privacy-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
@@ -102,7 +102,7 @@
           <li><strong>Droit de portabilité :</strong> Vous pouvez demander une copie de vos données dans un format structuré.</li>
         </ul>
         <p>
-          Pour exercer ces droits, contactez-nous directement à : 
+          Pour exercer ces droits, contactez-nous directement à :
           <a [href]="'mailto:' + contactEmail" class="email-link">{{ contactEmail }}</a>.
         </p>
       </div>
@@ -110,7 +110,7 @@
 
     <!-- Section 6 -->
     <section class="privacy-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <line x1="2" y1="12" x2="22" y2="12"/>
@@ -118,16 +118,11 @@
         </svg>
       </div>
       <div class="section-content">
-        <h2>6. Cookies & Traçage</h2>
+        <h2>6. Cookies &amp; Traçage</h2>
         <p>
           Nous utilisons uniquement des cookies dits <em>essentiels</em> servant à maintenir votre session ouverte et à mémoriser vos préférences. Nous n'utilisons aucun cookie de ciblage publicitaire tiers.
         </p>
       </div>
     </section>
-  </main>
-
-  <footer class="privacy-footer">
-    <p>Des questions concernant vos données ?</p>
-    <a [href]="'mailto:' + contactEmail" class="btn-contact">Écrire à l'équipe Charly Guitare</a>
-  </footer>
+  </main> 
 </div>

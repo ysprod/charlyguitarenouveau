@@ -8,81 +8,110 @@
   </header>
 
   <main class="contact-card">
+
     <!-- Message si l'utilisateur n'est pas connecté -->
-    <div *ngIf="!currentUser && !authLoading" class="alert alert-error">
-      <div>
-        <strong>Connexion requise</strong>
-        <p>Vous devez être connecté à votre compte pour envoyer un message à l'équipe.</p>
+    @if (!currentUser && !authLoading) {
+      <div class="alert alert-error" role="alert">
+        <div>
+          <strong>Connexion requise</strong>
+          <p>Vous devez être connecté à votre compte pour envoyer un message à l'équipe.</p>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Message de succès -->
-    <div *ngIf="submitSuccess" class="alert alert-success">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11"/>
-      </svg>
-      <div>
-        <strong>Message envoyé avec succès !</strong>
-        <p>Merci pour votre message. L'équipe Charly Guitare vous répondra directement sur votre compte.</p>
+    @if (submitSuccess) {
+      <div class="alert alert-success" role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11"/>
+        </svg>
+        <div>
+          <strong>Message envoyé avec succès !</strong>
+          <p>Merci pour votre message. L'équipe Charly Guitare vous répondra directement sur votre compte.</p>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Message d'erreur -->
-    <div *ngIf="submitError" class="alert alert-error">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      <div>
-        <strong>Erreur d'envoi</strong>
-        <p>{{ errorMessage }}</p>
-      </div>
-    </div>
-
-    <!-- Formulaire (masqué ou désactivé si non connecté) -->
-    <form *ngIf="currentUser" [formGroup]="contactForm" (ngSubmit)="onSubmit()" novalidate>
-      
-      <!-- Sujet -->
-      <div class="form-group">
-        <label for="subject">Sujet</label>
-        <input
-          type="text"
-          id="subject"
-          formControlName="subject"
-          placeholder="Ex: Question sur le cours de Coupé-Décalé"
-          [class.invalid]="f.subject.touched && f.subject.invalid"
-        />
-        <div *ngIf="f.subject.touched && f.subject.invalid" class="error-text">
-          <span *ngIf="f.subject.errors?.required">Le sujet est obligatoire.</span>
-          <span *ngIf="f.subject.errors?.minlength">Au moins 3 caractères requis.</span>
+    @if (submitError) {
+      <div class="alert alert-error" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div>
+          <strong>Erreur d'envoi</strong>
+          <p>{{ errorMessage }}</p>
         </div>
       </div>
+    }
 
-      <!-- Message -->
-      <div class="form-group">
-        <label for="message">Message</label>
-        <textarea
-          id="message"
-          rows="5"
-          formControlName="message"
-          placeholder="Écrivez votre message ici..."
-          [class.invalid]="f.message.touched && f.message.invalid"
-        ></textarea>
-        <div *ngIf="f.message.touched && f.message.invalid" class="error-text">
-          <span *ngIf="f.message.errors?.required">Le message ne peut pas être vide.</span>
-          <span *ngIf="f.message.errors?.minlength">Au moins 10 caractères requis.</span>
+    <!-- Formulaire (masqué si non connecté) -->
+    @if (currentUser) {
+      <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Sujet -->
+        <div class="form-group">
+          <label for="subject">Sujet</label>
+          <input
+            type="text"
+            id="subject"
+            formControlName="subject"
+            placeholder="Ex: Question sur le cours de Coupé-Décalé"
+            [class.invalid]="f.subject.touched && f.subject.invalid"
+          />
+          @if (f.subject.touched && f.subject.invalid) {
+            <div class="error-text">
+              @if (f.subject.errors?.['required']) {
+                <span>Le sujet est obligatoire.</span>
+              }
+              @if (f.subject.errors?.['minlength']) {
+                <span>Au moins 3 caractères requis.</span>
+              }
+            </div>
+          }
         </div>
-      </div>
 
-      <!-- Bouton de soumission -->
-      <button type="submit" class="btn-submit" [disabled]="isSubmitting || !currentUser">
-        <span *ngIf="!isSubmitting">Envoyer le message</span>
-        <span *ngIf="isSubmitting" class="spinner-container">
-          <span class="spinner"></span> Envoi en cours...
-        </span>
-      </button>
-    </form>
+        <!-- Message -->
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea
+            id="message"
+            rows="5"
+            formControlName="message"
+            placeholder="Écrivez votre message ici..."
+            [class.invalid]="f.message.touched && f.message.invalid"
+          ></textarea>
+          @if (f.message.touched && f.message.invalid) {
+            <div class="error-text">
+              @if (f.message.errors?.['required']) {
+                <span>Le message ne peut pas être vide.</span>
+              }
+              @if (f.message.errors?.['minlength']) {
+                <span>Au moins 10 caractères requis.</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Bouton de soumission -->
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isSubmitting || !currentUser"
+        >
+          @if (!isSubmitting) {
+            <span>Envoyer le message</span>
+          } @else {
+            <span class="spinner-container">
+              <span class="spinner" aria-hidden="true"></span>
+              Envoi en cours...
+            </span>
+          }
+        </button>
+      </form>
+    }
   </main>
 </div>

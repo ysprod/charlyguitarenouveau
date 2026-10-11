@@ -1,0 +1,293 @@
+/* ═════════════════════════════════════════════════════════════════════
+   BOUTON + MODALE D'INSTALLATION
+   ═════════════════════════════════════════════════════════════════════ */
+
+:host {
+  --warning: #ea580c;
+  --warning-hover: #c2410c;
+  --warning-soft: rgba(234, 88, 12, .08);
+  --warning-glow: rgba(234, 88, 12, .35);
+
+  --text-dark: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+
+  --bg-card: #ffffff;
+  --bg-soft: #f8fafc;
+
+  --border-subtle: rgba(15, 23, 42, .08);
+  --border-medium: rgba(15, 23, 42, .14);
+
+  display: block;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   BOUTON « INSTALLER L'APP »
+   ═════════════════════════════════════════════════════════════════════ */
+.btn-install-app {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  padding: .85rem 1.35rem;
+  background: var(--warning);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-size: .9rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 8px 22px -8px var(--warning-glow);
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
+
+  &:hover {
+    background: var(--warning-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -8px var(--warning-glow);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--warning);
+    outline-offset: 3px;
+  }
+
+  .btn-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   MODALE
+   ═════════════════════════════════════════════════════════════════════ */
+.install-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, .55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn .25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.install-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  padding: 2rem 2rem 1.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  box-shadow:
+    0 25px 60px rgba(15, 23, 42, .25),
+    0 0 0 1px rgba(255, 255, 255, .6);
+  animation: slideIn .35s cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Croix de fermeture */
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+
+  &:hover {
+    background: var(--bg-soft);
+    color: var(--text-body);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--warning);
+    outline-offset: 2px;
+  }
+
+  svg { width: 18px; height: 18px; }
+}
+
+/* Titre et description */
+.modal-title {
+  margin: 0 0 .75rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  letter-spacing: -.02em;
+}
+
+.modal-description {
+  margin: 0 0 1.75rem;
+  font-size: .95rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* Liste des étapes */
+.modal-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-radius: 50%;
+  font-size: .95rem;
+  font-weight: 800;
+}
+
+.step-body {
+  flex: 1;
+  min-width: 0;
+  padding-top: .35rem;
+}
+
+.step-text {
+  margin: 0;
+  font-size: .95rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+.step-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  color: var(--text-body);
+  vertical-align: middle;
+  margin: 0 .15rem;
+}
+
+/* Bouton "Compris" */
+.btn-understand {
+  display: block;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: var(--warning);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 800;
+  font-family: inherit;
+  letter-spacing: .02em;
+  cursor: pointer;
+  box-shadow: 0 10px 25px -10px var(--warning-glow);
+  transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+
+  &:hover {
+    background: var(--warning-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px -10px var(--warning-glow);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--warning);
+    outline-offset: 3px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .install-modal-card {
+    padding: 1.5rem 1.25rem 1.25rem;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
+  }
+
+  .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: .85rem;
+  }
+
+  .step-text {
+    font-size: .88rem;
+  }
+
+  .btn-understand {
+    font-size: .95rem;
+  }
+
+  .btn-install-app {
+    width: 100%;
+    justify-content: center;
+    padding: .75rem 1.1rem;
+    font-size: .85rem;
+
+    span { display: none; }
+
+    .btn-icon { margin: 0; }
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

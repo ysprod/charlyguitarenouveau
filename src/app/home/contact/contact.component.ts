@@ -30,9 +30,7 @@ import {
 } from '@angular/common';
 
 import {
-  Observable,
-  Subject,
-  firstValueFrom
+  Subject
 } from 'rxjs';
 
 import {
@@ -63,7 +61,7 @@ interface MessageData {
     ReactiveFormsModule
   ],
   templateUrl: './contact.component.html',
-  styleUrls: ['./contact.component.css']
+  styleUrls: ['./contact.component.scss'] // ⚠️ renommé de .css en .scss
 })
 export class ContactComponent implements OnInit, OnDestroy {
 

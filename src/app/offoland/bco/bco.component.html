@@ -1,21 +1,21 @@
 <div class="bco-page">
 
   <!-- ==================== HEADER ==================== -->
-  <header class="bco-header" @fadeInUp>
+  <header class="bco-header">
     <div class="header-left">
-      <div class="bco-emblem">🏦</div>
+      <div class="bco-emblem" aria-hidden="true">🏦</div>
       <div class="header-titles">
         <h1>Banque Centrale d'Offoland</h1>
         <p class="header-sub">
-          <span class="live-dot"></span>
+          <span class="live-dot" aria-hidden="true"></span>
           Régulateur monétaire
         </p>
       </div>
     </div>
 
     <div class="header-right">
-      <div class="status-chip" [class.active]="isEmitting()">
-        <span class="status-dot"></span>
+      <div class="status-chip" [class.active]="isEmitting()" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
         {{ isEmitting() ? 'Émission en cours…' : 'Système stable' }}
       </div>
       <div class="supply-mini">
@@ -26,42 +26,45 @@
   </header>
 
   <!-- ==================== KPIs ==================== -->
-  <section class="kpi-section" @staggerKpis>
-    <div class="kpi-card"
-         *ngFor="let kpi of kpis(); trackBy: trackByKpi; let i = index"
-         [style.--kpi-color]="kpi.color"
-         [class.active]="activeKpi() === kpi.id"
-         (mouseenter)="onKpiHover(kpi.id)"
-         (mouseleave)="onKpiHover(null)">
+  <section class="kpi-section" aria-label="Indicateurs clés">
+    @for (kpi of kpis(); track kpi.id; let i = $index) {
+      <div
+        class="kpi-card"
+        [class.active]="activeKpi() === kpi.id"
+        [style.--kpi-color]="kpi.color"
+        [style.animation-delay.ms]="i * 80"
+        (mouseenter)="onKpiHover(kpi.id)"
+        (mouseleave)="onKpiHover(null)"
+      >
+        <div class="kpi-header">
+          <span class="kpi-label">{{ kpi.label }}</span>
+          <span class="kpi-trend" [class]="trendClass(kpi.trend)" aria-live="polite">
+            {{ kpi.trend > 0 ? '▲' : kpi.trend < 0 ? '▼' : '●' }}
+            {{ formatTrend(kpi.trend) }}
+          </span>
+        </div>
 
-      <div class="kpi-header">
-        <span class="kpi-label">{{ kpi.label }}</span>
-        <span class="kpi-trend" [class]="trendClass(kpi.trend)">
-          {{ kpi.trend > 0 ? '▲' : kpi.trend < 0 ? '▼' : '●' }}
-          {{ formatTrend(kpi.trend) }}
-        </span>
-      </div>
+        <div class="kpi-value">
+          <span class="kpi-number">{{ formatNumber(kpi.value) }}</span>
+          <span class="kpi-unit">{{ kpi.unit }}</span>
+        </div>
 
-      <div class="kpi-value">
-        <span class="kpi-number">{{ formatNumber(kpi.value) }}</span>
-        <span class="kpi-unit">{{ kpi.unit }}</span>
+        <div class="kpi-sparkline" aria-hidden="true">
+          <app-sparkline
+            [data]="kpi.history"
+            [color]="kpi.color"
+            [width]="240"
+            [height]="50"
+          />
+        </div>
       </div>
-
-      <div class="kpi-sparkline">
-        <app-sparkline
-          [data]="kpi.history"
-          [color]="kpi.color"
-          [width]="240"
-          [height]="50">
-        </app-sparkline>
-      </div>
-    </div>
+    }
   </section>
 
   <!-- ==================== JUGES DE SANTÉ ==================== -->
-  <section class="gauges-section" @fadeInUp>
+  <section class="gauges-section" aria-labelledby="gauges-title">
     <div class="section-title-row">
-      <h2>Indicateurs de santé monétaire</h2>
+      <h2 id="gauges-title">Indicateurs de santé monétaire</h2>
       <span class="section-hint">Évaluation temps réel de l'équilibre d'Offoland</span>
     </div>
 
@@ -71,9 +74,9 @@
           [value]="stabilityScore()"
           label="Stabilité économique"
           unit="%"
-          colorFrom="#00FF88"
-          colorTo="#00D4FF">
-        </app-gauge>
+          colorFrom="#22c55e"
+          colorTo="#0ea5e9"
+        />
         <p class="gauge-desc">
           Combine l'inflation et le ratio de réserves pour évaluer la solidité du système.
         </p>
@@ -84,9 +87,9 @@
           [value]="liquidityScore()"
           label="Liquidité en circulation"
           unit="%"
-          colorFrom="#00D4FF"
-          colorTo="#B266FF">
-        </app-gauge>
+          colorFrom="#0ea5e9"
+          colorTo="#8b5cf6"
+        />
         <p class="gauge-desc">
           Part de la masse monétaire activement utilisée par les offolandais.
         </p>
@@ -97,9 +100,9 @@
           [value]="reserveRatio()"
           label="Ratio de réserves"
           unit="%"
-          colorFrom="#FFD700"
-          colorTo="#FF8C00">
-        </app-gauge>
+          colorFrom="#f59e0b"
+          colorTo="#ea580c"
+        />
         <p class="gauge-desc">
           Couverture des OFO émis par les réserves virtuelles de la BCO.
         </p>
@@ -108,55 +111,59 @@
   </section>
 
   <!-- ==================== ACTIONS BCO ==================== -->
-  <section class="actions-section" @staggerActions>
+  <section class="actions-section" aria-labelledby="actions-title">
     <div class="section-title-row">
-      <h2>Politique monétaire</h2>
+      <h2 id="actions-title">Politique monétaire</h2>
       <span class="section-hint">Chaque action modifie l'équilibre des Sept Dimensions</span>
     </div>
 
     <div class="actions-grid">
-      <button class="action-card"
-              *ngFor="let action of actions; trackBy: trackByAction; let i = index"
-              [style.--action-color]="action.color"
-              [class.triggered]="selectedAction() === action.id"
-              (click)="triggerAction(action)"
-              type="button">
-
-        <div class="action-icon">{{ action.icon }}</div>
-        <div class="action-body">
-          <h3>{{ action.label }}</h3>
-          <p>{{ action.description }}</p>
-          <div class="action-impact">
-            <span class="impact-label">Impact</span>
-            <span class="impact-value">{{ action.impact }}</span>
+      @for (action of actions; track action.id; let i = $index) {
+        <button
+          type="button"
+          class="action-card"
+          [class]="'variant-' + action.variant"
+          [class.triggered]="selectedAction() === action.id"
+          [style.animation-delay.ms]="i * 60"
+          (click)="triggerAction(action)"
+          [attr.aria-label]="action.label + ' — ' + action.description"
+        >
+          <div class="action-icon" aria-hidden="true">{{ action.icon }}</div>
+          <div class="action-body">
+            <h3>{{ action.label }}</h3>
+            <p>{{ action.description }}</p>
+            <div class="action-impact">
+              <span class="impact-label">Impact</span>
+              <span class="impact-value">{{ action.impact }}</span>
+            </div>
           </div>
-        </div>
-        <div class="action-arrow">→</div>
-      </button>
+          <div class="action-arrow" aria-hidden="true">→</div>
+        </button>
+      }
     </div>
   </section>
 
   <!-- ==================== TAUX DE CHANGE ==================== -->
-  <section class="rates-section" @fadeInUp>
+  <section class="rates-section" aria-labelledby="rates-title">
     <div class="section-title-row">
-      <h2>Taux de change officiels</h2>
+      <h2 id="rates-title">Taux de change officiels</h2>
       <span class="section-hint">Valeur fixée par la BCO face aux monnaies réelles</span>
     </div>
 
     <div class="rates-grid">
-      <div class="rate-card"
-           *ngFor="let r of exchangeRates(); trackBy: trackByCode"
-           [style.--rate-color]="r.color">
-        <div class="rate-flag">{{ r.flag }}</div>
-        <div class="rate-info">
-          <div class="rate-code">{{ r.code }}</div>
-          <div class="rate-name">{{ r.name }}</div>
+      @for (r of exchangeRates(); track r.code) {
+        <div class="rate-card">
+          <div class="rate-flag" aria-hidden="true">{{ r.flag }}</div>
+          <div class="rate-info">
+            <div class="rate-code">{{ r.code }}</div>
+            <div class="rate-name">{{ r.name }}</div>
+          </div>
+          <div class="rate-value">
+            <span class="rate-number">{{ formatRate(r.rate) }}</span>
+            <span class="rate-unit">OFO</span>
+          </div>
         </div>
-        <div class="rate-value">
-          <span class="rate-number">{{ formatRate(r.rate) }}</span>
-          <span class="rate-unit">OFO</span>
-        </div>
-      </div>
+      }
     </div>
 
     <div class="rate-formula">
@@ -166,35 +173,35 @@
   </section>
 
   <!-- ==================== ÉVÉNEMENTS RÉCENTS ==================== -->
-  <section class="events-section" @fadeInUp>
+  <section class="events-section" aria-labelledby="events-title">
     <div class="section-title-row">
-      <h2>Journal monétaire</h2>
+      <h2 id="events-title">Journal monétaire</h2>
       <span class="section-hint">10 dernières opérations de la BCO</span>
     </div>
 
-    <div class="events-list">
-      <div class="event-row"
-           *ngFor="let event of events(); trackBy: trackByEvent"
-           @eventSlide
-           [style.--event-color]="eventColor(event.type)">
+    <div class="events-list" role="region" aria-live="polite">
+      @for (event of events(); track event.id) {
+        <div class="event-row" [class]="'variant-' + eventVariant(event.type)">
+          <div class="event-icon" aria-hidden="true">{{ eventIcon(event.type) }}</div>
 
-        <div class="event-icon">{{ eventIcon(event.type) }}</div>
+          <div class="event-main">
+            <div class="event-title">{{ event.title }}</div>
+            <div class="event-time">{{ timeAgo(event.date) }}</div>
+          </div>
 
-        <div class="event-main">
-          <div class="event-title">{{ event.title }}</div>
-          <div class="event-time">{{ timeAgo(event.date) }}</div>
+          <div class="event-amount">{{ eventAmountLabel(event) }}</div>
+
+          <div class="event-status" [class]="event.status">
+            {{ eventStatusLabel(event.status) }}
+          </div>
         </div>
+      }
 
-        <div class="event-amount">{{ eventAmountLabel(event) }}</div>
-
-        <div class="event-status" [class]="event.status">
-          {{ event.status === 'active' ? 'Active' : event.status === 'pending' ? 'En attente' : 'Archivée' }}
+      @if (events().length === 0) {
+        <div class="events-empty">
+          Aucune opération enregistrée
         </div>
-      </div>
-
-      <div class="events-empty" *ngIf="events().length === 0">
-        Aucune opération enregistrée
-      </div>
+      }
     </div>
   </section>
 

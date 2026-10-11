@@ -109,7 +109,7 @@
           <div class="bar-shine"></div>
         </div>
         <div class="star-power-stars">
-          @for (star of getStarPowerStars(); track star) {
+          @for (star of starPowerStars; track star) {
             <span class="star" [class.filled]="isStarFilled(star)">★</span>
           }
         </div>
@@ -135,13 +135,13 @@
       </button>
     </div>
 
-    <div class="timer-bar-wrapper" [class.critical]="getTimerPercent() < 20">
+    <div class="timer-bar-wrapper" [class.critical]="isTimerCritical()">
       <div class="timer-bar"
-           [style.width.%]="getTimerPercent()"
-           [style.background]="getTimerColor()">
+           [style.width.%]="timerPercent()"
+           [style.background]="timerColor()">
         <div class="timer-pulse"></div>
       </div>
-      <div class="timer-glow" [style.background]="getTimerColor()"></div>
+      <div class="timer-glow" [style.background]="timerColor()"></div>
     </div>
   }
 

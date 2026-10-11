@@ -1,6 +1,7 @@
 import {
   Component,
   EnvironmentInjector,
+  OnDestroy,
   OnInit,
   inject,
   runInInjectionContext
@@ -29,19 +30,27 @@ import {
   update
 } from '@angular/fire/database';
 
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
+import { Subject } from 'rxjs';
 
 import { UserProfile } from '../models/user.model';
 
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES
+   ═════════════════════════════════════════════════════════════════════ */
 
-/** Profil utilisateur stocké dans Firebase Realtime Database. */
+/** Origine d'inscription — ajout du champ pour traçabilité. */
+type UserOrigin = 'google' | 'email';
+
 interface RealtimeUserProfile extends UserProfile {
   lastLogin: string;
   disabled: boolean;
+  origine: UserOrigin;      // ← NOUVEAU
+  codepromo?: string;
+  updatedAt?: string;
 }
 
-/** Codes d'erreur Firebase → messages français. */
 const FIREBASE_ERRORS: Record<string, string> = {
   'auth/user-not-found': 'Email ou mot de passe incorrect.',
   'auth/wrong-password': 'Email ou mot de passe incorrect.',
@@ -57,16 +66,20 @@ const FIREBASE_ERRORS: Record<string, string> = {
 };
 
 const DEFAULT_RETURN_URL = '/';
+const TOAST_DURATION_MS = 4000;
 
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
 
   private readonly auth = inject(Auth);
   private readonly database = inject(Database);
@@ -74,30 +87,39 @@ export class LoginComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly environmentInjector = inject(EnvironmentInjector);
 
+  private readonly destroy$ = new Subject<void>();
+  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  /* ─── Formulaire ─── */
   email = '';
   password = '';
+  showPassword = false;
 
+  /* ─── États UI ─── */
   errorMessage = '';
   successMessage = '';
-
   loading = false;
-  showPassword = false;
 
   returnUrl: string = DEFAULT_RETURN_URL;
 
-  // =========================================================
-  // INITIALISATION
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     CYCLE DE VIE
+     ═══════════════════════════════════════════════════════════════════ */
 
   ngOnInit(): void {
     this.returnUrl = this.resolveReturnUrl();
   }
 
-  /**
-   * Récupère `returnUrl` depuis les query params.
-   * Seules les URLs internes (commençant par `/` mais pas `//`)
-   * sont acceptées, pour éviter les redirections externes.
-   */
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    if (this.toastTimeoutId !== null) {
+      clearTimeout(this.toastTimeoutId);
+      this.toastTimeoutId = null;
+    }
+  }
+
   private resolveReturnUrl(): string {
     const raw = this.route.snapshot.queryParamMap.get('returnUrl');
 
@@ -109,9 +131,19 @@ export class LoginComponent implements OnInit {
     return isSafe ? raw! : DEFAULT_RETURN_URL;
   }
 
-  // =========================================================
-  // CONNEXION EMAIL / MOT DE PASSE
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     UI HELPERS
+     ═══════════════════════════════════════════════════════════════════ */
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CONNEXION EMAIL / MOT DE PASSE
+     ───────────────────────────────────────────────────────────────────
+     ✅ Origine = 'email'
+     ═══════════════════════════════════════════════════════════════════ */
 
   async handleSubmit(): Promise<void> {
     this.clearMessages();
@@ -130,7 +162,7 @@ export class LoginComponent implements OnInit {
         signInWithEmailAndPassword(this.auth, email, this.password)
       );
 
-      await this.handleSuccessfulLogin(credential.user);
+      await this.handleSuccessfulLogin(credential.user, 'email');
 
     } catch (error: unknown) {
       this.errorMessage = this.getFrenchErrorMessage(error);
@@ -139,9 +171,11 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  // =========================================================
-  // CONNEXION GOOGLE
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     CONNEXION GOOGLE
+     ───────────────────────────────────────────────────────────────────
+     ✅ Origine = 'google'
+     ═══════════════════════════════════════════════════════════════════ */
 
   async loginWithGoogle(): Promise<void> {
     this.clearMessages();
@@ -155,10 +189,9 @@ export class LoginComponent implements OnInit {
         signInWithPopup(this.auth, provider)
       );
 
-      await this.handleSuccessfulLogin(credential.user);
+      await this.handleSuccessfulLogin(credential.user, 'google');
 
     } catch (error: unknown) {
-      // Fermeture manuelle de la popup : pas d'erreur à afficher
       if (this.getFirebaseErrorCode(error) !== 'auth/popup-closed-by-user') {
         this.errorMessage = this.getFrenchErrorMessage(error);
       }
@@ -167,19 +200,107 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  /**
-   * Étapes communes après une connexion réussie (email ou Google).
-   */
-  private async handleSuccessfulLogin(user: User | null): Promise<void> {
-    if (user) {
-      await this.writeUserToDatabase(user);
+  /* ═══════════════════════════════════════════════════════════════════
+     HANDLER — APRÈS CONNEXION RÉUSSIE
+     ───────────────────────────────────────────────────────────────────
+     ✅ Écrit le profil en arrière-plan (non bloquant).
+     ✅ Enregistre l'ORIGINE de l'inscription.
+     ✅ Redirige directement vers `returnUrl`.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  private async handleSuccessfulLogin(
+    user: User | null,
+    origine: UserOrigin
+  ): Promise<void> {
+    if (!user) {
+      await this.router.navigateByUrl(this.returnUrl);
+      return;
     }
+
+    /* Détection d'un nouvel utilisateur Google */
+    const createdAt = user.metadata?.creationTime;
+    const lastLoginAt = user.metadata?.lastSignInTime;
+    const isLikelyNewUser =
+      !!createdAt && !!lastLoginAt && createdAt === lastLoginAt;
+
+    /* Vérifie si le profil existe déjà en base */
+    const userReference = ref(this.database, `users/${user.uid}`);
+    let exists = false;
+
+    try {
+      const snapshot = await this.runInContext(() => get(userReference));
+      exists = snapshot.exists();
+    } catch (error) {
+      console.warn('Lecture profil échouée (fallback) :', error);
+    }
+
+    /* ✅ Écriture profil en arrière-plan (non bloquant) */
+    void this.writeUserToDatabaseInBackground(
+      user,
+      exists || isLikelyNewUser === false ? exists : false,
+      origine
+    );
+
+    /* ✅ Redirection directe (plus de modale) */
     await this.router.navigateByUrl(this.returnUrl);
   }
 
-  // =========================================================
-  // MOT DE PASSE OUBLIÉ
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     ÉCRITURE DB EN ARRIÈRE-PLAN
+     ───────────────────────────────────────────────────────────────────
+     ✅ Nouvel utilisateur → enregistre l'origine
+     ✅ Utilisateur existant → préserve l'origine initiale
+     ═══════════════════════════════════════════════════════════════════ */
+
+  private async writeUserToDatabaseInBackground(
+    user: User,
+    exists: boolean,
+    origine: UserOrigin
+  ): Promise<void> {
+    const userReference = ref(this.database, `users/${user.uid}`);
+    const now = new Date().toISOString();
+    const email = user.email ?? '';
+    const displayName = user.displayName ?? email.split('@')[0] ?? '';
+    const photoURL = user.photoURL ?? '';
+
+    try {
+      /* ─── Utilisateur EXISTANT : mise à jour ciblée ─── */
+      if (exists) {
+        await this.runInContext(() =>
+          update(userReference, {
+            lastLogin: now,
+            email,
+            displayName,
+            photoURL
+            /* ⚠️ On NE TOUCHE PAS à `origine` pour préserver la valeur initiale */
+          })
+        );
+        return;
+      }
+
+      /* ─── NOUVEL utilisateur : création complète avec origine ─── */
+      const newUser: RealtimeUserProfile = {
+        uid: user.uid,
+        email,
+        displayName,
+        photoURL,
+        role: 'user',
+        createdAt: now,
+        lastLogin: now,
+        disabled: false,
+        origine                // ✅ Champ ajouté
+      };
+
+      await this.runInContext(() => set(userReference, newUser));
+
+    } catch (error) {
+      console.warn('Mise à jour profil en arrière-plan échouée :', error);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MOT DE PASSE OUBLIÉ
+     ═══════════════════════════════════════════════════════════════════ */
 
   async onForgotPassword(): Promise<void> {
     this.clearMessages();
@@ -209,57 +330,9 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  // =========================================================
-  // SYNCHRONISATION AVEC REALTIME DATABASE
-  // =========================================================
-
-  /**
-   * Crée ou met à jour `users/{uid}` dans Realtime Database.
-   */
-  private async writeUserToDatabase(user: User): Promise<void> {
-    const userReference = ref(this.database, `users/${user.uid}`);
-
-    const snapshot = await this.runInContext(() => get(userReference));
-
-    const now = new Date().toISOString();
-    const email = user.email ?? '';
-    const displayName =
-      user.displayName ?? email.split('@')[0] ?? '';
-    const photoURL = user.photoURL ?? '';
-
-    // Utilisateur existant : mise à jour ciblée
-    if (snapshot.exists()) {
-      await this.runInContext(() =>
-        update(userReference, {
-          lastLogin: now,
-          email,
-          displayName,
-          photoURL
-        })
-      );
-      return;
-    }
-
-    // Nouvel utilisateur : création complète
-    const newUser: RealtimeUserProfile = {
-      uid: user.uid,
-      email,
-      displayName,
-      photoURL,
-      role: 'user',
-      createdAt: now,
-      lastLogin: now,
-      disabled: false
-    };
-
-    await this.runInContext(() =>
-      set(userReference, newUser)
-    );
-  }
-
-  // =========================================================
-  // HELPERS
-  // =========================================================
+  /* ═══════════════════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════════════════ */
 
   private clearMessages(): void {
     this.errorMessage = '';
@@ -282,8 +355,27 @@ export class LoginComponent implements OnInit {
     return undefined;
   }
 
-  /** Enveloppe un appel Firebase dans le contexte d'injection Angular. */
   private runInContext<T>(fn: () => T): T {
     return runInInjectionContext(this.environmentInjector, fn);
+  }
+
+  private showToast(message: string, type: 'success' | 'error'): void {
+    if (type === 'success') {
+      this.successMessage = message;
+      this.errorMessage = '';
+    } else {
+      this.errorMessage = message;
+      this.successMessage = '';
+    }
+
+    if (this.toastTimeoutId !== null) {
+      clearTimeout(this.toastTimeoutId);
+    }
+
+    this.toastTimeoutId = setTimeout(() => {
+      if (this.successMessage === message) this.successMessage = '';
+      if (this.errorMessage === message) this.errorMessage = '';
+      this.toastTimeoutId = null;
+    }, TOAST_DURATION_MS);
   }
 }

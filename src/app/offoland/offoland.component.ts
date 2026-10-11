@@ -1,9 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { RevealDirective } from '../shared/reveal.directive';
 import { CharlyguitaregameComponent } from '../univers/charlyguitaregame/charlyguitaregame.component';
-import { PlayComponent } from '../game/play/play.component';
-import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-offoland',
@@ -12,11 +11,9 @@ import { RouterLink } from '@angular/router';
     CommonModule,
     RevealDirective,
     CharlyguitaregameComponent,
-    PlayComponent,
     RouterLink
   ],
   templateUrl: './offoland.component.html',
   styleUrls: ['./offoland.component.scss']
 })
-export class OffolandComponent {
-}
+export class OffolandComponent { }

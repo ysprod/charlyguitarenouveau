@@ -7,10 +7,13 @@
        CONFIGURATION DE BASE & META VITALES
   ========================================================== -->
   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
   <title>Charly Guitare | Apprendre la guitare, jouer, progresser</title>
   <base href="/">
 
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
   <meta name="description" content="Charly Guitare vous accompagne pour apprendre la guitare et la musique : cours, méthodes, livres interactifs, exercices, jeux musicaux et ressources pédagogiques.">
   <meta name="keywords" content="Charly Guitare, guitare, apprendre la guitare, cours de guitare, cours guitare en ligne, méthode guitare, apprendre musique, formation musicale, jeux musicaux, solfège, guitare débutant, coupé décalé">
   <meta name="author" content="Charly Guitare">
@@ -28,23 +31,56 @@
 
 
   <!-- =========================================================
+       SÉCURITÉ & CONFIDENTIALITÉ
+  ========================================================== -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagservices.com https://www.google-analytics.com https://apis.google.com https://*.firebaseio.com https://*.googleapis.com;
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                 font-src 'self' data: https://fonts.gstatic.com;
+                 img-src 'self' data: blob: https:;
+                 connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://pagead2.googlesyndication.com;
+                 frame-src 'self' https://*.firebaseapp.com https://www.youtube.com https://www.youtube-nocookie.com;
+                 object-src 'none';
+                 base-uri 'self';
+                 form-action 'self';
+                 upgrade-insecure-requests;">
+
+  <meta name="format-detection" content="telephone=no">
+  <meta name="color-scheme" content="light">
+
+
+  <!-- =========================================================
        PERFORMANCE & PRECONNECT (LCP / CLS Optimisations)
   ========================================================== -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
+  <link rel="dns-prefetch" href="https://www.google-analytics.com">
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com">
 
   <!-- Chargement asynchrone non-bloquant des polices -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" media="print" onload="this.media='all'">
-  
+  <link rel="preload" as="style"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap">
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"
+        media="print" onload="this.media='all'">
+
+  <link rel="preload" as="style"
+        href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        media="print" onload="this.media='all'">
+
   <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons">
   </noscript>
 
   <!-- Preload de l'image LCP (Hero) -->
-  <link rel="preload" as="image" type="image/jpeg" href="assets/charly-guitare-hero.jpg">
+  <link rel="preload" as="image" type="image/jpeg" href="assets/charly-guitare-hero.jpg" fetchpriority="high">
 
 
   <!-- =========================================================
@@ -57,7 +93,7 @@
   <meta property="og:description" content="Apprenez la guitare et développez votre passion grâce aux cours, méthodes interactives, exercices et jeux musicaux de Charly Guitare.">
   <meta property="og:image" content="https://charlyguitare.com/assets/charly-guitare-hero.jpg">
   <meta property="og:image:secure_url" content="https://charlyguitare.com/assets/charly-guitare-hero.jpg">
-  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Charly Guitare - Apprendre la guitare et la musique">
@@ -83,17 +119,28 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180x180.png">
   <link rel="manifest" href="manifest.webmanifest">
 
-  <meta name="theme-color" content="#0f172a">
+  <!-- Couleur de la barre d'état (alignée sur le manifest orange) -->
+  <meta name="theme-color" content="#ea580c">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ea580c">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#c2410c">
+
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Charly Guitare">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CharlyGuitare">
+
+  <!-- Windows / Edge -->
+  <meta name="msapplication-TileColor" content="#ea580c">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="application-name" content="CharlyGuitare">
 
 
   <!-- =========================================================
        GOOGLE ADSENSE (Optimisé Async)
   ========================================================== -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4776906885222505" crossorigin="anonymous"></script>
+  <script async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4776906885222505"
+          crossorigin="anonymous"></script>
 
 
   <!-- =========================================================
@@ -110,9 +157,9 @@
         "url": "https://charlyguitare.com/",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://charlyguitare.com/assets/charly-guitare-hero.jpg",
-          "width": "1200",
-          "height": "630"
+          "url": "https://charlyguitare.com/assets/icons/icon-512x512.png",
+          "width": "512",
+          "height": "512"
         },
         "image": "https://charlyguitare.com/assets/charly-guitare-hero.jpg",
         "description": "Plateforme pédagogique dédiée à l'apprentissage de la guitare et de la musique avec des cours, méthodes, exercices, livres interactifs et jeux musicaux.",
@@ -124,7 +171,12 @@
           "Solfège",
           "Coupé-Décalé"
         ],
-        "areaServed": "Worldwide"
+        "areaServed": "Worldwide",
+        "sameAs": [
+          "https://www.youtube.com/@charlyguitare",
+          "https://www.instagram.com/charlyguitare",
+          "https://www.tiktok.com/@charlyguitare"
+        ]
       },
       {
         "@type": "WebSite",
@@ -135,7 +187,24 @@
         "inLanguage": "fr-FR",
         "publisher": {
           "@id": "https://charlyguitare.com/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://charlyguitare.com/recherche?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
         }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://charlyguitare.com/#webpage",
+        "url": "https://charlyguitare.com/",
+        "name": "Charly Guitare | Apprendre la guitare, jouer, progresser",
+        "isPartOf": { "@id": "https://charlyguitare.com/#website" },
+        "about": { "@id": "https://charlyguitare.com/#organization" },
+        "inLanguage": "fr-FR"
       }
     ]
   }
@@ -154,6 +223,7 @@
       <h1>Charly Guitare</h1>
       <p>Bienvenue sur Charly Guitare, votre plateforme dédiée à l'apprentissage de la guitare et de la musique.</p>
       <p>Pour profiter de nos cours interactifs, exercices pratiques et jeux musicaux, veuillez activer JavaScript dans les paramètres de votre navigateur.</p>
+      <p><a href="https://www.enable-javascript.com/fr/" rel="noopener noreferrer" target="_blank">Comment activer JavaScript ?</a></p>
     </main>
   </noscript>
 

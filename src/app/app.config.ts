@@ -1,88 +1,130 @@
 import {
-  ApplicationConfig
+  ApplicationConfig,
+  isDevMode,
+  provideZoneChangeDetection,
 } from '@angular/core';
 
 import {
   provideRouter,
-  withInMemoryScrolling
+  withInMemoryScrolling,
+  withRouterConfig,
+  withViewTransitions,
 } from '@angular/router';
 
 import {
-  provideAnimations
-} from '@angular/platform-browser/animations';
+  provideAnimationsAsync,
+} from '@angular/platform-browser/animations/async';
 
 import {
-  provideServiceWorker
+  provideServiceWorker,
 } from '@angular/service-worker';
 
 import {
   initializeApp,
-  provideFirebaseApp
+  provideFirebaseApp,
 } from '@angular/fire/app';
 
 import {
   getAuth,
-  provideAuth
+  provideAuth,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
+  setPersistence,
 } from '@angular/fire/auth';
 
 import {
   getDatabase,
-  provideDatabase
+  provideDatabase,
 } from '@angular/fire/database';
 
 import {
-  routes
+  routes,
 } from './app.routes';
 
 import {
-  environment
+  environment,
 } from '../environments/environment';
 
+// ✅ AJOUT
 import {
-  CookieService
-} from 'ngx-cookie-service';
+  getStorage,
+  provideStorage,
+} from '@angular/fire/storage';
 
-import {
-  TictactoeserviceService
-} from './services/tictactoeservice.service';
-
-import {
-  GameService
-} from './services/game.service';
+/* ═══════════════════════════════════════════════════════════
+   APP CONFIG
+   ═══════════════════════════════════════════════════════════ */
 
 export const appConfig: ApplicationConfig = {
   providers: [
 
+    /* ═══════════════════════════════════════════════════════
+       1. DÉTECTION DE CHANGEMENT — Zone.js optimisé
+       ═══════════════════════════════════════════════════════ */
+    provideZoneChangeDetection({
+      eventCoalescing: true,     // Regroupe les events (scroll, click…)
+      runCoalescing: true,       // Regroupe les cycles CD
+    }),
+
+    /* ═══════════════════════════════════════════════════════
+       2. ROUTER
+       ═══════════════════════════════════════════════════════ */
     provideRouter(
       routes,
       withInMemoryScrolling({
-        scrollPositionRestoration: 'top'
-      })
+        scrollPositionRestoration: 'top',
+        anchorScrolling: 'enabled',
+      }),
+      withRouterConfig({
+        onSameUrlNavigation: 'reload',
+        paramsInheritanceStrategy: 'always',
+      }),
+      withViewTransitions({
+        skipInitialTransition: true,
+      }),
     ),
 
-    provideAnimations(),
+    /* ═══════════════════════════════════════════════════════
+       3. ANIMATIONS — Chargement async (performance)
+       ═══════════════════════════════════════════════════════ */
+    provideAnimationsAsync(),
 
-    provideFirebaseApp(
-      () => initializeApp(environment.firebase)
+    /* ═══════════════════════════════════════════════════════
+       4. FIREBASE — Core
+       ═══════════════════════════════════════════════════════ */
+    provideFirebaseApp(() =>
+      initializeApp(environment.firebase)
     ),
 
-    provideAuth(
-      () => getAuth()
-    ),
+    /* ═══════════════════════════════════════════════════════
+       5. AUTH — Persistance offline (IndexedDB)
+       ═══════════════════════════════════════════════════════ */
+    provideAuth(() => {
+      const auth = getAuth();
 
-    provideDatabase(
-      () => getDatabase()
-    ),
+      /* L'utilisateur reste connecté hors-ligne via IndexedDB. */
+      void setPersistence(auth, indexedDBLocalPersistence)
+        .catch(() => {
+          /* Fallback si IndexedDB indisponible. */
+          return setPersistence(auth, browserLocalPersistence);
+        });
 
-    provideServiceWorker(
-      'ngsw-worker.js',
-      {
-        enabled: environment.production,
-        registrationStrategy: 'registerWhenStable:30000'
-      }
-    ),
-    CookieService,
-    TictactoeserviceService,
-    GameService
-  ]
-}; 
+      return auth;
+    }),
+
+    /* ═══════════════════════════════════════════════════════
+       6. REALTIME DATABASE — offline-first natif
+       ═══════════════════════════════════════════════════════ */
+    provideDatabase(() => getDatabase()),
+    provideStorage(() => getStorage()),
+
+    /* ═══════════════════════════════════════════════════════
+       7. SERVICE WORKER — PWA
+       ═══════════════════════════════════════════════════════ */
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
+
+  ],
+};

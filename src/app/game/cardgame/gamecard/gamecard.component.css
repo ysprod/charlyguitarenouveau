@@ -1,31 +1,51 @@
-/* ============================================================
+/* ═════════════════════════════════════════════════════════════════════
+   GAMECARD — Palette chaude « Bois & Cartes »
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* ═════════════════════════════════════════════════════════════════════
    HOST
-   ============================================================ */
+   ═════════════════════════════════════════════════════════════════════ */
 :host {
   display: block;
   width: 100%;
-  height: 100%;
-  aspect-ratio: 3 / 4;         /* ✅ Force un ratio élégant, carte bien visible */
+  /* ✅ PAS de height: 100% — c'est aspect-ratio qui pilote la hauteur */
+  aspect-ratio: 3 / 4;
   perspective: 1200px;
   position: relative;
+
+  /* Palette chaude */
+  --wood-darkest: #3a1f08;
+  --wood-dark: #78350f;
+  --wood: #b45309;
+  --wood-light: #d97706;
+  --wood-glow: rgba(180, 83, 9, .55);
+  --wood-soft: rgba(180, 83, 9, .15);
+  --cream: #fef3c7;
+  --cream-soft: rgba(254, 243, 199, .8);
 }
 
-/* ============================================================
+/* ═════════════════════════════════════════════════════════════════════
    CONTENEUR
-   ============================================================ */
+   ═════════════════════════════════════════════════════════════════════ */
 .card-container {
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 6px;                /* ✅ petit padding pour ne pas coller aux voisins */
+  padding: 6px;
   box-sizing: border-box;
+  border-radius: 18px;
 }
 
-/* ============================================================
-   STRUCTURE 3D DE LA CARTE
-   ============================================================ */
+.card-container:focus-visible {
+  outline: 2px solid var(--wood);
+  outline-offset: 4px;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   STRUCTURE 3D
+   ═════════════════════════════════════════════════════════════════════ */
 .card-3d {
   width: 100%;
   height: 100%;
@@ -34,33 +54,30 @@
   cursor: pointer;
   transform-style: preserve-3d;
   transition:
-    box-shadow 0.35s ease,
-    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow .35s ease,
+    transform .35s cubic-bezier(.34, 1.56, .64, 1);
   will-change: transform;
-
-  /* Ombre de base + halo subtil */
   box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 0 25px rgba(124, 58, 237, 0.15);
+    0 12px 30px rgba(28, 25, 23, .35),
+    0 0 0 1px rgba(180, 83, 9, .15),
+    0 0 20px rgba(180, 83, 9, .12);
 }
 
 .card-3d:hover {
   box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.65),
-    0 0 30px rgba(0, 242, 254, 0.5),
-    0 0 60px rgba(124, 58, 237, 0.4);
+    0 18px 45px rgba(28, 25, 23, .45),
+    0 0 30px var(--wood-glow),
+    0 0 60px rgba(180, 83, 9, .35);
   transform: translateY(-4px) scale(1.02);
 }
 
-/* Ne pas animer les cartes déjà matchées */
 .card-3d.is-matched {
   pointer-events: none;
 }
 
-/* ============================================================
+/* ═════════════════════════════════════════════════════════════════════
    FACES
-   ============================================================ */
+   ═════════════════════════════════════════════════════════════════════ */
 .card-face {
   position: absolute;
   inset: 0;
@@ -73,33 +90,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0f172a;
+  background: var(--cream);
 }
 
-/* ---- Face ARRIÈRE (Dos) ---- */
 .back {
   transform: rotateY(0deg);
-  border: 2px solid rgba(124, 58, 237, 0.65);
+  border: 2px solid var(--wood);
   background:
-    radial-gradient(circle at 50% 40%, rgba(124, 58, 237, 0.35), transparent 65%),
-    linear-gradient(145deg, #1a1440 0%, #0a0620 100%);
+    radial-gradient(circle at 50% 40%, rgba(180, 83, 9, .25), transparent 65%),
+    linear-gradient(145deg, #fef3c7 0%, #fde68a 100%);
 }
 
-/* ---- Face AVANT (Image) ---- */
 .front {
   transform: rotateY(180deg);
-  border: 2px solid rgba(0, 242, 254, 0.7);
-  background: linear-gradient(145deg, #1e1b4b, #0a0620);
+  border: 2px solid var(--wood-light);
+  background: linear-gradient(145deg, #fef3c7, #fde68a);
 }
 
-/* ============================================================
-   CADRE INTERNE DU DOS (HUD décoratif)
-   ============================================================ */
+/* ═════════════════════════════════════════════════════════════════════
+   CADRE INTERNE DU DOS
+   ═════════════════════════════════════════════════════════════════════ */
 .inner-frame {
   position: absolute;
   inset: 12px;
   border-radius: 14px;
-  border: 1px dashed rgba(168, 85, 247, 0.5);
+  border: 1px dashed rgba(180, 83, 9, .5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,26 +122,25 @@
   z-index: 2;
 }
 
-/* Coins lumineux */
 .inner-frame .corner {
   position: absolute;
   width: 14px;
   height: 14px;
-  border-color: #a855f7;
-  filter: drop-shadow(0 0 6px #a855f7);
+  border-color: var(--wood);
+  filter: drop-shadow(0 0 4px var(--wood-glow));
   animation: cornerGlow 2.4s ease-in-out infinite;
 }
+
 .corner-tl { top: 4px; left: 4px; border-top: 2px solid; border-left: 2px solid; border-top-left-radius: 6px; }
 .corner-tr { top: 4px; right: 4px; border-top: 2px solid; border-right: 2px solid; border-top-right-radius: 6px; }
 .corner-bl { bottom: 4px; left: 4px; border-bottom: 2px solid; border-left: 2px solid; border-bottom-left-radius: 6px; }
 .corner-br { bottom: 4px; right: 4px; border-bottom: 2px solid; border-right: 2px solid; border-bottom-right-radius: 6px; }
 
 @keyframes cornerGlow {
-  0%,100% { opacity: 0.55; transform: scale(1); }
-  50%     { opacity: 1; transform: scale(1.15); }
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.15); }
 }
 
-/* Emblème central (au dos de la carte) */
 .back-emblem {
   width: 64%;
   aspect-ratio: 1;
@@ -135,11 +149,11 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle, rgba(168, 85, 247, 0.35), rgba(124, 58, 237, 0.15) 60%, transparent 80%);
-  border: 2px solid rgba(168, 85, 247, 0.7);
+    radial-gradient(circle, rgba(180, 83, 9, .25), rgba(217, 119, 6, .12) 60%, transparent 80%);
+  border: 2px solid var(--wood);
   box-shadow:
-    0 0 25px rgba(168, 85, 247, 0.6),
-    inset 0 0 25px rgba(168, 85, 247, 0.35);
+    0 0 25px var(--wood-glow),
+    inset 0 0 25px rgba(180, 83, 9, .25);
   animation: emblemPulse 3s ease-in-out infinite;
   position: relative;
   z-index: 3;
@@ -147,36 +161,46 @@
 
 .emblem-glyph {
   font-size: 2.2rem;
-  filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.9));
+  filter: drop-shadow(0 2px 4px rgba(28, 25, 23, .35));
   animation: glyphBob 3s ease-in-out infinite;
 }
 
 @keyframes emblemPulse {
-  0%,100% { transform: scale(1); box-shadow: 0 0 25px rgba(168, 85, 247, 0.6), inset 0 0 25px rgba(168, 85, 247, 0.35); }
-  50%     { transform: scale(1.05); box-shadow: 0 0 40px rgba(168, 85, 247, 0.95), inset 0 0 35px rgba(168, 85, 247, 0.55); }
-}
-@keyframes glyphBob {
-  0%,100% { transform: translateY(0) rotate(-4deg); }
-  50%     { transform: translateY(-4px) rotate(4deg); }
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 25px var(--wood-glow),
+      inset 0 0 25px rgba(180, 83, 9, .25);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 40px rgba(180, 83, 9, .85),
+      inset 0 0 35px rgba(180, 83, 9, .45);
+  }
 }
 
-/* Motif de fond du dos */
+@keyframes glyphBob {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50%      { transform: translateY(-4px) rotate(4deg); }
+}
+
 .back-pattern {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(rgba(168, 85, 247, 0.18) 1px, transparent 1px),
-    radial-gradient(rgba(0, 242, 254, 0.12) 1px, transparent 1px);
+    radial-gradient(rgba(180, 83, 9, .15) 1px, transparent 1px),
+    radial-gradient(rgba(217, 119, 6, .1) 1px, transparent 1px);
   background-size: 14px 14px, 28px 28px;
   background-position: 0 0, 7px 7px;
-  opacity: 0.6;
+  opacity: .6;
   z-index: 0;
   pointer-events: none;
 }
 
-/* ============================================================
+/* ═════════════════════════════════════════════════════════════════════
    IMAGE DE LA FACE AVANT
-   ============================================================ */
+   ═════════════════════════════════════════════════════════════════════ */
 .front-image-wrapper {
   position: relative;
   width: 100%;
@@ -190,50 +214,49 @@
 .card-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;               /* ✅ remplissage propre, pas de déformation */
+  object-fit: cover;
   object-position: center;
   border-radius: 12px;
   display: block;
-  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  transition: transform .45s cubic-bezier(.34, 1.56, .64, 1);
+  box-shadow: inset 0 0 20px rgba(28, 25, 23, .4);
 }
 
 .card-3d:hover .card-img {
   transform: scale(1.06);
 }
 
-/* Petite brillance sur l'image avant */
 .front-shine {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 40%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .25) 0%, transparent 40%);
   pointer-events: none;
   border-radius: 16px;
 }
 
-/* ============================================================
-   AURA / CONTOUR FLUO
-   ============================================================ */
+/* ═════════════════════════════════════════════════════════════════════
+   AURA / CONTOUR AMBRÉ
+   ═════════════════════════════════════════════════════════════════════ */
 .card-border-glow {
   position: absolute;
   inset: 0;
   border-radius: 18px;
   pointer-events: none;
   box-shadow:
-    inset 0 0 20px rgba(124, 58, 237, 0.7),
-    inset 0 0 40px rgba(124, 58, 237, 0.25);
+    inset 0 0 20px rgba(180, 83, 9, .5),
+    inset 0 0 40px rgba(180, 83, 9, .2);
   z-index: 2;
 }
 
 .front-glow {
   box-shadow:
-    inset 0 0 20px rgba(0, 242, 254, 0.7),
-    inset 0 0 40px rgba(0, 242, 254, 0.25);
+    inset 0 0 20px rgba(217, 119, 6, .5),
+    inset 0 0 40px rgba(217, 119, 6, .2);
 }
 
-/* ============================================================
+/* ═════════════════════════════════════════════════════════════════════
    EFFET SHINE AU SURVOL
-   ============================================================ */
+   ═════════════════════════════════════════════════════════════════════ */
 .shine-effect {
   position: absolute;
   top: -50%;
@@ -243,11 +266,11 @@
   background: linear-gradient(
     45deg,
     transparent 45%,
-    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, .35) 50%,
     transparent 55%
   );
   transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  transition: transform 0.7s ease-in-out;
+  transition: transform .7s ease-in-out;
   pointer-events: none;
   z-index: 4;
 }
@@ -256,38 +279,40 @@
   transform: translateX(100%) translateY(100%) rotate(45deg);
 }
 
-/* ============================================================
-   MOTIF OVERLAY (grille fine)
-   ============================================================ */
+/* ═════════════════════════════════════════════════════════════════════
+   MOTIF OVERLAY
+   ═════════════════════════════════════════════════════════════════════ */
 .pattern-overlay {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 0);
+  background-image: radial-gradient(rgba(28, 25, 23, .06) 1px, transparent 0);
   background-size: 12px 12px;
   pointer-events: none;
   z-index: 1;
 }
 
-/* ============================================================
+/* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
-   ============================================================ */
+   ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  :host {
-    aspect-ratio: 3 / 4;
-  }
   .emblem-glyph { font-size: 1.6rem; }
   .inner-frame { inset: 8px; }
   .back-emblem { width: 60%; }
 }
 
-/* ============================================================
-   PREFERS-REDUCED-MOTION
-   ============================================================ */
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: .01ms !important;
   }
-  .card-3d:hover { transform: none; }
+
+  .card-3d:hover {
+    transform: none;
+  }
 }

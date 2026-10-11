@@ -156,8 +156,7 @@ export class MessagerieComponent
 
   /**
    * Cache des réponses triées par clé de message.
-   * Évite de recalculer getRepliesArray() à chaque cycle CD
-   * (appelé plusieurs fois par template pour le même message).
+   * Évite de recalculer getRepliesArray() à chaque cycle CD.
    */
   private readonly repliesCache = new Map<string, MessageReply[]>();
 
@@ -318,15 +317,10 @@ export class MessagerieComponent
     this.replyText = '';
   }
 
-  /**
-   * Gestion de la touche Entrée dans le textarea :
-   * - Entrée         → envoie
-   * - Maj + Entrée   → saut de ligne
-   */
   onReplyEnter(event: Event): void {
     const keyboardEvent = event as KeyboardEvent;
     if (keyboardEvent.shiftKey) {
-      return; // laisse le saut de ligne
+      return;
     }
     keyboardEvent.preventDefault();
     if (!this.isSending && this.replyText.trim()) {
@@ -370,7 +364,6 @@ export class MessagerieComponent
         );
       });
 
-      // Invalide le cache pour ce message
       if (message.key) {
         this.repliesCache.delete(message.key);
       }
@@ -388,27 +381,19 @@ export class MessagerieComponent
 
   /* ─── Helpers template ─── */
 
-  /**
-   * Récupère les réponses d'un message depuis le cache.
-   * Utilisé plusieurs fois par template → mémoïsation cruciale.
-   */
   repliesOf(message: UserMessage): MessageReply[] {
     return this.getRepliesArray(message.replies, message.key);
   }
 
-  /** Nombre de réponses (pour la carte liste). */
   repliesCount(
     replies: Record<string, MessageReply> | MessageReply[] | undefined
   ): number {
     return this.getRepliesArray(replies).length;
   }
 
-  /** Initiales de l'utilisateur connecté (mémoïsé via getter). */
   get userInitials(): string {
     return this.getInitials(this.currentUser?.displayName ?? 'Vous');
   }
-
-  /* ─── Maps statiques (accessibles au template) ─── */
 
   statusBadgeClass(status: string | undefined): string {
     return STATUS_BADGE_CLASS[status as MessageStatus] ?? DEFAULT_STATUS_BADGE;
@@ -436,7 +421,6 @@ export class MessagerieComponent
       return [];
     }
 
-    // Si on a une clé de cache et un objet (non tableau), on mémoïse
     if (cacheKey && !Array.isArray(replies)) {
       const cached = this.repliesCache.get(cacheKey);
       if (cached) {
@@ -533,7 +517,6 @@ export class MessagerieComponent
     const previousRepliesCount = this.getRepliesArray(selected.replies).length;
     const updatedRepliesCount = this.getRepliesArray(updated.replies).length;
 
-    // Invalide le cache si le nombre de réponses a changé
     if (updatedRepliesCount !== previousRepliesCount && updated.key) {
       this.repliesCache.delete(updated.key);
     }

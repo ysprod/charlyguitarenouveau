@@ -1,0 +1,67 @@
+<div
+  class="promo-modal-backdrop"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="promo-modal-title"
+  aria-describedby="promo-modal-desc"
+  (click)="close()"
+>
+  <div class="promo-modal-card" (click)="$event.stopPropagation()">
+
+    <div class="promo-modal-icon" aria-hidden="true">🎁</div>
+
+    <h2 id="promo-modal-title" class="promo-modal-title">{{ title }}</h2>
+
+    <p id="promo-modal-desc" class="promo-modal-message">{{ message }}</p>
+
+    <div class="promo-modal-field">
+      <label for="promoCodeInput">Votre code promo</label>
+      <input
+        type="text"
+        id="promoCodeInput"
+        name="promoCodeInput"
+        [value]="codeValue"
+        (input)="onInputChange($event)"
+        (keydown)="onKeydown($event)"
+        autocomplete="off"
+        maxlength="50"
+        [disabled]="isSaving"
+        placeholder="Ex : CHRLY2026"
+      />
+      <small class="promo-modal-hint">
+        Ce code est obligatoire. Contactez votre parrain si vous ne l'avez pas.
+      </small>
+    </div>
+
+    @if (errorMessage) {
+      <p class="promo-modal-error" role="alert">{{ errorMessage }}</p>
+    }
+
+    <div class="promo-modal-actions">
+      <button
+        type="button"
+        class="promo-btn promo-btn-secondary"
+        (click)="close()"
+        [disabled]="isSaving"
+      >
+        Annuler
+      </button>
+
+      <button
+        type="button"
+        class="promo-btn promo-btn-primary"
+        (click)="submit()"
+        [disabled]="isSaving"
+        [attr.aria-busy]="isSaving"
+      >
+        @if (!isSaving) {
+          <span>Continuer</span>
+        } @else {
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Vérification...</span>
+        }
+      </button>
+    </div>
+
+  </div>
+</div>

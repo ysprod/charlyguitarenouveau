@@ -12,7 +12,7 @@
   <main class="legal-body">
     <!-- Section 1 : Éditeur du site -->
     <section class="legal-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
@@ -20,7 +20,7 @@
       </div>
       <div class="section-content">
         <h2>1. Éditeur du site</h2>
-        <p>Le site <strong>{{ siteName }}</strong> (accessible à l'adresse <a [href]="siteUrl" target="_blank">{{ siteUrl }}</a>) est édité par :</p>
+        <p>Le site <strong>{{ siteName }}</strong> (accessible à l'adresse <a [href]="siteUrl" target="_blank" rel="noopener noreferrer">{{ siteUrl }}</a>) est édité par :</p>
         <ul>
           <li><strong>Responsable de publication :</strong> {{ ownerName }}</li>
           <li><strong>Contact e-mail :</strong> <a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a></li>
@@ -31,7 +31,7 @@
 
     <!-- Section 2 : Hébergement -->
     <section class="legal-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
           <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
@@ -45,21 +45,21 @@
         <ul>
           <li><strong>Hébergeur :</strong> {{ hostName }}</li>
           <li><strong>Adresse :</strong> {{ hostAddress }}</li>
-          <li><strong>Site Web :</strong> <a [href]="hostWebsite" target="_blank" rel="noopener">{{ hostWebsite }}</a></li>
+          <li><strong>Site Web :</strong> <a [href]="hostWebsite" target="_blank" rel="noopener noreferrer">{{ hostWebsite }}</a></li>
         </ul>
       </div>
     </section>
 
     <!-- Section 3 : Propriété intellectuelle -->
     <section class="legal-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <path d="M14.83 14.83a4 4 0 110-5.66"/>
         </svg>
       </div>
       <div class="section-content">
-        <h2>3. Propriété intellectuelle & Droits d'auteur</h2>
+        <h2>3. Propriété intellectuelle &amp; Droits d'auteur</h2>
         <p>
           L'ensemble du contenu présent sur le site <strong>{{ siteName }}</strong> — incluant, de manière non limitative, les textes, cours, méthodes d'apprentissage, arrangements musicaux, vidéos, logos, graphismes, icônes et codes sources — est la propriété exclusive de {{ ownerName }}, sauf mention contraire.
         </p>
@@ -71,14 +71,14 @@
 
     <!-- Section 4 : Accessibilité & Liens externes -->
     <section class="legal-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
           <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
         </svg>
       </div>
       <div class="section-content">
-        <h2>4. Liens hypertextes & Responsabilité</h2>
+        <h2>4. Liens hypertextes &amp; Responsabilité</h2>
         <p>
           Le site {{ siteName }} peut contenir des liens vers d'autres sites web ou ressources externes. L'éditeur ne peut être tenu responsable de la disponibilité ou du contenu de ces sites tiers.
         </p>
@@ -90,7 +90,7 @@
 
     <!-- Section 5 : Droit applicable -->
     <section class="legal-section">
-      <div class="section-icon">
+      <div class="section-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -102,10 +102,5 @@
         </p>
       </div>
     </section>
-  </main>
-
-  <footer class="legal-footer">
-    <p>Besoin de renseignements complémentaires ?</p>
-    <a [href]="'mailto:' + contactEmail" class="btn-contact">Contactez-nous par e-mail</a>
-  </footer>
+  </main> 
 </div>

@@ -1,17 +1,18 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
-  ViewChild,
-  inject,
-  effect,
-  signal,
-  OnDestroy,
-  NgZone,
   DestroyRef,
+  ElementRef,
+  NgZone,
+  OnDestroy,
+  ViewChild,
+  effect,
+  inject,
+  signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { OracleGameService } from '../../services/oracle-game.service';
 import { ParticleService } from '../../services/particle.service';
 
@@ -21,31 +22,44 @@ import { ParticleService } from '../../services/particle.service';
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './oracle-widget.component.html',
-  styleUrl: './oracle-widget.component.css',
+  styleUrls: ['./oracle-widget.component.scss']
 })
 export class OracleWidgetComponent implements OnDestroy {
-  public readonly game = inject(OracleGameService);
-  public readonly particles = inject(ParticleService);
+
+  /* ─── Injection ─── */
+  readonly game = inject(OracleGameService);
+  readonly particles = inject(ParticleService);
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
 
-  public textInput = signal<string>('');
+  /* ─── État local ─── */
+  readonly textInput = signal('');
 
-  @ViewChild('visualizerCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('particlesCanvas') particlesCanvasRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('textInputElem') textInputElem?: ElementRef<HTMLInputElement>;
+  /* ─── Refs canvas / input ─── */
+  @ViewChild('visualizerCanvas', { static: true })
+  private readonly canvasRef?: ElementRef<HTMLCanvasElement>;
 
-  private animFrameId: number | null = null;
+  @ViewChild('particlesCanvas', { static: true })
+  private readonly particlesCanvasRef?: ElementRef<HTMLCanvasElement>;
+
+  @ViewChild('textInputElem')
+  private readonly textInputElem?: ElementRef<HTMLInputElement>;
+
+  /* ─── Boucles d'animation ─── */
+  private waveAnimId: number | null = null;
   private particlesAnimId: number | null = null;
 
+  /* ═══════════════════════════════════════════════════════
+     CYCLE DE VIE
+     ═══════════════════════════════════════════════════════ */
+
   constructor() {
-    // Écoute les changements d'état vocal sans déclencher de cycle de détection inutile
+    /* Écoute les changements d'état vocal */
     effect(() => {
       const speaking = this.game.isSpeaking();
       const listening = this.game.isListening();
 
-      // Exécution hors zone Angular pour préserver le 60FPS sans saccades
       this.ngZone.runOutsideAngular(() => {
         if (speaking || listening) {
           this.startWaveAnimation(speaking ? '#a855f7' : '#06b6d4');
@@ -55,7 +69,13 @@ export class OracleWidgetComponent implements OnDestroy {
       });
     });
 
-    // Lancer la boucle de particules hors zone Angular
+    /* Configure les canvas après le prochain tick */
+    queueMicrotask(() => {
+      this.setupParticlesCanvas();
+      this.setupVisualizerCanvas();
+    });
+
+    /* Lance la boucle de particules hors zone Angular */
     this.ngZone.runOutsideAngular(() => {
       this.startParticlesLoop();
     });
@@ -63,18 +83,61 @@ export class OracleWidgetComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopWaveAnimation();
-    if (this.particlesAnimId !== null) {
-      cancelAnimationFrame(this.particlesAnimId);
-      this.particlesAnimId = null;
+    this.stopParticlesLoop();
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     CANVAS — SETUP HAUTE DÉFINITION (Retina)
+     ═══════════════════════════════════════════════════════ */
+
+  /**
+   * Adapte la résolution du canvas des particules à la taille CSS
+   * ET au devicePixelRatio (rendu net sur écrans Retina).
+   */
+  private setupParticlesCanvas(): void {
+    const canvas = this.particlesCanvasRef?.nativeElement;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+
+  /**
+   * Le canvas du visualiseur audio a une taille fixe (280×40),
+   * on ajuste juste pour la netteté Retina.
+   */
+  private setupVisualizerCanvas(): void {
+    const canvas = this.canvasRef?.nativeElement;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const logicalWidth = 280;
+    const logicalHeight = 40;
+
+    canvas.width = Math.floor(logicalWidth * dpr);
+    canvas.height = Math.floor(logicalHeight * dpr);
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
   }
 
   /* ═══════════════════════════════════════════════════════
      NAVIGATION & ACTIONS
      ═══════════════════════════════════════════════════════ */
+
   goBackToMenu(): void {
     this.game.playClick();
-    this.router.navigate(['/play']);
+    void this.router.navigate(['/play']);
   }
 
   onMicClick(): void {
@@ -87,10 +150,9 @@ export class OracleWidgetComponent implements OnDestroy {
 
   submitText(): void {
     const val = this.textInput().trim();
-    if (val) {
-      this.game.submitTextAnswer(val);
-      this.textInput.set('');
-    }
+    if (!val) return;
+    this.game.submitTextAnswer(val);
+    this.textInput.set('');
   }
 
   onTyping(): void {
@@ -102,37 +164,41 @@ export class OracleWidgetComponent implements OnDestroy {
   }
 
   /* ═══════════════════════════════════════════════════════
-     MOTEURS DE RENDU CANVAS (60 FPS NATIVE OUTSIDE ANGULAR)
+     VISUALISEUR AUDIO (onde sinusoïdale animée)
      ═══════════════════════════════════════════════════════ */
+
   private startWaveAnimation(color: string): void {
     this.stopWaveAnimation();
+
+    const canvas = this.canvasRef?.nativeElement;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    /* Dimensions LOGIQUES (indépendantes du DPR) */
+    const width = 280;
+    const height = 40;
+    const centerY = height / 2;
+
     let step = 0;
 
     const draw = () => {
-      const canvas = this.canvasRef?.nativeElement;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const width = canvas.width;
-      const height = canvas.height;
-      const centerY = height / 2;
-
       ctx.clearRect(0, 0, width, height);
 
+      /* Onde principale */
       const gradient = ctx.createLinearGradient(0, 0, width, 0);
       gradient.addColorStop(0, color);
       gradient.addColorStop(0.5, '#ffffff');
       gradient.addColorStop(1, color);
 
-      // Onde Principale
       ctx.beginPath();
       ctx.lineWidth = 3;
       ctx.strokeStyle = gradient;
       ctx.shadowBlur = 15;
       ctx.shadowColor = color;
 
-      for (let x = 0; x < width; x++) {
+      for (let x = 0; x <= width; x++) {
         const y = Math.sin((x + step) * 0.05) * 12 * Math.sin(x * 0.01) + centerY;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -140,12 +206,13 @@ export class OracleWidgetComponent implements OnDestroy {
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Onde Secondaire
+      /* Onde secondaire */
       ctx.beginPath();
       ctx.lineWidth = 1.5;
       ctx.globalAlpha = 0.4;
       ctx.strokeStyle = color;
-      for (let x = 0; x < width; x++) {
+
+      for (let x = 0; x <= width; x++) {
         const y = Math.sin((x + step * 1.5) * 0.04) * 8 * Math.sin(x * 0.008) + centerY;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -154,31 +221,48 @@ export class OracleWidgetComponent implements OnDestroy {
       ctx.globalAlpha = 1;
 
       step += 4;
-      this.animFrameId = requestAnimationFrame(draw);
+      this.waveAnimId = requestAnimationFrame(draw);
     };
 
     draw();
   }
 
   private stopWaveAnimation(): void {
-    if (this.animFrameId !== null) {
-      cancelAnimationFrame(this.animFrameId);
-      this.animFrameId = null;
+    if (this.waveAnimId !== null) {
+      cancelAnimationFrame(this.waveAnimId);
+      this.waveAnimId = null;
     }
+
     const canvas = this.canvasRef?.nativeElement;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
   }
+
+  /* ═══════════════════════════════════════════════════════
+     BOUCLE DE PARTICULES (60 FPS hors zone Angular)
+     ═══════════════════════════════════════════════════════ */
 
   private startParticlesLoop(): void {
     const loop = () => {
       const canvas = this.particlesCanvasRef?.nativeElement;
+
       if (canvas) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const dpr = window.devicePixelRatio || 1;
+          const logicalWidth = canvas.width / dpr;
+          const logicalHeight = canvas.height / dpr;
+
+          ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#fff';
+          ctx.font = '16px serif';
+          ctx.textBaseline = 'middle';
+
           const activeParticles = this.particles.particles();
 
           for (let i = 0; i < activeParticles.length; i++) {
@@ -198,10 +282,18 @@ export class OracleWidgetComponent implements OnDestroy {
           ctx.globalAlpha = 1;
         }
       }
+
       this.particles.update();
       this.particlesAnimId = requestAnimationFrame(loop);
     };
 
     loop();
+  }
+
+  private stopParticlesLoop(): void {
+    if (this.particlesAnimId !== null) {
+      cancelAnimationFrame(this.particlesAnimId);
+      this.particlesAnimId = null;
+    }
   }
 }

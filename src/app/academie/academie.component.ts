@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DocumentsComponent } from './documents/documents.component';
 
@@ -9,11 +9,4 @@ import { DocumentsComponent } from './documents/documents.component';
   templateUrl: './academie.component.html',
   styleUrls: ['./academie.component.scss']
 })
-export class AcademieComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
-}
+export class AcademieComponent {}

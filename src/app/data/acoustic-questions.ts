@@ -4,6 +4,7 @@ import { QuizQuestion } from "../models/acoustic-quiz.model";
  * Catalogue complet des questions du Quiz Acoustique & Lutherie.
  * Regroupe : physique des cordes, lutherie, résonance, psychoacoustique.
  */
+
 export const ACOUSTIC_QUESTIONS: QuizQuestion[] = [
   {
     id: 1,

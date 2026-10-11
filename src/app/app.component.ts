@@ -6,6 +6,7 @@ import {
   HostListener,
   OnDestroy,
   OnInit,
+  computed,
   inject,
   runInInjectionContext
 } from '@angular/core';
@@ -21,6 +22,7 @@ import {
 } from '@angular/fire/database';
 import { Observable, Subject, of } from 'rxjs';
 import { map, switchMap, takeUntil } from 'rxjs/operators';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { AuthService } from './services/auth.service';
 import { UserMessage } from './models/user-message.model';
@@ -29,6 +31,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { FooterComponent } from './footer/footer.component';
 import { VoiceService } from './services/voice.service';
+import { InstallPromptComponent } from './footer/install-prompt/install-prompt.component';
+import { InstallComponent } from './footer/install/install.component';
 
 @Component({
   selector: 'app-root',
@@ -42,7 +46,9 @@ import { VoiceService } from './services/voice.service';
     MatMenuModule,
     MatDividerModule,
     MatSnackBarModule,
-    FooterComponent
+    FooterComponent,
+    InstallPromptComponent,
+    InstallComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -55,7 +61,27 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isMobileMenuOpen = false;
   isScrolled = false;
+
+  /** Flux : nombre de messages traités (status === 'replied') non lus */
   unreadCount$: Observable<number> = of(0);
+
+  /** Flux : l'utilisateur a-t-il déjà envoyé au moins un message ? */
+  private readonly hasSentMessage$: Observable<boolean> = this.buildHasSentMessageStream();
+
+  /** Signal dérivé, exposé au template */
+  readonly hasSentMessage = toSignal(this.hasSentMessage$, { initialValue: false });
+
+  /** Route dynamique du CTA « Discuter avec Charly Guitare » */
+  readonly contactCtaRoute = computed(() =>
+    this.hasSentMessage() ? '/inbox' : '/contact'
+  );
+
+  /** Libellé dynamique du CTA */
+  readonly contactCtaLabel = computed(() =>
+    this.hasSentMessage()
+      ? 'MES MESSAGES AVEC CHARLY'
+      : 'DISCUTEZ AVEC CHARLY GUITARE'
+  );
 
   private readonly destroy$ = new Subject<void>();
   private readonly voice = inject(VoiceService);
@@ -116,6 +142,30 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   /* ═══════════════════════════════════════════════════════
+     FLUX : l'utilisateur a-t-il déjà envoyé un message ?
+     ═══════════════════════════════════════════════════════ */
+
+  private buildHasSentMessageStream(): Observable<boolean> {
+    return this.auth.user$.pipe(
+      switchMap(user => {
+        if (!user) return of(false);
+
+        return runInInjectionContext(this.environmentInjector, () => {
+          const messagesQuery = query(
+            ref(this.database, 'messages'),
+            orderByChild('userId'),
+            equalTo(user.uid)
+          );
+
+          return listVal<UserMessage>(messagesQuery).pipe(
+            map(messages => messages.length > 0)
+          );
+        });
+      })
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════════
      ANNONCE VOCALE DES NOUVEAUX MESSAGES
      ═══════════════════════════════════════════════════════ */
 
@@ -138,12 +188,20 @@ export class AppComponent implements OnInit, OnDestroy {
             ? 'Tu as reçu un nouveau message de Charly Guitare.'
             : `Tu as reçu ${diff} nouveaux messages de Charly Guitare.`;
 
+          // On capture destroy$ pour éviter d'annoncer après destruction
+          const destroy$ = this.destroy$;
+          const voice = this.voice;
+
           setTimeout(async () => {
-            await this.voice.waitForSpeechEnd();
-            await this.voice.speak(message, {
-              pitch: 1.05,
-              rate: 0.95
-            });
+            if (destroy$.isStopped) return;
+
+            try {
+              await voice.waitForSpeechEnd();
+              if (destroy$.isStopped) return;
+              await voice.speak(message, { pitch: 1.05, rate: 0.95 });
+            } catch {
+              // silencieux : l'annonce vocale est optionnelle
+            }
           }, 300);
         }
 
@@ -178,7 +236,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.snackBar.open('Déconnexion réussie', 'Fermer', { duration: 3000 });
 
-    void this.router.navigate(['/home']);
+    void this.router.navigate(['/']);
   }
 
   /* ═══════════════════════════════════════════════════════

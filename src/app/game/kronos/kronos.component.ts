@@ -1,10 +1,20 @@
-import { CommonModule, DecimalPipe } from '@angular/common';
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+
+import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 /* ═════════════════════════════════════════════════════════════════════
    TYPES
    ═════════════════════════════════════════════════════════════════════ */
+
 interface PowerUp {
   id: string;
   name: string;
@@ -31,15 +41,19 @@ interface DiceFace {
 
 type SoundType = 'roll' | 'win' | 'power';
 
+const SOUND_PREF_KEY = 'kronos_sound_enabled';
+
 /* ═════════════════════════════════════════════════════════════════════
    COMPOSANT
    ═════════════════════════════════════════════════════════════════════ */
+
 @Component({
   selector: 'app-kronos',
   standalone: true,
-  imports: [DecimalPipe, CommonModule],
+  imports: [DecimalPipe],
   templateUrl: './kronos.component.html',
-  styleUrls: ['./kronos.component.scss']
+  styleUrls: ['./kronos.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KronosComponent implements OnInit, OnDestroy {
 
@@ -49,28 +63,31 @@ export class KronosComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════════════════
      CONSTANTES
      ═══════════════════════════════════════════════════════════════════ */
+
   readonly SEUIL_LYKO = 1_000_000_000;
   readonly COUT_LANCER = 2_000;
 
   /* ═══════════════════════════════════════════════════════════════════
      ÉTAT
      ═══════════════════════════════════════════════════════════════════ */
+
   readonly pointdevies = signal(5_000);
   readonly pointdebonus = signal(100);
   readonly randomnumber = signal(0);
   readonly derniereFace = signal(0);
   readonly isRolling = signal(false);
-  readonly messageKronos = signal('Le Maître du Temps vous observe...');
+  readonly messageKronos = signal('Le Maître du Temps vous observe…');
   readonly comboStreak = signal(0);
   readonly multiplierBonus = signal(1);
   readonly historique = signal<HistoryEntry[]>([]);
   readonly rejouer = signal(false);
   readonly etapedujeu = signal('0');
 
-  /* ─── Son (persistance localStorage) ─── */
+  /* ─── Son ─── */
   readonly soundEnabled = signal<boolean>(true);
 
   /* ─── Computed ─── */
+
   readonly progressionSeuil = computed(() =>
     Math.min((this.pointdevies() / this.SEUIL_LYKO) * 100, 100)
   );
@@ -86,6 +103,7 @@ export class KronosComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════════════════
      DONNÉES
      ═══════════════════════════════════════════════════════════════════ */
+
   readonly powers: PowerUp[] = [
     {
       id: 'shield',
@@ -95,7 +113,7 @@ export class KronosComponent implements OnInit, OnDestroy {
       description: 'Annule la déduction de coût si la face est < 4.',
       cooldown: 3,
       currentCooldown: 0,
-      active: false
+      active: false,
     },
     {
       id: 'rewind',
@@ -105,7 +123,7 @@ export class KronosComponent implements OnInit, OnDestroy {
       description: 'Relance le dé si le résultat est inférieur à 5.',
       cooldown: 4,
       currentCooldown: 0,
-      active: false
+      active: false,
     },
     {
       id: 'presage',
@@ -115,8 +133,8 @@ export class KronosComponent implements OnInit, OnDestroy {
       description: 'Garantit un score entre 6 et 12 au prochain lancer.',
       cooldown: 5,
       currentCooldown: 0,
-      active: false
-    }
+      active: false,
+    },
   ];
 
   readonly faces: DiceFace[] = [
@@ -125,76 +143,97 @@ export class KronosComponent implements OnInit, OnDestroy {
     { value: 3,  symbol: '⚂', name: 'La Trinité' },
     { value: 4,  symbol: '⚃', name: 'Les Fondations' },
     { value: 5,  symbol: '⚄', name: 'Le Changement' },
-    { value: 6,  symbol: '⚅', name: 'L\'Harmonie' },
+    { value: 6,  symbol: '⚅', name: "L'Harmonie" },
     { value: 7,  symbol: '✦', name: 'La Chance' },
-    { value: 8,  symbol: '✧', name: 'L\'Infini' },
+    { value: 8,  symbol: '✧', name: "L'Infini" },
     { value: 9,  symbol: '❂', name: 'La Sagesse' },
     { value: 10, symbol: '❖', name: 'La Puissance' },
     { value: 11, symbol: '✵', name: 'Le Destin' },
-    { value: 12, symbol: '✹', name: 'L\'Apothéose' }
+    { value: 12, symbol: '✹', name: "L'Apothéose" },
   ];
 
   /* ─── Audio ─── */
   private audioCtx?: AudioContext;
-  private rollIntervalId?: ReturnType<typeof setInterval>;
+  private rollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   /* ═══════════════════════════════════════════════════════════════════
      LIFECYCLE
      ═══════════════════════════════════════════════════════════════════ */
+
   ngOnInit(): void {
     this.etapedujeu.set(
       this.activatedRoute.snapshot.queryParamMap.get('etape') ?? '0'
     );
-
-    this.router.routeReuseStrategy.shouldReuseRoute = () => false;
-    this.router.onSameUrlNavigation = 'reload';
 
     this.initAudio();
     this.loadSoundPreference();
   }
 
   ngOnDestroy(): void {
-    if (this.rollIntervalId) clearInterval(this.rollIntervalId);
-    this.audioCtx?.close();
+    if (this.rollIntervalId !== null) {
+      clearInterval(this.rollIntervalId);
+    }
+
+    if (this.audioCtx && this.audioCtx.state !== 'closed') {
+      void this.audioCtx.close();
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════
      SON
      ═══════════════════════════════════════════════════════════════════ */
+
   private initAudio(): void {
-    const Ctor = window.AudioContext
-      || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (Ctor) this.audioCtx = new Ctor();
+    const Ctor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (Ctor) {
+      this.audioCtx = new Ctor();
+    }
   }
 
   private loadSoundPreference(): void {
-    const saved = localStorage.getItem('kronos_sound_enabled');
-    if (saved === 'false') this.soundEnabled.set(false);
+    try {
+      const saved = localStorage.getItem(SOUND_PREF_KEY);
+      if (saved === 'false') {
+        this.soundEnabled.set(false);
+      }
+    } catch {
+      /* silencieux */
+    }
   }
 
   toggleSound(): void {
     const next = !this.soundEnabled();
     this.soundEnabled.set(next);
-    localStorage.setItem('kronos_sound_enabled', String(next));
+
+    try {
+      localStorage.setItem(SOUND_PREF_KEY, String(next));
+    } catch {
+      /* silencieux */
+    }
 
     if (next) {
-      this.playSound('power'); // Feedback sonore à la réactivation
+      this.playSound('power');
     }
   }
 
   private playSound(type: SoundType): void {
-    if (!this.soundEnabled() || !this.audioCtx) return;  // ⬅️ Garde-fou son
+    const ctx = this.audioCtx;
+    if (!this.soundEnabled() || !ctx) return;
 
-    if (this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume().catch(() => { /* ignore */ });
+    if (ctx.state === 'suspended') {
+      void ctx.resume().catch(() => { /* silencieux */ });
     }
 
-    const osc = this.audioCtx.createOscillator();
-    const gain = this.audioCtx.createGain();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
+    gain.connect(ctx.destination);
 
-    const now = this.audioCtx.currentTime;
+    const now = ctx.currentTime;
 
     if (type === 'roll') {
       osc.type = 'sawtooth';
@@ -226,8 +265,15 @@ export class KronosComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════════════════
      POUVOIRS
      ═══════════════════════════════════════════════════════════════════ */
+
   activatePower(power: PowerUp): void {
-    if (power.currentCooldown > 0 || this.pointdebonus() < power.cost || power.active) return;
+    if (
+      power.currentCooldown > 0 ||
+      this.pointdebonus() < power.cost ||
+      power.active
+    ) {
+      return;
+    }
 
     this.pointdebonus.update(v => v - power.cost);
     power.active = true;
@@ -238,14 +284,17 @@ export class KronosComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════════════════
      LANCER
      ═══════════════════════════════════════════════════════════════════ */
+
   resetjeu(): void {
     if (this.pointdevies() < this.COUT_LANCER) {
-      this.messageKronos.set('Vous n\'avez pas assez de points de vie pour défier Kronos.');
+      this.messageKronos.set(
+        "Vous n'avez pas assez de points de vie pour défier Kronos."
+      );
       return;
     }
 
     this.isRolling.set(true);
-    this.messageKronos.set('Les rouages du temps s\'élancent...');
+    this.messageKronos.set("Les rouages du temps s'élancent…");
 
     let compteur = 0;
     this.rollIntervalId = setInterval(() => {
@@ -254,7 +303,10 @@ export class KronosComponent implements OnInit, OnDestroy {
       compteur++;
 
       if (compteur > 18) {
-        clearInterval(this.rollIntervalId);
+        if (this.rollIntervalId !== null) {
+          clearInterval(this.rollIntervalId);
+          this.rollIntervalId = null;
+        }
         this.finaliserLancer();
       }
     }, 80);
@@ -274,7 +326,9 @@ export class KronosComponent implements OnInit, OnDestroy {
     /* Inversion Chrono */
     const rewindPower = this.powers.find(p => p.id === 'rewind');
     if (rewindPower?.active && roll < 5) {
-      this.messageKronos.set('Inversion Temporelle ! Nouveau tirage automatique...');
+      this.messageKronos.set(
+        'Inversion Temporelle ! Nouveau tirage automatique…'
+      );
       roll = this.randomInteger(5, 12);
     }
 
@@ -292,7 +346,7 @@ export class KronosComponent implements OnInit, OnDestroy {
     /* Combos */
     if (roll >= 7) {
       this.comboStreak.update(s => s + 1);
-      this.multiplierBonus.set(1 + (this.comboStreak() * 0.1));
+      this.multiplierBonus.set(1 + this.comboStreak() * 0.1);
       this.playSound('win');
     } else {
       this.comboStreak.set(0);
@@ -310,21 +364,32 @@ export class KronosComponent implements OnInit, OnDestroy {
     /* Narration */
     const faceInfo = this.getFaceInfo(roll);
     if (roll >= 10) {
-      this.messageKronos.set(`APOTHÉOSE ! Face ${roll} (${faceInfo?.name}). Combo x${this.multiplierBonus().toFixed(1)} !`);
+      this.messageKronos.set(
+        `APOTHÉOSE ! Face ${roll} (${faceInfo?.name}). Combo x${this.multiplierBonus().toFixed(1)} !`
+      );
     } else if (roll >= 5) {
-      this.messageKronos.set(`Victoire ! Face ${roll} (${faceInfo?.name}). Le temps vous favorise.`);
+      this.messageKronos.set(
+        `Victoire ! Face ${roll} (${faceInfo?.name}). Le temps vous favorise.`
+      );
     } else {
-      this.messageKronos.set(`Épreuve ! Face ${roll} (${faceInfo?.name}). Persévérez.`);
+      this.messageKronos.set(
+        `Épreuve ! Face ${roll} (${faceInfo?.name}). Persévérez.`
+      );
     }
 
     /* Historique */
     this.historique.update(list => {
-      const updated = [{ face: roll, avant, apres: nouveauScore, date: new Date() }, ...list];
+      const updated = [
+        { face: roll, avant, apres: nouveauScore, date: new Date() },
+        ...list,
+      ];
       return updated.slice(0, 5);
     });
 
     if (this.pointdevies() >= this.SEUIL_LYKO) {
-      this.messageKronos.set('Seuil suprême atteint ! Lykö s\'incline devant votre maestria.');
+      this.messageKronos.set(
+        "Seuil suprême atteint ! Lykö s'incline devant votre maestria."
+      );
     }
   }
 
@@ -342,20 +407,22 @@ export class KronosComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════════════════
      NAVIGATION
      ═══════════════════════════════════════════════════════════════════ */
+
   onrecommencer(): void {
-    this.router.navigate(['/play'], {
+    void this.router.navigate(['/play'], {
       queryParams: {
         vie: this.pointdevies(),
         bonus: this.pointdebonus(),
-        etape: this.etapedujeu()
-      }
+        etape: this.etapedujeu(),
+      },
     });
   }
 
   /* ═══════════════════════════════════════════════════════════════════
      HELPERS
      ═══════════════════════════════════════════════════════════════════ */
-  randomInteger(min: number, max: number): number {
+
+  private randomInteger(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 

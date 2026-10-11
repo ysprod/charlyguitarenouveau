@@ -1,16 +1,19 @@
 <div class="kronos-container">
 
   <!-- ═══════════════════════════════════════════════════════
-       HEADER : Bouton retour + Titre + Bouton son
+       HEADER
        ═══════════════════════════════════════════════════════ -->
   <header class="game-header">
     <div class="header-top-row">
 
-      <button class="btn-floating-back"
-              (click)="onrecommencer()"
-              type="button"
-              aria-label="Retour au menu des jeux">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <button
+        class="btn-back"
+        (click)="onrecommencer()"
+        type="button"
+        aria-label="Retour au menu des jeux"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" aria-hidden="true">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
@@ -18,18 +21,23 @@
       </button>
 
       <h1 class="header-title">
-        <span class="header-icon">⏳</span>
+        <span class="header-icon" aria-hidden="true">⏳</span>
         <span class="title-text">KRONOS</span>
       </h1>
 
-      <!-- Bouton son -->
-      <button class="btn-sound"
-              (click)="toggleSound()"
-              type="button"
-              [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
-              [attr.title]="soundEnabled() ? 'Couper tous les sons' : 'Activer tous les sons'">
-        <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
-        <span class="sound-label">{{ soundEnabled() ? 'Son activé' : 'Son coupé' }}</span>
+      <button
+        class="btn-sound"
+        (click)="toggleSound()"
+        type="button"
+        [attr.aria-pressed]="soundEnabled()"
+        [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
+      >
+        <span class="sound-icon" aria-hidden="true">
+          {{ soundEnabled() ? '🔊' : '🔇' }}
+        </span>
+        <span class="sound-label">
+          {{ soundEnabled() ? 'Son activé' : 'Son coupé' }}
+        </span>
       </button>
     </div>
   </header>
@@ -40,16 +48,24 @@
   <div class="kronos-main">
 
     <!-- ═══════════ COLONNE GAUCHE : STATS + HISTORIQUE ═══════════ -->
-    <aside class="side-panel">
+    <aside class="side-panel" aria-label="Statistiques">
 
       <!-- PV -->
       <div class="stat-card">
         <div class="card-header">
-          <span class="material-icons red">favorite</span>
+          <span class="card-icon icon-red" aria-hidden="true">❤️</span>
           Points de Vie
         </div>
-        <div class="stat-value">{{ pointdevies() | number }}</div>
-        <div class="progress-container">
+        <div class="stat-value" aria-live="polite">
+          {{ pointdevies() | number }}
+        </div>
+        <div
+          class="progress-container"
+          role="progressbar"
+          [attr.aria-valuenow]="progressionSeuil()"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           <div class="progress-fill" [style.width.%]="progressionSeuil()"></div>
         </div>
         <div class="progress-label">
@@ -61,7 +77,7 @@
       <!-- Bonus & Combos -->
       <div class="stat-card">
         <div class="card-header">
-          <span class="material-icons gold">bolt</span>
+          <span class="card-icon icon-wood" aria-hidden="true">⚡</span>
           Bonus &amp; Séquences
         </div>
         <div class="stat-value-group">
@@ -71,7 +87,9 @@
           </div>
           <div>
             <span class="sub-label">Combo</span>
-            <div class="stat-subvalue highlight-combo">x{{ multiplierBonus().toFixed(1) }}</div>
+            <div class="stat-subvalue highlight-combo">
+              x{{ multiplierBonus().toFixed(1) }}
+            </div>
           </div>
         </div>
       </div>
@@ -79,7 +97,7 @@
       <!-- Historique -->
       <div class="history-card">
         <div class="card-header">
-          <span class="material-icons">history</span>
+          <span class="card-icon" aria-hidden="true">📜</span>
           Historique des Lancers
         </div>
         <div class="history-list">
@@ -100,18 +118,23 @@
       </div>
     </aside>
 
-    <!-- ═══════════ COLONNE CENTRALE : DÉ 3D + ACTIONS ═══════════ -->
-    <main class="center-panel">
+    <!-- ═══════════ COLONNE CENTRALE : DÉ + ACTIONS ═══════════ -->
+    <main class="center-panel" aria-label="Zone de jeu">
 
       <!-- Message Narratif -->
-      <div class="kronos-message" [class.rolling]="isRolling()">
+      <div
+        class="kronos-message"
+        [class.rolling]="isRolling()"
+        role="status"
+        aria-live="polite"
+      >
         <p>{{ messageKronos() }}</p>
       </div>
 
       <!-- Dodécaèdre 3D -->
       <div class="dice-container" [class.rolling]="isRolling()">
-        <div class="dice-glow"></div>
-        <div class="dice-3d">
+        <div class="dice-glow" aria-hidden="true"></div>
+        <div class="dice-3d" aria-hidden="true">
 
           @if (isRolling()) {
             <div class="dice-face rolling-anim">
@@ -143,12 +166,20 @@
         <h4 class="powers-title">Pouvoirs Temporels</h4>
         <div class="powers-grid">
           @for (power of powers; track power.id) {
-            <button class="power-card"
-                    [class.active]="power.active"
-                    [class.disabled]="power.currentCooldown > 0 || pointdebonus() < power.cost"
-                    (click)="activatePower(power)"
-                    type="button">
-              <span class="material-icons">{{ power.icon }}</span>
+            <button
+              class="power-card"
+              [class.active]="power.active"
+              [class.disabled]="power.currentCooldown > 0 || pointdebonus() < power.cost"
+              (click)="activatePower(power)"
+              type="button"
+              [attr.aria-label]="power.name + ' : ' + power.description"
+              [attr.aria-pressed]="power.active"
+            >
+              <span class="power-icon" aria-hidden="true">
+                {{ power.icon === 'shield' ? '🛡️'
+                   : power.icon === 'replay' ? '🔄'
+                   : '👁️' }}
+              </span>
               <div class="power-info">
                 <span class="p-name">{{ power.name }}</span>
                 <span class="p-cost">{{ power.cost }} Bonus</span>
@@ -162,63 +193,80 @@
       </div>
 
       <!-- Bouton Lancer -->
-      <button class="btn-roll"
-              (click)="resetjeu()"
-              [disabled]="isRolling() || casuffit() || pointdevies() < COUT_LANCER"
-              type="button">
-        <span class="material-icons">{{ isRolling() ? 'hourglass_top' : 'casino' }}</span>
+      <button
+        class="btn-roll"
+        (click)="resetjeu()"
+        [disabled]="isRolling() || casuffit() || pointdevies() < COUT_LANCER"
+        type="button"
+      >
+        <span class="btn-icon" aria-hidden="true">
+          {{ isRolling() ? '⏳' : '🎲' }}
+        </span>
         <div class="btn-text">
-          <span class="main-text">{{ isRolling() ? 'INVOCATION EN COURS...' : 'LANCER LE DÉ' }}</span>
-          <span class="sub-text">Coût : {{ COUT_LANCER | number }} PV • Multiplicateur x(1 à 12)</span>
+          <span class="main-text">
+            {{ isRolling() ? 'INVOCATION EN COURS…' : 'LANCER LE DÉ' }}
+          </span>
+          <span class="sub-text">
+            Coût : {{ COUT_LANCER | number }} PV • Multiplicateur x(1 à 12)
+          </span>
         </div>
       </button>
 
       <!-- Alertes -->
       @if (gagnant() && !isRolling()) {
-        <div class="alert success">
-          <span class="material-icons">emoji_events</span>
-          <p><strong>Excellente progression !</strong> Continuez de défier Kronos pour maximiser vos points.</p>
+        <div class="alert success" role="status">
+          <span class="alert-icon" aria-hidden="true">🏆</span>
+          <p>
+            <strong>Excellente progression !</strong>
+            Continuez de défier Kronos pour maximiser vos points.
+          </p>
         </div>
       }
 
       @if (casuffit()) {
-        <div class="alert danger">
-          <span class="material-icons">warning</span>
-          <p><strong>Seuil Ultime Atteint !</strong> Vous avez accompli le destin fixé par Lykö.</p>
+        <div class="alert danger" role="alert">
+          <span class="alert-icon" aria-hidden="true">⚠️</span>
+          <p>
+            <strong>Seuil Ultime Atteint !</strong>
+            Vous avez accompli le destin fixé par Lykö.
+          </p>
         </div>
       }
 
       @if (pointdevies() < COUT_LANCER && !casuffit()) {
-        <div class="alert info">
-          <span class="material-icons">info</span>
-          <p>Il vous faut au moins {{ COUT_LANCER | number }} PV pour invoquer le dé.</p>
+        <div class="alert info" role="status">
+          <span class="alert-icon" aria-hidden="true">ℹ️</span>
+          <p>
+            Il vous faut au moins {{ COUT_LANCER | number }} PV
+            pour invoquer le dé.
+          </p>
         </div>
       }
     </main>
 
     <!-- ═══════════ COLONNE DROITE : RÈGLES + LORE ═══════════ -->
-    <aside class="side-panel">
+    <aside class="side-panel" aria-label="Règles et lore">
 
       <div class="rules-card">
         <div class="card-header">
-          <span class="material-icons gold">menu_book</span>
+          <span class="card-icon icon-wood" aria-hidden="true">📖</span>
           Règles &amp; Stratégie
         </div>
         <ul class="rules-list">
           <li>
-            <span class="material-icons">casino</span>
+            <span class="rule-icon" aria-hidden="true">🎲</span>
             Lancez le dodécaèdre temporel (12 faces).
           </li>
           <li>
-            <span class="material-icons">trending_down</span>
+            <span class="rule-icon" aria-hidden="true">📉</span>
             Déduction de {{ COUT_LANCER | number }} PV par lancer.
           </li>
           <li>
-            <span class="material-icons">auto_awesome</span>
+            <span class="rule-icon" aria-hidden="true">✨</span>
             Enchaînez les faces ≥ 7 pour débloquer des combos.
           </li>
           <li>
-            <span class="material-icons">bolt</span>
+            <span class="rule-icon" aria-hidden="true">⚡</span>
             Utilisez vos points Bonus pour déclencher des sorts.
           </li>
         </ul>
@@ -226,12 +274,13 @@
 
       <div class="lore-card">
         <div class="card-header">
-          <span class="material-icons">auto_stories</span>
+          <span class="card-icon" aria-hidden="true">📜</span>
           La Légende
         </div>
         <p>
-          Forgé dans les profondeurs de l'Éther, le dodécaèdre de Kronos régit les lignes du temps.
-          Chaque lancer tisse une réalité alternative où le succès côtoie l'amertume.
+          Forgé dans les profondeurs de l'Éther, le dodécaèdre de Kronos
+          régit les lignes du temps. Chaque lancer tisse une réalité
+          alternative où le succès côtoie l'amertume.
         </p>
       </div>
     </aside>

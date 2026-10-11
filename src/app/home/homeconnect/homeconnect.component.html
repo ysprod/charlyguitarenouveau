@@ -5,7 +5,9 @@
        ═══════════════════════════════════════════════════════ -->
   <section class="section-header">
     <h2 class="section-title">OFFOLOMOU ECOSYSTEME ACADEMIE</h2>
-    <p class="section-desc">Jeux, formations, lives et expériences immersives — tout au même endroit.</p>
+    <p class="section-desc">
+      Jeux, formations, lives et expériences immersives — tout au même endroit.
+    </p>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════
@@ -16,30 +18,46 @@
   <app-documents></app-documents>
 
   <!-- ═══════════════════════════════════════════════════════
-       UNIVERS — RANGÉE 2 (FEATURE CARD LIVE)
+       UNIVERS — FEATURE CARD LIVE
        ═══════════════════════════════════════════════════════ -->
-  <section class="features-section">
+  <section class="features-section" aria-label="Sessions Live">
 
     <!-- 🔴 LIVE -->
     <article class="feature-card" appReveal>
-      <a routerLink="/live" class="feature-image-link" title="Rejoindre le Live">
+      <a
+        routerLink="/live"
+        class="feature-image-link"
+        title="Rejoindre le Live"
+        aria-label="Rejoindre les sessions live"
+      >
         <div class="feature-image-wrapper">
-          <img src="assets/live.jpg" alt="Live" class="feature-image" loading="lazy" />
-          <div class="feature-overlay"></div>
+          <img
+            src="assets/live.jpg"
+            alt="Live"
+            class="feature-image"
+            loading="lazy"
+          />
+          <div class="feature-overlay" aria-hidden="true"></div>
           <span class="feature-tag feature-tag-live">
-            <span class="live-dot"></span>
+            <span class="live-dot" aria-hidden="true"></span>
             Live
           </span>
         </div>
       </a>
       <div class="feature-content">
-        <h3 class="feature-title">Vidéos & Live</h3>
+        <h3 class="feature-title">Vidéos &amp; Live</h3>
         <p class="feature-desc">
           Rejoignez-nous pour des sessions interactives.
         </p>
         <a routerLink="/live" class="feature-link">
           <span>Rejoindre le live</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
@@ -60,17 +78,17 @@
 
     <div class="why-grid">
       <div class="why-card" appReveal>
-        <div class="why-icon">🎯</div>
+        <div class="why-icon" aria-hidden="true">🎯</div>
         <h3>Méthode éprouvée</h3>
         <p>Un parcours progressif, structuré par niveaux, pensé par Charly Guitare lui-même.</p>
       </div>
       <div class="why-card" appReveal>
-        <div class="why-icon">🎮</div>
+        <div class="why-icon" aria-hidden="true">🎮</div>
         <h3>Apprendre en jouant</h3>
         <p>Des jeux interactifs qui transforment chaque exercice en défi ludique et mémorable.</p>
       </div>
       <div class="why-card" appReveal>
-        <div class="why-icon">🚀</div>
+        <div class="why-icon" aria-hidden="true">🚀</div>
         <h3>Communauté active</h3>
         <p>Masterclass, lives, entraide : progressez entouré de passionnés, pas seul face à votre écran.</p>
       </div>
@@ -87,27 +105,28 @@
     </div>
 
     <div class="testimonials-grid">
+
       <figure class="testimonial-card" appReveal>
-        <div class="quote-mark">"</div>
+        <div class="quote-mark" aria-hidden="true">&ldquo;</div>
         <blockquote>
           En 6 mois, j'ai progressé plus qu'en 3 ans seul avec YouTube. La méthode est claire et motivante.
         </blockquote>
         <figcaption>
-          <span class="author-avatar">🎸</span>
+          <span class="author-avatar" aria-hidden="true">🎸</span>
           <span class="author-info">
             <strong>Sarah M.</strong>
-            <em>Élève depuis 2024</em>
+            <em>Élève depuis 2026</em>
           </span>
         </figcaption>
       </figure>
 
       <figure class="testimonial-card" appReveal>
-        <div class="quote-mark">"</div>
+        <div class="quote-mark" aria-hidden="true">&ldquo;</div>
         <blockquote>
           Les jeux pédagogiques sont géniaux. On apprend sans s'en rendre compte, c'est addictif !
         </blockquote>
         <figcaption>
-          <span class="author-avatar">🎵</span>
+          <span class="author-avatar" aria-hidden="true">🎵</span>
           <span class="author-info">
             <strong>Thomas L.</strong>
             <em>Membre Premium</em>
@@ -116,18 +135,19 @@
       </figure>
 
       <figure class="testimonial-card" appReveal>
-        <div class="quote-mark">"</div>
+        <div class="quote-mark" aria-hidden="true">&ldquo;</div>
         <blockquote>
           Enfin une plateforme complète : cours, lives, suivi. Charly a créé une vraie école numérique.
         </blockquote>
         <figcaption>
-          <span class="author-avatar">🎼</span>
+          <span class="author-avatar" aria-hidden="true">🎼</span>
           <span class="author-info">
             <strong>Amina K.</strong>
-            <em>Élève depuis 2023</em>
+            <em>Élève depuis 2026</em>
           </span>
         </figcaption>
       </figure>
+
     </div>
   </section>
 

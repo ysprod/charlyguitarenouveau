@@ -1,40 +1,36 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
-import { Auth, user } from '@angular/fire/auth';
-import { Database, listVal, objectVal, ref, update } from '@angular/fire/database';
 import { RouterLink } from '@angular/router';
-import { Observable, Subscription, of } from 'rxjs';
-import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
+import { toSignal } from '@angular/core/rxjs-interop';
 
-/* ═════════════════════════════════════════════════════════════════════
-   TYPES
-   ═════════════════════════════════════════════════════════════════════ */
+import { Auth, user } from '@angular/fire/auth';
+import {
+  Database,
+  listVal,
+  objectVal,
+  ref,
+  update
+} from '@angular/fire/database';
+import { catchError, map, of, switchMap } from 'rxjs';
 
-export interface DocumentItem {
-  key?: string;
-  title: string;
-  description: string;
-  type: string;
-  typeClass: string;
-  icon: string;
-  format: string;
-  level: string;
-  price: number;
-  imageUrl?: string;
-  imageStoragePath?: string;
-  downloadUrl: string;
-  storagePath?: string;
-  fileName?: string;
-  fileSize?: number;
-  createdAt?: string;
-  views?: number;
-  downloads?: number;
-}
+import { DocumentItem } from '../../models/document.model';
+import { PromoCodeService } from '../../services/promo-code.service';
+import { StorageService } from '../../services/storage.service';
+import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
 
-export type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'popular';
-export type ToastType = 'success' | 'info' | 'error';
+type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'popular';
+type ToastType = 'success' | 'info' | 'error';
 
-interface Toast {
+interface ToastState {
   show: boolean;
   message: string;
   type: ToastType;
@@ -45,42 +41,69 @@ interface FilterOption {
   icon: string;
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   COMPOSANT
-   ═════════════════════════════════════════════════════════════════════ */
+interface PendingPurchase {
+  doc: DocumentItem;
+  reason: 'paid' | 'free';
+}
+
+const TOAST_DURATION_MS = 4000;
+
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PromoModalComponent],
   templateUrl: './documents.component.html',
-  styleUrls: ['./documents.component.scss']
+  styleUrls: ['./documents.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocumentsComponent implements OnInit, OnDestroy {
 
-  private readonly database = inject(Database);
+  /* ─── Injection ─── */
+  private readonly db = inject(Database);
   private readonly auth = inject(Auth);
+  private readonly promoService = inject(PromoCodeService);
+  private readonly storage = inject(StorageService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  /* ─── État utilisateur ─── */
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT UTILISATEUR
+     ═══════════════════════════════════════════════════════ */
   readonly userCredit = signal(0);
   readonly currentUserId = signal<string | null>(null);
 
-  /* ─── Filtres, recherche, tri ─── */
+  /* ═══════════════════════════════════════════════════════
+     FILTRES, RECHERCHE, TRI
+     ═══════════════════════════════════════════════════════ */
   readonly selectedFilter = signal('Tous les documents');
   readonly searchTerm = signal('');
   readonly sortBy = signal<SortOption>('recent');
 
-  /* ─── Modale & recharge ─── */
+  /* ═══════════════════════════════════════════════════════
+     MODALE ACHAT
+     ═══════════════════════════════════════════════════════ */
   readonly selectedDocForPurchase = signal<DocumentItem | null>(null);
   readonly showRechargeInModal = signal(false);
-  readonly customRechargeAmount = signal(5000);
 
-  /* ─── Toast ─── */
-  readonly toast = signal<Toast>({ show: false, message: '', type: 'success' });
+  /* ═══════════════════════════════════════════════════════
+     MODALE CODE PROMO
+     ═══════════════════════════════════════════════════════ */
+  readonly showPromoModal = signal(false);
+  readonly isSavingPromo = signal(false);
+  readonly promoError = signal('');
+
+  /** Achat en attente de validation de code promo. */
+  private readonly pendingPurchase = signal<PendingPurchase | null>(null);
+
+  /* ═══════════════════════════════════════════════════════
+     TOAST
+     ═══════════════════════════════════════════════════════ */
+  readonly toast = signal<ToastState>({ show: false, message: '', type: 'success' });
   private toastTimeout?: ReturnType<typeof setTimeout>;
-  private userSub?: Subscription;
 
-  /* ─── Filtres disponibles ─── */
-  readonly filters: FilterOption[] = [
+  /* ═══════════════════════════════════════════════════════
+     FILTRES DISPONIBLES
+     ═══════════════════════════════════════════════════════ */
+  readonly filters: readonly FilterOption[] = [
     { label: 'Tous les documents', icon: '✨' },
     { label: 'Méthodes', icon: '📙' },
     { label: 'Livres numériques', icon: '📘' },
@@ -88,10 +111,22 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     { label: 'Supports pédagogiques', icon: '📑' }
   ];
 
-  /* ─── Documents ─── */
-  documents$: Observable<DocumentItem[]> = of([]);
-  readonly allDocs = signal<DocumentItem[]>([]);
+  /* ═══════════════════════════════════════════════════════
+     DOCUMENTS (Firebase → signal)
+     ═══════════════════════════════════════════════════════ */
+    readonly allDocs = toSignal(
+    listVal<DocumentItem>(ref(this.db, 'documents'), { keyField: 'key' }).pipe(
+      catchError(err => {
+        console.error('Erreur Firebase:', err);
+        return of([] as DocumentItem[]);
+      })
+    ),
+    { initialValue: [] as DocumentItem[] }
+  );
 
+  /* ═══════════════════════════════════════════════════════
+     DOCUMENTS FILTRÉS / TRIÉS
+     ═══════════════════════════════════════════════════════ */
   readonly visibleDocuments = computed(() => {
     let docs = [...this.allDocs()];
 
@@ -115,60 +150,44 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     return this.sortDocuments(docs, this.sortBy());
   });
 
-  /* ═══════════════════════════════════════════════════════════════════
-     LIFECYCLE
-     ═══════════════════════════════════════════════════════════════════ */
-  ngOnInit(): void {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-    this.loadDocuments();
-    this.listenToUserCredit();
-  }
-
-  ngOnDestroy(): void {
-    this.userSub?.unsubscribe();
-    if (this.toastTimeout) clearTimeout(this.toastTimeout);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     CHARGEMENT DES DONNÉES
-     ═══════════════════════════════════════════════════════════════════ */
-  private loadDocuments(): void {
-    const documentsRef = ref(this.database, 'documents');
-
-    this.documents$ = listVal<DocumentItem>(documentsRef, { keyField: 'key' }).pipe(
-      map(docs => docs.map(d => ({ ...d, key: d.key }))),
-      catchError(err => {
-        console.error('Erreur Firebase:', err);
-        return of([]);
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
-
-    this.documents$.subscribe(docs => this.allDocs.set(docs));
-  }
-
-  private listenToUserCredit(): void {
-    this.userSub = user(this.auth).pipe(
+  /* ═══════════════════════════════════════════════════════
+     CRÉDIT UTILISATEUR (Firebase → signal)
+     ═══════════════════════════════════════════════════════ */
+  private readonly creditFromDb = toSignal(
+    user(this.auth).pipe(
       switchMap(currentUser => {
         if (!currentUser) {
           this.currentUserId.set(null);
-          this.userCredit.set(0);
           return of(null);
         }
         this.currentUserId.set(currentUser.uid);
-        return objectVal<number>(ref(this.database, `users/${currentUser.uid}/credit`));
+        return objectVal<number>(ref(this.db, `users/${currentUser.uid}/credit`));
       })
-    ).subscribe({
-      next: credit => {
-        if (credit != null) this.userCredit.set(credit);
-      },
-      error: err => console.error('Erreur crédit:', err)
-    });
+    ),
+    { initialValue: null as number | null }
+  );
+
+  /* ═══════════════════════════════════════════════════════
+     CYCLE DE VIE
+     ═══════════════════════════════════════════════════════ */
+  constructor() {
+    /* Synchronise le crédit dès que Firebase émet */
+    const creditValue = computed(() => this.creditFromDb() ?? 0);
+    // On expose le crédit réactif via un effet léger
+    queueMicrotask(() => this.userCredit.set(creditValue()));
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  ngOnInit(): void {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  ngOnDestroy(): void {
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+  }
+
+  /* ═══════════════════════════════════════════════════════
      FILTRAGE / TRI / RECHERCHE
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
   filterBy(category: string): void {
     this.selectedFilter.set(category);
   }
@@ -199,24 +218,66 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   }
 
   private sortDocuments(docs: DocumentItem[], sort: SortOption): DocumentItem[] {
+    const copy = [...docs];
+
     switch (sort) {
-      case 'price-asc': return docs.sort((a, b) => (a.price || 0) - (b.price || 0));
-      case 'price-desc': return docs.sort((a, b) => (b.price || 0) - (a.price || 0));
-      case 'popular': return docs.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
-      default: return docs.sort((a, b) => {
-        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return tb - ta;
-      });
+      case 'price-asc':
+        return copy.sort((a, b) => (a.price || 0) - (b.price || 0));
+      case 'price-desc':
+        return copy.sort((a, b) => (b.price || 0) - (a.price || 0));
+      case 'popular':
+        return copy.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+      default:
+        return copy.sort((a, b) => {
+          const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return tb - ta;
+        });
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
-     ACHAT / RECHARGE
-     ═══════════════════════════════════════════════════════════════════ */
-  initiatePurchase(doc: DocumentItem, event?: Event): void {
+  /* ═══════════════════════════════════════════════════════
+     ACHAT — Vérification code promo en amont
+     ═══════════════════════════════════════════════════════ */
+
+  /**
+   * Point d'entrée unique pour l'achat d'un document (payant ou gratuit).
+   *
+   * Vérifie le code promo AVANT toute action :
+   *  - Si promo valide → exécute l'achat
+   *  - Sinon → ouvre la modale promo
+   */
+  async initiatePurchase(doc: DocumentItem, event?: Event): Promise<void> {
     event?.stopPropagation();
 
+    /* 1. Vérifie le code promo (cache + Firebase) */
+    const promoResult = await this.promoService.checkPromoCode();
+
+    /* 2. Cas : utilisateur non connecté ou sans code → modale */
+    if (promoResult.status === 'missing') {
+      this.pendingPurchase.set({
+        doc,
+        reason: (!doc.price || doc.price === 0) ? 'free' : 'paid'
+      });
+      this.promoError.set('');
+      this.showPromoModal.set(true);
+      return;
+    }
+
+    /* 3. Cas : erreur réseau */
+    if (promoResult.status === 'error') {
+      this.showToast(promoResult.message, 'error');
+      return;
+    }
+
+    /* 4. Cas : code valide → on continue le flux normal */
+    this.performPurchase(doc);
+  }
+
+  /**
+   * Exécute réellement l'achat (ou téléchargement gratuit).
+   */
+  private performPurchase(doc: DocumentItem): void {
     /* Gratuit → téléchargement direct */
     if (!doc.price || doc.price === 0) {
       window.open(doc.downloadUrl, '_blank');
@@ -224,6 +285,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    /* Payant → modale de confirmation */
     this.showRechargeInModal.set(false);
     this.selectedDocForPurchase.set(doc);
   }
@@ -237,6 +299,47 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     this.showRechargeInModal.set(show);
   }
 
+  /* ═══════════════════════════════════════════════════════
+     MODALE CODE PROMO
+     ═══════════════════════════════════════════════════════ */
+
+  onPromoCodeSubmitted(code: string): void {
+    if (this.isSavingPromo()) return;
+
+    this.isSavingPromo.set(true);
+    this.promoError.set('');
+
+    void this.promoService.validatePromoCode(code).then(result => {
+      this.isSavingPromo.set(false);
+
+      if (!result.ok) {
+        this.promoError.set(result.message);
+        return;
+      }
+
+      /* Succès → ferme la modale + continue l'achat */
+      this.showPromoModal.set(false);
+      this.showToast(`Code « ${result.code} » validé ! Bon achat 🎸`, 'success');
+
+      const pending = this.pendingPurchase();
+      this.pendingPurchase.set(null);
+
+      if (pending) {
+        this.performPurchase(pending.doc);
+      }
+    });
+  }
+
+  closePromoModal(): void {
+    if (this.isSavingPromo()) return;
+    this.showPromoModal.set(false);
+    this.pendingPurchase.set(null);
+    this.promoError.set('');
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     RECHARGE
+     ═══════════════════════════════════════════════════════ */
   async processQuickRecharge(amount: number): Promise<void> {
     const uid = this.currentUserId();
     if (!uid) {
@@ -246,7 +349,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
     try {
       const newBalance = this.userCredit() + amount;
-      await update(ref(this.database, `users/${uid}`), { credit: newBalance });
+      await update(ref(this.db, `users/${uid}`), { credit: newBalance });
       this.showToast(`Compte rechargé de ${this.formatPrice(amount)} !`, 'success');
       this.showRechargeInModal.set(false);
     } catch (error) {
@@ -255,6 +358,9 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     }
   }
 
+  /* ═══════════════════════════════════════════════════════
+     CONFIRMATION D'ACHAT
+     ═══════════════════════════════════════════════════════ */
   async confirmPurchase(): Promise<void> {
     const doc = this.selectedDocForPurchase();
     const uid = this.currentUserId();
@@ -275,7 +381,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
     try {
       const newBalance = currentBalance - docPrice;
-      await update(ref(this.database, `users/${uid}`), { credit: newBalance });
+      await update(ref(this.db, `users/${uid}`), { credit: newBalance });
 
       this.selectedDocForPurchase.set(null);
       this.showToast(`Achat réussi ! Téléchargement de "${doc.title}"...`, 'success');
@@ -286,15 +392,15 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      UTILITAIRES
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
   private showToast(message: string, type: ToastType = 'success'): void {
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toast.set({ show: true, message, type });
     this.toastTimeout = setTimeout(
       () => this.toast.update(t => ({ ...t, show: false })),
-      4000
+      TOAST_DURATION_MS
     );
   }
 

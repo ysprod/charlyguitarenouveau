@@ -1,32 +1,55 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+
 import { Router } from '@angular/router';
-import { QuizQuestion, QuizState, Difficulty } from '../../models/acoustic-quiz.model';
+
+import {
+  QuizQuestion,
+  Difficulty,
+} from '../../models/acoustic-quiz.model';
+
 import { ACOUSTIC_QUESTIONS } from 'src/app/data/acoustic-questions';
- 
+
 /* ═════════════════════════════════════════════════════════════════════
    TYPES
    ═════════════════════════════════════════════════════════════════════ */
+
 type DifficultyFilter = Difficulty | 'Toutes';
 
-const LETTERS = ['A', 'B', 'C', 'D'];
+const LETTERS = ['A', 'B', 'C', 'D'] as const;
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-acoustic',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './acoustic.component.html',
-  styleUrls: ['./acoustic.component.scss']
+  styleUrls: ['./acoustic.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AcousticComponent implements OnInit {
 
   private readonly router = inject(Router);
 
-  /* ─── Données (importées depuis le fichier séparé) ─── */
+  /* ─── Données ─── */
   readonly questions: QuizQuestion[] = ACOUSTIC_QUESTIONS;
 
   /* ─── Filtres ─── */
-  readonly difficulties: DifficultyFilter[] = ['Toutes', 'Facile', 'Intermédiaire', 'Expert'];
+  readonly difficulties: DifficultyFilter[] = [
+    'Toutes',
+    'Facile',
+    'Intermédiaire',
+    'Expert',
+  ];
   readonly selectedDifficulty = signal<DifficultyFilter>('Toutes');
 
   /* ─── État du quiz (signals) ─── */
@@ -48,6 +71,8 @@ export class AcousticComponent implements OnInit {
 
   readonly totalQuestions = computed(() => this.filteredQuestions().length);
 
+  readonly hasQuestions = computed(() => this.totalQuestions() > 0);
+
   readonly currentQuestion = computed<QuizQuestion | null>(() => {
     const list = this.filteredQuestions();
     const idx = this.currentQuestionIndex();
@@ -60,12 +85,12 @@ export class AcousticComponent implements OnInit {
     return ((this.currentQuestionIndex() + 1) / total) * 100;
   });
 
-  readonly canSubmit = computed(() =>
-    this.selectedOptionIndex() !== null && !this.isAnswerSubmitted()
+  readonly canSubmit = computed(
+    () => this.selectedOptionIndex() !== null && !this.isAnswerSubmitted()
   );
 
-  readonly isLastQuestion = computed(() =>
-    this.currentQuestionIndex() >= this.totalQuestions() - 1
+  readonly isLastQuestion = computed(
+    () => this.currentQuestionIndex() >= this.totalQuestions() - 1
   );
 
   readonly scorePercentage = computed(() => {
@@ -75,16 +100,20 @@ export class AcousticComponent implements OnInit {
 
   readonly scoreLabel = computed(() => {
     const p = this.scorePercentage();
-    if (p >= 80) return '🔥 Excellent ! Vous avez des bases solides en acoustique et lutherie !';
-    if (p >= 50) return '👍 Bon travail ! Quelques notions à revoir pour devenir un expert.';
-    return '🌱 Continuez d\'apprendre ! L\'acoustique est un domaine passionnant.';
+    if (p >= 80) {
+      return '🔥 Excellent ! Vous avez des bases solides en acoustique et lutherie !';
+    }
+    if (p >= 50) {
+      return '👍 Bon travail ! Quelques notions à revoir pour devenir un expert.';
+    }
+    return "🌱 Continuez d'apprendre ! L'acoustique est un domaine passionnant.";
   });
 
   readonly gradeEmoji = computed(() => {
     const p = this.scorePercentage();
     if (p === 100) return '🏆';
-    if (p >= 80)  return '🎓';
-    if (p >= 50)  return '🎸';
+    if (p >= 80) return '🎓';
+    if (p >= 50) return '🎸';
     return '📚';
   });
 
@@ -94,6 +123,7 @@ export class AcousticComponent implements OnInit {
   /* ═══════════════════════════════════════════════════════════════════
      LIFECYCLE
      ═══════════════════════════════════════════════════════════════════ */
+
   ngOnInit(): void {
     this.resetQuiz();
   }
@@ -101,7 +131,9 @@ export class AcousticComponent implements OnInit {
   /* ═══════════════════════════════════════════════════════════════════
      ACTIONS
      ═══════════════════════════════════════════════════════════════════ */
+
   filterByDifficulty(d: DifficultyFilter): void {
+    if (this.selectedDifficulty() === d) return;
     this.selectedDifficulty.set(d);
     this.resetQuiz();
   }
@@ -136,9 +168,9 @@ export class AcousticComponent implements OnInit {
       this.currentQuestionIndex.update(i => i + 1);
       this.selectedOptionIndex.set(null);
       this.isAnswerSubmitted.set(false);
-    } else {
-      this.isCompleted.set(true);
+      return;
     }
+    this.isCompleted.set(true);
   }
 
   resetQuiz(): void {
@@ -154,7 +186,17 @@ export class AcousticComponent implements OnInit {
   /* ═══════════════════════════════════════════════════════════════════
      NAVIGATION
      ═══════════════════════════════════════════════════════════════════ */
+
   goToPlay(): void {
-    this.router.navigate(['/play']);
+    void this.router.navigate(['/play']);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     HELPERS TEMPLATE
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /** Retourne la classe de difficulté pour le badge. */
+  getDifficultyClass(difficulty: Difficulty): string {
+    return difficulty.toLowerCase().replace('é', 'e');
   }
 }

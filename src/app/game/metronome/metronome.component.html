@@ -1,7 +1,7 @@
 <div class="challenge-container">
 
   <!-- ═══════════════════════════════════════════════════════
-       HEADER : Bouton retour + Titre sur la même ligne
+       HEADER : Bouton retour + Titre + Bouton son
        ═══════════════════════════════════════════════════════ -->
   <header class="game-header">
     <div class="header-top-row">
@@ -41,18 +41,18 @@
   <!-- ═══════════════════════════════════════════════════════
        RECORD
        ═══════════════════════════════════════════════════════ -->
-  @if (bestScoreEver > 0) {
+  @if (bestScoreEver() > 0) {
     <div class="record-banner">
-      🏆 Meilleur score : <strong>{{ bestScoreEver }}%</strong>
+      🏆 Meilleur score : <strong>{{ bestScoreEver() }}%</strong>
       <span class="record-sep">•</span>
-      Précision record : <strong>±{{ bestAvgDeltaEver }} ms</strong>
+      Précision record : <strong>±{{ bestAvgDeltaEver() }} ms</strong>
     </div>
   }
 
   <!-- ═══════════════════════════════════════════════════════
        CONFIGURATION
        ═══════════════════════════════════════════════════════ -->
-  @if (gameState === 'IDLE') {
+  @if (gameState() === 'IDLE') {
     <section class="config-card">
 
       <!-- Difficulté -->
@@ -61,8 +61,8 @@
         <div class="difficulty-grid">
           @for (d of difficulties; track d.mode) {
             <button class="difficulty-chip"
-                    [class.active]="difficulty === d.mode"
-                    (click)="difficulty = d.mode"
+                    [class.active]="difficulty() === d.mode"
+                    (click)="difficulty.set(d.mode)"
                     type="button">
               <span class="diff-emoji">{{ d.emoji }}</span>
               <span class="diff-label">{{ d.label }}</span>
@@ -74,13 +74,19 @@
 
       <!-- Tempo -->
       <div class="config-group">
-        <label>Tempo : <strong>{{ bpm }} BPM</strong></label>
-        <input type="range" min="40" max="220" step="5" [(ngModel)]="bpm">
+        <label>Tempo : <strong>{{ bpm() }} BPM</strong></label>
+        <input type="range"
+               [min]="limits.BPM_MIN"
+               [max]="limits.BPM_MAX"
+               [step]="limits.BPM_STEP"
+               [ngModel]="bpm()"
+               (ngModelChange)="bpm.set($event)"
+               [ngModelOptions]="{ standalone: true }">
         <div class="bpm-presets">
-          @for (p of [60, 80, 100, 120, 140, 180]; track p) {
+          @for (p of bpmPresets; track p) {
             <button class="bpm-preset"
-                    [class.active]="bpm === p"
-                    (click)="bpm = p"
+                    [class.active]="bpm() === p"
+                    (click)="bpm.set(p)"
                     type="button">
               {{ p }}
             </button>
@@ -92,13 +98,13 @@
       <div class="config-group">
         <label>Durée du défi</label>
         <div class="beats-options">
-          @for (n of [8, 16, 32, 64]; track n) {
+          @for (n of beatOptions; track n) {
             <button class="beats-chip"
-                    [class.active]="totalBeatsToPlay === n"
-                    (click)="totalBeatsToPlay = n"
+                    [class.active]="totalBeatsToPlay() === n"
+                    (click)="totalBeatsToPlay.set(n)"
                     type="button">
               {{ n }} temps
-              <small>({{ n / beatsPerBar }} mes.)</small>
+              <small>({{ n / beatsPerBar() }} mes.)</small>
             </button>
           }
         </div>
@@ -108,13 +114,22 @@
       <div class="config-group">
         <label>Subdivision</label>
         <div class="subdivision-options">
-          <button class="sub-chip" [class.active]="subdivision === 1" (click)="subdivision = 1" type="button">
+          <button class="sub-chip"
+                  [class.active]="subdivision() === 1"
+                  (click)="subdivision.set(1)"
+                  type="button">
             ♩ Noires
           </button>
-          <button class="sub-chip" [class.active]="subdivision === 2" (click)="subdivision = 2" type="button">
+          <button class="sub-chip"
+                  [class.active]="subdivision() === 2"
+                  (click)="subdivision.set(2)"
+                  type="button">
             ♪ Croches
           </button>
-          <button class="sub-chip" [class.active]="subdivision === 4" (click)="subdivision = 4" type="button">
+          <button class="sub-chip"
+                  [class.active]="subdivision() === 4"
+                  (click)="subdivision.set(4)"
+                  type="button">
             ♬ Doubles
           </button>
         </div>
@@ -124,8 +139,14 @@
       <details class="advanced-settings">
         <summary>⚙️ Réglages avancés</summary>
         <div class="config-group">
-          <label>Compensation latence : <strong>{{ latencyOffsetMs }} ms</strong></label>
-          <input type="range" min="-100" max="100" step="5" [(ngModel)]="latencyOffsetMs">
+          <label>Compensation latence : <strong>{{ latencyOffsetMs() }} ms</strong></label>
+          <input type="range"
+                 [min]="limits.LATENCY_MIN"
+                 [max]="limits.LATENCY_MAX"
+                 [step]="limits.LATENCY_STEP"
+                 [ngModel]="latencyOffsetMs()"
+                 (ngModelChange)="latencyOffsetMs.set($event)"
+                 [ngModelOptions]="{ standalone: true }">
           <small class="hint">
             Ajustez si vos taps sont systématiquement en avance (+) ou en retard (−).
           </small>
@@ -141,11 +162,11 @@
       </p>
 
       <!-- Historique -->
-      @if (sessions.length > 0) {
+      @if (sessions().length > 0) {
         <div class="history-section">
           <h4>📊 Dernières sessions</h4>
           <ul class="history-list">
-            @for (s of sessions.slice(0, 5); track s.date) {
+            @for (s of sessions().slice(0, 5); track s.date) {
               <li>
                 <span class="hist-score"
                       [class.good]="s.score >= 70"
@@ -167,14 +188,14 @@
   <!-- ═══════════════════════════════════════════════════════
        ZONE DE JEU
        ═══════════════════════════════════════════════════════ -->
-  @if (gameState === 'COUNTDOWN' || gameState === 'PLAYING') {
+  @if (gameState() === 'COUNTDOWN' || gameState() === 'PLAYING') {
     <section class="game-play-area">
 
       <!-- Décompte -->
-      @if (gameState === 'COUNTDOWN') {
+      @if (gameState() === 'COUNTDOWN') {
         <div class="countdown-overlay">
           <div class="countdown-ring">
-            <span class="countdown-number">{{ countdownValue }}</span>
+            <span class="countdown-number">{{ countdownValue() }}</span>
           </div>
           <p>Préparez-vous…</p>
           <small class="hint">Tapez sur chaque temps fort</small>
@@ -182,22 +203,22 @@
       }
 
       <!-- Plateau de jeu -->
-      @if (gameState === 'PLAYING') {
+      @if (gameState() === 'PLAYING') {
         <div class="active-board">
 
           <!-- Barre de progression -->
           <div class="play-progress-track">
-            <div class="play-progress-fill" [style.width.%]="progressPercent"></div>
+            <div class="play-progress-fill" [style.width.%]="progressPercent()"></div>
           </div>
 
           <!-- En-tête live -->
           <div class="live-header">
             <div class="beat-info">
-              <span class="beat-label">{{ beatLabel }}{{ subBeatLabel }}</span>
+              <span class="beat-label">{{ beatLabel() }}{{ subBeatLabel() }}</span>
               <div class="beat-dots">
                 @for (b of [0, 1, 2, 3]; track b) {
                   <span class="beat-dot"
-                        [class.active]="(currentBeatIndex % beatsPerBar) === b && currentSubBeat === 0"
+                        [class.active]="(currentBeatIndex() % beatsPerBar()) === b && currentSubBeat() === 0"
                         [class.accent]="b === 0"></span>
                 }
               </div>
@@ -205,15 +226,15 @@
 
             <div class="live-stats">
               <div class="live-stat">
-                <span class="live-val">{{ liveScore }}</span>
+                <span class="live-val">{{ liveScore() }}</span>
                 <span class="live-lbl">Score</span>
               </div>
-              <div class="live-stat" [class.hot]="liveStreak >= 4">
-                <span class="live-val">🔥 {{ liveStreak }}</span>
+              <div class="live-stat" [class.hot]="liveStreak() >= 4">
+                <span class="live-val">🔥 {{ liveStreak() }}</span>
                 <span class="live-lbl">Série</span>
               </div>
               <div class="live-stat">
-                <span class="live-val">{{ liveAccuracy }}%</span>
+                <span class="live-val">{{ liveAccuracy() }}%</span>
                 <span class="live-lbl">Précision</span>
               </div>
             </div>
@@ -221,7 +242,7 @@
 
           <!-- Bouton TAP -->
           <button class="tap-button"
-                  [class.pulse-bar]="isBarAccent"
+                  [class.pulse-bar]="isBarAccent()"
                   (click)="registerTap()"
                   type="button">
             <span class="tap-icon">🥁</span>
@@ -231,7 +252,7 @@
 
           <!-- Feedback récent -->
           <div class="recent-feedback">
-            @for (record of tapRecords.slice(-5); track record.beatNumber) {
+            @for (record of tapRecords().slice(-5); track record.beatNumber) {
               <div class="feedback-badge" [ngClass]="record.accuracy.toLowerCase()">
                 <span class="fb-delta">
                   {{ record.deltaMs > 0 ? '+' : '' }}{{ record.deltaMs }} ms
@@ -253,64 +274,67 @@
   <!-- ═══════════════════════════════════════════════════════
        RÉSULTATS
        ═══════════════════════════════════════════════════════ -->
-  @if (gameState === 'FINISHED' && gameResults) {
+  @if (gameState() === 'FINISHED' && gameResults(); as results) {
     <section class="results-card">
 
-      @if (gameResults.isNewRecord) {
+      @if (results.isNewRecord) {
         <div class="new-record-banner">🎉 NOUVEAU RECORD !</div>
       }
 
       <!-- En-tête résultat -->
       <div class="result-header">
-        <div class="rank-emoji">{{ gameResults.rankEmoji }}</div>
-        <h2>{{ gameResults.rankTitle }}</h2>
-        <div class="main-score" [class.perfect]="gameResults.scorePercentage >= 90">
-          {{ gameResults.scorePercentage }}%
+        <div class="rank-emoji">{{ results.rankEmoji }}</div>
+        <h2>{{ results.rankTitle }}</h2>
+        <div class="main-score" [class.perfect]="results.scorePercentage >= 90">
+          {{ results.scorePercentage }}%
         </div>
         <p class="score-sub">
-          {{ gameResults.playedBeats }} / {{ gameResults.totalBeats }} temps joués
+          {{ results.playedBeats }} / {{ results.totalBeats }} temps joués
         </p>
       </div>
 
       <!-- Barre de score -->
       <div class="score-bar">
-        <div class="score-segment perfect" [style.width.%]="gameResults.perfectCount / gameResults.totalBeats * 100"></div>
-        <div class="score-segment great"   [style.width.%]="gameResults.greatCount / gameResults.totalBeats * 100"></div>
-        <div class="score-segment ok"      [style.width.%]="gameResults.okCount / gameResults.totalBeats * 100"></div>
+        <div class="score-segment perfect"
+             [style.width.%]="results.perfectCount / results.totalBeats * 100"></div>
+        <div class="score-segment great"
+             [style.width.%]="results.greatCount / results.totalBeats * 100"></div>
+        <div class="score-segment ok"
+             [style.width.%]="results.okCount / results.totalBeats * 100"></div>
       </div>
 
       <div class="score-legend">
-        <span><i class="dot perfect"></i> Parfait ({{ gameResults.perfectCount }})</span>
-        <span><i class="dot great"></i>   Excellent ({{ gameResults.greatCount }})</span>
-        <span><i class="dot ok"></i>      Correct ({{ gameResults.okCount }})</span>
-        <span><i class="dot missed"></i>  Manqués ({{ gameResults.missedBeats }})</span>
+        <span><i class="dot perfect"></i> Parfait ({{ results.perfectCount }})</span>
+        <span><i class="dot great"></i>   Excellent ({{ results.greatCount }})</span>
+        <span><i class="dot ok"></i>      Correct ({{ results.okCount }})</span>
+        <span><i class="dot missed"></i>  Manqués ({{ results.missedBeats }})</span>
       </div>
 
       <!-- Stats détaillées -->
       <div class="stats-grid">
         <div class="stat-box">
           <span class="stat-label">Décalage moyen</span>
-          <span class="stat-value">±{{ gameResults.avgDeltaMs }} ms</span>
+          <span class="stat-value">±{{ results.avgDeltaMs }} ms</span>
         </div>
         <div class="stat-box">
           <span class="stat-label">Médiane</span>
-          <span class="stat-value">±{{ gameResults.medianDeltaMs }} ms</span>
+          <span class="stat-value">±{{ results.medianDeltaMs }} ms</span>
         </div>
         <div class="stat-box">
           <span class="stat-label">Régularité (σ)</span>
-          <span class="stat-value">±{{ gameResults.stdDeviationMs }} ms</span>
+          <span class="stat-value">±{{ results.stdDeviationMs }} ms</span>
         </div>
         <div class="stat-box highlight">
           <span class="stat-label">Meilleur tap</span>
-          <span class="stat-value">{{ gameResults.bestDeltaMs }} ms</span>
+          <span class="stat-value">{{ results.bestDeltaMs }} ms</span>
         </div>
         <div class="stat-box">
           <span class="stat-label">Meilleure série</span>
-          <span class="stat-value">🔥 {{ bestStreak }}</span>
+          <span class="stat-value">🔥 {{ bestStreak() }}</span>
         </div>
         <div class="stat-box">
           <span class="stat-label">Pire tap</span>
-          <span class="stat-value">{{ gameResults.worstDeltaMs }} ms</span>
+          <span class="stat-value">{{ results.worstDeltaMs }} ms</span>
         </div>
       </div>
 
@@ -318,7 +342,7 @@
       <div class="visual-analysis">
         <h4>📈 Répartition des taps</h4>
         <div class="beat-bars">
-          @for (b of beatResults; track b.beatNumber) {
+          @for (b of beatResults(); track b.beatNumber) {
             <div class="beat-bar"
                  [ngClass]="b.accuracy.toLowerCase()"
                  [title]="'Temps ' + (b.beatNumber + 1) + ' · ' + (b.deltaMs !== null ? (b.deltaMs > 0 ? '+' : '') + b.deltaMs + ' ms' : 'manqué')">
@@ -340,7 +364,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (r of beatResults; track r.beatNumber) {
+            @for (r of beatResults(); track r.beatNumber) {
               <tr>
                 <td>Temps {{ r.beatNumber + 1 }}</td>
                 <td [class.late]="r.deltaMs !== null && r.deltaMs > 0"

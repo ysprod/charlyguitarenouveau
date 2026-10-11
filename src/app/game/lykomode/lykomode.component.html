@@ -1,17 +1,23 @@
 <div class="lyko-page">
- 
+
   <!-- ═══════════════════════════════════════════════════════
        BOÎTE DE DIALOGUE
        ═══════════════════════════════════════════════════════ -->
-  <div class="dialog-overlay" [class.show]="showDialog()">
+  <div
+    class="dialog-overlay"
+    [class.show]="showDialog()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="lyko-title"
+  >
 
     <div class="dialog-card">
 
       <!-- Ornement haut -->
-      <div class="dialog-ornament top"></div>
- 
-      <!-- Avatar Lyko -->
-      <div class="lyko-avatar">
+      <div class="dialog-ornament top" aria-hidden="true"></div>
+
+      <!-- Avatar Lykö -->
+      <div class="lyko-avatar" aria-hidden="true">
         <div class="avatar-ring ring-1"></div>
         <div class="avatar-ring ring-2"></div>
         <div class="avatar-icon">🐵</div>
@@ -20,52 +26,67 @@
       </div>
 
       <!-- Titre -->
-      <h1 class="lyko-title">
-        <span class="title-small">Le Gardien des Guitares Sacrées</span>
+      <h1 id="lyko-title" class="lyko-title">
+        <span class="title-small">Gardien des Guitares Sacrées</span>
         <span class="title-big">LYKÖ LE SAGE</span>
-        <span class="title-underline"></span>
+        <span class="title-underline" aria-hidden="true"></span>
       </h1>
 
       <!-- Boutons d'action -->
       <div class="actions">
 
-        <!-- 🔥 Défier OFFOWA -->
-        <button type="button" class="btn-action btn-ia" (click)="playAgainstAI()">
-          <span class="btn-glow"></span>
-          <span class="btn-icon">🤖</span>
+        <!-- 🟠 Défier OFFOWA (action principale) -->
+        <button
+          type="button"
+          class="btn-action btn-primary"
+          (click)="playAgainstAI()"
+          aria-label="Défier OFFOWA, l'intelligence artificielle"
+        >
+          <span class="btn-glow" aria-hidden="true"></span>
+          <span class="btn-icon" aria-hidden="true">🤖</span>
           <span class="btn-content">
             <span class="btn-text">DÉFIER OFFOWA</span>
             <span class="btn-sub">Affronte la sagesse du Gardien</span>
           </span>
-          <span class="btn-arrow">→</span>
+          <span class="btn-arrow" aria-hidden="true">→</span>
         </button>
 
-        <!-- 👥 Jouer avec un ami -->
-        <button type="button" class="btn-action btn-friend" (click)="playWithFriend()">
-          <span class="btn-glow"></span>
-          <span class="btn-icon">👥</span>
+        <!-- 🔵 Jouer avec un ami (action alternative) -->
+        <button
+          type="button"
+          class="btn-action btn-secondary"
+          (click)="playWithFriend()"
+          aria-label="Jouer avec un ami en local"
+        >
+          <span class="btn-glow" aria-hidden="true"></span>
+          <span class="btn-icon" aria-hidden="true">👥</span>
           <span class="btn-content">
             <span class="btn-text">JOUER AVEC UN AMI</span>
-            <span class="btn-sub">Duel local · 2 Joueurs</span>
+            <span class="btn-sub">Duel local · 2 joueurs</span>
           </span>
-          <span class="btn-arrow">→</span>
+          <span class="btn-arrow" aria-hidden="true">→</span>
         </button>
 
-        <!-- ↩ Retour au menu -->
-        <button type="button" class="btn-action btn-back" (click)="backToMenu()">
-          <span class="btn-glow"></span>
-          <span class="btn-icon">↩</span>
+        <!-- ⚪ Retour au menu (action secondaire) -->
+        <button
+          type="button"
+          class="btn-action btn-neutral"
+          (click)="backToMenu()"
+          aria-label="Retourner au menu des jeux"
+        >
+          <span class="btn-glow" aria-hidden="true"></span>
+          <span class="btn-icon" aria-hidden="true">↩</span>
           <span class="btn-content">
             <span class="btn-text">MENU DES JEUX</span>
             <span class="btn-sub">Revenir à l'arène principale</span>
           </span>
-          <span class="btn-arrow">←</span>
+          <span class="btn-arrow" aria-hidden="true">←</span>
         </button>
 
       </div>
 
       <!-- Ornement bas -->
-      <div class="dialog-ornament bottom"></div>
+      <div class="dialog-ornament bottom" aria-hidden="true"></div>
 
     </div>
   </div>

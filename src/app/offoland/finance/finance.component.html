@@ -1,81 +1,105 @@
 <div class="offoland-finance">
-  <section class="hero" @fadeInUp>
-    <div class="hero-background">
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero">
+    <div class="hero-background" aria-hidden="true">
       <div class="floating-coins">
-        <span class="coin" *ngFor="let i of [1,2,3,4,5]" [style.animation-delay]="i * 0.5 + 's'">🪙</span>
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <span class="coin" [style.animation-delay]="i * 0.5 + 's'">🪙</span>
+        }
       </div>
       <div class="gradient-orb orb-1"></div>
       <div class="gradient-orb orb-2"></div>
       <div class="gradient-orb orb-3"></div>
     </div>
 
-    <div class="hero-content"> 
+    <div class="hero-content">
       <h1 class="hero-title">
         <span class="title-line">L'Économie</span>
         <span class="title-line gradient-text">d'Offoland</span>
-      </h1>   
+      </h1>
     </div>
 
     <!-- Compteur de masse monétaire -->
     <div class="supply-counter">
       <div class="supply-label">
-        <span class="live-dot"></span>
+        <span class="live-dot" aria-hidden="true"></span>
         Masse monétaire OFFO en direct
       </div>
-      <div class="supply-value">{{ formatNumber(totalSupply()) }} <span class="unit">OFFO</span></div>
+      <div class="supply-value" aria-live="polite">
+        {{ formatNumber(totalSupply()) }} <span class="unit">OFFO</span>
+      </div>
     </div>
-  </section> 
+  </section>
 
   <!-- ==================== FINANCE MODULES ==================== -->
-  <section class="modules" @staggerCards>  
+  <section class="modules" aria-labelledby="modules-title">
+    <div class="section-header">
+      <span class="section-tag">🧩 Architecture</span>
+      <h2 id="modules-title" class="section-title">Les 7 piliers financiers d'Offoland</h2>
+      <p class="section-description">
+        Chaque module est une brique essentielle de l'écosystème économique.
+      </p>
+    </div>
 
     <div class="modules-grid">
-      <article class="finance-card" *ngFor="let module of modules; let i = index"
-        [style.--card-gradient]="module.gradient" [style.--card-color]="module.color"
-        [style.animation-delay]="i * 0.1 + 's'">
+      @for (module of modules; track module.id; let i = $index) {
+        <article
+          class="finance-card"
+          [class]="'variant-' + module.variant"
+          [style.animation-delay.ms]="i * 100"
+        >
+          <div class="card-glow" aria-hidden="true"></div>
 
-        <div class="card-glow"></div>
+          <div class="card-header">
+            <div class="card-emoji" aria-hidden="true">{{ module.emoji }}</div>
+            <div class="card-number">0{{ module.id }}</div>
+          </div>
 
-        <div class="card-header">
-          <div class="card-emoji">{{ module.emoji }}</div>
-          <div class="card-number">0{{ module.id }}</div>
-        </div>
+          <div class="card-body">
+            <h3 class="card-title">{{ module.title }}</h3>
+            <p class="card-subtitle">{{ module.subtitle }}</p>
+            <p class="card-description">{{ module.description }}</p>
 
-        <div class="card-body">
-          <h3 class="card-title">{{ module.title }}</h3>
-          <p class="card-subtitle">{{ module.subtitle }}</p>
-          <p class="card-description">{{ module.description }}</p>
-
-          <ul class="card-features">
-            <li *ngFor="let feature of module.features">
-              <span class="feature-check">✓</span>
-              {{ feature }}
-            </li>
-          </ul>
-        </div> 
-      </article>
+            <ul class="card-features">
+              @for (feature of module.features; track feature) {
+                <li>
+                  <span class="feature-check" aria-hidden="true">✓</span>
+                  {{ feature }}
+                </li>
+              }
+            </ul>
+          </div>
+        </article>
+      }
     </div>
   </section>
 
   <!-- ==================== CONVERSION PIPELINE ==================== -->
-  <section class="pipeline" @fadeInUp>
+  <section class="pipeline" aria-labelledby="pipeline-title">
     <div class="section-header">
       <span class="section-tag">💱 Conversion</span>
-      <h2 class="section-title">Comment un FCFA devient un OFFO</h2>
+      <h2 id="pipeline-title" class="section-title">Comment un FCFA devient un OFFO</h2>
       <p class="section-description">
         Le parcours d'un paiement réel jusqu'à votre portefeuille virtuel.
       </p>
     </div>
 
     <div class="pipeline-steps">
-      <div class="pipeline-step" *ngFor="let step of conversionSteps; let i = index"
-        [style.animation-delay]="i * 0.15 + 's'">
-        <div class="step-number">{{ step.step }}</div>
-        <div class="step-icon">{{ step.icon }}</div>
-        <div class="step-label">{{ step.label }}</div>
-        <div class="step-detail">{{ step.detail }}</div>
-        <div class="step-arrow" *ngIf="i < conversionSteps.length - 1">→</div>
-      </div>
+      @for (step of conversionSteps; track step.step; let i = $index; let last = $last) {
+        <div
+          class="pipeline-step"
+          [style.animation-delay.ms]="i * 150"
+        >
+          <div class="step-number">0{{ step.step }}</div>
+          <div class="step-icon" aria-hidden="true">{{ step.icon }}</div>
+          <div class="step-label">{{ step.label }}</div>
+          <div class="step-detail">{{ step.detail }}</div>
+          @if (!last) {
+            <div class="step-arrow" aria-hidden="true">→</div>
+          }
+        </div>
+      }
     </div>
 
     <div class="example-box">
@@ -87,12 +111,12 @@
           <span class="example-label">Paiement réel</span>
           <span class="example-value">5 000 FCFA</span>
         </div>
-        <div class="example-arrow">↓</div>
+        <div class="example-arrow" aria-hidden="true">↓</div>
         <div class="example-row highlight">
           <span class="example-label">Solde Offo Money</span>
           <span class="example-value">5 000 OFFO</span>
         </div>
-        <div class="example-arrow">↓</div>
+        <div class="example-arrow" aria-hidden="true">↓</div>
         <div class="example-row">
           <span class="example-label">Achat dans Offoland</span>
           <span class="example-value">1 000 OFFO</span>
@@ -102,44 +126,50 @@
   </section>
 
   <!-- ==================== TAUX DE CHANGE ==================== -->
-  <section class="exchange" @fadeInUp>
+  <section class="exchange" aria-labelledby="exchange-title">
     <div class="section-header">
       <span class="section-tag">🌍 Marché des devises</span>
-      <h2 class="section-title">Taux de change en temps réel</h2>
+      <h2 id="exchange-title" class="section-title">Taux de change en temps réel</h2>
       <p class="section-description">
         Les taux évoluent selon les règles économiques d'Offoland.
       </p>
     </div>
 
-    <div class="exchange-table">
-      <div class="exchange-row exchange-header">
-        <span>Devise</span>
-        <span>Nom</span>
-        <span>Taux / OFFO</span>
-        <span>Variation</span>
+    <div class="exchange-table" role="table" aria-label="Taux de change en temps réel">
+      <div class="exchange-row exchange-header" role="row">
+        <span role="columnheader">Devise</span>
+        <span role="columnheader">Nom</span>
+        <span role="columnheader">Taux / OFFO</span>
+        <span role="columnheader">Variation</span>
       </div>
-      <div class="exchange-row" *ngFor="let rate of exchangeRates; let i = index"
-        [style.animation-delay]="i * 0.05 + 's'">
-        <span class="exchange-flag">{{ rate.flag }}</span>
-        <span class="exchange-name">
-          <strong>{{ rate.code }}</strong> — {{ rate.name }}
-        </span>
-        <span class="exchange-rate">{{ rate.rate }}</span>
-        <span class="exchange-change" [class]="getChangeClass(rate.change)">
-          {{ getChangeIcon(rate.change) }} {{ rate.change > 0 ? '+' : '' }}{{ rate.change }}%
-        </span>
-      </div>
+
+      @for (rate of exchangeRates(); track rate.code; let i = $index) {
+        <div class="exchange-row" role="row" [style.animation-delay.ms]="i * 50">
+          <span class="exchange-flag" role="cell" aria-hidden="true">{{ rate.flag }}</span>
+          <span class="exchange-name" role="cell">
+            <strong>{{ rate.code }}</strong> — {{ rate.name }}
+          </span>
+          <span class="exchange-rate" role="cell">{{ formatRate(rate.rate) }}</span>
+          <span
+            class="exchange-change"
+            role="cell"
+            [class]="getChangeClass(rate.change)"
+          >
+            {{ getChangeIcon(rate.change) }} {{ formatChange(rate.change) }}
+          </span>
+        </div>
+      }
     </div>
 
     <div class="dual-value">
       <div class="dual-card">
-        <div class="dual-icon">🏛️</div>
+        <div class="dual-icon" aria-hidden="true">🏛️</div>
         <h4>Valeur officielle</h4>
         <p>Fixée par la Banque Centrale d'Offoland (BCO)</p>
       </div>
-      <div class="dual-connector">⇄</div>
+      <div class="dual-connector" aria-hidden="true">⇄</div>
       <div class="dual-card">
-        <div class="dual-icon">📊</div>
+        <div class="dual-icon" aria-hidden="true">📊</div>
         <h4>Valeur économique</h4>
         <p>Attribuée par le marché d'Offoland</p>
       </div>
@@ -147,40 +177,43 @@
   </section>
 
   <!-- ==================== LEDGER ==================== -->
-  <section class="ledger" @fadeInUp>
+  <section class="ledger" aria-labelledby="ledger-title">
     <div class="section-header">
       <span class="section-tag">📒 Grand Livre</span>
-      <h2 class="section-title">Chaque transaction est gravée</h2>
+      <h2 id="ledger-title" class="section-title">Chaque transaction est gravée</h2>
       <p class="section-description">
         Le ledger est la mémoire financière d'Offoland. Rien ne s'efface, tout se trace.
       </p>
     </div>
 
-    <div class="ledger-table">
-      <div class="ledger-row ledger-header">
-        <span>ID</span>
-        <span>Utilisateur</span>
-        <span>Opération</span>
-        <span>Débit</span>
-        <span>Crédit</span>
+    <div class="ledger-table" role="table" aria-label="Journal des transactions">
+      <div class="ledger-row ledger-header" role="row">
+        <span role="columnheader">ID</span>
+        <span role="columnheader">Utilisateur</span>
+        <span role="columnheader">Opération</span>
+        <span role="columnheader">Débit</span>
+        <span role="columnheader">Crédit</span>
       </div>
-      <div class="ledger-row" *ngFor="let entry of [
-        {id: '001', user: 'Charly', op: 'Dépôt', debit: '—', credit: '5 000 OFFO'},
-        {id: '002', user: 'Charly', op: 'Achat jeu', debit: '1 000 OFFO', credit: '—'},
-        {id: '003', user: 'Charly', op: 'Récompense', debit: '—', credit: '250 OFFO'},
-        {id: '004', user: 'Charly', op: 'Achat livre', debit: '2 500 OFFO', credit: '—'}
-      ]; let i = index">
-        <span class="ledger-id">{{ entry.id }}</span>
-        <span class="ledger-user">{{ entry.user }}</span>
-        <span class="ledger-op">{{ entry.op }}</span>
-        <span class="ledger-debit" [class.empty]="entry.debit === '—'">{{ entry.debit }}</span>
-        <span class="ledger-credit" [class.empty]="entry.credit === '—'">{{ entry.credit }}</span>
-      </div>
+
+      @for (entry of ledgerEntries; track entry.id) {
+        <div class="ledger-row" role="row">
+          <span class="ledger-id" role="cell">{{ entry.id }}</span>
+          <span class="ledger-user" role="cell">{{ entry.user }}</span>
+          <span class="ledger-op" role="cell">{{ entry.op }}</span>
+          <span class="ledger-debit" role="cell" [class.empty]="entry.debit === '—'">
+            {{ entry.debit }}
+          </span>
+          <span class="ledger-credit" role="cell" [class.empty]="entry.credit === '—'">
+            {{ entry.credit }}
+          </span>
+        </div>
+      }
     </div>
 
     <div class="ledger-formula">
       <span class="formula-label">Formule du solde</span>
       <span class="formula">Solde = Σ Crédits − Σ Débits</span>
     </div>
-  </section> 
+  </section>
+
 </div>

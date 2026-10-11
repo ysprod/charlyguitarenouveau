@@ -1602,3 +1602,10 @@ button:focus-visible,
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
 }
+
+/* Fix — éviter les débordements de texte sur petits écrans */
+@media (max-width: 480px) {
+  .game-hud .target-card .target-note {
+    font-size: 1.3rem;
+  }
+}

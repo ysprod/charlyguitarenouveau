@@ -5,14 +5,15 @@ import {
   RouterStateSnapshot,
   UrlTree
 } from '@angular/router';
-import { Auth, user } from '@angular/fire/auth';
+import { Auth, authState } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
-import { map, take } from 'rxjs/operators';
+import { filter, map, take } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthGuard {
+
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
 
@@ -20,13 +21,15 @@ export class AuthGuard {
     _route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Observable<boolean | UrlTree> {
-    return user(this.auth).pipe(
+    return authState(this.auth).pipe(
+      /* ✅ Attend la première émission *réelle* de Firebase Auth
+         (ignore les valeurs indéfinies éventuelles) */
+      filter((user): user is NonNullable<typeof user> | null => user !== undefined),
       take(1),
       map(currentUser => {
         if (currentUser) {
           return true;
         }
-
         return this.router.createUrlTree(['/login'], {
           queryParams: { returnUrl: state.url }
         });

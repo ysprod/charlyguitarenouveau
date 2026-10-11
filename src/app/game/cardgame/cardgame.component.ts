@@ -1,8 +1,17 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule, Location } from '@angular/common';
-import { MatGridListModule } from '@angular/material/grid-list';
+import { DecimalPipe, Location } from '@angular/common';
+
 import { CardData } from './CardData';
 import { RdialogComponent, RdialogResult } from './rdialog/rdialog.component';
 import { GamecardComponent } from './gamecard/gamecard.component';
@@ -11,30 +20,42 @@ import { VoiceService, SpeakOptions } from '../../services/voice.service';
 /* ═════════════════════════════════════════════════════════════════════
    TYPES
    ═════════════════════════════════════════════════════════════════════ */
+
 type SoundType = 'flip' | 'match' | 'wrong' | 'victory' | 'defeat';
 
-/* ═════════════════════════════════════════════════════════════════════
-   VOIX D'ENFANT — Paramètres dédiés à cette page
-   ═════════════════════════════════════════════════════════════════════ */
 const CHILD_VOICE: Required<Pick<SpeakOptions, 'pitch' | 'rate' | 'volume'>> = {
   pitch: 1.7,
   rate: 1.15,
   volume: 1.0,
 };
 
+const CARD_IMAGES: readonly string[] = [
+  'assets/rouge.jpg',
+  'assets/bleu.jpg',
+  'assets/vert.jpg',
+  'assets/rouge.jpg',
+  'assets/noir.jpg',
+  'assets/blanc.jpg',
+];
+
+const PV_PAR_COUP = 100;
+const PV_PAR_PAIRE = 5000;
+const PV_MAX = 10_000_000;
+const FLIP_DELAY_MS = 800;
+const LAST_MATCH_HIDE_MS = 3000;
+const INTRO_DELAY_MS = 600;
+
 /* ═════════════════════════════════════════════════════════════════════
    COMPOSANT
    ═════════════════════════════════════════════════════════════════════ */
+
 @Component({
   selector: 'app-cardgame',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatGridListModule,
-    GamecardComponent
-  ],
+  imports: [GamecardComponent, DecimalPipe],
   templateUrl: './cardgame.component.html',
-  styleUrls: ['./cardgame.component.css']
+  styleUrls: ['./cardgame.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CardgameComponent implements OnInit, OnDestroy {
 
@@ -45,69 +66,64 @@ export class CardgameComponent implements OnInit, OnDestroy {
   private readonly location = inject(Location);
   private readonly voice = inject(VoiceService);
 
-  /* ─── État de jeu ─── */
-  lavie = 0;
-  lebonus = 0;
-  pointdevies = 0;
+  /* ─── État de jeu (signaux) ─── */
+  readonly lavie = signal(0);
+  readonly lebonus = signal(0);
+  readonly pointdevies = signal(0);
 
-  readonly cardImages = [
-    'assets/rouge.jpg',
-    'assets/bleu.jpg',
-    'assets/vert.jpg',
-    'assets/rouge.jpg',
-    'assets/noir.jpg',
-    'assets/blanc.jpg'
-  ];
+  readonly matchedCount = signal(0);
+  readonly moves = signal(0);
 
-  cards: CardData[] = [];
+  readonly elapsedSeconds = signal(0);
+  readonly lastMatchSeconds = signal(0);
+
+  readonly soundEnabled = signal(true);
+
+  readonly cards = signal<CardData[]>([]);
+
+  /* ─── Constantes exposées au template ─── */
+  readonly cardImages = CARD_IMAGES;
+
+  /* ─── Computed ─── */
+  readonly globalTimerDisplay = computed(() =>
+    this.formatTime(this.elapsedSeconds())
+  );
+
+  readonly pvFillPercent = computed(() =>
+    Math.min(100, (this.pointdevies() / PV_MAX) * 100)
+  );
+
+  readonly isPlaying = computed(() => this.pointdevies() < PV_MAX);
+
+  readonly totalPairs = computed(() => this.cardImages.length);
+
+  /* ─── Interne ─── */
   private flippedCards: CardData[] = [];
-  matchedCount = 0;
-  moves = 0;
   private isProcessing = false;
-
-  /* ═══════════════════════════════════════════════════════════════════
-     ⏱️ CHRONOMÈTRES
-     ═══════════════════════════════════════════════════════════════════ */
-
-  /** Temps total écoulé depuis le démarrage de la partie (secondes) */
-  elapsedSeconds = 0;
-
-  /** Temps de la dernière trouvaille (secondes) — affiché temporairement */
-  lastMatchSeconds = 0;
-
-  /** Affichage formaté "MM:SS" du chrono global */
-  get globalTimerDisplay(): string {
-    return this.formatTime(this.elapsedSeconds);
-  }
 
   private globalTimerInterval?: ReturnType<typeof setInterval>;
   private gameStartTime = 0;
   private currentRoundStartTime = 0;
   private lastMatchHideTimeout?: ReturnType<typeof setTimeout>;
 
-  /* ─── Audio ─── */
   private audioCtx?: AudioContext;
-  soundEnabled = true;
 
-  /* ─── Constantes ─── */
-  private readonly PV_PAR_COUP = 100;
-  private readonly PV_PAR_PAIRE = 5000;
-  private readonly PV_MAX = 10_000_000;
-  private readonly FLIP_DELAY_MS = 800;
-  private readonly LAST_MATCH_HIDE_MS = 3000;
-
-  /* ─── Timers ─── */
-  private timeouts: number[] = [];
+  private readonly timeouts: number[] = [];
   private hasAnnouncedIntro = false;
 
   /* ═══════════════════════════════════════════════════════════════════
      LIFECYCLE
      ═══════════════════════════════════════════════════════════════════ */
+
   ngOnInit(): void {
     const params = this.activatedRoute.snapshot.queryParamMap;
-    this.pointdevies = parseInt(params.get('vie') ?? '1000', 10);
-    this.lavie = this.pointdevies;
-    this.lebonus = parseInt(params.get('bonus') ?? '0', 10);
+
+    const initialPv = parseInt(params.get('vie') ?? '1000', 10);
+    const initialBonus = parseInt(params.get('bonus') ?? '0', 10);
+
+    this.pointdevies.set(initialPv);
+    this.lavie.set(initialPv);
+    this.lebonus.set(initialBonus);
 
     this.initAudio();
     this.setupCards();
@@ -117,31 +133,36 @@ export class CardgameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      this.audioCtx.close();
+      void this.audioCtx.close();
     }
+
     this.stopGlobalTimer();
-    if (this.lastMatchHideTimeout) clearTimeout(this.lastMatchHideTimeout);
+
+    if (this.lastMatchHideTimeout) {
+      clearTimeout(this.lastMatchHideTimeout);
+    }
+
     this.timeouts.forEach(t => clearTimeout(t));
     this.voice.stopSpeaking();
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     ⏱️ GESTION DES CHRONOMÈTRES
+     ⏱️ CHRONOMÈTRES
      ═══════════════════════════════════════════════════════════════════ */
 
-  /** Démarre (ou redémarre) le chrono global */
   private startGlobalTimer(): void {
     this.stopGlobalTimer();
 
     this.gameStartTime = Date.now();
-    this.elapsedSeconds = 0;
+    this.elapsedSeconds.set(0);
 
     this.globalTimerInterval = setInterval(() => {
-      this.elapsedSeconds = Math.floor((Date.now() - this.gameStartTime) / 1000);
+      this.elapsedSeconds.set(
+        Math.floor((Date.now() - this.gameStartTime) / 1000)
+      );
     }, 1000);
   }
 
-  /** Arrête le chrono global */
   private stopGlobalTimer(): void {
     if (this.globalTimerInterval) {
       clearInterval(this.globalTimerInterval);
@@ -149,25 +170,28 @@ export class CardgameComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Démarre le chrono de la réflexion en cours */
   private startRoundTimer(): void {
     this.currentRoundStartTime = Date.now();
   }
 
-  /** Capture le temps de la réflexion et l'expose temporairement */
   private captureRoundTime(): void {
     if (this.currentRoundStartTime === 0) return;
 
-    const duration = Math.floor((Date.now() - this.currentRoundStartTime) / 1000);
-    this.lastMatchSeconds = duration;
+    const duration = Math.floor(
+      (Date.now() - this.currentRoundStartTime) / 1000
+    );
 
-    if (this.lastMatchHideTimeout) clearTimeout(this.lastMatchHideTimeout);
+    this.lastMatchSeconds.set(duration);
+
+    if (this.lastMatchHideTimeout) {
+      clearTimeout(this.lastMatchHideTimeout);
+    }
+
     this.lastMatchHideTimeout = setTimeout(() => {
-      this.lastMatchSeconds = 0;
-    }, this.LAST_MATCH_HIDE_MS);
+      this.lastMatchSeconds.set(0);
+    }, LAST_MATCH_HIDE_MS);
   }
 
-  /** Formate un nombre de secondes en "MM:SS" */
   formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -175,12 +199,15 @@ export class CardgameComponent implements OnInit, OnDestroy {
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     🎙️ HELPER VOIX D'ENFANT
+     🎙️ VOIX
      ═══════════════════════════════════════════════════════════════════ */
+
   private speakAsChild(
     text: string,
     overrides: Partial<typeof CHILD_VOICE> = {}
   ): Promise<void> {
+    if (!this.soundEnabled()) return Promise.resolve();
+
     return this.voice.speak(text, {
       ...CHILD_VOICE,
       ...overrides,
@@ -188,9 +215,6 @@ export class CardgameComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
-     ANNONCE VOCALE D'INTRODUCTION
-     ═══════════════════════════════════════════════════════════════════ */
   private announceGameRules(): void {
     if (this.hasAnnouncedIntro) return;
     this.hasAnnouncedIntro = true;
@@ -200,21 +224,23 @@ export class CardgameComponent implements OnInit, OnDestroy {
       `Retrouve toutes les paires cachées pour gagner le trésor ! ` +
       `Chaque coup te coûte cent points de vie, ` +
       `mais une paire trouvée t'en rapporte cinq mille ! ` +
-      `Tu as ${this.pointdevies} points. ` +
+      `Tu as ${this.pointdevies()} points. ` +
       `Le chrono tourne ! Allez, c'est parti !`;
 
     const timerId = window.setTimeout(() => {
-      this.speakAsChild(intro, { rate: 1.05 });
-    }, 600);
+      void this.speakAsChild(intro, { rate: 1.05 });
+    }, INTRO_DELAY_MS);
+
     this.timeouts.push(timerId);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
      NAVIGATION
      ═══════════════════════════════════════════════════════════════════ */
+
   goToPlay(): void {
     this.voice.stopSpeaking();
-    this.router.navigate(['/play']);
+    void this.router.navigate(['/play']);
   }
 
   goBack(): void {
@@ -222,24 +248,28 @@ export class CardgameComponent implements OnInit, OnDestroy {
     this.location.back();
   }
 
-  onrecommencer(): void {
-    this.goToPlay();
-  }
-
   /* ═══════════════════════════════════════════════════════════════════
-     AUDIO — Effets sonores
+     🔊 AUDIO
      ═══════════════════════════════════════════════════════════════════ */
+
   private initAudio(): void {
-    const Ctor = window.AudioContext
-      || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (Ctor) this.audioCtx = new Ctor();
+    const Ctor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (Ctor) {
+      this.audioCtx = new Ctor();
+    }
   }
 
   private playSound(type: SoundType): void {
-    if (!this.soundEnabled || !this.audioCtx) return;
+    if (!this.soundEnabled() || !this.audioCtx) return;
 
     if (this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume().catch(() => { /* ignore */ });
+      void this.audioCtx.resume().catch(() => {
+        /* Silencieux */
+      });
     }
 
     const now = this.audioCtx.currentTime;
@@ -251,22 +281,48 @@ export class CardgameComponent implements OnInit, OnDestroy {
 
       case 'match':
         [523.25, 659.25, 783.99].forEach((freq, i) => {
-          this.tone({ freq, type: 'triangle', duration: 0.15, volume: 0.18, now: now + i * 0.08 });
+          this.tone({
+            freq,
+            type: 'triangle',
+            duration: 0.15,
+            volume: 0.18,
+            now: now + i * 0.08,
+          });
         });
         break;
 
       case 'wrong':
-        this.tone({ freq: 300, endFreq: 120, type: 'sawtooth', duration: 0.25, volume: 0.15, now });
+        this.tone({
+          freq: 300,
+          endFreq: 120,
+          type: 'sawtooth',
+          duration: 0.25,
+          volume: 0.15,
+          now,
+        });
         break;
 
       case 'victory':
-        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-          this.tone({ freq, type: 'triangle', duration: 0.3, volume: 0.2, now: now + i * 0.12 });
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+          this.tone({
+            freq,
+            type: 'triangle',
+            duration: 0.3,
+            volume: 0.2,
+            now: now + i * 0.12,
+          });
         });
         break;
 
       case 'defeat':
-        this.tone({ freq: 220, endFreq: 80, type: 'sawtooth', duration: 0.4, volume: 0.18, now });
+        this.tone({
+          freq: 220,
+          endFreq: 80,
+          type: 'sawtooth',
+          duration: 0.4,
+          volume: 0.18,
+          now,
+        });
         break;
     }
   }
@@ -300,61 +356,70 @@ export class CardgameComponent implements OnInit, OnDestroy {
 
     osc.connect(gain);
     gain.connect(this.audioCtx.destination);
+
     osc.start(opts.now);
     osc.stop(opts.now + opts.duration + 0.05);
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
-     TOGGLE SON
-     ═══════════════════════════════════════════════════════════════════ */
   toggleSound(): void {
-    this.soundEnabled = !this.soundEnabled;
+    const next = !this.soundEnabled();
+    this.soundEnabled.set(next);
 
-    if (!this.soundEnabled) {
+    if (!next) {
       this.voice.stopSpeaking();
     } else {
-      this.speakAsChild('Son activé !');
+      void this.speakAsChild('Son activé !');
     }
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     LOGIQUE DU JEU
+     🎴 LOGIQUE DU JEU
      ═══════════════════════════════════════════════════════════════════ */
-  private shuffleArray<T>(array: T[]): T[] {
+
+  private shuffleArray<T>(array: readonly T[]): T[] {
     return array
       .map(item => ({ sort: Math.random(), value: item }))
       .sort((a, b) => a.sort - b.sort)
       .map(item => item.value);
   }
 
-  setupCards(): void {
+  private setupCards(): void {
     const cardPairs: CardData[] = [];
+
     this.cardImages.forEach(image => {
       cardPairs.push({ imageId: image, state: 'default' });
       cardPairs.push({ imageId: image, state: 'default' });
     });
-    this.cards = this.shuffleArray(cardPairs);
+
+    this.cards.set(this.shuffleArray(cardPairs));
     this.flippedCards = [];
     this.isProcessing = false;
     this.currentRoundStartTime = 0;
   }
 
   cardClicked(index: number): void {
-    const cardInfo = this.cards[index];
+    const list = this.cards();
+    const cardInfo = list[index];
+
     if (this.isProcessing || cardInfo.state !== 'default') return;
 
     this.playSound('flip');
     this.decrementervie();
-    cardInfo.state = 'flipped';
-    this.flippedCards.push(cardInfo);
 
-    /* ⏱️ Démarre le chrono de la réflexion dès la 1ère carte retournée */
+    /* Mise à jour immutable */
+    const updated: CardData = { ...cardInfo, state: 'flipped' };
+    const newList = [...list];
+    newList[index] = updated;
+    this.cards.set(newList);
+
+    this.flippedCards.push(updated);
+
     if (this.flippedCards.length === 1) {
       this.startRoundTimer();
     }
 
     if (this.flippedCards.length === 2) {
-      this.moves++;
+      this.moves.update(m => m + 1);
       this.isProcessing = true;
       this.checkForCardMatch();
     }
@@ -365,51 +430,78 @@ export class CardgameComponent implements OnInit, OnDestroy {
       const [cardOne, cardTwo] = this.flippedCards;
 
       if (cardOne.imageId === cardTwo.imageId) {
-        /* ✅ Paire trouvée */
-        this.playSound('match');
-        cardOne.state = 'matched';
-        cardTwo.state = 'matched';
-        this.matchedCount++;
-
-        /* ⏱️ Capture le temps de la trouvaille */
-        this.captureRoundTime();
-
-        this.speakAsChild(this.pickMatchPhrase(), { pitch: 1.8, rate: 1.2 });
-
-        if (this.matchedCount === this.cardImages.length) {
-          this.incrementervie();
-          this.playSound('victory');
-          this.stopGlobalTimer();
-
-          this.speakAsChild(
-            `Youpi ! Tu as trouvé toutes les paires ! ` +
-            `Tu gagnes cinq mille points bonus ! ` +
-            `Ton trésor est maintenant de ${this.pointdevies} points ! ` +
-            `Temps total : ${this.formatTime(this.elapsedSeconds)} !`,
-            { pitch: 1.85, rate: 1.15 }
-          ).then(() => {
-            this.openVictoryDialog();
-          });
-        }
+        this.handleMatch(cardOne, cardTwo);
       } else {
-        /* ❌ Mauvaise paire */
-        this.playSound('wrong');
-        cardOne.state = 'default';
-        cardTwo.state = 'default';
-
-        /* ⏱️ Réinitialise le chrono de round */
-        this.currentRoundStartTime = 0;
-
-        if (Math.random() < 0.5) {
-          this.speakAsChild(this.pickWrongPhrase(), { pitch: 1.5, rate: 1.1 });
-        }
+        this.handleMismatch(cardOne, cardTwo);
       }
 
       this.flippedCards = [];
       this.isProcessing = false;
-    }, this.FLIP_DELAY_MS);
+    }, FLIP_DELAY_MS);
 
     this.timeouts.push(timerId);
+  }
+
+  private handleMatch(cardOne: CardData, cardTwo: CardData): void {
+    this.playSound('match');
+    this.matchedCount.update(c => c + 1);
+
+    const list = this.cards();
+    const newList = list.map(c => {
+      if (c === cardOne || c === cardTwo) {
+        return { ...c, state: 'matched' as const };
+      }
+      return c;
+    });
+    this.cards.set(newList);
+
+    this.captureRoundTime();
+    void this.speakAsChild(this.pickMatchPhrase(), {
+      pitch: 1.8,
+      rate: 1.2,
+    });
+
+    if (this.matchedCount() === this.cardImages.length) {
+      this.handleVictory();
+    }
+  }
+
+  private handleMismatch(cardOne: CardData, cardTwo: CardData): void {
+    this.playSound('wrong');
+
+    const list = this.cards();
+    const newList = list.map(c => {
+      if (c === cardOne || c === cardTwo) {
+        return { ...c, state: 'default' as const };
+      }
+      return c;
+    });
+    this.cards.set(newList);
+
+    this.currentRoundStartTime = 0;
+
+    if (Math.random() < 0.5) {
+      void this.speakAsChild(this.pickWrongPhrase(), {
+        pitch: 1.5,
+        rate: 1.1,
+      });
+    }
+  }
+
+  private handleVictory(): void {
+    this.incrementervie();
+    this.playSound('victory');
+    this.stopGlobalTimer();
+
+    void this.speakAsChild(
+      `Youpi ! Tu as trouvé toutes les paires ! ` +
+      `Tu gagnes cinq mille points bonus ! ` +
+      `Ton trésor est maintenant de ${this.pointdevies()} points ! ` +
+      `Temps total : ${this.formatTime(this.elapsedSeconds())} !`,
+      { pitch: 1.85, rate: 1.15 }
+    ).then(() => {
+      this.openVictoryDialog();
+    });
   }
 
   private pickMatchPhrase(): string {
@@ -421,7 +513,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
       'Encore une !',
       'Génial !',
       'Bravo !',
-      'Wow, quelle mémoire !'
+      'Wow, quelle mémoire !',
     ];
     return phrases[Math.floor(Math.random() * phrases.length)];
   }
@@ -433,57 +525,57 @@ export class CardgameComponent implements OnInit, OnDestroy {
       'Essaie encore !',
       'Pas grave, retente !',
       'Hop, essaie encore !',
-      'Tu vas y arriver !'
+      'Tu vas y arriver !',
     ];
     return phrases[Math.floor(Math.random() * phrases.length)];
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     MODALE DE VICTOIRE — Gestion des 2 sorties
+     🏆 MODALE DE VICTOIRE
      ═══════════════════════════════════════════════════════════════════ */
+
   private openVictoryDialog(): void {
     const dialogRef = this.dialog.open(RdialogComponent, {
       disableClose: true,
-      panelClass: 'victory-dialog-container'
+      panelClass: 'victory-dialog-container',
     });
 
     dialogRef.afterClosed().subscribe((result: RdialogResult | undefined) => {
       if (result === 'menu') {
-        /* Le joueur veut retourner au menu des jeux */
-        this.speakAsChild('Retour au menu ! À bientôt !', { pitch: 1.8 });
+        void this.speakAsChild('Retour au menu ! À bientôt !', { pitch: 1.8 });
         this.goToPlay();
         return;
       }
 
-      /* Par défaut (replay ou fermeture forcée) : nouvelle partie */
-      this.speakAsChild('Nouvelle partie ! C\'est reparti !', { pitch: 1.8 });
+      void this.speakAsChild("Nouvelle partie ! C'est reparti !", {
+        pitch: 1.8,
+      });
       this.restart();
     });
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     POINTS DE VIE
+     💎 POINTS DE VIE
      ═══════════════════════════════════════════════════════════════════ */
+
   incrementervie(): void {
-    this.pointdevies += this.PV_PAR_PAIRE;
-    this.lavie = this.pointdevies;
+    const next = this.pointdevies() + PV_PAR_PAIRE;
+    this.pointdevies.set(next);
+    this.lavie.set(next);
   }
 
   decrementervie(): void {
-    this.pointdevies = Math.max(0, this.pointdevies - this.PV_PAR_COUP);
-    this.lavie = this.pointdevies;
+    const next = Math.max(0, this.pointdevies() - PV_PAR_COUP);
+    this.pointdevies.set(next);
+    this.lavie.set(next);
   }
 
   restart(): void {
-    this.matchedCount = 0;
-    this.moves = 0;
-    this.lastMatchSeconds = 0;
+    this.matchedCount.set(0);
+    this.moves.set(0);
+    this.lastMatchSeconds.set(0);
     this.currentRoundStartTime = 0;
     this.setupCards();
     this.startGlobalTimer();
-  }
-
-  oncontinue(): boolean {
-    return this.pointdevies < this.PV_MAX;
   }
 }

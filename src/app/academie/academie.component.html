@@ -1,29 +1,30 @@
 <div class="academie-container">
 
   <!-- ================= HERO ================= -->
-  <section class="hero-banner">
+  <section class="hero-banner" aria-labelledby="academie-hero-title">
 
-    <div class="hero-glow glow-1"></div>
-    <div class="hero-glow glow-2"></div>
+    <div class="hero-glow glow-1" aria-hidden="true"></div>
+    <div class="hero-glow glow-2" aria-hidden="true"></div>
 
     <div class="hero-content">
       <div class="hero-title-wrapper">
-        <span class="hero-line"></span>
-        <h1 class="hero-title">OFFOLOMOU ECOSYSTEME ACADEMIE</h1>
-        <span class="hero-line"></span>
+        <span class="hero-line" aria-hidden="true"></span>
+        <h1 id="academie-hero-title" class="hero-title">
+          OFFOLOMOU ECOSYSTEME ACADEMIE
+        </h1>
+        <span class="hero-line" aria-hidden="true"></span>
       </div>
 
       <p class="hero-description">
         Développez votre potentiel artistique grâce à nos méthodes,
         cours particuliers, master class et ressources pédagogiques exclusives.
       </p>
-
     </div>
   </section>
 
   <app-documents></app-documents>
 
-  <section class="grid-section">
+  <section class="grid-section" aria-label="Nos formations">
 
     <div class="cards-grid">
 
@@ -31,15 +32,15 @@
       <article class="academy-card highlight-card">
 
         <div class="popular-badge">
-          ⭐ POPULAIRE
+          <span aria-hidden="true">⭐</span> POPULAIRE
         </div>
 
-        <div class="card-number">02</div>
+        <div class="card-number" aria-hidden="true">02</div>
 
         <div class="card-header">
 
           <div class="card-icon-wrap">
-            <span class="card-icon">🎓</span>
+            <span class="card-icon" aria-hidden="true">🎓</span>
           </div>
 
           <div>
@@ -65,7 +66,7 @@
 
         <a routerLink="/contact" class="card-action">
           <span>Démarrer l'apprentissage</span>
-          <span class="arrow">→</span>
+          <span class="arrow" aria-hidden="true">→</span>
         </a>
 
       </article>
@@ -73,12 +74,12 @@
       <!-- MASTER CLASS -->
       <article class="academy-card">
 
-        <div class="card-number">03</div>
+        <div class="card-number" aria-hidden="true">03</div>
 
         <div class="card-header">
 
           <div class="card-icon-wrap">
-            <span class="card-icon">🎤</span>
+            <span class="card-icon" aria-hidden="true">🎤</span>
           </div>
 
           <div>
@@ -102,7 +103,7 @@
 
         <a routerLink="/contact" class="card-action">
           <span>S'inscrire aux sessions</span>
-          <span class="arrow">→</span>
+          <span class="arrow" aria-hidden="true">→</span>
         </a>
 
       </article>
@@ -110,12 +111,12 @@
       <!-- COURS PRIVÉS -->
       <article class="academy-card">
 
-        <div class="card-number">06</div>
+        <div class="card-number" aria-hidden="true">06</div>
 
         <div class="card-header">
 
           <div class="card-icon-wrap">
-            <span class="card-icon">👨🏾‍🏫</span>
+            <span class="card-icon" aria-hidden="true">👨🏾‍🏫</span>
           </div>
 
           <div>
@@ -139,7 +140,7 @@
 
         <a routerLink="/contact" class="card-action">
           <span>Réserver un professeur</span>
-          <span class="arrow">→</span>
+          <span class="arrow" aria-hidden="true">→</span>
         </a>
 
       </article>
@@ -149,11 +150,11 @@
 
   <!-- ================= LIVE ================= -->
 
-  <section class="live-section">
+  <section class="live-section" aria-labelledby="live-heading-title">
 
     <div class="section-heading live-heading">
 
-      <h2>
+      <h2 id="live-heading-title">
         Apprenez <span>en live</span>
       </h2>
 
@@ -169,16 +170,16 @@
       <!-- MASTER CLASS LIVE -->
       <article class="live-card">
 
-        <div class="live-background-icon">🎓</div>
+        <div class="live-background-icon" aria-hidden="true">🎓</div>
 
         <div class="live-card-content">
 
           <div class="live-icon-wrap">
-            <span>🎓</span>
+            <span aria-hidden="true">🎓</span>
           </div>
 
           <span class="live-label">
-            <span class="pulse-dot"></span>
+            <span class="pulse-dot" aria-hidden="true"></span>
             LIVE
           </span>
 
@@ -193,7 +194,7 @@
 
         <a routerLink="/contact" class="live-action">
           Rejoindre la session
-          <span>→</span>
+          <span aria-hidden="true">→</span>
         </a>
 
       </article>
@@ -201,16 +202,16 @@
       <!-- COURS LIVE -->
       <article class="live-card">
 
-        <div class="live-background-icon">🎸</div>
+        <div class="live-background-icon" aria-hidden="true">🎸</div>
 
         <div class="live-card-content">
 
           <div class="live-icon-wrap">
-            <span>🎸</span>
+            <span aria-hidden="true">🎸</span>
           </div>
 
           <span class="live-label">
-            <span class="pulse-dot"></span>
+            <span class="pulse-dot" aria-hidden="true"></span>
             LIVE
           </span>
 
@@ -225,7 +226,7 @@
 
         <a routerLink="/contact" class="live-action">
           S'inscrire au cours
-          <span>→</span>
+          <span aria-hidden="true">→</span>
         </a>
 
       </article>

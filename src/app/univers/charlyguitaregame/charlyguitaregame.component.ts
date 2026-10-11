@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 export interface Dimension {
@@ -18,23 +18,25 @@ export interface Dimension {
   selector: 'app-charlyguitaregame',
   standalone: true,
   imports: [
-    CommonModule, RouterLink
+    CommonModule,
+    RouterLink
   ],
   templateUrl: './charlyguitaregame.component.html',
   styleUrls: ['./charlyguitaregame.component.scss']
 })
-export class CharlyguitaregameComponent implements OnInit {
+export class CharlyguitaregameComponent {
 
+  /* ═══════════════════════════════════════════════════════
+     ORDRE SACRÉ DES 7 DIMENSIONS (selon la Bible d'Offoland)
+     Do → Ré → Mi → Fa → Sol → La → Si
+     ═══════════════════════════════════════════════════════
+     ⚠️ Couleurs assombries pour contraste AA sur fond blanc
+     ═══════════════════════════════════════════════════════ */
   dimensions: Dimension[] = [
-    /* ═══════════════════════════════════════════════════════
-       ORDRE SACRÉ DES 7 DIMENSIONS (selon la Bible d'Offoland)
-       Do → Ré → Mi → Fa → Sol → La → Si
-       ═══════════════════════════════════════════════════════ */
-
     {
       nom: 'BLANC',
-      couleur: '#f8fafc',
-      couleurSecondaire: '#cbd5e1',
+      couleur: '#475569',         // gris foncé (assombrissement du blanc)
+      couleurSecondaire: '#94a3b8',
       symbole: '✨',
       note: 'Do',
       sage: 'Offodo',
@@ -45,7 +47,7 @@ export class CharlyguitaregameComponent implements OnInit {
     {
       nom: 'ROUGE',
       couleur: '#dc2626',
-      couleurSecondaire: '#f87171',
+      couleurSecondaire: '#b91c1c',
       symbole: '🔥',
       note: 'Ré',
       sage: 'Offoré',
@@ -55,8 +57,8 @@ export class CharlyguitaregameComponent implements OnInit {
     },
     {
       nom: 'VERT',
-      couleur: '#22c55e',
-      couleurSecondaire: '#4ade80',
+      couleur: '#16a34a',         // vert assombri pour contraste AA
+      couleurSecondaire: '#15803d',
       symbole: '🌿',
       note: 'Mi',
       sage: 'Offomi',
@@ -66,8 +68,8 @@ export class CharlyguitaregameComponent implements OnInit {
     },
     {
       nom: 'BLEU',
-      couleur: '#3b82f6',
-      couleurSecondaire: '#60a5fa',
+      couleur: '#2563eb',         // bleu assombri pour contraste AA
+      couleurSecondaire: '#1d4ed8',
       symbole: '🌊',
       note: 'Fa',
       sage: 'Offofa',
@@ -82,41 +84,31 @@ export class CharlyguitaregameComponent implements OnInit {
       symbole: '🖤',
       note: 'Sol',
       sage: 'Offosol',
-      description: 'La Dimension de l\'Épreuve',
+      description: "La Dimension de l'Épreuve",
       image: 'assets/noir.jpg',
       route: '/noir'
     },
-
-    /* ═══════════════════════════════════════════════════════
-       NOUVELLES DIMENSIONS
-       ═══════════════════════════════════════════════════════ */
-
     {
       nom: 'POURPRE',
       couleur: '#9333ea',
-      couleurSecondaire: '#c084fc',
+      couleurSecondaire: '#7e22ce',
       symbole: '👁️',
       note: 'La',
       sage: 'Offola',
       description: 'La Dimension de la Vision',
       image: 'assets/pourpre.jpg',
       route: '/pourpre'
-    },   
+    },
     {
-  nom: 'JAUNE',
-  couleur: '#eab308',
-  couleurSecondaire: '#fde047',
-  symbole: '👑',
-  note: 'Si',
-  sage: 'Offosi',
-  description: 'La Dimension de l\'Accomplissement',
-  image: 'assets/jaune.jpg',
-  route: '/violet'
-}
+      nom: 'JAUNE',
+      couleur: '#b8860b',         // doré assombri (assombrissement du jaune)
+      couleurSecondaire: '#d4a017',
+      symbole: '👑',
+      note: 'Si',
+      sage: 'Offosi',
+      description: "La Dimension de l'Accomplissement",
+      image: 'assets/jaune.jpg',
+      route: '/violet'            // ⚠️ Route inchangée (à vérifier)
+    }
   ];
-
-  constructor() { }
-
-  ngOnInit(): void { }
-
 }

@@ -1,0 +1,249 @@
+/* ═════════════════════════════════════════════════════════════════════
+   BANNIÈRE D'INSTALLATION PWA — Fond blanc, action orange
+   ═════════════════════════════════════════════════════════════════════ */
+
+:host {
+  --bg-card: #ffffff;
+  --bg-soft: #fff7ed;
+
+  --text-dark: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+
+  --border-subtle: rgba(15, 23, 42, .08);
+  --border-orange: rgba(234, 88, 12, .3);
+
+  --warning: #ea580c;
+  --warning-hover: #c2410c;
+  --warning-soft: rgba(234, 88, 12, .08);
+  --warning-glow: rgba(234, 88, 12, .35);
+
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  --t-fast: .2s ease;
+  --t-base: .3s ease;
+
+  display: block;
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9000;
+  width: min(1200px, calc(100% - 2rem));
+  pointer-events: none;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   BANNIÈRE
+   ═════════════════════════════════════════════════════════════════════ */
+.install-banner {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .9rem 1.1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-orange);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, .06),
+    0 20px 40px -18px rgba(15, 23, 42, .15);
+  font-family: 'Inter', 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  animation: bannerSlideIn .45s cubic-bezier(.22, 1, .36, 1);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes bannerSlideIn {
+  from { opacity: 0; transform: translateY(-16px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Icône ─── */
+.banner-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--warning);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 14px -6px var(--warning-glow);
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* ─── Texte ─── */
+.banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.banner-title {
+  margin: 0 0 .15rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  letter-spacing: -.01em;
+}
+
+.banner-subtitle {
+  margin: 0;
+  font-size: .85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ─── Actions ─── */
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-shrink: 0;
+}
+
+.btn-install {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .65rem 1.25rem;
+  background: var(--warning);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-size: .9rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background var(--t-fast),
+    transform var(--t-fast),
+    box-shadow var(--t-fast);
+  box-shadow: 0 6px 16px -6px var(--warning-glow);
+
+  &:hover:not(:disabled) {
+    background: var(--warning-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px -8px var(--warning-glow);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: .7;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--warning);
+    outline-offset: 3px;
+  }
+
+  .btn-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, .35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-close {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+
+  &:hover {
+    background: var(--bg-soft);
+    color: var(--text-body);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--warning);
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  :host {
+    top: .75rem;
+    width: calc(100% - 1.5rem);
+  }
+
+  .install-banner {
+    flex-wrap: wrap;
+    padding: .85rem .9rem;
+    gap: .75rem;
+  }
+
+  .banner-text {
+    flex: 1 1 calc(100% - 60px);
+  }
+
+  .banner-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .banner-title {
+    font-size: .95rem;
+  }
+
+  .banner-subtitle {
+    font-size: .8rem;
+  }
+
+  .btn-install {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

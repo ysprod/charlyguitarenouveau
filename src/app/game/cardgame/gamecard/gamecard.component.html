@@ -1,47 +1,64 @@
-<div class="card-container" *ngIf="estvisible()">
-  <div class="card-3d" (click)="cardClicked.emit()" [@cardFlip]="data.state"
-    [class.is-flipped]="data.state === 'flipped'" [class.is-matched]="data.state === 'matched'">
+@if (isVisible()) {
+  <div
+    class="card-container"
+    role="button"
+    tabindex="0"
+    [attr.aria-label]="'Carte retournable'"
+    (keydown.enter)="onClick()"
+    (keydown.space)="onClick()"
+  >
+    <div
+      class="card-3d"
+      (click)="onClick()"
+      [@cardFlip]="data().state"
+      [class.is-flipped]="data().state === 'flipped'"
+      [class.is-matched]="data().state === 'matched'"
+    >
 
-    <!-- ============================================================
-         FACE ARRIÈRE (Dos mystique)
-         ============================================================ -->
-    <div class="card-face back">
-      <div class="card-border-glow"></div>
+      <!-- ═══════════════════════════════════════════════════════
+           FACE ARRIÈRE (Dos « Bois & Cartes »)
+           ═══════════════════════════════════════════════════════ -->
+      <div class="card-face back">
+        <div class="card-border-glow"></div>
 
-      <!-- Cadre interne décoratif -->
-      <div class="inner-frame">
-        <div class="corner corner-tl"></div>
-        <div class="corner corner-tr"></div>
-        <div class="corner corner-bl"></div>
-        <div class="corner corner-br"></div>
+        <!-- Cadre interne décoratif -->
+        <div class="inner-frame">
+          <div class="corner corner-tl"></div>
+          <div class="corner corner-tr"></div>
+          <div class="corner corner-bl"></div>
+          <div class="corner corner-br"></div>
 
-        <!-- Symbole central -->
-        <div class="back-emblem">
-          <span class="emblem-glyph">🧙</span>
+          <!-- Emblème central -->
+          <div class="back-emblem">
+            <span class="emblem-glyph" aria-hidden="true">🧙</span>
+          </div>
+
+          <!-- Motif de fond -->
+          <div class="back-pattern"></div>
         </div>
 
-        <!-- Motif de fond -->
-        <div class="back-pattern"></div>
+        <div class="shine-effect"></div>
+        <div class="pattern-overlay"></div>
       </div>
 
-      <div class="shine-effect"></div>
-      <div class="pattern-overlay"></div>
-    </div>
+      <!-- ═══════════════════════════════════════════════════════
+           FACE AVANT (Image révélée)
+           ═══════════════════════════════════════════════════════ -->
+      <div class="card-face front">
+        <div class="card-border-glow front-glow"></div>
 
-    <!-- ============================================================
-         FACE AVANT (Image révélée)
-         ============================================================ -->
-    <div class="card-face front">
-      <div class="card-border-glow front-glow"></div>
+        <div class="front-image-wrapper">
+          <img
+            [src]="data().imageId"
+            alt="Carte révélée"
+            class="card-img"
+          />
+          <div class="front-shine"></div>
+        </div>
 
-      <!-- Image avec cadre -->
-      <div class="front-image-wrapper">
-        <img [src]="data.imageId" alt="Carte" class="card-img" />
-        <div class="front-shine"></div>
+        <div class="shine-effect"></div>
       </div>
 
-      <div class="shine-effect"></div>
     </div>
-
   </div>
-</div>
+}

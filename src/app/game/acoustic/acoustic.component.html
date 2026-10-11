@@ -1,67 +1,67 @@
 <div class="quiz-container">
 
   <!-- ═══════════════════════════════════════════════════════
-       EN-TÊTE : Bouton retour + Titre côte à côte
+       EN-TÊTE
        ═══════════════════════════════════════════════════════ -->
   <header class="quiz-header">
 
-    <!-- Ligne du haut : bouton retour + titre principal -->
     <div class="header-top-row">
-
-      <!-- Bouton retour -->
-      <button class="btn-floating-back"
-              (click)="goToPlay()"
-              type="button"
-              aria-label="Retour à la liste des jeux"
-              title="Retour au menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <button
+        class="btn-back"
+        (click)="goToPlay()"
+        type="button"
+        aria-label="Retour à la liste des jeux"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" aria-hidden="true">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
         <span>Retour</span>
       </button>
 
-      <!-- Titre principal -->
       <h1 class="header-title">Quiz Acoustique &amp; Lutherie</h1>
-    </div>
+    </div> 
 
-    <!-- Sous-titre centré -->
-    <p class="subtitle">
-      Testez vos connaissances sur la physique et les secrets du son de la guitare
-    </p>
-
-    <!-- Métadonnées (badge catégorie + streak) -->
-    <div class="header-meta">
-      @if (!isCompleted() && currentQuestion()) {
+    @if (!isCompleted() && currentQuestion()) {
+      <div class="header-meta">
         <div class="badge-category">
           🔊 {{ currentQuestion()!.category }}
-          <span class="badge-difficulty"
-                [ngClass]="currentQuestion()!.difficulty.toLowerCase()">
+          <span
+            class="badge-difficulty"
+            [class]="getDifficultyClass(currentQuestion()!.difficulty)"
+          >
             {{ currentQuestion()!.difficulty }}
           </span>
         </div>
-      }
 
-      @if (streak() > 1 && !isCompleted()) {
-        <div class="streak">🔥 Série : {{ streak() }}</div>
-      }
-    </div>
+        @if (streak() > 1) {
+          <div class="streak" role="status" aria-live="polite">
+            🔥 Série : {{ streak() }}
+          </div>
+        }
+      </div>
+    }
   </header>
 
   <!-- ═══════════════════════════════════════════════════════
        FILTRE DIFFICULTÉ
        ═══════════════════════════════════════════════════════ -->
   @if (!isCompleted()) {
-    <div class="difficulty-filter">
+    <nav class="difficulty-filter" role="tablist" aria-label="Filtrer par difficulté">
       @for (d of difficulties; track d) {
-        <button class="chip"
-                [class.active]="selectedDifficulty() === d"
-                (click)="filterByDifficulty(d)"
-                type="button">
+        <button
+          class="chip"
+          [class.active]="selectedDifficulty() === d"
+          (click)="filterByDifficulty(d)"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="selectedDifficulty() === d"
+        >
           {{ d }}
         </button>
       }
-    </div>
+    </nav>
   }
 
   <!-- ═══════════════════════════════════════════════════════
@@ -69,84 +69,122 @@
        ═══════════════════════════════════════════════════════ -->
   @if (!isCompleted()) {
 
-    <!-- Barre de progression -->
-    <div class="progress-bar-container">
-      <div class="progress-info">
-        <span>Question {{ currentQuestionIndex() + 1 }} / {{ totalQuestions() }}</span>
-        <span>Score : {{ score() }} pt(s)</span>
+    @if (!hasQuestions()) {
+      <div class="empty-state" role="status">
+        <span class="empty-icon" aria-hidden="true">🎸</span>
+        <p>Aucune question pour ce filtre.</p>
+        <button
+          class="btn-secondary"
+          (click)="filterByDifficulty('Toutes')"
+          type="button"
+        >
+          Voir toutes les questions
+        </button>
       </div>
-      <div class="progress-track">
-        <div class="progress-fill" [style.width.%]="progressPercent()"></div>
-      </div>
-    </div>
+    } @else {
 
-    <!-- Carte question -->
-    @if (currentQuestion(); as q) {
-      <article class="question-card">
-
-        <h2 class="question-title">{{ q.title }}</h2>
-        <p class="question-text">{{ q.question }}</p>
-
-        <!-- Propositions -->
-        <div class="options-grid">
-          @for (opt of q.options; let i = $index; track i) {
-            <button class="option-btn"
-                    [class.selected]="selectedOptionIndex() === i"
-                    [class.correct]="isAnswerSubmitted() && opt.isCorrect"
-                    [class.wrong]="isAnswerSubmitted() && selectedOptionIndex() === i && !opt.isCorrect"
-                    [disabled]="isAnswerSubmitted()"
-                    (click)="selectOption(i)"
-                    type="button">
-              <span class="option-prefix">{{ letters[i] }}</span>
-              <span class="option-label">{{ opt.label }}</span>
-            </button>
-          }
+      <!-- Barre de progression -->
+      <div class="progress-bar-container">
+        <div class="progress-info">
+          <span>
+            Question {{ currentQuestionIndex() + 1 }} / {{ totalQuestions() }}
+          </span>
+          <span aria-live="polite">Score : {{ score() }} pt(s)</span>
         </div>
+        <div
+          class="progress-track"
+          role="progressbar"
+          [attr.aria-valuenow]="progressPercent()"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <div class="progress-fill" [style.width.%]="progressPercent()"></div>
+        </div>
+      </div>
 
-        <!-- Feedback -->
-        @if (isAnswerSubmitted() && selectedOptionIndex() !== null) {
-          <div class="feedback-box"
-               [class.success]="q.options[selectedOptionIndex()!].isCorrect"
-               [class.error]="!q.options[selectedOptionIndex()!].isCorrect">
+      <!-- Carte question -->
+      @if (currentQuestion(); as q) {
+        <article class="question-card">
 
-            <h4>
-              @if (q.options[selectedOptionIndex()!].isCorrect) {
-                ✅ Bonne réponse !
-              } @else {
-                ❌ Mauvaise réponse
-              }
-            </h4>
+          <h2 class="question-title">{{ q.title }}</h2>
+          <p class="question-text">{{ q.question }}</p>
 
-            <p>{{ q.options[selectedOptionIndex()!].explanation }}</p>
-
-            @if (q.funFact) {
-              <p class="fun-fact">💡 <em>{{ q.funFact }}</em></p>
+          <!-- Propositions -->
+          <div
+            class="options-grid"
+            role="radiogroup"
+            aria-label="Choisissez une réponse"
+          >
+            @for (opt of q.options; let i = $index; track i) {
+              <button
+                class="option-btn"
+                [class.selected]="selectedOptionIndex() === i"
+                [class.correct]="isAnswerSubmitted() && opt.isCorrect"
+                [class.wrong]="isAnswerSubmitted() && selectedOptionIndex() === i && !opt.isCorrect"
+                [disabled]="isAnswerSubmitted()"
+                (click)="selectOption(i)"
+                type="button"
+                role="radio"
+                [attr.aria-checked]="selectedOptionIndex() === i"
+              >
+                <span class="option-prefix" aria-hidden="true">{{ letters[i] }}</span>
+                <span class="option-label">{{ opt.label }}</span>
+              </button>
             }
           </div>
-        }
 
-        <!-- Actions -->
-        <div class="actions-row">
-          @if (!isAnswerSubmitted()) {
-            <button class="btn-primary"
-                    [disabled]="!canSubmit()"
-                    (click)="submitAnswer()"
-                    type="button">
-              Valider la réponse
-            </button>
-          } @else {
-            <button class="btn-success"
-                    (click)="nextQuestion()"
-                    type="button">
-              @if (!isLastQuestion()) {
-                Question suivante →
-              } @else {
-                Voir les résultats
+          <!-- Feedback -->
+          @if (isAnswerSubmitted() && selectedOptionIndex() !== null) {
+            <div
+              class="feedback-box"
+              [class.success]="q.options[selectedOptionIndex()!].isCorrect"
+              [class.error]="!q.options[selectedOptionIndex()!].isCorrect"
+              role="status"
+              aria-live="polite"
+            >
+              <h4>
+                @if (q.options[selectedOptionIndex()!].isCorrect) {
+                  ✅ Bonne réponse !
+                } @else {
+                  ❌ Mauvaise réponse
+                }
+              </h4>
+
+              <p>{{ q.options[selectedOptionIndex()!].explanation }}</p>
+
+              @if (q.funFact) {
+                <p class="fun-fact">💡 <em>{{ q.funFact }}</em></p>
               }
-            </button>
+            </div>
           }
-        </div>
-      </article>
+
+          <!-- Actions -->
+          <div class="actions-row">
+            @if (!isAnswerSubmitted()) {
+              <button
+                class="btn-primary"
+                [disabled]="!canSubmit()"
+                (click)="submitAnswer()"
+                type="button"
+              >
+                Valider la réponse
+              </button>
+            } @else {
+              <button
+                class="btn-success"
+                (click)="nextQuestion()"
+                type="button"
+              >
+                @if (!isLastQuestion()) {
+                  Question suivante →
+                } @else {
+                  Voir les résultats
+                }
+              </button>
+            }
+          </div>
+        </article>
+      }
     }
   }
 
@@ -154,11 +192,11 @@
        RÉSULTATS
        ═══════════════════════════════════════════════════════ -->
   @if (isCompleted()) {
-    <div class="results-card">
-      <div class="result-icon">{{ gradeEmoji() }}</div>
-      <h2>Quiz Terminé !</h2>
+    <div class="results-card" role="region" aria-labelledby="results-title">
+      <div class="result-icon" aria-hidden="true">{{ gradeEmoji() }}</div>
+      <h2 id="results-title">Quiz Terminé !</h2>
 
-      <div class="score-badge">
+      <div class="score-badge" aria-live="polite">
         <span class="score-num">{{ score() }} / {{ totalQuestions() }}</span>
         <span class="score-percent">({{ scorePercentage() }}%)</span>
       </div>

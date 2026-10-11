@@ -293,6 +293,7 @@ export const QUESTS: readonly Quest[] = [
 /* ═══════════════════════════════════════════════════════
    CONSTANTES DE JEU
    ═══════════════════════════════════════════════════════ */
+
 export const HINT_COST = 10;
 export const XP_PER_LEVEL = 100;
 export const MAX_ATTEMPTS_BEFORE_HINT = 3;

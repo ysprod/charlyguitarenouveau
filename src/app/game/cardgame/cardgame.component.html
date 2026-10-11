@@ -10,9 +10,14 @@
       <header class="game-header">
         <div class="header-top-row">
 
-          <button class="btn-floating-back" (click)="goToPlay()" type="button" aria-label="Retour au menu des jeux"
-            title="Retour au menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <button
+            class="btn-back"
+            (click)="goToPlay()"
+            type="button"
+            aria-label="Retour au menu des jeux"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" aria-hidden="true">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
@@ -30,14 +35,28 @@
       </header>
 
       <!-- Plateau -->
-      <div class="game-area-card" *ngIf="oncontinue()">
-        <mat-grid-list cols="3" rowHeight="1:1" gutterSize="16px">
-          <mat-grid-tile *ngFor="let c of cards; let idx = index">
-            <app-gamecard [data]="c" (click)="cardClicked(idx)" class="card-item">
-            </app-gamecard>
-          </mat-grid-tile>
-        </mat-grid-list>
-      </div>
+      @if (isPlaying()) {
+        <div class="game-area-card">
+          <div
+            class="cards-grid"
+            role="grid"
+            aria-label="Plateau de jeu Boubouni"
+          >
+            @for (card of cards(); track $index; let idx = $index) {
+              <div
+                class="card-item"
+                role="gridcell"
+                [attr.aria-label]="'Carte ' + (idx + 1)"
+              >
+                <app-gamecard
+                  [data]="card"
+                  (click)="cardClicked(idx)"
+                />
+              </div>
+            }
+          </div>
+        </div>
+      }
 
     </section>
 
@@ -46,109 +65,125 @@
          ═══════════════════════════════════════════════════════ -->
     <aside class="dashboard-section">
 
-      <!-- Bouton Nouvelle partie -->
-      <button class="btn-cyber-secondary" (click)="restart()">
+      <!-- 🟠 Bouton Nouvelle partie (action principale) -->
+      <button class="btn-primary" (click)="restart()" type="button">
         🔄 Nouvelle partie
       </button>
 
-      <br><br>
-
       <!-- ═══════════════════════════════════════════════════════
-           STATS RAPIDES (avec chronos)
+           STATS RAPIDES
            ═══════════════════════════════════════════════════════ -->
-      <div class="quick-stats" *ngIf="oncontinue()">
+      @if (isPlaying()) {
+        <div class="quick-stats">
 
-        <div class="quick-stat">
-          <span class="qs-icon">🎯</span>
-          <span class="qs-label">Paires</span>
-          <span class="qs-value">{{ matchedCount }} / {{ cardImages.length }}</span>
+          <div class="quick-stat">
+            <span class="qs-icon" aria-hidden="true">🎯</span>
+            <span class="qs-label">Paires</span>
+            <span class="qs-value" aria-live="polite">
+              {{ matchedCount() }} / {{ totalPairs() }}
+            </span>
+          </div>
+
+          <div class="quick-stat">
+            <span class="qs-icon" aria-hidden="true">🎴</span>
+            <span class="qs-label">Coups</span>
+            <span class="qs-value" aria-live="polite">
+              {{ moves() }}
+            </span>
+          </div>
+
+          <!-- ⏱️ Chrono global -->
+          <div class="quick-stat timer-stat">
+            <span class="qs-icon" aria-hidden="true">⏱️</span>
+            <span class="qs-label">Temps total</span>
+            <span class="qs-value timer-value" aria-live="polite">
+              {{ globalTimerDisplay() }}
+            </span>
+          </div>
+
+          <!-- ⚡ Dernière trouvaille -->
+          <div
+            class="quick-stat match-timer-stat"
+            [class.active]="lastMatchSeconds() > 0"
+          >
+            <span class="qs-icon" aria-hidden="true">⚡</span>
+            <span class="qs-label">Trouvaille</span>
+            <span class="qs-value match-timer-value" aria-live="polite">
+              @if (lastMatchSeconds() > 0) {
+                {{ lastMatchSeconds() }}s
+              } @else {
+                —
+              }
+            </span>
+          </div>
+
         </div>
-
-        <div class="quick-stat">
-          <span class="qs-icon">🎴</span>
-          <span class="qs-label">Coups</span>
-          <span class="qs-value">{{ moves }}</span>
-        </div>
-      </div>
-
-      <div class="quick-stats" *ngIf="oncontinue()">
-        <!-- ⏱️ Chrono global -->
-        <div class="quick-stat timer-stat">
-          <span class="qs-icon">⏱️</span>
-          <span class="qs-label">Temps total</span>
-          <span class="qs-value timer-value">{{ globalTimerDisplay }}</span>
-        </div>
-
-        <!-- ⚡ Temps de la dernière trouvaille (affiché temporairement) -->
-        <div class="quick-stat match-timer-stat" [class.active]="lastMatchSeconds > 0">
-          <span class="qs-icon">⚡</span>
-          <span class="qs-label">Trouvaille</span>
-          <span class="qs-value match-timer-value">
-            @if (lastMatchSeconds > 0) {
-            {{ lastMatchSeconds }}s
-            } @else {
-            —
-            }
-          </span>
-        </div>
-
-      </div>
+      }
 
       <!-- Carte gains -->
       <div class="glass-card score-card">
         <div class="card-header">
-          <span class="card-icon">💎</span>
+          <span class="card-icon" aria-hidden="true">💎</span>
           <h3>VOS GAINS</h3>
         </div>
 
         <div class="pv-display">
           <span class="pv-label">Points de Vie</span>
-          <span class="pv-value">{{ lavie | number }}</span>
+          <span class="pv-value" aria-live="polite">
+            {{ lavie() | number }}
+          </span>
           <div class="pv-bar">
-            <div class="pv-fill" [style.width.%]="(pointdevies / 10000) * 100"></div>
+            <div class="pv-fill" [style.width.%]="pvFillPercent()"></div>
           </div>
         </div>
 
         <div class="stat-row">
           <div class="stat-item">
-            <span class="stat-icon">🎁</span>
+            <span class="stat-icon" aria-hidden="true">🎁</span>
             <span class="stat-label">Bonus</span>
-            <span class="stat-value bonus-pts">+{{ lebonus }}</span>
+            <span class="stat-value bonus-pts">+{{ lebonus() }}</span>
           </div>
         </div>
       </div>
 
       <!-- Bouton son -->
-      <button class="btn-sound" (click)="toggleSound()" type="button"
-        [attr.aria-label]="soundEnabled ? 'Couper le son' : 'Activer le son'">
-        <span class="sound-icon">{{ soundEnabled ? '🔊' : '🔇' }}</span>
-        <span class="sound-label">{{ soundEnabled ? 'Son activé' : 'Son coupé' }}</span>
+      <button
+        class="btn-sound"
+        (click)="toggleSound()"
+        type="button"
+        [attr.aria-pressed]="soundEnabled()"
+        [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
+      >
+        <span class="sound-icon" aria-hidden="true">
+          {{ soundEnabled() ? '🔊' : '🔇' }}
+        </span>
+        <span class="sound-label">
+          {{ soundEnabled() ? 'Son activé' : 'Son coupé' }}
+        </span>
       </button>
-
-      <br><br>
 
       <!-- Règles -->
       <div class="glass-card info-card">
         <div class="card-header">
-          <span class="card-icon">📜</span>
+          <span class="card-icon" aria-hidden="true">📜</span>
           <h3>RÈGLES DU GARDIEN</h3>
         </div>
 
         <ul class="rules-list">
           <li>
-            <span class="rule-num">1</span>
+            <span class="rule-num" aria-hidden="true">1</span>
             <span>Retourne <strong>deux cartes</strong> pour tenter de former une paire.</span>
           </li>
           <li>
-            <span class="rule-num">2</span>
-            <span>Chaque coup te coûte <strong class="penalty">-100 PV</strong>.</span>
+            <span class="rule-num" aria-hidden="true">2</span>
+            <span>Chaque coup te coûte <strong class="penalty">−100 PV</strong>.</span>
           </li>
           <li>
-            <span class="rule-num">3</span>
+            <span class="rule-num" aria-hidden="true">3</span>
             <span>Une paire trouvée te rapporte <strong class="reward">+5 000 PV</strong>.</span>
           </li>
           <li>
-            <span class="rule-num">4</span>
+            <span class="rule-num" aria-hidden="true">4</span>
             <span>Trouve <strong>toutes les paires</strong> le plus vite possible !</span>
           </li>
         </ul>
@@ -157,11 +192,11 @@
       <!-- Astuce -->
       <div class="glass-card tip-card">
         <div class="card-header">
-          <span class="card-icon">🐵</span>
+          <span class="card-icon" aria-hidden="true">🐵</span>
           <h3>ASTUCE DU GARDIEN</h3>
         </div>
         <p class="tip-text">
-          « Mémorise bien l'emplacement des cartes ratées...
+          « Mémorise bien l'emplacement des cartes ratées…
           <em>la mémoire est la clé du trésor</em>. »
         </p>
       </div>

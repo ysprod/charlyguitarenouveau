@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
@@ -8,20 +8,24 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
-export class FooterComponent implements OnInit {
-  currentYear: number = new Date().getFullYear();
+export class FooterComponent {
 
-  constructor() { }
-
-  ngOnInit(): void { }
+  /** Année courante pour le copyright */
+  readonly currentYear: number = new Date().getFullYear();
 
   /**
-   * Retour en haut de page avec scroll fluide
+   * Retour en haut de page avec scroll fluide.
+   * Respecte `prefers-reduced-motion` : scroll instantané si l'utilisateur
+   * a désactivé les animations.
    */
   scrollToTop(): void {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: prefersReducedMotion ? 'auto' : 'smooth'
     });
   }
 }

@@ -1,4 +1,5 @@
 <footer class="app-footer">
+
   <!-- Décor lumineux supérieur -->
   <div class="footer-glow" aria-hidden="true"></div>
 
@@ -8,9 +9,9 @@
          COLONNE 1 : IDENTITÉ & MARQUE
          ═══════════════════════════════════════════ -->
     <div class="footer-brand">
-      <a routerLink="/" class="brand-logo">
+      <a [routerLink]="['/']" class="brand-logo" aria-label="CHARLY GUITARE — Retour à l'accueil">
         <div class="logo-icon-wrapper">
-          <span class="logo-icon">🎸</span>
+          <span class="logo-icon" aria-hidden="true">🎸</span>
           <span class="logo-ring" aria-hidden="true"></span>
         </div>
         <div class="logo-text-wrapper">
@@ -25,21 +26,23 @@
       </p>
 
       <!-- Réseaux Sociaux -->
-      <div class="social-links">
-        <a href="https://www.youtube.com/@CharlyGuitare" target="_blank" rel="noopener noreferrer" aria-label="YouTube"
-          class="social-link social-youtube">
+      <div class="social-links" aria-label="Réseaux sociaux">
+        <a href="https://www.youtube.com/@CharlyGuitare" target="_blank" rel="noopener noreferrer"
+          aria-label="YouTube — Charly Guitare" class="social-link social-youtube">
           <img src="assets/youtube.png" alt="" class="social-img" loading="lazy" />
-          <span class="social-tooltip">YouTube</span>
+          <span class="social-tooltip" aria-hidden="true">YouTube</span>
         </a>
-        <a href="https://facebook.com/charlyguitare2020" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
-          class="social-link social-facebook">
+
+        <a href="https://facebook.com/charlyguitare2020" target="_blank" rel="noopener noreferrer"
+          aria-label="Facebook — Charly Guitare" class="social-link social-facebook">
           <img src="assets/facebook.png" alt="" class="social-img" loading="lazy" />
-          <span class="social-tooltip">Facebook</span>
+          <span class="social-tooltip" aria-hidden="true">Facebook</span>
         </a>
+
         <a href="https://www.instagram.com/charlyguitare" target="_blank" rel="noopener noreferrer"
-          aria-label="Instagram" class="social-link social-instagram">
+          aria-label="Instagram — Charly Guitare" class="social-link social-instagram">
           <img src="assets/instagram.png" alt="" class="social-img" loading="lazy" />
-          <span class="social-tooltip">Instagram</span>
+          <span class="social-tooltip" aria-hidden="true">Instagram</span>
         </a>
       </div>
     </div>
@@ -47,7 +50,7 @@
     <!-- ═══════════════════════════════════════════
          COLONNE 2 : NAVIGATION
          ═══════════════════════════════════════════ -->
-    <nav class="footer-column" aria-label="Navigation principale">
+    <nav class="footer-column" aria-label="Navigation pied de page">
       <h4 class="column-title">
         <span class="title-dot" aria-hidden="true"></span>
         Navigation
@@ -92,11 +95,7 @@
         <a [routerLink]="['/live']" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           Live
-        </a>
-        <a [routerLink]="['/contact']" routerLinkActive="active">
-          <span class="nav-dot" aria-hidden="true"></span>
-          Contact
-        </a>
+        </a> 
       </div>
     </nav>
 
@@ -107,6 +106,7 @@
        ═══════════════════════════════════════════════ -->
   <div class="footer-bottom">
     <div class="bottom-container">
+
       <p class="copyright">
         &copy; {{ currentYear }}
         <strong class="brand-highlight">CHARLY GUITARE</strong>
@@ -126,6 +126,8 @@
           <polyline points="18 15 12 9 6 15" />
         </svg>
       </button>
+
     </div>
   </div>
+
 </footer>

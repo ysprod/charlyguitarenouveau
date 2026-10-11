@@ -1,16 +1,19 @@
 <div class="decoder-container">
 
   <!-- ═══════════════════════════════════════════════════════
-       HEADER : Bouton retour + Titre sur la même ligne
+       HEADER
        ═══════════════════════════════════════════════════════ -->
   <header class="game-header">
     <div class="header-top-row">
 
-      <button class="btn-floating-back"
-              (click)="goToPlay()"
-              type="button"
-              aria-label="Retour au menu des jeux">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <button
+        class="btn-back"
+        (click)="goToPlay()"
+        type="button"
+        aria-label="Retour au menu des jeux"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" aria-hidden="true">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
@@ -23,6 +26,18 @@
     <p class="header-subtitle">
       Saisis une grille d'accords, décode l'harmonie, transpose et entraîne-toi en rythme.
     </p>
+
+    @if (statusMessage()) {
+      <div
+        class="status-banner"
+        [class.status-success]="statusKind() === 'success'"
+        [class.status-error]="statusKind() === 'error'"
+        role="status"
+        aria-live="polite"
+      >
+        {{ statusMessage() }}
+      </div>
+    }
   </header>
 
   <!-- ═══════════════════════════════════════════════════════
@@ -33,38 +48,60 @@
     <!-- ═══════════════════════════════════════════════════════
          COLONNE GAUCHE : ÉDITEUR
          ═══════════════════════════════════════════════════════ -->
-    <section class="editor-panel">
+    <section class="editor-panel" aria-label="Éditeur de grille">
 
       <!-- 1. Saisie -->
       <div class="panel-section">
-        <h3><span class="step">1</span> Saisie de la grille</h3>
+        <h3><span class="step" aria-hidden="true">1</span> Saisie de la grille</h3>
 
         <textarea
           [ngModel]="rawInput()"
           (ngModelChange)="onRawInputChange($event)"
           rows="5"
           spellcheck="false"
-          placeholder="Ex: [C] [Am] | [F] [G7]">
-        </textarea>
+          placeholder="Ex: [C] [Am] | [F] [G7]"
+          aria-label="Grille d'accords à décoder"
+        ></textarea>
 
         <div class="textarea-actions">
-          <button class="btn-ghost" (click)="clearAll()" type="button" title="Effacer">
+          <button
+            class="btn-secondary"
+            (click)="clearAll()"
+            type="button"
+            title="Effacer la grille"
+          >
             🗑 Effacer
           </button>
-          <button class="btn-ghost" (click)="saveGrid()" type="button" title="Sauvegarder">
+          <button
+            class="btn-success"
+            (click)="saveGrid()"
+            type="button"
+            title="Sauvegarder la grille"
+          >
             💾 Sauvegarder
+          </button>
+          <button
+            class="btn-primary"
+            (click)="exportMidi()"
+            type="button"
+            title="Exporter en MIDI"
+          >
+            🎵 Export MIDI
           </button>
         </div>
       </div>
 
       <!-- 2. Presets -->
       <div class="panel-section">
-        <h3><span class="step">2</span> Grilles célèbres</h3>
+        <h3><span class="step" aria-hidden="true">2</span> Grilles célèbres</h3>
         <div class="presets-grid">
           @for (p of presets; track p.name) {
-            <button class="preset-chip"
-                    (click)="loadPreset(p)"
-                    type="button">
+            <button
+              class="preset-chip"
+              (click)="loadPreset(p)"
+              type="button"
+              [attr.aria-label]="'Charger la grille ' + p.name"
+            >
               {{ p.name }}
             </button>
           }
@@ -73,14 +110,16 @@
 
       <!-- 3. Tonalité & transposition -->
       <div class="panel-section">
-        <h3><span class="step">3</span> Tonalité &amp; transposition</h3>
+        <h3><span class="step" aria-hidden="true">3</span> Tonalité &amp; transposition</h3>
 
         <div class="controls-row">
           <div class="control-group">
             <label for="keySelect">Tonalité de référence</label>
-            <select id="keySelect"
-                    [ngModel]="selectedKey()"
-                    (ngModelChange)="onKeyChange($event)">
+            <select
+              id="keySelect"
+              [ngModel]="selectedKey()"
+              (ngModelChange)="onKeyChange($event)"
+            >
               @for (note of notesList; track note) {
                 <option [value]="note">{{ note }} Majeur</option>
               }
@@ -89,7 +128,12 @@
 
           <div class="control-group">
             <label>Altérations</label>
-            <button class="btn-toggle" (click)="toggleFlats()" type="button">
+            <button
+              class="btn-toggle"
+              (click)="toggleFlats()"
+              type="button"
+              [attr.aria-pressed]="useFlats()"
+            >
               {{ useFlats() ? '♭ Bémols' : '♯ Dièses' }}
             </button>
           </div>
@@ -103,41 +147,93 @@
         </div>
       </div>
 
-      <!-- 4. Playback -->
+      <!-- 4. Playback & modes -->
       <div class="panel-section">
-        <h3><span class="step">4</span> Simulateur &amp; métronome</h3>
+        <h3><span class="step" aria-hidden="true">4</span> Simulateur &amp; métronome</h3>
 
-        <div class="playback-controls">
-          <button class="btn-play"
-                  [class.playing]="isPlaying()"
-                  (click)="togglePlayback()"
-                  type="button">
-            {{ isPlaying() ? '⏹ Arrêter' : '▶ Lancer' }}
+        <!-- Sélecteur de mode -->
+        <div class="mode-selector" role="tablist" aria-label="Mode de lecture">
+          <button
+            type="button"
+            role="tab"
+            class="mode-tab"
+            [class.active]="playMode() === 'normal'"
+            [attr.aria-selected]="playMode() === 'normal'"
+            (click)="playMode() !== 'normal' && toggleLearningMode()"
+          >
+            ▶ Mode normal
           </button>
-
-          <label class="metronome-toggle">
-            <input type="checkbox"
-                   [ngModel]="isMetronomeOn()"
-                   (ngModelChange)="isMetronomeOn.set($event)" />
-            <span>🔔 Métronome</span>
-          </label>
+          <button
+            type="button"
+            role="tab"
+            class="mode-tab"
+            [class.active]="playMode() === 'learning'"
+            [attr.aria-selected]="playMode() === 'learning'"
+            (click)="playMode() !== 'learning' && toggleLearningMode()"
+          >
+            🎓 Apprentissage
+          </button>
         </div>
 
+        <!-- Contrôles normaux -->
+        @if (playMode() === 'normal') {
+          <div class="playback-controls">
+            <button
+              class="btn-play"
+              [class.playing]="isPlaying()"
+              (click)="togglePlayback()"
+              type="button"
+              [attr.aria-pressed]="isPlaying()"
+            >
+              {{ isPlaying() ? '⏹ Arrêter' : '▶ Lancer' }}
+            </button>
+
+            <label class="metronome-toggle">
+              <input
+                type="checkbox"
+                [ngModel]="isMetronomeOn()"
+                (ngModelChange)="toggleMetronome($event)"
+              />
+              <span>🔔 Métronome</span>
+            </label>
+          </div>
+        }
+
+        <!-- Contrôles mode apprentissage -->
+        @if (playMode() === 'learning') {
+          <div class="learning-controls">
+            <button
+              class="btn-stop-learning"
+              (click)="toggleLearningMode()"
+              type="button"
+            >
+              ⏹ Quitter l'apprentissage
+            </button>
+          </div>
+        }
+
         <div class="bpm-control">
-          <label>
+          <label for="bpmRange">
             Tempo : <strong>{{ bpm() }} BPM</strong>
           </label>
-          <input type="range" min="40" max="220"
-                 [ngModel]="bpm()"
-                 (ngModelChange)="onBpmInput($event)"
-                 (change)="onBpmChange()" />
+          <input
+            id="bpmRange"
+            type="range"
+            min="40"
+            max="220"
+            [ngModel]="bpm()"
+            (ngModelChange)="onBpmInput($event)"
+            (change)="onBpmChange()"
+          />
 
-          @if (isPlaying()) {
-            <div class="beat-indicator">
-              @for (b of [0, 1, 2, 3]; track b) {
-                <span class="beat-dot"
-                      [class.active]="currentBeat() === b"
-                      [class.accent]="b === 0"></span>
+          @if (isPlaying() && playMode() === 'normal') {
+            <div class="beat-indicator" aria-hidden="true">
+              @for (b of beatsArray; track b) {
+                <span
+                  class="beat-dot"
+                  [class.active]="currentBeat() === b"
+                  [class.accent]="b === 0"
+                ></span>
               }
             </div>
           }
@@ -147,15 +243,27 @@
       <!-- 5. Grilles sauvegardées -->
       @if (savedGrids().length > 0) {
         <div class="panel-section">
-          <h3><span class="step">★</span> Mes grilles</h3>
+          <h3><span class="step" aria-hidden="true">★</span> Mes grilles</h3>
           <ul class="saved-list">
             @for (g of savedGrids(); track g.name; let i = $index) {
               <li>
-                <button class="saved-item" (click)="loadSavedGrid(g)" type="button">
+                <button
+                  class="saved-item"
+                  (click)="loadSavedGrid(g)"
+                  type="button"
+                  [attr.aria-label]="'Charger ' + g.name"
+                >
                   <span class="saved-name">{{ g.name }}</span>
                   <span class="saved-meta">{{ g.key }} · {{ g.bpm }} BPM</span>
                 </button>
-                <button class="btn-delete" (click)="deleteSaved(i)" type="button" title="Supprimer">×</button>
+                <button
+                  class="btn-delete"
+                  (click)="deleteSaved(i)"
+                  type="button"
+                  [attr.aria-label]="'Supprimer ' + g.name"
+                >
+                  ×
+                </button>
               </li>
             }
           </ul>
@@ -166,10 +274,10 @@
     <!-- ═══════════════════════════════════════════════════════
          COLONNE DROITE : VISUALISATION
          ═══════════════════════════════════════════════════════ -->
-    <section class="display-panel">
+    <section class="display-panel" aria-label="Grille décodée">
 
       <!-- Stats -->
-      @if (parsedBars().length > 0) {
+      @if (hasBars()) {
         <div class="stats-bar">
           <div class="stat">
             <span class="stat-value">{{ parsedBars().length }}</span>
@@ -193,28 +301,47 @@
       <!-- Display header -->
       <div class="display-header">
         <h3>Grille décodée</h3>
-        @if (isPlaying()) {
-          <span class="playing-indicator">
+
+        @if (isPlaying() && playMode() === 'normal') {
+          <span class="playing-indicator" aria-live="polite">
             ● En cours — Mesure {{ currentBarIndex() + 1 }}
+          </span>
+        }
+
+        @if (playMode() === 'learning' && learningBarIndex() >= 0) {
+          <span class="learning-indicator" aria-live="polite">
+            🎓 Apprentissage — Mesure {{ learningBarIndex() + 1 }}
           </span>
         }
       </div>
 
+      <!-- Barre de progression du mode apprentissage -->
+      @if (playMode() === 'learning' && learningBarIndex() >= 0) {
+        <div class="learning-progress-bar" role="progressbar"
+             [attr.aria-valuenow]="learningProgress()"
+             aria-valuemin="0" aria-valuemax="100">
+          <div class="learning-progress-fill"
+               [style.width.%]="learningProgress()"></div>
+        </div>
+      }
+
       <!-- Empty state -->
-      @if (parsedBars().length === 0) {
+      @if (!hasBars()) {
         <div class="empty-state">
-          <div class="empty-icon">🎵</div>
+          <div class="empty-icon" aria-hidden="true">🎵</div>
           <p>Saisis une grille pour la voir apparaître ici.</p>
         </div>
       }
 
       <!-- Grille -->
-      @if (parsedBars().length > 0) {
+      @if (hasBars()) {
         <div class="bars-grid">
           @for (bar of parsedBars(); track bar.barNumber; let i = $index) {
-            <article class="bar-card"
-                     [class.active-bar]="isPlaying() && currentBarIndex() === i">
-
+            <article
+              class="bar-card"
+              [class.active-bar]="isChordActive(i, -1)"
+              [class.learning-bar]="playMode() === 'learning' && learningBarIndex() === i"
+            >
               <header class="bar-header">
                 <span class="bar-number">M{{ bar.barNumber }}</span>
                 <span class="bar-chord-count">
@@ -223,8 +350,12 @@
               </header>
 
               <div class="chords-list">
-                @for (chord of bar.chords; track chord.raw) {
-                  <div class="chord-item" [class.non-diatonic]="!chord.isDiatonic">
+                @for (chord of bar.chords; track chord.raw; let j = $index) {
+                  <div
+                    class="chord-item"
+                    [class.non-diatonic]="!chord.isDiatonic"
+                    [class.chord-active]="isChordActive(i, j)"
+                  >
                     <div class="chord-top">
                       <span class="chord-name">{{ chord.raw }}</span>
                       @if (chord.romanNumeral || chord.degree) {

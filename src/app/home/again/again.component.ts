@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MEMBRES_EQUIPE } from 'src/app/data/equipe.data';
 import { MembreEquipe } from 'src/app/models/membre.model';
@@ -6,7 +5,7 @@ import { MembreEquipe } from 'src/app/models/membre.model';
 @Component({
   selector: 'app-again',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './again.component.html',
   styleUrls: ['./again.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
