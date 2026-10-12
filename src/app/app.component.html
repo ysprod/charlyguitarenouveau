@@ -1,5 +1,5 @@
 <!-- En-tête de navigation -->
-<header class="navbar" [class.scrolled]="isScrolled">
+<header class="navbar" [class.scrolled]="isScrolled()">
   <div class="navbar-container">
 
     <!-- 1. Gauche : Logo -->
@@ -9,13 +9,13 @@
     </a>
 
     <!-- 2. Centre : Liens -->
-    <nav class="nav-links" [class.open]="isMobileMenuOpen" aria-label="Navigation principale">
+    <nav class="nav-links" [class.open]="isMobileMenuOpen()" aria-label="Navigation principale">
       <a [routerLink]="['/']" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
         (click)="closeMobileMenu()">
         Accueil
       </a>
 
-       <a [routerLink]="['/play']" routerLinkActive="active" (click)="closeMobileMenu()">
+      <a [routerLink]="['/play']" routerLinkActive="active" (click)="closeMobileMenu()">
         Jeux
       </a>
 
@@ -26,12 +26,10 @@
 
       <a [routerLink]="['/inbox']" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link">
         <span>Inbox</span>
-        @if (unreadCount$ | async; as unreadCount) {
-        @if (unreadCount > 0) {
-        <span class="nav-badge" aria-label="messages non lus">
-          {{ unreadCount }}
-        </span>
-        }
+        @if (unreadCount() > 0) {
+          <span class="nav-badge" aria-label="messages non lus">
+            {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+          </span>
         }
       </a>
 
@@ -48,11 +46,11 @@
       </a>
 
       @if (!(auth.user$ | async)) {
-      <div class="mobile-auth">
-        <a [routerLink]="['/login']" class="btn-login-mobile" (click)="closeMobileMenu()">
-          Connexion
-        </a>
-      </div>
+        <div class="mobile-auth">
+          <a [routerLink]="['/login']" class="btn-login-mobile" (click)="closeMobileMenu()">
+            Connexion
+          </a>
+        </div>
       }
     </nav>
 
@@ -61,75 +59,73 @@
 
       @if (auth.user$ | async; as user) {
 
-      <!-- Cloche notification -->
-      <a [routerLink]="['/inbox']" class="notification-bell-btn" title="Voir mes messages"
-        aria-label="Voir mes messages">
-        <mat-icon aria-hidden="true">notifications</mat-icon>
-        @if (unreadCount$ | async; as unreadCount) {
-        @if (unreadCount > 0) {
-        <span class="bell-badge" aria-label="messages non lus">
-          {{ unreadCount > 99 ? '99+' : unreadCount }}
-        </span>
-        }
-        }
-      </a>
+        <!-- Cloche notification -->
+        <a [routerLink]="['/inbox']" class="notification-bell-btn" title="Voir mes messages"
+          aria-label="Voir mes messages">
+          <mat-icon aria-hidden="true">notifications</mat-icon>
+          @if (unreadCount() > 0) {
+            <span class="bell-badge" aria-label="messages non lus">
+              {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+            </span>
+          }
+        </a>
 
-      <!-- Avatar + menu -->
-      <button mat-button [matMenuTriggerFor]="userMenu" class="user-avatar-btn" aria-label="Menu profil" type="button">
-        <div class="avatar-ring">
-          <div class="avatar">
-            @if (user.photoURL) {
-            <img [src]="user.photoURL" [alt]="user.displayName || 'Utilisateur'" />
-            } @else {
-            <span>{{ getInitials(user.displayName) }}</span>
-            }
+        <!-- Avatar + menu -->
+        <button mat-button [matMenuTriggerFor]="userMenu" class="user-avatar-btn" aria-label="Menu profil" type="button">
+          <div class="avatar-ring">
+            <div class="avatar">
+              @if (user.photoURL) {
+                <img [src]="user.photoURL" [alt]="user.displayName || 'Utilisateur'" />
+              } @else {
+                <span>{{ getInitials(user.displayName) }}</span>
+              }
+            </div>
           </div>
-        </div>
-        <mat-icon class="arrow-icon" aria-hidden="true">expand_more</mat-icon>
-      </button>
-
-      <mat-menu #userMenu="matMenu" xPosition="before" class="custom-user-menu">
-        <div class="menu-header">
-          <div class="menu-avatar">
-            @if (user.photoURL) {
-            <img [src]="user.photoURL" [alt]="user.displayName || 'Utilisateur'" />
-            } @else {
-            <span>{{ getInitials(user.displayName) }}</span>
-            }
-          </div>
-          <div class="user-details">
-            <p class="menu-user-name">{{ user.displayName || 'Guitariste' }}</p>
-            <p class="menu-user-email">{{ user.email }}</p>
-          </div>
-        </div>
-
-        <mat-divider></mat-divider>
-
-        <button mat-menu-item [routerLink]="['/inbox']" type="button">
-          <mat-icon aria-hidden="true">mail_outline</mat-icon>
-          <span>Mes Messages</span>
+          <mat-icon class="arrow-icon" aria-hidden="true">expand_more</mat-icon>
         </button>
 
-        <button mat-menu-item [routerLink]="['/profil']" type="button">
-          <mat-icon aria-hidden="true">person_outline</mat-icon>
-          <span>Mon Profil</span>
-        </button>
+        <mat-menu #userMenu="matMenu" xPosition="before" class="custom-user-menu">
+          <div class="menu-header">
+            <div class="menu-avatar">
+              @if (user.photoURL) {
+                <img [src]="user.photoURL" [alt]="user.displayName || 'Utilisateur'" />
+              } @else {
+                <span>{{ getInitials(user.displayName) }}</span>
+              }
+            </div>
+            <div class="user-details">
+              <p class="menu-user-name">{{ user.displayName || 'Guitariste' }}</p>
+              <p class="menu-user-email">{{ user.email }}</p>
+            </div>
+          </div>
 
-        <mat-divider></mat-divider>
+          <mat-divider></mat-divider>
 
-        <button mat-menu-item (click)="onLogout()" class="logout-item" type="button">
-          <mat-icon aria-hidden="true">logout</mat-icon>
-          <span>Déconnexion</span>
-        </button>
-      </mat-menu>
+          <button mat-menu-item [routerLink]="['/inbox']" type="button">
+            <mat-icon aria-hidden="true">mail_outline</mat-icon>
+            <span>Mes Messages</span>
+          </button>
+
+          <button mat-menu-item [routerLink]="['/profil']" type="button">
+            <mat-icon aria-hidden="true">person_outline</mat-icon>
+            <span>Mon Profil</span>
+          </button>
+
+          <mat-divider></mat-divider>
+
+          <button mat-menu-item (click)="onLogout()" class="logout-item" type="button">
+            <mat-icon aria-hidden="true">logout</mat-icon>
+            <span>Déconnexion</span>
+          </button>
+        </mat-menu>
 
       } @else {
-      <a [routerLink]="['/login']" class="btn-login-desktop">Connexion</a>
+        <a [routerLink]="['/login']" class="btn-login-desktop">Connexion</a>
       }
 
       <!-- Burger mobile -->
-      <button class="burger-btn" type="button" (click)="toggleMobileMenu()" [class.is-active]="isMobileMenuOpen"
-        [attr.aria-expanded]="isMobileMenuOpen" aria-label="Menu Mobile">
+      <button class="burger-btn" type="button" (click)="toggleMobileMenu()" [class.is-active]="isMobileMenuOpen()"
+        [attr.aria-expanded]="isMobileMenuOpen()" aria-label="Menu Mobile">
         <span></span>
         <span></span>
         <span></span>
@@ -144,16 +140,3 @@
   <app-install-prompt />
   <router-outlet></router-outlet>
 </main>
-
-<!-- CTA Contact — pointe vers /inbox si l'utilisateur a déjà envoyé un message -->
-<div class="contact-cta">
-  <!-- 🟠 Bouton "Installer l'app" (à gauche) -->
-  <app-install />
-
-  <!-- 🟠 CTA Contact (à droite) -->
-  <a [routerLink]="contactCtaRoute()" routerLinkActive="active" [attr.aria-label]="contactCtaLabel()">
-    {{ contactCtaLabel() }}
-  </a>
-</div>
-
-<app-footer></app-footer>

@@ -1,0 +1,86 @@
+:host {
+  display: block;
+}
+
+.form-group {
+  margin-bottom: 1.1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: .5rem;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--text-body, #334155);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  width: 18px;
+  height: 18px;
+  color: var(--text-dim, #94a3b8);
+  pointer-events: none;
+  transition: color .2s ease;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: .85rem 1rem .85rem 2.75rem;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border-medium, rgba(15, 23, 42, .14));
+  background: #ffffff;
+  color: var(--text-dark, #0f172a);
+  font-size: .95rem;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
+}
+
+.input-wrapper input::placeholder {
+  color: var(--text-dim, #94a3b8);
+}
+
+.input-wrapper input:focus {
+  border-color: var(--gold-primary, #b8860b);
+  box-shadow: 0 0 0 4px var(--gold-soft, rgba(184, 134, 11, .08));
+}
+
+.input-wrapper:focus-within .input-icon {
+  color: var(--gold-primary, #b8860b);
+}
+
+.toggle-pwd {
+  position: absolute;
+  right: .75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim, #94a3b8);
+  cursor: pointer;
+  border-radius: var(--radius-sm, 8px);
+  transition: color .2s ease, background-color .2s ease;
+}
+
+.toggle-pwd:hover {
+  color: var(--text-dark, #0f172a);
+  background: var(--bg-soft, #f8fafc);
+}
+
+.toggle-pwd svg {
+  width: 18px;
+  height: 18px;
+}

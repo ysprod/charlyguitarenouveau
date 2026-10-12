@@ -1,13 +1,39 @@
+ <!-- ═══════════════════════════════════════════
+       ZONE CTA (isolée en haut du footer)
+       ═══════════════════════════════════════════ -->
+  <section class="footer-cta-section" aria-labelledby="footer-cta-title">
+    <h2 id="footer-cta-title" class="visually-hidden">
+      Actions principales
+    </h2>
+
+    <div class="contact-cta">
+      <!-- 🟠 Bouton "Installer l'app" -->
+      <app-install />
+
+      <!-- 🟠 CTA Contact -->
+      <a
+        [routerLink]="contactCtaRoute()"
+        routerLinkActive="active"
+        class="cta-contact-link"
+        [attr.aria-label]="contactCtaLabel()"
+      >
+        {{ contactCtaLabel() }}
+      </a>
+    </div>
+  </section>
 <footer class="app-footer">
 
   <!-- Décor lumineux supérieur -->
   <div class="footer-glow" aria-hidden="true"></div>
 
+ 
+
+  <!-- ═══════════════════════════════════════════
+       CONTENU PRINCIPAL DU FOOTER
+       ═══════════════════════════════════════════ -->
   <div class="footer-container">
 
-    <!-- ═══════════════════════════════════════════
-         COLONNE 1 : IDENTITÉ & MARQUE
-         ═══════════════════════════════════════════ -->
+    <!-- COLONNE 1 : IDENTITÉ & MARQUE -->
     <div class="footer-brand">
       <a [routerLink]="['/']" class="brand-logo" aria-label="CHARLY GUITARE — Retour à l'accueil">
         <div class="logo-icon-wrapper">
@@ -47,9 +73,7 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════
-         COLONNE 2 : NAVIGATION
-         ═══════════════════════════════════════════ -->
+    <!-- COLONNE 2 : NAVIGATION -->
     <nav class="footer-column" aria-label="Navigation pied de page">
       <h4 class="column-title">
         <span class="title-dot" aria-hidden="true"></span>
@@ -75,9 +99,7 @@
       </div>
     </nav>
 
-    <!-- ═══════════════════════════════════════════
-         COLONNE 3 : DÉCOUVRIR
-         ═══════════════════════════════════════════ -->
+    <!-- COLONNE 3 : DÉCOUVRIR -->
     <nav class="footer-column" aria-label="Découvrir">
       <h4 class="column-title">
         <span class="title-dot" aria-hidden="true"></span>
@@ -88,6 +110,10 @@
           <span class="nav-dot" aria-hidden="true"></span>
           Jeux
         </a>
+        <a [routerLink]="['/abonnement']" routerLinkActive="active">
+          <span class="nav-dot" aria-hidden="true"></span>
+          Offres
+        </a>
         <a [routerLink]="['/academie']" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           L'Académie
@@ -95,15 +121,15 @@
         <a [routerLink]="['/live']" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           Live
-        </a> 
+        </a>
       </div>
     </nav>
 
   </div><!-- /.footer-container -->
 
-  <!-- ═══════════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════
        BARRE INFÉRIEURE
-       ═══════════════════════════════════════════════ -->
+       ═══════════════════════════════════════════ -->
   <div class="footer-bottom">
     <div class="bottom-container">
 
@@ -120,8 +146,8 @@
         <a [routerLink]="['/privacy']">Confidentialité</a>
       </div>
 
-      <button type="button" class="back-to-top" (click)="scrollToTop()" aria-label="Retour en haut de page"
-        title="Retour en haut">
+      <button type="button" class="back-to-top" (click)="scrollToTop()"
+        aria-label="Retour en haut de page" title="Retour en haut">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <polyline points="18 15 12 9 6 15" />
         </svg>

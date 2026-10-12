@@ -4,7 +4,8 @@ import {
   OnDestroy,
   OnInit,
   inject,
-  runInInjectionContext
+  runInInjectionContext,
+  signal
 } from '@angular/core';
 
 import {
@@ -56,6 +57,14 @@ import {
   take,
   takeUntil
 } from 'rxjs/operators';
+
+/* ✅ Nouveaux imports pour le recadrage */
+import { AvatarCropDialogComponent } from '../../shared/avatar-crop-dialog/avatar-crop-dialog.component';
+import { ImageCropService } from '../../services/image-crop.service';
+import {
+  CropResult,
+  MAX_SOURCE_FILE_SIZE
+} from '../../models/avatar-crop.model';
 
 /* ═══════════════════════════════════════════════════════════
    TYPES
@@ -114,7 +123,12 @@ const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
 @Component({
   selector: 'app-profil',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatSnackBarModule,
+    AvatarCropDialogComponent
+  ],
   templateUrl: './profil.component.html',
   styleUrls: ['./profil.component.scss']
 })
@@ -127,6 +141,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly environmentInjector = inject(EnvironmentInjector);
   private readonly router = inject(Router);
+  private readonly cropService = inject(ImageCropService);
 
   private readonly destroy$ = new Subject<void>();
 
@@ -145,6 +160,10 @@ export class ProfilComponent implements OnInit, OnDestroy {
 
   private currentUid: string | null = null;
   private cachedProfile: Partial<UserProfile> = {};
+
+  /* ─── Recadrage ─── */
+  readonly pendingCropFile = signal<File | null>(null);
+  private croppedResult: CropResult | null = null;
 
   /* ═══════════════════════════════════════════════════════
      CYCLE DE VIE
@@ -388,29 +407,42 @@ export class ProfilComponent implements OnInit, OnDestroy {
     if (file) this.processAvatarFile(file);
   }
 
+  /**
+   * Valide le fichier puis ouvre la modale de recadrage.
+   * Le fichier recadré (300×300 JPEG) sera ensuite stocké dans `selectedFile`.
+   */
   private processAvatarFile(file: File): void {
     if (!file.type.startsWith('image/')) {
       this.showToast('✕ Seules les images sont acceptées.', 'error');
       return;
     }
 
-    if (file.size > MAX_AVATAR_SIZE) {
-      this.showToast("✕ L'image ne doit pas dépasser 2 Mo.", 'error');
+    if (file.size > MAX_SOURCE_FILE_SIZE) {
+      this.showToast("✕ L'image source ne doit pas dépasser 10 Mo.", 'error');
       return;
     }
 
-    this.selectedFile = file;
+    // ✅ Ouvre la modale de recadrage
+    this.pendingCropFile.set(file);
+  }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        this.avatarPreview = reader.result;
-      }
-    };
-    reader.onerror = () => {
-      this.showToast("✕ Impossible de lire l'image.", 'error');
-    };
-    reader.readAsDataURL(file);
+  /** Appelé quand l'utilisateur valide le recadrage. */
+  onCropValidated(result: CropResult): void {
+    this.pendingCropFile.set(null);
+    this.croppedResult = result;
+
+    // Aperçu immédiat (dataUrl 300×300)
+    this.avatarPreview = result.dataUrl;
+
+    // Convertit le Blob en File pour l'upload Firebase
+    this.selectedFile = this.cropService.blobToFile(result.blob);
+
+    this.showToast("✓ Photo recadrée. N'oubliez pas d'enregistrer.", 'success');
+  }
+
+  /** Appelé quand l'utilisateur annule le recadrage. */
+  onCropCancelled(): void {
+    this.pendingCropFile.set(null);
   }
 
   triggerFileInput(): void {
@@ -419,6 +451,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
 
   removeAvatar(): void {
     this.selectedFile = null;
+    this.croppedResult = null;
     this.avatarPreview = null;
     this.showToast("✓ Photo retirée. N'oubliez pas d'enregistrer.", 'success');
   }
@@ -479,13 +512,20 @@ export class ProfilComponent implements OnInit, OnDestroy {
           storageRef(this.storage, `avatars/${this.currentUid}`)
         );
 
+        // ✅ Le fichier est déjà recadré en 300×300 JPEG
         await this.runInContext(() =>
-          uploadBytes(avatarReference, this.selectedFile as File)
+          uploadBytes(avatarReference, this.selectedFile as File, {
+            contentType: 'image/jpeg',
+            cacheControl: 'public, max-age=31536000'
+          })
         );
 
         photoURL = await this.runInContext(() =>
           getDownloadURL(avatarReference)
         );
+
+        // Reset après upload réussi
+        this.croppedResult = null;
       }
 
       if (emailChanged) {
@@ -563,6 +603,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
     const currentUser = this.auth.currentUser;
 
     this.selectedFile = null;
+    this.croppedResult = null;
     this.avatarPreview = currentUser?.photoURL ?? null;
 
     this.profileForm.reset({

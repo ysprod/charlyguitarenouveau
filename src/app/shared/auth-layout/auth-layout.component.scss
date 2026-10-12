@@ -1,0 +1,82 @@
+@use '../styles/auth-shared' as shared;
+
+:host {
+    @include shared.auth-host-variables;
+    display: block;
+}
+
+.auth-wrapper {
+    @include shared.auth-wrapper;
+}
+
+.auth-card {
+    @include shared.auth-card;
+}
+
+/* Formes décoratives */
+.bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: .15;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+    animation: float 18s ease-in-out infinite;
+}
+
+.bg-shape-1 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(184, 134, 11, .5), transparent 70%);
+    top: -100px;
+    left: -100px;
+    animation-delay: 0s;
+}
+
+.bg-shape-2 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(37, 99, 235, .35), transparent 70%);
+    bottom: -150px;
+    right: -150px;
+    animation-delay: -6s;
+}
+
+.bg-shape-3 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(184, 134, 11, .3), transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: -12s;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(30px, -30px) scale(1.08);
+    }
+
+    66% {
+        transform: translate(-30px, 30px) scale(0.92);
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .bg-shape {
+        filter: blur(60px);
+    }
+}
+
+@include shared.auth-accessibility;

@@ -1,39 +1,42 @@
-import { Injectable, inject } from '@angular/core';
+import { inject } from '@angular/core';
 import {
-  ActivatedRouteSnapshot,
+  CanActivateFn,
   Router,
-  RouterStateSnapshot,
   UrlTree
 } from '@angular/router';
 import { Auth, authState } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
-import { filter, map, take } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
+import { getSafeReturnUrl } from 'src/app/utils/url.utils';
+import { AUTH_ROUTES, RETURN_URL_PARAM } from 'src/app/constants/auth.constants';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard {
+ 
 
-  private readonly auth = inject(Auth);
-  private readonly router = inject(Router);
+/**
+ * Guard d'authentification.
+ *
+ * - Utilise `authState(auth)` (au lieu de `user(auth)`) pour attendre
+ *   la restauration de la session Firebase avant d'émettre.
+ * - Redirige vers `/login?returnUrl=...` si l'utilisateur n'est pas connecté.
+ * - Le `returnUrl` est **validé** pour empêcher les redirections externes.
+ */
+export const AuthGuard: CanActivateFn = (
+  _route,
+  state
+): Observable<boolean | UrlTree> => {
+  const auth = inject(Auth);
+  const router = inject(Router);
 
-  canActivate(
-    _route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Observable<boolean | UrlTree> {
-    return authState(this.auth).pipe(
-      /* ✅ Attend la première émission *réelle* de Firebase Auth
-         (ignore les valeurs indéfinies éventuelles) */
-      filter((user): user is NonNullable<typeof user> | null => user !== undefined),
-      take(1),
-      map(currentUser => {
-        if (currentUser) {
-          return true;
-        }
-        return this.router.createUrlTree(['/login'], {
-          queryParams: { returnUrl: state.url }
-        });
-      })
-    );
-  }
-}
+  return authState(auth).pipe(
+    take(1),
+    map(currentUser => {
+      if (currentUser) return true;
+
+      const safeReturnUrl = getSafeReturnUrl(state.url);
+
+      return router.createUrlTree([AUTH_ROUTES.LOGIN], {
+        queryParams: { [RETURN_URL_PARAM]: safeReturnUrl }
+      });
+    })
+  );
+};

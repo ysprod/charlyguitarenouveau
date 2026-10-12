@@ -1,0 +1,99 @@
+<div
+  class="crop-backdrop"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="crop-title"
+>
+  <div class="crop-card">
+
+    <!-- En-tête -->
+    <header class="crop-header">
+      <h2 id="crop-title">Recadrer votre photo</h2>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="onCancel()"
+        [disabled]="isProcessing()"
+        aria-label="Fermer"
+      >✕</button>
+    </header>
+
+    <!-- Zone de recadrage -->
+    <div class="crop-viewport">
+      @if (!isReady()) {
+        <div class="crop-loading">
+          <span class="spinner" aria-hidden="true"></span>
+          <p>Chargement…</p>
+        </div>
+      }
+
+      <canvas
+        #canvasRef
+        class="crop-canvas"
+        [class.hidden]="!isReady()"
+        (wheel)="onWheel($event)"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"
+      ></canvas>
+
+      @if (isReady()) {
+        <p class="crop-hint">
+          <span aria-hidden="true">✋</span>
+          Glissez pour déplacer • Pincez ou molette pour zoomer
+        </p>
+      }
+    </div>
+
+    <!-- Contrôle du zoom -->
+    @if (isReady()) {
+      <div class="crop-controls">
+        <label for="zoomRange" class="zoom-label">Zoom</label>
+        <input
+          id="zoomRange"
+          type="range"
+          min="1"
+          max="3"
+          step="0.05"
+          [value]="zoom()"
+          (input)="onZoomChange($any($event.target).value)"
+          class="zoom-slider"
+        />
+        <span class="zoom-value">{{ zoom().toFixed(1) }}×</span>
+      </div>
+    }
+
+    <!-- Erreur -->
+    @if (errorMessage()) {
+      <p class="crop-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <!-- Actions -->
+    <footer class="crop-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="isProcessing()"
+      >
+        Annuler
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-success"
+        (click)="onValidate()"
+        [disabled]="!isReady() || isProcessing()"
+      >
+        @if (!isProcessing()) {
+          <span>Valider le recadrage</span>
+        } @else {
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Traitement…</span>
+        }
+      </button>
+    </footer>
+
+  </div>
+</div>

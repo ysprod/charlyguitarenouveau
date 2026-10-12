@@ -1,70 +1,296 @@
+<!-- src/app/homeconnect/homeconnect.component.html -->
+
 <div class="landing-page">
 
   <!-- ═══════════════════════════════════════════════════════
-       SECTION HEADER PRINCIPAL
+       BANNIÈRE DE BIENVENUE PERSONNALISÉE
+       ═══════════════════════════════════════════════════════ -->
+  <section class="welcome-banner" aria-labelledby="welcome-title">
+
+    <div class="welcome-glow" aria-hidden="true"></div>
+
+    <div class="welcome-content">
+      <div class="welcome-avatar" aria-hidden="true">
+        @if (userPhoto()) {
+          <img [src]="userPhoto()!" [alt]="userName()" />
+        } @else {
+          <span>{{ userInitials() }}</span>
+        }
+      </div>
+
+      <div class="welcome-text">
+        <p class="welcome-greeting">{{ greeting() }},</p>
+        <h1 id="welcome-title" class="welcome-name">
+          {{ userFirstName() }} 👋
+        </h1>
+        <p class="welcome-subtitle">
+          Prêt à faire vibrer les cordes aujourd'hui ?
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="quick-actions" aria-label="Actions rapides">
+      @for (action of quickActions; track action.route) {
+        <a
+          [routerLink]="action.route"
+          class="quick-action"
+          [attr.data-color]="action.color"
+        >
+          <span class="qa-icon" aria-hidden="true">{{ action.icon }}</span>
+          <span class="qa-text">
+            <span class="qa-label">{{ action.label }}</span>
+            <span class="qa-desc">{{ action.description }}</span>
+          </span>
+          <span class="qa-arrow" aria-hidden="true">→</span>
+        </a>
+      }
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ✉️ BOÎTE DE RÉCEPTION — GMAIL-LIKE
+       ═══════════════════════════════════════════════════════ -->
+  <section class="inbox-section" aria-labelledby="inbox-title">
+
+    <!-- En-tête de la boîte -->
+    <header class="inbox-header">
+      <div class="inbox-title-wrapper">
+        <span class="inbox-eyebrow">MESSAGERIE</span>
+        <h2 id="inbox-title" class="inbox-title">
+          Boîte de réception
+          @if (unreadCount() > 0) {
+            <span class="inbox-unread-badge" aria-label="messages non lus">
+              {{ unreadCount() }}
+            </span>
+          }
+        </h2>
+      </div>
+
+      <div class="inbox-header-actions">
+        @if (unreadCount() > 0) {
+          <button
+            type="button"
+            class="inbox-btn inbox-btn-grey"
+            (click)="markAllAsRead()"
+            aria-label="Tout marquer comme lu"
+          >
+            <span aria-hidden="true">✓✓</span>
+            Tout marquer comme lu
+          </button>
+        }
+        <a
+          routerLink="/inbox"
+          class="inbox-btn inbox-btn-blue"
+          aria-label="Ouvrir la messagerie complète"
+        >
+          <span aria-hidden="true">📬</span>
+          Ouvrir la messagerie
+        </a>
+      </div>
+    </header>
+
+    <!-- Onglets filtres -->
+    <nav class="inbox-filters" role="tablist" aria-label="Filtres messages">
+      @for (filter of inboxFilters; track filter.value) {
+        <button
+          type="button"
+          role="tab"
+          class="inbox-filter"
+          [class.active]="activeFilter() === filter.value"
+          [attr.aria-selected]="activeFilter() === filter.value"
+          (click)="setFilter(filter.value)"
+        >
+          <span aria-hidden="true">{{ filter.icon }}</span>
+          {{ filter.label }}
+          @if (filter.value === 'unread' && unreadCount() > 0) {
+            <span class="inbox-filter-count">{{ unreadCount() }}</span>
+          }
+          @if (filter.value === 'starred' && starredCount() > 0) {
+            <span class="inbox-filter-count">{{ starredCount() }}</span>
+          }
+        </button>
+      }
+    </nav>
+
+    <!-- Grille principale : liste + lecture -->
+    <div class="inbox-grid" [class.has-selection]="selectedMessage() !== null">
+
+      <!-- 📋 LISTE -->
+      <div class="inbox-list" role="list">
+
+        @if (paginatedMessages().length === 0) {
+          <div class="inbox-empty" role="status">
+            <div class="inbox-empty-illustration" aria-hidden="true">📭</div>
+            <h3>Aucun message</h3>
+            <p>
+              @if (activeFilter() === 'unread') {
+                Vous êtes à jour, aucun message non lu.
+              } @else if (activeFilter() === 'starred') {
+                Aucun message suivi pour le moment.
+              } @else {
+                Votre boîte de réception est vide.
+              }
+            </p>
+          </div>
+        }
+
+        @for (msg of paginatedMessages(); track msg.id) {
+          <article
+            class="inbox-item"
+            role="listitem"
+            tabindex="0"
+            [class.unread]="msg.isUnread"
+            [class.active]="selectedMessage()?.id === msg.id"
+            (click)="selectMessage(msg)"
+            (keydown.enter)="selectMessage(msg)"
+            (keydown.space)="selectMessage(msg); $event.preventDefault()"
+            [attr.aria-label]="msg.subject"
+          >
+            <!-- Colonne gauche : étoile + avatar -->
+            <div class="inbox-item-left">
+              <button
+                type="button"
+                class="inbox-star"
+                [class.is-starred]="msg.isStarred"
+                (click)="toggleStar(msg, $event)"
+                [attr.aria-label]="msg.isStarred ? 'Retirer le suivi' : 'Suivre ce message'"
+              >
+                {{ msg.isStarred ? '★' : '☆' }}
+              </button>
+              <span class="inbox-avatar" aria-hidden="true">
+                {{ msg.avatarEmoji }}
+              </span>
+            </div>
+
+            <!-- Colonne centrale : expéditeur + sujet + preview -->
+            <div class="inbox-item-body">
+              <div class="inbox-item-top">
+                <span class="inbox-from">{{ msg.from }}</span>
+                <span class="inbox-category" [attr.data-category]="msg.category">
+                  <span aria-hidden="true">{{ getCategoryIcon(msg.category) }}</span>
+                  {{ msg.category }}
+                </span>
+              </div>
+              <div class="inbox-subject">{{ msg.subject }}</div>
+              <p class="inbox-preview">
+                {{ truncate(msg.preview, previewMaxLength) }}
+              </p>
+            </div>
+
+            <!-- Colonne droite : date -->
+            <div class="inbox-item-right">
+              <span class="inbox-date">
+                {{ formatRelativeDate(msg.receivedAt) }}
+              </span>
+              @if (msg.isUnread) {
+                <span class="inbox-dot" aria-hidden="true"></span>
+              }
+            </div>
+          </article>
+        }
+      </div>
+
+      <!-- 📖 PANNEAU DE LECTURE (Gmail-like) -->
+      @if (selectedMessage(); as selected) {
+        <aside class="inbox-reader" aria-label="Lecture du message">
+          <header class="reader-header">
+            <button
+              type="button"
+              class="reader-back"
+              (click)="closeMessage()"
+              aria-label="Fermer le message"
+            >
+              <span aria-hidden="true">←</span>
+            </button>
+
+            <div class="reader-header-info">
+              <span class="inbox-avatar" aria-hidden="true">
+                {{ selected.avatarEmoji }}
+              </span>
+              <div class="reader-from">
+                <span class="reader-from-name">{{ selected.from }}</span>
+                <span class="reader-from-role">{{ selected.fromRole }}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="inbox-star"
+              [class.is-starred]="selected.isStarred"
+              (click)="toggleStar(selected, $event)"
+              [attr.aria-label]="selected.isStarred ? 'Retirer le suivi' : 'Suivre ce message'"
+            >
+              {{ selected.isStarred ? '★' : '☆' }}
+            </button>
+          </header>
+
+          <div class="reader-body">
+            <h3 class="reader-subject">{{ selected.subject }}</h3>
+            <p class="reader-date">
+              {{ selected.receivedAt | date: 'dd MMMM yyyy · HH:mm' }}
+            </p>
+            <pre class="reader-text">{{ selected.body }}</pre>
+          </div>
+
+          <footer class="reader-footer">
+            <button type="button" class="inbox-btn inbox-btn-blue">
+              <span aria-hidden="true">↩</span> Répondre
+            </button>
+            <button type="button" class="inbox-btn inbox-btn-grey">
+              <span aria-hidden="true">→</span> Transférer
+            </button>
+          </footer>
+        </aside>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <nav class="inbox-pagination" aria-label="Pagination messages">
+        <button
+          type="button"
+          class="inbox-page-btn"
+          [disabled]="currentPage() === 1"
+          (click)="goToPage(currentPage() - 1)"
+          aria-label="Page précédente"
+        >
+          ←
+        </button>
+
+        @for (page of pagesArray(); track page) {
+          <button
+            type="button"
+            class="inbox-page-btn"
+            [class.active]="page === currentPage()"
+            (click)="goToPage(page)"
+            [attr.aria-current]="page === currentPage() ? 'page' : null"
+          >
+            {{ page }}
+          </button>
+        }
+
+        <button
+          type="button"
+          class="inbox-page-btn"
+          [disabled]="currentPage() === totalPages()"
+          (click)="goToPage(currentPage() + 1)"
+          aria-label="Page suivante"
+        >
+          →
+        </button>
+      </nav>
+    }
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION HEADER
        ═══════════════════════════════════════════════════════ -->
   <section class="section-header">
     <h2 class="section-title">OFFOLOMOU ECOSYSTEME ACADEMIE</h2>
     <p class="section-desc">
       Jeux, formations, lives et expériences immersives — tout au même endroit.
     </p>
-  </section>
-
-  <!-- ═══════════════════════════════════════════════════════
-       COMPOSANTS EMBARQUÉS
-       ═══════════════════════════════════════════════════════ -->
-  <app-play></app-play>
-  <app-offres></app-offres>
-  <app-documents></app-documents>
-
-  <!-- ═══════════════════════════════════════════════════════
-       UNIVERS — FEATURE CARD LIVE
-       ═══════════════════════════════════════════════════════ -->
-  <section class="features-section" aria-label="Sessions Live">
-
-    <!-- 🔴 LIVE -->
-    <article class="feature-card" appReveal>
-      <a
-        routerLink="/live"
-        class="feature-image-link"
-        title="Rejoindre le Live"
-        aria-label="Rejoindre les sessions live"
-      >
-        <div class="feature-image-wrapper">
-          <img
-            src="assets/live.jpg"
-            alt="Live"
-            class="feature-image"
-            loading="lazy"
-          />
-          <div class="feature-overlay" aria-hidden="true"></div>
-          <span class="feature-tag feature-tag-live">
-            <span class="live-dot" aria-hidden="true"></span>
-            Live
-          </span>
-        </div>
-      </a>
-      <div class="feature-content">
-        <h3 class="feature-title">Vidéos &amp; Live</h3>
-        <p class="feature-desc">
-          Rejoignez-nous pour des sessions interactives.
-        </p>
-        <a routerLink="/live" class="feature-link">
-          <span>Rejoindre le live</span>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </a>
-      </div>
-    </article>
-
   </section>
 
   <!-- ═══════════════════════════════════════════════════════
@@ -80,17 +306,26 @@
       <div class="why-card" appReveal>
         <div class="why-icon" aria-hidden="true">🎯</div>
         <h3>Méthode éprouvée</h3>
-        <p>Un parcours progressif, structuré par niveaux, pensé par Charly Guitare lui-même.</p>
+        <p>
+          Un parcours progressif, structuré par niveaux, pensé par Charly
+          Guitare lui-même.
+        </p>
       </div>
       <div class="why-card" appReveal>
         <div class="why-icon" aria-hidden="true">🎮</div>
         <h3>Apprendre en jouant</h3>
-        <p>Des jeux interactifs qui transforment chaque exercice en défi ludique et mémorable.</p>
+        <p>
+          Des jeux interactifs qui transforment chaque exercice en défi ludique
+          et mémorable.
+        </p>
       </div>
       <div class="why-card" appReveal>
         <div class="why-icon" aria-hidden="true">🚀</div>
         <h3>Communauté active</h3>
-        <p>Masterclass, lives, entraide : progressez entouré de passionnés, pas seul face à votre écran.</p>
+        <p>
+          Masterclass, lives, entraide : progressez entouré de passionnés, pas
+          seul face à votre écran.
+        </p>
       </div>
     </div>
   </section>
@@ -101,7 +336,9 @@
   <section class="testimonials-section">
     <div class="section-header">
       <span class="section-eyebrow">ILS TÉMOIGNENT</span>
-      <h2 class="section-title">Rejoints par des centaines de passionnés</h2>
+      <h2 class="section-title">
+        Rejoints par des centaines de passionnés
+      </h2>
     </div>
 
     <div class="testimonials-grid">
@@ -109,7 +346,8 @@
       <figure class="testimonial-card" appReveal>
         <div class="quote-mark" aria-hidden="true">&ldquo;</div>
         <blockquote>
-          En 6 mois, j'ai progressé plus qu'en 3 ans seul avec YouTube. La méthode est claire et motivante.
+          En 6 mois, j'ai progressé plus qu'en 3 ans seul avec YouTube. La
+          méthode est claire et motivante.
         </blockquote>
         <figcaption>
           <span class="author-avatar" aria-hidden="true">🎸</span>
@@ -123,7 +361,8 @@
       <figure class="testimonial-card" appReveal>
         <div class="quote-mark" aria-hidden="true">&ldquo;</div>
         <blockquote>
-          Les jeux pédagogiques sont géniaux. On apprend sans s'en rendre compte, c'est addictif !
+          Les jeux pédagogiques sont géniaux. On apprend sans s'en rendre
+          compte, c'est addictif !
         </blockquote>
         <figcaption>
           <span class="author-avatar" aria-hidden="true">🎵</span>
@@ -137,7 +376,8 @@
       <figure class="testimonial-card" appReveal>
         <div class="quote-mark" aria-hidden="true">&ldquo;</div>
         <blockquote>
-          Enfin une plateforme complète : cours, lives, suivi. Charly a créé une vraie école numérique.
+          Enfin une plateforme complète : cours, lives, suivi. Charly a créé
+          une vraie école numérique.
         </blockquote>
         <figcaption>
           <span class="author-avatar" aria-hidden="true">🎼</span>
@@ -150,5 +390,7 @@
 
     </div>
   </section>
+
+  <app-footer></app-footer>
 
 </div>

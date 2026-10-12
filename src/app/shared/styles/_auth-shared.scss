@@ -1,0 +1,106 @@
+/* ═════════════════════════════════════════════════════════════════════
+   AUTH — Charte partagée (login + register)
+   ═════════════════════════════════════════════════════════════════════ */
+
+@mixin auth-host-variables {
+  /* Fonds */
+  --bg-page: #ffffff;
+  --bg-soft: #f8fafc;
+  --bg-card: #ffffff;
+
+  /* Identité dorée */
+  --gold-primary: #b8860b;
+  --gold-hover: #d4a017;
+  --gold-glow: rgba(184, 134, 11, .18);
+  --gold-soft: rgba(184, 134, 11, .08);
+
+  /* Palette fonctionnelle */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --warning: #ea580c;
+  --warning-hover: #c2410c;
+  --success: #16a34a;
+  --danger: #dc2626;
+
+  /* Texte */
+  --text-dark: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+
+  /* Bordures */
+  --border-subtle: rgba(15, 23, 42, .08);
+  --border-medium: rgba(15, 23, 42, .14);
+  --border-gold: rgba(184, 134, 11, .3);
+
+  /* Rayons */
+  --radius-lg: 24px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  /* Transitions */
+  --t-fast: .2s ease;
+  --t-base: .3s ease;
+}
+
+@mixin auth-wrapper {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg-page);
+  overflow: hidden;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@mixin auth-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  padding: 2.5rem 2rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  box-shadow:
+    0 4px 20px rgba(15, 23, 42, .06),
+    0 20px 50px -12px rgba(15, 23, 42, .12);
+  animation: cardIn .6s cubic-bezier(.22, 1, .36, 1);
+  will-change: transform, opacity;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(24px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@mixin auth-responsive {
+  @media (max-width: 480px) {
+    :host {
+      --radius-lg: 20px;
+    }
+  }
+}
+
+@mixin auth-accessibility {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}

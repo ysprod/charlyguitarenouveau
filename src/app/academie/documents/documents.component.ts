@@ -23,30 +23,23 @@ import {
 import { catchError, map, of, switchMap } from 'rxjs';
 
 import { DocumentItem } from '../../models/document.model';
+import {
+  INITIAL_TOAST_STATE,
+  PendingPurchase,
+  SortOption,
+  ToastState,
+  ToastType
+} from '../../models/documents-ui.model';
+
+import {
+  DOCUMENTS_DB_PATHS,
+  DOCUMENT_FILTERS,
+  FILTER_ALL_LABEL,
+  TOAST_DURATION_MS
+} from '../../constants/documents-ui.constants';
+
 import { PromoCodeService } from '../../services/promo-code.service';
-import { StorageService } from '../../services/storage.service';
 import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
-
-type SortOption = 'recent' | 'price-asc' | 'price-desc' | 'popular';
-type ToastType = 'success' | 'info' | 'error';
-
-interface ToastState {
-  show: boolean;
-  message: string;
-  type: ToastType;
-}
-
-interface FilterOption {
-  label: string;
-  icon: string;
-}
-
-interface PendingPurchase {
-  doc: DocumentItem;
-  reason: 'paid' | 'free';
-}
-
-const TOAST_DURATION_MS = 4000;
 
 @Component({
   selector: 'app-documents',
@@ -62,19 +55,41 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   private readonly db = inject(Database);
   private readonly auth = inject(Auth);
   private readonly promoService = inject(PromoCodeService);
-  private readonly storage = inject(StorageService);
   private readonly destroyRef = inject(DestroyRef);
 
   /* ═══════════════════════════════════════════════════════
-     ÉTAT UTILISATEUR
+     UTILISATEUR CONNECTÉ — UN SEUL FLUX
      ═══════════════════════════════════════════════════════ */
-  readonly userCredit = signal(0);
-  readonly currentUserId = signal<string | null>(null);
+
+  /** Utilisateur Firebase (source unique de vérité). */
+  private readonly currentUser = toSignal(user(this.auth), {
+    initialValue: null
+  });
+
+  /** UID dérivé (réactif). */
+  readonly currentUserId = computed(() => this.currentUser()?.uid ?? null);
+
+  /** Crédit lu depuis Realtime DB (réactif). */
+  private readonly creditFromDb = toSignal(
+    user(this.auth).pipe(
+      switchMap(u => {
+        if (!u) return of(null);
+        return objectVal<number>(
+          ref(this.db, `${DOCUMENTS_DB_PATHS.USERS}/${u.uid}/${DOCUMENTS_DB_PATHS.CREDIT}`)
+        );
+      })
+    ),
+    { initialValue: null as number | null }
+  );
+
+  /** ✅ Computed réactif — se met à jour dès que Firebase émet. */
+  readonly userCredit = computed(() => this.creditFromDb() ?? 0);
 
   /* ═══════════════════════════════════════════════════════
      FILTRES, RECHERCHE, TRI
      ═══════════════════════════════════════════════════════ */
-  readonly selectedFilter = signal('Tous les documents');
+  readonly filters = DOCUMENT_FILTERS;
+  readonly selectedFilter = signal(FILTER_ALL_LABEL);
   readonly searchTerm = signal('');
   readonly sortBy = signal<SortOption>('recent');
 
@@ -90,34 +105,24 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   readonly showPromoModal = signal(false);
   readonly isSavingPromo = signal(false);
   readonly promoError = signal('');
-
-  /** Achat en attente de validation de code promo. */
   private readonly pendingPurchase = signal<PendingPurchase | null>(null);
 
   /* ═══════════════════════════════════════════════════════
      TOAST
      ═══════════════════════════════════════════════════════ */
-  readonly toast = signal<ToastState>({ show: false, message: '', type: 'success' });
-  private toastTimeout?: ReturnType<typeof setTimeout>;
-
-  /* ═══════════════════════════════════════════════════════
-     FILTRES DISPONIBLES
-     ═══════════════════════════════════════════════════════ */
-  readonly filters: readonly FilterOption[] = [
-    { label: 'Tous les documents', icon: '✨' },
-    { label: 'Méthodes', icon: '📙' },
-    { label: 'Livres numériques', icon: '📘' },
-    { label: 'Partitions', icon: '🎼' },
-    { label: 'Supports pédagogiques', icon: '📑' }
-  ];
+  readonly toast = signal<ToastState>(INITIAL_TOAST_STATE);
+  private toastTimeout: ReturnType<typeof setTimeout> | null = null;
 
   /* ═══════════════════════════════════════════════════════
      DOCUMENTS (Firebase → signal)
      ═══════════════════════════════════════════════════════ */
-    readonly allDocs = toSignal(
-    listVal<DocumentItem>(ref(this.db, 'documents'), { keyField: 'key' }).pipe(
+  readonly allDocs = toSignal(
+    listVal<DocumentItem>(
+      ref(this.db, DOCUMENTS_DB_PATHS.DOCUMENTS),
+      { keyField: 'key' }
+    ).pipe(
       catchError(err => {
-        console.error('Erreur Firebase:', err);
+        console.error('Erreur Firebase (documents) :', err);
         return of([] as DocumentItem[]);
       })
     ),
@@ -132,7 +137,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
     /* Filtre catégorie */
     const filter = this.selectedFilter();
-    if (filter !== 'Tous les documents') {
+    if (filter !== FILTER_ALL_LABEL) {
       docs = docs.filter(d => this.matchesCategory(d, filter));
     }
 
@@ -151,30 +156,16 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   });
 
   /* ═══════════════════════════════════════════════════════
-     CRÉDIT UTILISATEUR (Firebase → signal)
-     ═══════════════════════════════════════════════════════ */
-  private readonly creditFromDb = toSignal(
-    user(this.auth).pipe(
-      switchMap(currentUser => {
-        if (!currentUser) {
-          this.currentUserId.set(null);
-          return of(null);
-        }
-        this.currentUserId.set(currentUser.uid);
-        return objectVal<number>(ref(this.db, `users/${currentUser.uid}/credit`));
-      })
-    ),
-    { initialValue: null as number | null }
-  );
-
-  /* ═══════════════════════════════════════════════════════
      CYCLE DE VIE
      ═══════════════════════════════════════════════════════ */
   constructor() {
-    /* Synchronise le crédit dès que Firebase émet */
-    const creditValue = computed(() => this.creditFromDb() ?? 0);
-    // On expose le crédit réactif via un effet léger
-    queueMicrotask(() => this.userCredit.set(creditValue()));
+    /* Nettoyage du timeout de toast à la destruction */
+    this.destroyRef.onDestroy(() => {
+      if (this.toastTimeout) {
+        clearTimeout(this.toastTimeout);
+        this.toastTimeout = null;
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -182,7 +173,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    /* Nettoyage géré par DestroyRef */
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -201,13 +192,13 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   }
 
   resetAll(): void {
-    this.selectedFilter.set('Tous les documents');
+    this.selectedFilter.set(FILTER_ALL_LABEL);
     this.searchTerm.set('');
     this.sortBy.set('recent');
   }
 
   private matchesCategory(doc: DocumentItem, category: string): boolean {
-    const type = doc.type.toLowerCase().trim();
+    const type = doc.type?.toLowerCase().trim() ?? '';
     switch (category) {
       case 'Méthodes': return type.includes('méthode');
       case 'Livres numériques': return type.includes('livre');
@@ -240,20 +231,13 @@ export class DocumentsComponent implements OnInit, OnDestroy {
      ACHAT — Vérification code promo en amont
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Point d'entrée unique pour l'achat d'un document (payant ou gratuit).
-   *
-   * Vérifie le code promo AVANT toute action :
-   *  - Si promo valide → exécute l'achat
-   *  - Sinon → ouvre la modale promo
-   */
   async initiatePurchase(doc: DocumentItem, event?: Event): Promise<void> {
     event?.stopPropagation();
 
     /* 1. Vérifie le code promo (cache + Firebase) */
     const promoResult = await this.promoService.checkPromoCode();
 
-    /* 2. Cas : utilisateur non connecté ou sans code → modale */
+    /* 2. Utilisateur sans code → modale */
     if (promoResult.status === 'missing') {
       this.pendingPurchase.set({
         doc,
@@ -264,19 +248,16 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    /* 3. Cas : erreur réseau */
+    /* 3. Erreur réseau → toast */
     if (promoResult.status === 'error') {
       this.showToast(promoResult.message, 'error');
       return;
     }
 
-    /* 4. Cas : code valide → on continue le flux normal */
+    /* 4. Code valide → continue */
     this.performPurchase(doc);
   }
 
-  /**
-   * Exécute réellement l'achat (ou téléchargement gratuit).
-   */
   private performPurchase(doc: DocumentItem): void {
     /* Gratuit → téléchargement direct */
     if (!doc.price || doc.price === 0) {
@@ -317,7 +298,6 @@ export class DocumentsComponent implements OnInit, OnDestroy {
         return;
       }
 
-      /* Succès → ferme la modale + continue l'achat */
       this.showPromoModal.set(false);
       this.showToast(`Code « ${result.code} » validé ! Bon achat 🎸`, 'success');
 
@@ -349,7 +329,9 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
     try {
       const newBalance = this.userCredit() + amount;
-      await update(ref(this.db, `users/${uid}`), { credit: newBalance });
+      await update(ref(this.db, `${DOCUMENTS_DB_PATHS.USERS}/${uid}`), {
+        [DOCUMENTS_DB_PATHS.CREDIT]: newBalance
+      });
       this.showToast(`Compte rechargé de ${this.formatPrice(amount)} !`, 'success');
       this.showRechargeInModal.set(false);
     } catch (error) {
@@ -381,7 +363,9 @@ export class DocumentsComponent implements OnInit, OnDestroy {
 
     try {
       const newBalance = currentBalance - docPrice;
-      await update(ref(this.db, `users/${uid}`), { credit: newBalance });
+      await update(ref(this.db, `${DOCUMENTS_DB_PATHS.USERS}/${uid}`), {
+        [DOCUMENTS_DB_PATHS.CREDIT]: newBalance
+      });
 
       this.selectedDocForPurchase.set(null);
       this.showToast(`Achat réussi ! Téléchargement de "${doc.title}"...`, 'success');
@@ -399,7 +383,10 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toast.set({ show: true, message, type });
     this.toastTimeout = setTimeout(
-      () => this.toast.update(t => ({ ...t, show: false })),
+      () => {
+        this.toast.update(t => ({ ...t, show: false }));
+        this.toastTimeout = null;
+      },
       TOAST_DURATION_MS
     );
   }

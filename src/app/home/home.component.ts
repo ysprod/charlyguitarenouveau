@@ -1,41 +1,42 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { Auth, authState, signOut } from '@angular/fire/auth';
+import { RouterLink, Router } from '@angular/router';
+import { Auth, authState } from '@angular/fire/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs/operators';
-import { HomeconnectComponent } from './homeconnect/homeconnect.component';
+import { FooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
-    HomeconnectComponent  
+    RouterLink,FooterComponent
   ],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent {
 
-  private auth = inject(Auth);
+  private readonly auth = inject(Auth);
+  private readonly router = inject(Router);
 
   /** 👤 Utilisateur Firebase (null si déconnecté) */
-  readonly currentUser = toSignal(authState(this.auth), { initialValue: null });
+  private readonly currentUser = toSignal(authState(this.auth), {
+    initialValue: null
+  });
 
-  /** ✅ Signal : connecté ou non */
-  readonly isLoggedIn = toSignal(
-    authState(this.auth).pipe(map(user => !!user)),
-    { initialValue: false }
-  );
-
-  /** 🔓 Déconnexion */
-  async logout(): Promise<void> {
-    try {
-      await signOut(this.auth);
-    } catch (error) {
-      console.error('Erreur déconnexion :', error);
-    }
+  constructor() {
+    // ✅ Redirection automatique vers /connect si connecté
+    effect(() => {
+      if (this.currentUser()) {
+        void this.router.navigateByUrl('/amanda', { replaceUrl: true });
+      }
+    });
   }
 }

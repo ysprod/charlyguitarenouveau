@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .75rem 1rem;
+  margin-bottom: 1.25rem;
+  border-radius: var(--radius-md, 12px);
+  font-size: .85rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.error-banner {
+  background: rgba(220, 38, 38, .06);
+  border: 1px solid rgba(220, 38, 38, .3);
+  color: var(--danger, #dc2626);
+  animation: shake .4s ease;
+}
+
+.success-banner {
+  background: rgba(22, 163, 74, .06);
+  border: 1px solid rgba(22, 163, 74, .3);
+  color: var(--success, #16a34a);
+}
+
+.alert-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-6px); }
+  75%      { transform: translateX(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-banner {
+    animation: none;
+  }
+}

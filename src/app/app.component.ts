@@ -2,16 +2,14 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  EnvironmentInjector,
-  HostListener,
+  DestroyRef,
   OnDestroy,
   OnInit,
-  computed,
+  effect,
   inject,
-  runInInjectionContext
+  signal
 } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   Database,
   equalTo,
@@ -20,19 +18,23 @@ import {
   query,
   ref
 } from '@angular/fire/database';
-import { Observable, Subject, of } from 'rxjs';
-import { map, switchMap, takeUntil } from 'rxjs/operators';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Subject, fromEvent, of } from 'rxjs';
+import {
+  distinctUntilChanged,
+  map,
+  switchMap,
+  takeUntil
+} from 'rxjs/operators';
 
-import { AuthService } from './services/auth.service';
-import { UserMessage } from './models/user-message.model';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { FooterComponent } from './footer/footer.component';
-import { VoiceService } from './services/voice.service';
 import { InstallPromptComponent } from './footer/install-prompt/install-prompt.component';
-import { InstallComponent } from './footer/install/install.component';
+import { UserMessage } from './models/user-message.model';
+import { AuthService } from './services/auth.service';
+import { VoiceService } from './services/voice.service';
 
 @Component({
   selector: 'app-root',
@@ -46,9 +48,7 @@ import { InstallComponent } from './footer/install/install.component';
     MatMenuModule,
     MatDividerModule,
     MatSnackBarModule,
-    FooterComponent,
-    InstallPromptComponent,
-    InstallComponent
+    InstallPromptComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
@@ -59,32 +59,34 @@ export class AppComponent implements OnInit, OnDestroy {
   readonly title = 'CHARLY GUITARE';
   readonly currentYear = new Date().getFullYear();
 
-  isMobileMenuOpen = false;
-  isScrolled = false;
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT UI — SIGNALS
+     ═══════════════════════════════════════════════════════ */
 
-  /** Flux : nombre de messages traités (status === 'replied') non lus */
-  unreadCount$: Observable<number> = of(0);
+  readonly isMobileMenuOpen = signal(false);
 
-  /** Flux : l'utilisateur a-t-il déjà envoyé au moins un message ? */
-  private readonly hasSentMessage$: Observable<boolean> = this.buildHasSentMessageStream();
-
-  /** Signal dérivé, exposé au template */
-  readonly hasSentMessage = toSignal(this.hasSentMessage$, { initialValue: false });
-
-  /** Route dynamique du CTA « Discuter avec Charly Guitare » */
-  readonly contactCtaRoute = computed(() =>
-    this.hasSentMessage() ? '/inbox' : '/contact'
+  /** Détection du scroll réactive (remplace @HostListener). */
+  readonly isScrolled = toSignal(
+    fromEvent(window, 'scroll', { passive: true }).pipe(
+      map(() => window.scrollY > 20),
+      distinctUntilChanged()
+    ),
+    { initialValue: false }
   );
 
-  /** Libellé dynamique du CTA */
-  readonly contactCtaLabel = computed(() =>
-    this.hasSentMessage()
-      ? 'MES MESSAGES AVEC CHARLY'
-      : 'DISCUTEZ AVEC CHARLY GUITARE'
-  );
+  /* ═══════════════════════════════════════════════════════
+     MESSAGES
+     ═══════════════════════════════════════════════════════ */
 
   private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly voice = inject(VoiceService);
+
+  /** Flux : nombre de messages traités (status === 'replied') non lus. */
+  readonly unreadCount = toSignal(
+    this.watchUnreadMessages(),
+    { initialValue: 0 }
+  );
 
   /** Dernier compteur connu, pour ne pas re-parler à chaque émission. */
   private lastUnreadCount = 0;
@@ -96,13 +98,14 @@ export class AppComponent implements OnInit, OnDestroy {
     public readonly auth: AuthService,
     private readonly router: Router,
     private readonly snackBar: MatSnackBar,
-    private readonly database: Database,
-    private readonly environmentInjector: EnvironmentInjector
-  ) {}
+    private readonly database: Database
+  ) {
+    /* Réagit aux changements du compteur de messages */
+    this.watchNewMessages();
+  }
 
   ngOnInit(): void {
-    this.watchUnreadMessages();
-    this.watchNewMessages();
+    /* Rien — tout est géré dans le constructor */
   }
 
   ngOnDestroy(): void {
@@ -114,8 +117,8 @@ export class AppComponent implements OnInit, OnDestroy {
      FLUX : compteur de messages "replied"
      ═══════════════════════════════════════════════════════ */
 
-  private watchUnreadMessages(): void {
-    this.unreadCount$ = this.auth.user$.pipe(
+  private watchUnreadMessages() {
+    return this.auth.user$.pipe(
       takeUntil(this.destroy$),
       switchMap(user => {
         if (!user) {
@@ -124,43 +127,17 @@ export class AppComponent implements OnInit, OnDestroy {
           return of(0);
         }
 
-        return runInInjectionContext(this.environmentInjector, () => {
-          const messagesQuery = query(
-            ref(this.database, 'messages'),
-            orderByChild('userId'),
-            equalTo(user.uid)
-          );
+        const messagesQuery = query(
+          ref(this.database, 'messages'),
+          orderByChild('userId'),
+          equalTo(user.uid)
+        );
 
-          return listVal<UserMessage>(messagesQuery).pipe(
-            map(messages =>
-              messages.filter(m => m.status === 'replied').length
-            )
-          );
-        });
-      })
-    );
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     FLUX : l'utilisateur a-t-il déjà envoyé un message ?
-     ═══════════════════════════════════════════════════════ */
-
-  private buildHasSentMessageStream(): Observable<boolean> {
-    return this.auth.user$.pipe(
-      switchMap(user => {
-        if (!user) return of(false);
-
-        return runInInjectionContext(this.environmentInjector, () => {
-          const messagesQuery = query(
-            ref(this.database, 'messages'),
-            orderByChild('userId'),
-            equalTo(user.uid)
-          );
-
-          return listVal<UserMessage>(messagesQuery).pipe(
-            map(messages => messages.length > 0)
-          );
-        });
+        return listVal<UserMessage>(messagesQuery).pipe(
+          map(messages =>
+            messages.filter(m => m.status === 'replied').length
+          )
+        );
       })
     );
   }
@@ -170,60 +147,58 @@ export class AppComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   private watchNewMessages(): void {
-    this.unreadCount$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(count => {
+    effect(() => {
+      const count = this.unreadCount();
 
-        // Première valeur : on la mémorise sans parler
-        if (!this.hasSeenFirstValue) {
-          this.hasSeenFirstValue = true;
-          this.lastUnreadCount = count;
-          return;
-        }
-
-        // Nouveau(x) message(s)
-        if (count > this.lastUnreadCount) {
-          const diff = count - this.lastUnreadCount;
-          const message = diff === 1
-            ? 'Tu as reçu un nouveau message de Charly Guitare.'
-            : `Tu as reçu ${diff} nouveaux messages de Charly Guitare.`;
-
-          // On capture destroy$ pour éviter d'annoncer après destruction
-          const destroy$ = this.destroy$;
-          const voice = this.voice;
-
-          setTimeout(async () => {
-            if (destroy$.isStopped) return;
-
-            try {
-              await voice.waitForSpeechEnd();
-              if (destroy$.isStopped) return;
-              await voice.speak(message, { pitch: 1.05, rate: 0.95 });
-            } catch {
-              // silencieux : l'annonce vocale est optionnelle
-            }
-          }, 300);
-        }
-
+      // Première valeur : on la mémorise sans parler
+      if (!this.hasSeenFirstValue) {
+        this.hasSeenFirstValue = true;
         this.lastUnreadCount = count;
-      });
+        return;
+      }
+
+      // Nouveau(x) message(s)
+      if (count > this.lastUnreadCount) {
+        const diff = count - this.lastUnreadCount;
+        const message = diff === 1
+          ? 'Tu as reçu un nouveau message de Charly Guitare.'
+          : `Tu as reçu ${diff} nouveaux messages de Charly Guitare.`;
+
+        this.scheduleVoiceAnnouncement(message);
+      }
+
+      this.lastUnreadCount = count;
+    });
+  }
+
+  private scheduleVoiceAnnouncement(message: string): void {
+    const voice = this.voice;
+
+    setTimeout(async () => {
+      if (this.destroyRef.destroyed) return;
+
+      try {
+        await voice.waitForSpeechEnd();
+        if (this.destroyRef.destroyed) return;
+        await voice.speak(message, { pitch: 1.05, rate: 0.95 });
+      } catch {
+        // silencieux : l'annonce vocale est optionnelle
+      }
+    }, 300);
   }
 
   /* ═══════════════════════════════════════════════════════
-     SCROLL / MENU
+     MENU
      ═══════════════════════════════════════════════════════ */
 
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    this.isScrolled = window.scrollY > 20;
-  }
-
   toggleMobileMenu(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    this.isMobileMenuOpen.update(v => !v);
   }
 
   closeMobileMenu(): void {
-    this.isMobileMenuOpen = false;
+    if (this.isMobileMenuOpen()) {
+      this.isMobileMenuOpen.set(false);
+    }
   }
 
   /* ═══════════════════════════════════════════════════════

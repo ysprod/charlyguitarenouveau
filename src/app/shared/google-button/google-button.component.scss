@@ -1,0 +1,47 @@
+:host {
+  display: block;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  width: 100%;
+  padding: .85rem 1rem;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border-medium, rgba(15, 23, 42, .14));
+  background: #ffffff;
+  color: var(--text-dark, #0f172a);
+  font-size: .95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    transform .2s ease,
+    background-color .2s ease,
+    box-shadow .2s ease,
+    border-color .2s ease;
+}
+
+.btn-google:hover:not(:disabled) {
+  background: var(--bg-soft, #f8fafc);
+  border-color: var(--border-gold, rgba(184, 134, 11, .3));
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -8px rgba(15, 23, 42, .12);
+}
+
+.btn-google:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-google:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}

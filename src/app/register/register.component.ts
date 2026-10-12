@@ -1,17 +1,13 @@
 import {
+  ChangeDetectionStrategy,
   Component,
-  EnvironmentInjector,
   OnDestroy,
   OnInit,
-  inject,
-  runInInjectionContext
+  inject
 } from '@angular/core';
 
-import {
-  ActivatedRoute,
-  Router,
-  RouterLink
-} from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import {
   Auth,
@@ -29,45 +25,32 @@ import {
   set,
   update
 } from '@angular/fire/database';
+import { DEFAULT_RETURN_URL_REGISTER } from '../constants/auth.constants';
+import { TOAST_DURATION_MS } from '../constants/documents-ui.constants';
+import { UserOrigin, RealtimeUserProfile } from '../models/auth.model';
+import { AuthContextService } from '../services/auth-context.service';
+import { AuthAlertComponent } from '../shared/auth-alert/auth-alert.component';
+import { AuthHeaderComponent } from '../shared/auth-header/auth-header.component';
+import { AuthInputComponent } from '../shared/auth-input/auth-input.component';
+import { AuthLayoutComponent } from '../shared/auth-layout/auth-layout.component';
+import { GoogleButtonComponent } from '../shared/google-button/google-button.component';
 
-import { FormsModule } from '@angular/forms';
-
-import { Subject } from 'rxjs';
-
-import { UserProfile } from '../models/user.model';
-
-/* ═════════════════════════════════════════════════════════════════════
-   TYPES
-   ═════════════════════════════════════════════════════════════════════ */
-
-/** Origine d'inscription — traçabilité utilisateur. */
-type UserOrigin = 'google' | 'email';
-
-interface RealtimeUserProfile extends UserProfile {
-  lastLogin: string;
-  disabled: boolean;
-  origine: UserOrigin;      // ← NOUVEAU
-  codepromo?: string;
-  updatedAt?: string;
-}
-
-interface FirebaseAuthError {
-  code?: string;
-  message?: string;
-}
-
-const DEFAULT_RETURN_URL = '/academie';
-
-/* ═════════════════════════════════════════════════════════════════════
-   COMPOSANT
-   ═════════════════════════════════════════════════════════════════════ */
+ 
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [
+    FormsModule,
+    AuthLayoutComponent,
+    AuthHeaderComponent,
+    AuthAlertComponent,
+    GoogleButtonComponent,
+    AuthInputComponent
+  ],
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss']
+  styleUrls: ['./register.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegisterComponent implements OnInit, OnDestroy {
 
@@ -77,45 +60,35 @@ export class RegisterComponent implements OnInit, OnDestroy {
   confirmPassword = '';
 
   errorMessage = '';
+  successMessage = '';
   loading = false;
   showPassword = false;
 
-  returnUrl: string = DEFAULT_RETURN_URL;
+  returnUrl: string = DEFAULT_RETURN_URL_REGISTER;
 
-  private readonly destroy$ = new Subject<void>();
+  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   /* ─── Injection ─── */
   private readonly auth = inject(Auth);
   private readonly database = inject(Database);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-  private readonly environmentInjector = inject(EnvironmentInjector);
+  private readonly authContext = inject(AuthContextService);
 
   /* ═══════════════════════════════════════════════════════════════════
      CYCLE DE VIE
      ═══════════════════════════════════════════════════════════════════ */
 
   ngOnInit(): void {
-    this.returnUrl = this.resolveReturnUrl();
+    this.returnUrl = this.authContext.resolveReturnUrl(
+      DEFAULT_RETURN_URL_REGISTER
+    );
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  private resolveReturnUrl(): string {
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-
-    if (
-      returnUrl &&
-      returnUrl.startsWith('/') &&
-      !returnUrl.startsWith('//')
-    ) {
-      return returnUrl;
+    if (this.toastTimeoutId !== null) {
+      clearTimeout(this.toastTimeoutId);
+      this.toastTimeoutId = null;
     }
-
-    return DEFAULT_RETURN_URL;
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -128,71 +101,70 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   /* ═══════════════════════════════════════════════════════════════════
      INSCRIPTION EMAIL / MOT DE PASSE
-     ───────────────────────────────────────────────────────────────────
-     ✅ Origine = 'email'
      ═══════════════════════════════════════════════════════════════════ */
 
   async handleSubmit(): Promise<void> {
+    this.clearMessages();
+
     if (!this.email || !this.password || !this.confirmPassword) {
-      this.errorMessage = 'Veuillez remplir tous les champs.';
+      this.showToast('Veuillez remplir tous les champs.', 'error');
       return;
     }
 
     const email = this.email.trim();
 
     if (!this.isValidEmail(email)) {
-      this.errorMessage = 'Adresse e-mail invalide.';
+      this.showToast('Adresse e-mail invalide.', 'error');
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      this.showToast('Les mots de passe ne correspondent pas.', 'error');
       return;
     }
 
     if (this.password.length < 6) {
-      this.errorMessage =
-        'Le mot de passe doit contenir au moins 6 caractères.';
+      this.showToast(
+        'Le mot de passe doit contenir au moins 6 caractères.',
+        'error'
+      );
       return;
     }
 
     this.loading = true;
-    this.errorMessage = '';
 
     try {
-      /* ─── 1. Création du compte Firebase Auth ─── */
-      const credential = await this.runInContext(() =>
+      const credential = await this.authContext.runInContext(() =>
         createUserWithEmailAndPassword(this.auth, email, this.password)
       );
 
       const user = credential.user;
 
       if (!user) {
-        this.errorMessage = 'Création du compte échouée.';
+        this.showToast('Création du compte échouée.', 'error');
         return;
       }
 
-      /* ─── 2. Enregistrement du profil avec origine = 'email' ─── */
       try {
         await this.saveUserDataInRealtimeDB(user, 'email');
       } catch (dbError) {
         console.error('❌ Erreur écriture DB :', dbError);
-        this.errorMessage =
-          "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.";
+        this.showToast(
+          "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.",
+          'error'
+        );
       }
 
-      /* ─── 3. Envoi email de vérification en arrière-plan ─── */
-      void this.runInContext(() =>
+      void this.authContext.runInContext(() =>
         sendEmailVerification(user).catch((error) => {
           console.warn('Envoi email vérification échoué :', error);
         })
       );
 
-      /* ─── 4. Redirection directe ─── */
       await this.router.navigateByUrl(this.returnUrl);
 
     } catch (error: unknown) {
-      this.errorMessage = this.getFrenchErrorMessage(error);
+      this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
     } finally {
       this.loading = false;
     }
@@ -200,46 +172,44 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   /* ═══════════════════════════════════════════════════════════════════
      INSCRIPTION GOOGLE
-     ───────────────────────────────────────────────────────────────────
-     ✅ Origine = 'google'
      ═══════════════════════════════════════════════════════════════════ */
 
   async signUpWithGoogle(): Promise<void> {
+    this.clearMessages();
     this.loading = true;
-    this.errorMessage = '';
 
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
 
-      const credential = await this.runInContext(() =>
+      const credential = await this.authContext.runInContext(() =>
         signInWithPopup(this.auth, provider)
       );
 
       const user = credential.user;
 
       if (!user) {
-        this.errorMessage = 'Création du compte Google échouée.';
+        this.showToast('Création du compte Google échouée.', 'error');
         return;
       }
 
-      /* ─── Enregistrement du profil avec origine = 'google' ─── */
       try {
         await this.saveUserDataInRealtimeDB(user, 'google');
       } catch (dbError) {
         console.error('❌ Erreur écriture DB :', dbError);
-        this.errorMessage =
-          "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.";
+        this.showToast(
+          "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.",
+          'error'
+        );
       }
 
-      /* ─── Redirection directe ─── */
       await this.router.navigateByUrl(this.returnUrl);
 
     } catch (error: unknown) {
-      const code = this.getFirebaseErrorCode(error);
+      const code = this.authContext.getFirebaseErrorCode(error);
 
       if (code !== 'auth/popup-closed-by-user') {
-        this.errorMessage = this.getFrenchErrorMessage(error);
+        this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
       }
     } finally {
       this.loading = false;
@@ -248,9 +218,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   /* ═══════════════════════════════════════════════════════════════════
      SYNCHRONISATION REALTIME DATABASE
-     ───────────────────────────────────────────────────────────────────
-     ✅ Nouvel utilisateur → enregistre l'origine
-     ✅ Utilisateur existant → préserve l'origine initiale
      ═══════════════════════════════════════════════════════════════════ */
 
   private async saveUserDataInRealtimeDB(
@@ -259,28 +226,27 @@ export class RegisterComponent implements OnInit, OnDestroy {
   ): Promise<void> {
     const userRef = ref(this.database, `users/${user.uid}`);
 
-    const snapshot = await this.runInContext(() => get(userRef));
+    const snapshot = await this.authContext.runInContext(() =>
+      get(userRef)
+    );
 
     const now = new Date().toISOString();
     const email = user.email ?? '';
     const displayName = user.displayName ?? email.split('@')[0] ?? '';
     const photoURL = user.photoURL ?? '';
 
-    /* ─── Utilisateur EXISTANT : mise à jour ciblée ─── */
     if (snapshot.exists()) {
-      await this.runInContext(() =>
+      await this.authContext.runInContext(() =>
         update(userRef, {
           lastLogin: now,
           email,
           displayName,
           photoURL
-          /* ⚠️ On NE TOUCHE PAS à `origine` pour préserver la valeur initiale */
         })
       );
       return;
     }
 
-    /* ─── NOUVEL utilisateur : création complète avec origine ─── */
     const newUser: RealtimeUserProfile = {
       uid: user.uid,
       email,
@@ -290,10 +256,12 @@ export class RegisterComponent implements OnInit, OnDestroy {
       createdAt: now,
       lastLogin: now,
       disabled: false,
-      origine                // ✅ Champ ajouté
+      origine
     };
 
-    await this.runInContext(() => set(userRef, newUser));
+    await this.authContext.runInContext(() =>
+      set(userRef, newUser)
+    );
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -305,62 +273,31 @@ export class RegisterComponent implements OnInit, OnDestroy {
     return emailPattern.test(email);
   }
 
-  private runInContext<T>(fn: () => T): T {
-    return runInInjectionContext(this.environmentInjector, fn);
+  private clearMessages(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
   }
 
-  private getFirebaseErrorCode(error: unknown): string {
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error
-    ) {
-      const firebaseError = error as FirebaseAuthError;
-      return firebaseError.code ?? '';
+  private showToast(
+    message: string,
+    type: 'success' | 'error'
+  ): void {
+    if (type === 'success') {
+      this.successMessage = message;
+      this.errorMessage = '';
+    } else {
+      this.errorMessage = message;
+      this.successMessage = '';
     }
-    return '';
-  }
 
-  private getFrenchErrorMessage(error: unknown): string {
-    const code = this.getFirebaseErrorCode(error);
-
-    switch (code) {
-      case 'auth/email-already-in-use':
-        return 'Cette adresse e-mail est déjà utilisée par un autre compte.';
-      case 'auth/weak-password':
-        return 'Le mot de passe doit contenir au moins 6 caractères.';
-      case 'auth/invalid-email':
-        return 'Adresse e-mail invalide.';
-      case 'auth/network-request-failed':
-        return 'Problème de connexion réseau. Vérifiez votre connexion internet.';
-      case 'auth/popup-closed-by-user':
-        return '';
-      case 'auth/popup-blocked':
-        return 'La fenêtre de connexion Google a été bloquée par votre navigateur.';
-      case 'auth/cancelled-popup-request':
-        return 'La connexion Google a été annulée.';
-      case 'auth/operation-not-allowed':
-        return "L'inscription par e-mail n'est pas activée. Contactez l'administrateur.";
-      case 'auth/too-many-requests':
-        return 'Trop de tentatives. Veuillez patienter quelques instants avant de réessayer.';
-      case 'auth/configuration-not-found':
-        return 'Configuration Firebase introuvable. Vérifiez environment.ts.';
-      case 'auth/unauthorized-domain':
-        return "Ce domaine n'est pas autorisé. Contactez l'administrateur.";
-      case 'auth/invalid-api-key':
-      case 'auth/api-key-not-valid':
-        return 'Clé API Firebase invalide. Vérifiez environment.ts.';
-      case 'auth/internal-error':
-        return 'Erreur interne Firebase. Réessayez dans quelques instants.';
-
-      default:
-        console.error('❌ Erreur Firebase inconnue lors de l’inscription :', error);
-        console.error('   Code Firebase :', code);
-        console.error('   Message brut :', (error as { message?: string })?.message);
-
-        return code
-          ? `Erreur technique : ${code}`
-          : 'Une erreur est survenue lors de l’inscription.';
+    if (this.toastTimeoutId !== null) {
+      clearTimeout(this.toastTimeoutId);
     }
+
+    this.toastTimeoutId = setTimeout(() => {
+      if (this.successMessage === message) this.successMessage = '';
+      if (this.errorMessage === message) this.errorMessage = '';
+      this.toastTimeoutId = null;
+    }, TOAST_DURATION_MS);
   }
 }

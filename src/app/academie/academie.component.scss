@@ -647,3 +647,32 @@
     transition-duration: .01ms !important;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   PLACEHOLDER — Defer loading des documents
+   ═════════════════════════════════════════════════════════════════════ */
+.documents-placeholder {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1250px;
+  margin: 0 auto 3rem;
+
+  .skeleton {
+    height: 320px;
+    background: linear-gradient(
+      90deg,
+      var(--bg-soft) 25%,
+      #e2e8f0 50%,
+      var(--bg-soft) 75%
+    );
+    background-size: 200% 100%;
+    border-radius: var(--radius-lg);
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

@@ -41,6 +41,7 @@ import { GuitarLiveComponent } from './game/guitar-live/guitar-live.component';
 import { OracleWidgetComponent } from './game/oracle-widget/oracle-widget.component';
 import { PourpreComponent } from './univers/pourpre/pourpre.component';
 import { VioletComponent } from './univers/violet/violet.component';
+import { HomeconnectComponent } from './home/homeconnect/homeconnect.component';
 
 export const routes: Routes = [
   {
@@ -53,7 +54,10 @@ export const routes: Routes = [
     component: RegisterComponent
   },
 
-
+  {
+    path: '',
+    component: HomeComponent,
+  },
 
   {
     path: 'home',
@@ -165,8 +169,14 @@ export const routes: Routes = [
   },
 
   {
-    path: 'documents',
-    component: DocumentsComponent,
+    path: 'oracle',
+    component: OracleWidgetComponent,
+    canActivate: [AuthGuard]
+  },
+
+  {
+    path: 'amanda',
+    component: HomeconnectComponent,
     canActivate: [AuthGuard]
   },
 

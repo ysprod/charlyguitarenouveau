@@ -22,8 +22,18 @@
     </div>
   </section>
 
-  <app-documents></app-documents>
+  <!-- ================= DOCUMENTS (lazy) ================= -->
+  @defer (on viewport) {
+    <app-documents></app-documents>
+  } @placeholder {
+    <div class="documents-placeholder" aria-hidden="true">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  }
 
+  <!-- ================= FORMATIONS ================= -->
   <section class="grid-section" aria-label="Nos formations">
 
     <div class="cards-grid">
@@ -149,7 +159,6 @@
   </section>
 
   <!-- ================= LIVE ================= -->
-
   <section class="live-section" aria-labelledby="live-heading-title">
 
     <div class="section-heading live-heading">
