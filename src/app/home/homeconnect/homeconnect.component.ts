@@ -1,13 +1,10 @@
 // src/app/home/homeconnect/homeconnect.component.ts
 
-import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   inject,
-  linkedSignal,
-  signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Auth, authState } from '@angular/fire/auth';
@@ -21,27 +18,16 @@ import { getInitials } from 'src/app/utils/string.utils';
 import {
   QUICK_ACTIONS,
   COLOR_UNIVERSES,
-  INBOX_FILTERS,
-  INBOX_PAGE_SIZE,
-  INBOX_PREVIEW_MAX_LENGTH,
-  MOCK_INBOX_MESSAGES,
 } from 'src/app/constants/homeconnect.constants';
 
 import { FooterComponent } from 'src/app/footer/footer.component';
-import { InboxMessage, InboxFilter } from 'src/app/models/homeconnect.model';
-import { InboxService } from 'src/app/services/inbox.service';
-import { getCategoryIcon } from 'src/app/shared/category-icons.constants';
 import { RevealDirective } from 'src/app/shared/reveal.directive';
-import {
-  filterMessages,
-  formatRelativeDate,
-  truncate,
-} from 'src/app/utils/homeconnect.utils';
+import { InboxPanelComponent } from './inbox-panel/inbox-panel.component';
 
 @Component({
   selector: 'app-homeconnect',
   standalone: true,
-  imports: [CommonModule, RouterLink, RevealDirective, FooterComponent],
+  imports: [RouterLink, RevealDirective, FooterComponent, InboxPanelComponent],
   templateUrl: './homeconnect.component.html',
   styleUrls: ['./homeconnect.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,7 +39,6 @@ export class HomeconnectComponent {
 
   private readonly auth = inject(Auth);
   private readonly db = inject(Database);
-  private readonly inboxService = inject(InboxService);
 
   /* ═══════════════════════════════════════════════════════
      UTILISATEUR CONNECTÉ
@@ -121,133 +106,4 @@ export class HomeconnectComponent {
 
   readonly quickActions = QUICK_ACTIONS;
   readonly colorUniverses = COLOR_UNIVERSES;
-  readonly inboxFilters = INBOX_FILTERS;
-  readonly pageSize = INBOX_PAGE_SIZE;
-  readonly previewMaxLength = INBOX_PREVIEW_MAX_LENGTH;
-
-  /* ═══════════════════════════════════════════════════════
-     ÉTAT UI
-     ═══════════════════════════════════════════════════════ */
-
-  readonly selectedMessage = signal<InboxMessage | null>(null);
-  readonly activeFilter = signal<InboxFilter>('all');
-  readonly currentPage = signal(1);
-
-  /* ═══════════════════════════════════════════════════════
-     FLUX FIREBASE (readonly)
-     ═══════════════════════════════════════════════════════ */
-
-  private readonly firebaseMessages = toSignal(
-    this.inboxService.messagesWithFallback$(MOCK_INBOX_MESSAGES),
-    { initialValue: [] as InboxMessage[] }
-  );
-
-  /* ═══════════════════════════════════════════════════════
-     SIGNAL LOCAL (linkedSignal) — synchronisé avec Firebase
-     ═══════════════════════════════════════════════════════ */
-
-  /**
-   * linkedSignal : se resynchronise automatiquement quand
-   * firebaseMessages() change, MAIS reste mutable localement
-   * pour les interactions UI (marquer lu, étoile, etc.).
-   */
-  private readonly localMessages = linkedSignal<InboxMessage[]>(() =>
-    this.firebaseMessages()
-  );
-
-  /* ═══════════════════════════════════════════════════════
-     SIGNAUX DÉRIVÉS
-     ═══════════════════════════════════════════════════════ */
-
-  readonly filteredMessages = computed(() =>
-    filterMessages(this.localMessages(), this.activeFilter())
-  );
-
-  readonly unreadCount = computed(
-    () => this.localMessages().filter((m) => m.isUnread).length
-  );
-
-  readonly totalCount = computed(() => this.localMessages().length);
-
-  readonly starredCount = computed(
-    () => this.localMessages().filter((m) => m.isStarred).length
-  );
-
-  readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filteredMessages().length / this.pageSize))
-  );
-
-  readonly paginatedMessages = computed(() => {
-    const filtered = this.filteredMessages();
-    const page = this.currentPage();
-    const start = (page - 1) * this.pageSize;
-    return filtered.slice(start, start + this.pageSize);
-  });
-
-  readonly pagesArray = computed(() =>
-    Array.from({ length: this.totalPages() }, (_, i) => i + 1)
-  );
-
-  /* ═══════════════════════════════════════════════════════
-     HELPERS TEMPLATE
-     ═══════════════════════════════════════════════════════ */
-
-  readonly formatRelativeDate = formatRelativeDate;
-  readonly truncate = truncate;
-  readonly getCategoryIcon = getCategoryIcon;
-
-  /* ═══════════════════════════════════════════════════════
-     ACTIONS UI
-     ═══════════════════════════════════════════════════════ */
-
-  setFilter(filter: InboxFilter): void {
-    this.activeFilter.set(filter);
-    this.currentPage.set(1);
-    this.selectedMessage.set(null);
-  }
-
-  selectMessage(message: InboxMessage): void {
-    this.selectedMessage.set(message);
-
-    if (message.isUnread) {
-      this.localMessages.update((list) =>
-        list.map((m) => (m.id === message.id ? { ...m, isUnread: false } : m))
-      );
-      this.selectedMessage.set({ ...message, isUnread: false });
-    }
-  }
-
-  closeMessage(): void {
-    this.selectedMessage.set(null);
-  }
-
-  toggleStar(message: InboxMessage, event: Event): void {
-    event.stopPropagation();
-    this.localMessages.update((list) =>
-      list.map((m) =>
-        m.id === message.id ? { ...m, isStarred: !m.isStarred } : m
-      )
-    );
-
-    const selected = this.selectedMessage();
-    if (selected?.id === message.id) {
-      this.selectedMessage.set({
-        ...selected,
-        isStarred: !selected.isStarred,
-      });
-    }
-  }
-
-  goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.selectedMessage.set(null);
-  }
-
-  markAllAsRead(): void {
-    this.localMessages.update((list) =>
-      list.map((m) => ({ ...m, isUnread: false }))
-    );
-    this.selectedMessage.update((m) => (m ? { ...m, isUnread: false } : null));
-  }
 }

@@ -1,41 +1,30 @@
 <!-- ═══════════════════════════════════════════════════════
-     CONFETTI
+     DIALOGUE DE FIN
      ═══════════════════════════════════════════════════════ -->
-@if (showConfetti) {
-<div class="confetti-wrapper" aria-hidden="true">
-  @for (p of particles; track p) {
-  <div class="confetti-piece" [style.left.%]="(p * 7) % 100" [style.animation-delay]="(p * 0.05) + 's'"
-    [style.background]="p % 2 === 0 ? '#b45309' : '#d97706'"></div>
-  }
-</div>
-}
-
-<!-- ═══════════════════════════════════════════════════════
-     OVERLAY VICTOIRE — Fermable
-     ═══════════════════════════════════════════════════════ -->
-@if (showVictoryOverlay) {
-<div class="overlay victory-overlay" (click)="dismissOverlay()" role="alert" aria-labelledby="victory-title">
-  <div class="overlay-content" (click)="$event.stopPropagation()">
-    <div class="overlay-icon" aria-hidden="true">🏆</div>
-    <h1 id="victory-title">VICTOIRE</h1>
-    <p>{{ messageLyko }}</p>
-
-    <button class="btn-dismiss" (click)="dismissOverlay()" type="button">
-      Continuer
-    </button>
-  </div>
-</div>
+@if (showEndDialog && endSummary; as summary) {
+  <app-duo-end-game-dialog
+    [summary]="summary"
+    (replay)="onDialogReplay()"
+    (nextLevel)="onDialogNextLevel()"
+    (previousLevel)="onDialogPreviousLevel()"
+    (backToMenu)="onDialogBackToMenu()"
+  />
 }
 
 <div class="temple-container py-4">
 
   <!-- ═══════════════════════════════════════════════════════
-       HEADER
-       ═══════════════════════════════════════════════════════ -->
+        HEADER
+        ═══════════════════════════════════════════════════════ -->
   <header class="game-header">
     <div class="header-top-row">
 
-      <button class="btn-back" (click)="onrecommencer()" type="button" aria-label="Retour au menu des jeux">
+      <button
+        class="btn-back"
+        (click)="onrecommencer()"
+        type="button"
+        aria-label="Retour au menu des jeux"
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
@@ -48,8 +37,14 @@
         <span class="title-text">LYKO DUEL</span>
       </h1>
 
-      <button class="btn-sound" (click)="toggleSound()" type="button" [class.active]="!soundEnabled()"
-        [attr.aria-pressed]="soundEnabled()" [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'">
+      <button
+        class="btn-sound"
+        (click)="toggleSound()"
+        type="button"
+        [class.active]="!soundEnabled()"
+        [attr.aria-pressed]="soundEnabled()"
+        [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
+      >
         <span class="sound-icon" aria-hidden="true">
           {{ soundEnabled() ? '🔊' : '🔇' }}
         </span>
@@ -65,30 +60,42 @@
     <!-- ═══════════ GRILLE ═══════════ -->
     <div class="col-12 col-lg-7">
       <div class="board-wrapper">
-        <div class="dynamic-grid" [style.--grid-size]="gs.gridSize" role="grid" aria-label="Grille de jeu Lyko Duel">
+        <div
+          class="dynamic-grid"
+          [style.--grid-size]="gs.gridSize"
+          role="grid"
+          aria-label="Grille de jeu Lyko Duel"
+        >
           @for (block of gs.blocks; track $index; let i = $index) {
-          <div (click)="playerClick(i)" (keydown.enter)="playerClick(i)" (keydown.space)="playerClick(i)"
-            [class.disabled]="!block.free || lock" [class.winning-cell]="block.isWinningCell"
-            [class.new-cell]="block.isNew" class="grid-cell" role="gridcell" tabindex="0"
-            [attr.aria-label]="'Case ' + (i + 1) + (block.free ? ', libre' : ', occupée')">
+            <div
+              (click)="playerClick(i)"
+              (keydown.enter)="playerClick(i)"
+              (keydown.space)="playerClick(i)"
+              [class.disabled]="!block.free || lock"
+              [class.winning-cell]="block.isWinningCell"
+              [class.new-cell]="block.isNew"
+              class="grid-cell"
+              role="gridcell"
+              tabindex="0"
+              [attr.aria-label]="'Case ' + (i + 1) + (block.free ? ', libre' : ', occupée')"
+            >
+              <div class="cell-content">
+                @if (block.value) {
+                  <img [src]="block.urlimg()" alt="Symbole" class="cell-icon pop-in" />
+                }
+                @if (block.free && !lock) {
+                  <span class="hover-hint" aria-hidden="true">+</span>
+                }
+              </div>
 
-            <div class="cell-content">
-              @if (block.value) {
-              <img [src]="block.urlimg()" alt="Symbole" class="cell-icon pop-in" />
-              }
-              @if (block.free && !lock) {
-              <span class="hover-hint" aria-hidden="true">+</span>
+              @if (block.isNew) {
+                <div class="cell-particles" aria-hidden="true">
+                  @for (p of [1, 2, 3, 4]; track p) {
+                    <span></span>
+                  }
+                </div>
               }
             </div>
-
-            @if (block.isNew) {
-            <div class="cell-particles" aria-hidden="true">
-              @for (p of [1, 2, 3, 4]; track p) {
-              <span></span>
-              }
-            </div>
-            }
-          </div>
           }
         </div>
       </div>
@@ -97,6 +104,7 @@
     <!-- ═══════════ PANNEAU LATÉRAL ═══════════ -->
     <div class="col-12 col-lg-5">
       <p class="lyko-message" aria-live="polite">{{ messageLyko }}</p>
+
       <div class="stats-panel mb-4">
 
         <!-- Indicateur de tour -->
@@ -122,9 +130,9 @@
         <div class="actions-grid">
 
           @if (rejouer || gs.isGameOver) {
-          <button class="btn-secondary" (click)="resetjeu()" type="button">
-            🔄 Rejouer la grille
-          </button>
+            <button class="btn-secondary" (click)="resetjeu()" type="button">
+              🔄 Rejouer la grille
+            </button>
           }
 
           <button class="btn-primary" (click)="prochainNiveau()" type="button">
@@ -132,9 +140,9 @@
           </button>
 
           @if (yaprecedent()) {
-          <button class="btn-success" (click)="precedentNiveau()" type="button">
-            ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize - 1 }}×{{ gs.gridSize - 1 }})
-          </button>
+            <button class="btn-success" (click)="precedentNiveau()" type="button">
+              ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize - 1 }}×{{ gs.gridSize - 1 }})
+            </button>
           }
 
           <button class="btn-neutral" (click)="onrecommencer()" type="button">

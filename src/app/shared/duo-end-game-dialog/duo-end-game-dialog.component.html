@@ -1,0 +1,93 @@
+<div
+  class="end-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="duo-end-title"
+>
+  <div
+    class="end-card"
+    [class.p1]="summary().result === 'player1'"
+    [class.p2]="summary().result === 'player2'"
+    [class.draw]="summary().result === 'draw'"
+  >
+    <div class="end-icon" aria-hidden="true">{{ icon() }}</div>
+
+    <h1 id="duo-end-title" class="end-title">{{ title() }}</h1>
+    <p class="end-message">{{ message() }}</p>
+
+    <div class="end-stats" aria-live="polite">
+      <div class="stat-row">
+        <span class="stat-label">🎸 JOUEUR 1</span>
+        <span class="stat-value p1">{{ summary().player1Score }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">🎸 JOUEUR 2</span>
+        <span class="stat-value p2">{{ summary().player2Score }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">⚖️ Égalités cumulées</span>
+        <span class="stat-value gray">{{ summary().drawCount }}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">🎯 Alignements (J1 / J2)</span>
+        <span class="stat-value">
+          <span class="p1">{{ summary().player1Alignments }}</span>
+          /
+          <span class="p2">{{ summary().player2Alignments }}</span>
+        </span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">💎 PV gagnés (J1 / J2)</span>
+        <span class="stat-value">
+          <span class="p1">+{{ summary().player1GainedPv }}</span>
+          /
+          <span class="p2">+{{ summary().player2GainedPv }}</span>
+        </span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">📐 Niveau / Grille</span>
+        <span class="stat-value">
+          {{ summary().level }} — {{ summary().gridSize }}×{{ summary().gridSize }}
+        </span>
+      </div>
+    </div>
+
+    <div class="end-actions">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="replay.emit()"
+      >
+        🔄 Rejouer
+      </button>
+
+      @if (summary().hasPreviousLevel) {
+        <button
+          type="button"
+          class="btn-success"
+          (click)="previousLevel.emit()"
+        >
+          ⏪ Niveau précédent
+        </button>
+      }
+
+      @if (summary().hasNextLevel) {
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="nextLevel.emit()"
+        >
+          🚀 Niveau suivant
+        </button>
+      }
+
+      <button
+        type="button"
+        class="btn-neutral"
+        (click)="backToMenu.emit()"
+      >
+        ⚔️ Retour au menu
+      </button>
+    </div>
+  </div>
+</div>

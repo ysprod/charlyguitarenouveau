@@ -3,17 +3,17 @@
   <!-- ═══════════════════════════════════════════════════════
        HERO — LE PORTAIL D'OFFOLAND
        ═══════════════════════════════════════════════════════ -->
-  <section class="hero-section">
+  <section class="hero-section" aria-labelledby="offoland-title">
 
     <!-- 🌌 Sept couleurs primordiales en auras tournantes -->
     <div class="hero-aura" aria-hidden="true">
-      <div class="aura aura-do"></div>  <!-- Blanc    -->
-      <div class="aura aura-re"></div>  <!-- Rouge    -->
-      <div class="aura aura-mi"></div>  <!-- Vert     -->
-      <div class="aura aura-fa"></div>  <!-- Bleu     -->
+      <div class="aura aura-do"></div> <!-- Blanc    -->
+      <div class="aura aura-re"></div> <!-- Rouge    -->
+      <div class="aura aura-mi"></div> <!-- Vert     -->
+      <div class="aura aura-fa"></div> <!-- Bleu     -->
       <div class="aura aura-sol"></div> <!-- Noir     -->
-      <div class="aura aura-la"></div>  <!-- Pourpre  -->
-      <div class="aura aura-si"></div>  <!-- Violet   -->
+      <div class="aura aura-la"></div> <!-- Pourpre  -->
+      <div class="aura aura-si"></div> <!-- Violet   -->
     </div>
 
     <!-- 🥁 Battement du Premier Tambour -->
@@ -27,12 +27,13 @@
     <div class="hero-content">
 
       <!-- 🌟 Titre principal -->
-      <h1 class="hero-title">
+      <h1 id="offoland-title" class="hero-title">
         <span class="hero-title-gold">OFFOLAND</span>
       </h1>
 
+
       <!-- 🎵 Mélodie des Origines (La m – Ré m – Fa M – Sol M) -->
-      <div class="melodie-origines">
+      <div class="melodie-origines" aria-label="Mélodie des Origines">
         <span class="note" style="--note-color: #64748b">La m</span>
         <span class="note-sep" aria-hidden="true">·</span>
         <span class="note" style="--note-color: #dc2626">Ré m</span>
@@ -42,6 +43,17 @@
         <span class="note" style="--note-color: #16a34a">Sol M</span>
       </div>
 
+      <!-- 🎼 Les Sept Notes de la Création -->
+      <ul class="sept-notes" aria-label="Les Sept Notes de la Création">
+        <li class="sept-note" style="--note-color: #94a3b8">Do</li>
+        <li class="sept-note" style="--note-color: #dc2626">Ré</li>
+        <li class="sept-note" style="--note-color: #16a34a">Mi</li>
+        <li class="sept-note" style="--note-color: #2563eb">Fa</li>
+        <li class="sept-note" style="--note-color: #1c1917">Sol</li>
+        <li class="sept-note" style="--note-color: #9333ea">La</li>
+        <li class="sept-note" style="--note-color: #7c3aed">Si</li>
+      </ul>
+
       <!-- 🌈 Divider sacré -->
       <div class="hero-divider">
         <span class="line" aria-hidden="true"></span>
@@ -49,22 +61,105 @@
         <span class="line" aria-hidden="true"></span>
       </div>
 
-      <!-- 🏦 Portails vers les modules -->
+
+
       <div class="portails-grid">
 
-        <a class="portail-btn portail-economie" [routerLink]="['/finance']">
+        <!-- Portails actifs -->
+        <a class="portail-btn portail-economie" [routerLink]="['/finance']"
+          aria-label="Accéder à l'Économie — Offo Money, BCO, Marché">
           <span class="portail-glow" aria-hidden="true"></span>
           <span class="portail-icon" aria-hidden="true">🏦</span>
           <span class="portail-label">ÉCONOMIE</span>
           <span class="portail-sub">Offo Money · BCO · Marché</span>
         </a>
 
-        <a class="portail-btn portail-banque" [routerLink]="['/bco']">
+        <a class="portail-btn portail-banque" [routerLink]="['/bco']"
+          aria-label="Accéder à la Banque Centrale — Masse monétaire, Réserves">
           <span class="portail-glow" aria-hidden="true"></span>
           <span class="portail-icon" aria-hidden="true">⚖️</span>
           <span class="portail-label">BANQUE CENTRALE</span>
           <span class="portail-sub">Masse monétaire · Réserves</span>
         </a>
+
+        <!-- Portails verrouillés -->
+        <div class="portail-btn portail-locked" aria-disabled="true" role="link"
+          [attr.aria-label]="'Portail verrouillé : Académie — Bientôt disponible'">
+          <span class="portail-icon" aria-hidden="true">📚</span>
+          <span class="portail-label">ACADÉMIE</span>
+          <span class="portail-sub">Cours · Ateliers · Progression</span>
+          <span class="portail-lock" aria-hidden="true">🔒</span>
+        </div>
+
+        <div class="portail-btn portail-locked" aria-disabled="true" role="link"
+          [attr.aria-label]="'Portail verrouillé : Jeux — Bientôt disponible'">
+          <span class="portail-icon" aria-hidden="true">🎮</span>
+          <span class="portail-label">JEUX</span>
+          <span class="portail-sub">Charly Guitare · TicTacToe</span>
+          <span class="portail-lock" aria-hidden="true">🔒</span>
+        </div>
+
+        <div class="portail-btn portail-locked" aria-disabled="true" role="link"
+          [attr.aria-label]="'Portail verrouillé : Musique — Bientôt disponible'">
+          <span class="portail-icon" aria-hidden="true">🎼</span>
+          <span class="portail-label">MUSIQUE</span>
+          <span class="portail-sub">Instruments · Mélodies sacrées</span>
+          <span class="portail-lock" aria-hidden="true">🔒</span>
+        </div>
+
+        <div class="portail-btn portail-locked" aria-disabled="true" role="link"
+          [attr.aria-label]="'Portail verrouillé : Nature — Bientôt disponible'">
+          <span class="portail-icon" aria-hidden="true">🌿</span>
+          <span class="portail-label">NATURE</span>
+          <span class="portail-sub">Forêts · Rivières · Totems</span>
+          <span class="portail-lock" aria-hidden="true">🔒</span>
+        </div>
+
+        <div class="portail-btn portail-locked" aria-disabled="true" role="link"
+          [attr.aria-label]="'Portail verrouillé : Destinée — Bientôt disponible'">
+          <span class="portail-icon" aria-hidden="true">⭐</span>
+          <span class="portail-label">DESTINÉE</span>
+          <span class="portail-sub">Sept Portails · Offolomou</span>
+          <span class="portail-lock" aria-hidden="true">🔒</span>
+        </div>
+
+      </div>
+
+      <!-- 🌟 Citation sacrée (Livre I) -->
+      <blockquote class="hero-quote">
+        « Celui qui découvrira l’harmonie des Sept Dimensions connaîtra Offolomou,»
+        <cite>— Le Conseil des Sages d’Offoland</cite>
+      </blockquote>
+
+      <!-- 🔱 Les Trois Divinités (Livre VI) -->
+      <div class="divinites-grid" role="list">
+
+        <article class="divinite-card" role="listitem">
+          <span class="divinite-icon" aria-hidden="true">💧</span>
+          <h2 class="divinite-name">Offomiji</h2>
+          <p class="divinite-role">Gardienne des Eaux Éternelles</p>
+          <p class="divinite-quote">
+            « Rien ne guérit sans être d’abord reconnu. »
+          </p>
+        </article>
+
+        <article class="divinite-card" role="listitem">
+          <span class="divinite-icon" aria-hidden="true">❤️</span>
+          <h2 class="divinite-name">Offocolo</h2>
+          <p class="divinite-role">Roi de l’Amour et de la Cohésion</p>
+          <p class="divinite-quote">
+            « Celui qui marche seul va vite. Celui qui marche avec les autres va plus loin. »
+          </p>
+        </article>
+
+        <article class="divinite-card" role="listitem">
+          <span class="divinite-icon" aria-hidden="true">🔑</span>
+          <h2 class="divinite-name">Offowa</h2>
+          <p class="divinite-role">Gardienne des Sept Portails</p>
+          <p class="divinite-quote">
+            « Le portail ne refuse personne. Il révèle le moment où chacun est prêt. »
+          </p>
+        </article>
 
       </div>
 
@@ -72,9 +167,45 @@
 
   </section>
 
-  <main class="main-content">  
-    <section class="section-wrapper" appReveal>
-      <app-charlyguitaregame></app-charlyguitaregame>
+  <!-- ═══════════════════════════════════════════════════════
+       LE CHEMIN — Enseignement d'Offoland (Livre IX)
+       ═══════════════════════════════════════════════════════ -->
+  <section class="chemin-section" aria-labelledby="chemin-title">
+    <div class="chemin-content">
+      <h2 id="chemin-title" class="chemin-title">
+        <span class="chemin-icon" aria-hidden="true">🥁</span>
+        Le Chemin
+      </h2>
+      <p class="chemin-text">
+        Offoland ne s’ouvre ni par la force, ni par le savoir.
+        Elle s’ouvre à celui qui accepte de marcher avec humilité, vérité et respect.
+      </p>
+      <p class="chemin-text chemin-text-muted">
+        « Celui qui joue pour être admiré entendra seulement les sons.
+        Celui qui joue pour servir entendra la musique.
+        Celui qui joue avec vérité ouvrira les Sept Portails. »
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       JEU — Charly Guitare (chargement différé)
+       ═══════════════════════════════════════════════════════ -->
+  <main class="main-content">
+    <section class="section-wrapper" appReveal aria-label="Jeu Charly Guitare">
+      @defer (on viewport) {
+      <app-charlyguitaregame />
+      } @placeholder {
+      <div class="defer-placeholder" aria-hidden="true">
+        <span class="defer-spinner"></span>
+        <p>L’instrument s’accorde…</p>
+      </div>
+      } @loading (minimum 300ms) {
+      <div class="defer-placeholder" aria-hidden="true">
+        <span class="defer-spinner"></span>
+        <p>L’instrument s’accorde…</p>
+      </div>
+      }
     </section>
   </main>
 

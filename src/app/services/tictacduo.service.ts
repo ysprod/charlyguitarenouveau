@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 
 export class Block {
   free = true;
-  value = '';                 // "tick" (Joueur 1) ou "cross" (Joueur 2)
+  value = '';               // "tick" (Joueur 1) ou "cross" (Joueur 2)
   symbol = '';
   isWinningCell = false;
   isNew = false;
@@ -92,7 +92,7 @@ export class TictacduoService {
 
   /* ═══════════════════════════════════════════════════════════════════
      INITIALISATION
-     ═══════════════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════════════════ */
 
   initBlocks(size: number = this.gridSize): void {
     this.gridSize = Math.max(this.GRID_MIN_SIZE, size);
@@ -134,17 +134,18 @@ export class TictacduoService {
 
   /* ═══════════════════════════════════════════════════════════════════
      ÉTAT DU JEU
-     ═══════════════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════════════════ */
 
-  /** La partie est terminée quand toutes les cases sont remplies. */
+  /** La partie est terminée quand il ne reste plus aucune case libre. */
   get isGameOver(): boolean {
     if (this.blocks.length === 0) return false;
+    // ✅ Double vérification fiable : compteur ET scan réel
     return this.freeBlocksRemaining <= 0 || this.blocks.every(b => !b.free);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
      ⚡ JOUEUR — Effectue un coup
-     ═══════════════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════════════════ */
 
   playMove(index: number): number {
     if (
@@ -158,6 +159,8 @@ export class TictacduoService {
     const currentBlock = this.blocks[index];
     currentBlock.free = false;
     currentBlock.setValue(this.turn === 0 ? 'tick' : 'cross');
+
+    // ✅ Décrémentation directe (fiable et synchrone, pas de re-scan coûteux)
     this.freeBlocksRemaining = Math.max(0, this.freeBlocksRemaining - 1);
 
     /* Évaluation ciblée du coup joué */
@@ -172,7 +175,7 @@ export class TictacduoService {
 
   /* ═══════════════════════════════════════════════════════════════════
      ALIGNEMENTS
-     ═══════════════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════════════════ */
 
   checkNewAlignments(lastIndex?: number): number {
     if (lastIndex === undefined) {
@@ -274,21 +277,18 @@ export class TictacduoService {
       }
     };
 
-    /* Horizontales */
     for (let r = 0; r < N; r++) {
       for (let c = 0; c <= N - K; c++) {
         checkLine([r * N + c, r * N + c + 1, r * N + c + 2], `h-${r}-${c}`);
       }
     }
 
-    /* Verticales */
     for (let c = 0; c < N; c++) {
       for (let r = 0; r <= N - K; r++) {
         checkLine([r * N + c, (r + 1) * N + c, (r + 2) * N + c], `v-${r}-${c}`);
       }
     }
 
-    /* Diagonales ↘ */
     for (let r = 0; r <= N - K; r++) {
       for (let c = 0; c <= N - K; c++) {
         checkLine(
@@ -298,7 +298,6 @@ export class TictacduoService {
       }
     }
 
-    /* Diagonales ↙ */
     for (let r = 0; r <= N - K; r++) {
       for (let c = K - 1; c < N; c++) {
         checkLine(
@@ -329,7 +328,7 @@ export class TictacduoService {
 
   /* ═══════════════════════════════════════════════════════════════════
      RESET
-     ═══════════════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════════════════ */
 
   resetAll(): void {
     this.blocks.forEach(b => b.reset());

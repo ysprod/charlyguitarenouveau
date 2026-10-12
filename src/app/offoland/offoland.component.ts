@@ -1,19 +1,23 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { RevealDirective } from '../shared/reveal.directive';
 import { CharlyguitaregameComponent } from '../univers/charlyguitaregame/charlyguitaregame.component';
+
+/* ═════════════════════════════════════════════════════════════════════
+   OFFLOLAND — Portail d'entrée du royaume
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-offoland',
   standalone: true,
   imports: [
-    CommonModule,
+    RouterLink,
     RevealDirective,
-    CharlyguitaregameComponent,
-    RouterLink
+    CharlyguitaregameComponent
   ],
   templateUrl: './offoland.component.html',
-  styleUrls: ['./offoland.component.scss']
+  styleUrls: ['./offoland.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class OffolandComponent { }
+export class OffolandComponent {}

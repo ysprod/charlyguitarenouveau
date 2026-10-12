@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
   OnInit,
@@ -11,9 +12,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { TictacduoService } from '../../services/tictacduo.service';
+import { DuoEndGameDialogComponent } from 'src/app/shared/duo-end-game-dialog/duo-end-game-dialog.component';
+import { DuoEndGameSummary } from 'src/app/models/duo-end-game-summary.model';
 
 /* ═════════════════════════════════════════════════════════════════════
-   TYPES
+   TYPES & CONSTANTES
    ═════════════════════════════════════════════════════════════════════ */
 
 type SoundType = 'click' | 'win' | 'draw' | 'levelup';
@@ -22,7 +25,8 @@ const ALIGNMENT_REWARD = 10;
 const SOUND_PREF_KEY = 'tictacduo_sound_enabled';
 const CONFETTI_COUNT = 60;
 const CONFETTI_DURATION_MS = 4500;
-const END_GAME_DELAY_MS = 500;
+const END_GAME_DELAY_MS = 150; // ✅ Réduit pour un affichage quasi immédiat
+const WINNING_HIGHLIGHT_MS = 1200;
 
 /* ═════════════════════════════════════════════════════════════════════
    COMPOSANT
@@ -31,7 +35,7 @@ const END_GAME_DELAY_MS = 500;
 @Component({
   selector: 'app-tictacduo',
   standalone: true,
-  imports: [],
+  imports: [DuoEndGameDialogComponent],
   templateUrl: './tictacduo.component.html',
   styleUrls: ['./tictacduo.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,23 +45,30 @@ export class TictacduoComponent implements OnInit, OnDestroy {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
-
+  private readonly cdr = inject(ChangeDetectorRef); // ✅ Pour forcer la détection
   public readonly gs = inject(TictacduoService);
 
   /* ─── État ─── */
   lock = false;
   rejouer = false;
-  etapedujeu = '0';
   lavie = 0;
   lebonus = 0;
   pointdevies = 0;
   pointdebonus = 0;
   messageLyko = 'Au tour du Joueur 1…';
   showConfetti = false;
-  showVictoryOverlay = false;
-  particles: number[] = [];
+
+  /* ─── Dialogue de fin ─── */
+  showEndDialog = false;
+  endSummary: DuoEndGameSummary | null = null;
 
   readonly alignmentReward = ALIGNMENT_REWARD;
+
+  /* ─── Suivi de manche ─── */
+  private player1AlignmentsThisRound = 0;
+  private player2AlignmentsThisRound = 0;
+  private player1GainedPvThisRound = 0;
+  private player2GainedPvThisRound = 0;
 
   /* ─── Son ─── */
   readonly soundEnabled = signal<boolean>(true);
@@ -74,8 +85,6 @@ export class TictacduoComponent implements OnInit, OnDestroy {
 
     this.lavie = parseInt(params.get('vie') ?? '500', 10);
     this.lebonus = parseInt(params.get('bonus') ?? '0', 10);
-    this.etapedujeu = params.get('etape') ?? this.etapedujeu;
-
     this.pointdevies = this.lavie;
     this.pointdebonus = this.lebonus;
 
@@ -88,8 +97,8 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
       void this.audioCtx.close();
     }
-
     this.timeouts.forEach(t => clearTimeout(t));
+    this.timeouts.length = 0;
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -102,20 +111,15 @@ export class TictacduoComponent implements OnInit, OnDestroy {
       if (saved === 'false') {
         this.soundEnabled.set(false);
       }
-    } catch {
-      /* silencieux */
-    }
+    } catch { /* silencieux */ }
   }
 
   toggleSound(): void {
     const next = !this.soundEnabled();
     this.soundEnabled.set(next);
-
     try {
       localStorage.setItem(SOUND_PREF_KEY, String(next));
-    } catch {
-      /* silencieux */
-    }
+    } catch { /* silencieux */ }
   }
 
   private initAudio(): void {
@@ -124,9 +128,7 @@ export class TictacduoComponent implements OnInit, OnDestroy {
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
 
-    if (Ctor) {
-      this.audioCtx = new Ctor();
-    }
+    if (Ctor) this.audioCtx = new Ctor();
   }
 
   private playSound(type: SoundType): void {
@@ -141,48 +143,18 @@ export class TictacduoComponent implements OnInit, OnDestroy {
 
     switch (type) {
       case 'click':
-        this.tone(ctx, {
-          freq: 440,
-          endFreq: 880,
-          type: 'sine',
-          duration: 0.06,
-          volume: 0.15,
-          now,
-        });
+        this.tone(ctx, { freq: 440, endFreq: 880, type: 'sine', duration: 0.06, volume: 0.15, now });
         break;
-
       case 'win':
         [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
-          this.tone(ctx, {
-            freq,
-            type: 'triangle',
-            duration: 0.3,
-            volume: 0.2,
-            now: now + i * 0.1,
-          });
+          this.tone(ctx, { freq, type: 'triangle', duration: 0.3, volume: 0.2, now: now + i * 0.1 });
         });
         break;
-
       case 'draw':
-        this.tone(ctx, {
-          freq: 220,
-          endFreq: 180,
-          type: 'square',
-          duration: 0.3,
-          volume: 0.2,
-          now,
-        });
+        this.tone(ctx, { freq: 220, endFreq: 180, type: 'square', duration: 0.3, volume: 0.2, now });
         break;
-
       case 'levelup':
-        this.tone(ctx, {
-          freq: 300,
-          endFreq: 1200,
-          type: 'sine',
-          duration: 0.5,
-          volume: 0.3,
-          now,
-        });
+        this.tone(ctx, { freq: 300, endFreq: 1200, type: 'sine', duration: 0.5, volume: 0.3, now });
         break;
     }
   }
@@ -223,33 +195,29 @@ export class TictacduoComponent implements OnInit, OnDestroy {
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     OVERLAY
-     ═══════════════════════════════════════════════════════════════════ */
-
-  dismissOverlay(): void {
-    this.showConfetti = false;
-    this.showVictoryOverlay = false;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     JEU — Reset & niveaux
+     RESET & NIVEAUX
      ═══════════════════════════════════════════════════════════════════ */
 
   resetjeu(): void {
-    /* État UI */
     this.rejouer = false;
     this.lock = false;
     this.showConfetti = false;
-    this.showVictoryOverlay = false;
+    this.showEndDialog = false;
+    this.endSummary = null;
 
-    /* Service */
+    this.player1AlignmentsThisRound = 0;
+    this.player2AlignmentsThisRound = 0;
+    this.player1GainedPvThisRound = 0;
+    this.player2GainedPvThisRound = 0;
+
     this.gs.resetAll();
     this.gs.turn = 0;
 
-    /* Message */
     this.messageLyko =
       `Niveau ${this.gs.gridSize - 2} — Grille ${this.gs.gridSize}×${this.gs.gridSize} · ` +
       `Alignez 3 pions pour gagner +${this.alignmentReward} PV !`;
+
+    this.cdr.markForCheck();
   }
 
   prochainNiveau(): void {
@@ -278,18 +246,20 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     );
   }
 
+  yaprecedent(): boolean {
+    return this.gs.gridSize > 3;
+  }
+
   /* ═══════════════════════════════════════════════════════════════════
-     🎯 JOUEUR — Clic sur une case
+     JOUEUR — Clic sur une case
      ═══════════════════════════════════════════════════════════════════ */
 
   playerClick(i: number): void {
-    if (this.lock || !this.gs.blocks[i].free) return;
+    // ✅ On ne bloque que si la partie est déjà verrouillée (fin en cours)
+    if (this.lock || this.gs.isGameOver || !this.gs.blocks[i].free) return;
 
     const playerTurn = this.gs.turn;
-
     const alignments = this.gs.playMove(i);
-
-    if (this.gs.blocks[i].free) return;
 
     this.playSound('click');
 
@@ -297,19 +267,32 @@ export class TictacduoComponent implements OnInit, OnDestroy {
       this.handleAlignment(playerTurn, alignments);
     }
 
+    // ✅ VÉRIFICATION IMMÉDIATE APRÈS LE COUP — l'état est maintenant synchrone
     if (this.gs.isGameOver) {
-      const timerId = setTimeout(() => this.handleEndGame(), END_GAME_DELAY_MS);
-      this.timeouts.push(timerId);
+      this.lock = true;
+      // ✅ On affiche le dialogue DIRECTEMENT (plus de setTimeout)
+      //    pour garantir l'affichage immédiat
+      this.handleEndGame();
+      this.cdr.markForCheck();
       return;
     }
 
     this.changeTurn();
+    this.cdr.markForCheck();
   }
 
   private handleAlignment(playerTurn: number, count: number): void {
     const gain = count * this.alignmentReward;
     this.pointdevies += gain;
     this.lavie = this.pointdevies;
+
+    if (playerTurn === 0) {
+      this.player1AlignmentsThisRound += count;
+      this.player1GainedPvThisRound += gain;
+    } else {
+      this.player2AlignmentsThisRound += count;
+      this.player2GainedPvThisRound += gain;
+    }
 
     this.playSound('win');
 
@@ -323,67 +306,58 @@ export class TictacduoComponent implements OnInit, OnDestroy {
     );
 
     const timerId = setTimeout(
-      () => this.gs.clearWinningHighlight(),
-      1200
+      () => {
+        this.gs.clearWinningHighlight();
+        this.cdr.markForCheck();
+      },
+      WINNING_HIGHLIGHT_MS
     );
     this.timeouts.push(timerId);
   }
 
   private handleEndGame(): void {
-    if (this.lock) return;
-
-    this.lock = true;
     this.rejouer = true;
     this.gs.draw += 1;
-    this.playSound('draw');
 
     const scoreJ1 = this.gs.players[0].score;
     const scoreJ2 = this.gs.players[1].score;
 
+    let result: 'player1' | 'player2' | 'draw' = 'draw';
+
     if (scoreJ1 > scoreJ2) {
-      this.triggerConfetti();
-      this.showVictoryOverlay = true;
+      result = 'player1';
+      this.playSound('win');
       this.messageLyko = `🏆 Le JOUEUR 1 remporte le duel (${scoreJ1} - ${scoreJ2}) !`;
-
-      this.snackBar.open(
-        `🏆 VICTOIRE JOUEUR 1 : ${scoreJ1} - ${scoreJ2}`,
-        'Félicitations !',
-        { duration: 3500 }
-      );
     } else if (scoreJ2 > scoreJ1) {
-      this.triggerConfetti();
-      this.showVictoryOverlay = true;
-      this.messageLyko = `🏆 Le JOUEUR 2 remporte le duel (${scoreJ2} - ${scoreJ1}) !`;
-
-      this.snackBar.open(
-        `🏆 VICTOIRE JOUEUR 2 : ${scoreJ2} - ${scoreJ1}`,
-        'Félicitations !',
-        { duration: 3500 }
-      );
+      result = 'player2';
+      this.playSound('win');
+      this.messageLyko = `🎉 Le JOUEUR 2 remporte le duel (${scoreJ2} - ${scoreJ1}) !`;
     } else {
+      result = 'draw';
+      this.playSound('draw');
       this.messageLyko = `⚖️ Égalité parfaite (${scoreJ1} - ${scoreJ2}) !`;
-
-      this.snackBar.open(
-        `⚖️ MATCH NUL ${scoreJ1} - ${scoreJ2}`,
-        'Égalité',
-        { duration: 3000 }
-      );
     }
+
+    this.endSummary = {
+      result,
+      player1Score: scoreJ1,
+      player2Score: scoreJ2,
+      drawCount: this.gs.draw,
+      level: this.gs.gridSize - 2,
+      gridSize: this.gs.gridSize,
+      player1Alignments: this.player1AlignmentsThisRound,
+      player2Alignments: this.player2AlignmentsThisRound,
+      player1GainedPv: this.player1GainedPvThisRound,
+      player2GainedPv: this.player2GainedPvThisRound,
+      hasPreviousLevel: this.yaprecedent(),
+      hasNextLevel: true,
+    };
+
+    this.showEndDialog = true;
+    this.cdr.detectChanges(); // ✅ Force l'affichage immédiat du dialogue
   }
 
-  private triggerConfetti(): void {
-    this.showConfetti = true;
-    this.particles = Array.from({ length: CONFETTI_COUNT }, (_, i) => i);
 
-    const timerId = setTimeout(() => {
-      if (this.showVictoryOverlay) {
-        this.showConfetti = false;
-        this.showVictoryOverlay = false;
-      }
-    }, CONFETTI_DURATION_MS);
-
-    this.timeouts.push(timerId);
-  }
 
   private changeTurn(): void {
     const current = this.gs.changeTurn();
@@ -392,8 +366,24 @@ export class TictacduoComponent implements OnInit, OnDestroy {
       : '🎯 Au tour du JOUEUR 1';
   }
 
-  yaprecedent(): boolean {
-    return this.gs.gridSize > 3;
+  /* ═══════════════════════════════════════════════════════════════════
+     ACTIONS DU DIALOGUE DE FIN
+     ═══════════════════════════════════════════════════════════════════ */
+
+  onDialogReplay(): void {
+    this.resetjeu();
+  }
+
+  onDialogNextLevel(): void {
+    this.prochainNiveau();
+  }
+
+  onDialogPreviousLevel(): void {
+    this.precedentNiveau();
+  }
+
+  onDialogBackToMenu(): void {
+    this.onrecommencer();
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -407,6 +397,6 @@ export class TictacduoComponent implements OnInit, OnDestroy {
   }
 
   onrecommencer(): void {
-    this.goToPlay(this.lavie, this.lebonus, this.etapedujeu);
+    this.goToPlay(this.lavie, this.lebonus, '0');
   }
 }
