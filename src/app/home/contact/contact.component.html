@@ -1,27 +1,22 @@
 <div class="contact-container">
+
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════ -->
   <header class="contact-header">
     <span class="badge">Restons en contact</span>
     <h1>Contactez Charly Guitare</h1>
     <p class="subtitle">
-      Une question sur les cours, un problème technique ou simplement envie d'échanger ? Envoyez-nous un message !
+      Une question sur les cours, un problème technique ou simplement envie d'échanger ?
+      Envoyez-nous un message !
     </p>
   </header>
 
   <main class="contact-card">
 
-    <!-- Message si l'utilisateur n'est pas connecté -->
-    @if (!currentUser && !authLoading) {
-      <div class="alert alert-error" role="alert">
-        <div>
-          <strong>Connexion requise</strong>
-          <p>Vous devez être connecté à votre compte pour envoyer un message à l'équipe.</p>
-        </div>
-      </div>
-    }
-
-    <!-- Message de succès -->
-    @if (submitSuccess) {
-      <div class="alert alert-success" role="status">
+    <!-- ✅ Succès -->
+    @if (submitSuccess()) {
+      <div class="alert alert-success" role="status" aria-live="polite">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
           <polyline points="22 4 12 14.01 9 11"/>
@@ -33,9 +28,9 @@
       </div>
     }
 
-    <!-- Message d'erreur -->
-    @if (submitError) {
-      <div class="alert alert-error" role="alert">
+    <!-- ❌ Erreur -->
+    @if (submitError()) {
+      <div class="alert alert-error" role="alert" aria-live="assertive">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="12" cy="12" r="10"/>
           <line x1="12" y1="8" x2="12" y2="12"/>
@@ -43,75 +38,113 @@
         </svg>
         <div>
           <strong>Erreur d'envoi</strong>
-          <p>{{ errorMessage }}</p>
+          <p>{{ errorMessage() }}</p>
         </div>
       </div>
     }
 
-    <!-- Formulaire (masqué si non connecté) -->
-    @if (currentUser) {
-      <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" novalidate>
+    <!-- 📝 Formulaire -->
+    <form
+      [formGroup]="contactForm"
+      (ngSubmit)="onSubmit()"
+      novalidate
+      [attr.aria-busy]="isSubmitting()"
+    >
 
-        <!-- Sujet -->
-        <div class="form-group">
-          <label for="subject">Sujet</label>
+      <!-- Sujet -->
+      <div class="form-group">
+        <label for="subject">Sujet</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                  stroke="currentColor" stroke-width="2"/>
+            <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
           <input
             type="text"
             id="subject"
             formControlName="subject"
-            placeholder="Ex: Question sur le cours de Coupé-Décalé"
+            placeholder="Ex : Question sur le cours de Coupé-Décalé"
+            autocomplete="off"
+            [attr.maxlength]="subjectMaxLength"
             [class.invalid]="f.subject.touched && f.subject.invalid"
+            [attr.aria-invalid]="f.subject.touched && f.subject.invalid"
           />
-          @if (f.subject.touched && f.subject.invalid) {
-            <div class="error-text">
-              @if (f.subject.errors?.['required']) {
-                <span>Le sujet est obligatoire.</span>
-              }
-              @if (f.subject.errors?.['minlength']) {
-                <span>Au moins 3 caractères requis.</span>
-              }
-            </div>
-          }
         </div>
+        @if (f.subject.touched && f.subject.invalid) {
+          <div class="error-text" role="alert">
+            @if (f.subject.errors?.['required']) {
+              <span>Le sujet est obligatoire.</span>
+            }
+            @if (f.subject.errors?.['minlength']) {
+              <span>Au moins 3 caractères requis.</span>
+            }
+            @if (f.subject.errors?.['maxlength']) {
+              <span>Maximum {{ subjectMaxLength }} caractères.</span>
+            }
+          </div>
+        }
+      </div>
 
-        <!-- Message -->
-        <div class="form-group">
-          <label for="message">Message</label>
+      <!-- Message -->
+      <div class="form-group">
+        <label for="message">Message</label>
+        <div class="input-wrapper textarea-wrapper">
+          <svg class="input-icon textarea-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
           <textarea
             id="message"
-            rows="5"
+            rows="6"
             formControlName="message"
-            placeholder="Écrivez votre message ici..."
+            placeholder="Écrivez votre message ici…"
+            [attr.maxlength]="messageMaxLength"
             [class.invalid]="f.message.touched && f.message.invalid"
+            [attr.aria-invalid]="f.message.touched && f.message.invalid"
           ></textarea>
-          @if (f.message.touched && f.message.invalid) {
-            <div class="error-text">
-              @if (f.message.errors?.['required']) {
-                <span>Le message ne peut pas être vide.</span>
-              }
-              @if (f.message.errors?.['minlength']) {
-                <span>Au moins 10 caractères requis.</span>
-              }
-            </div>
-          }
         </div>
 
-        <!-- Bouton de soumission -->
-        <button
-          type="submit"
-          class="btn-submit"
-          [disabled]="isSubmitting || !currentUser"
-        >
-          @if (!isSubmitting) {
-            <span>Envoyer le message</span>
-          } @else {
-            <span class="spinner-container">
-              <span class="spinner" aria-hidden="true"></span>
-              Envoi en cours...
-            </span>
-          }
-        </button>
-      </form>
-    }
+        <div class="char-counter" [class.warn]="messageLength > messageMaxLength * 0.85">
+          {{ messageLength }} / {{ messageMaxLength }}
+        </div>
+
+        @if (f.message.touched && f.message.invalid) {
+          <div class="error-text" role="alert">
+            @if (f.message.errors?.['required']) {
+              <span>Le message ne peut pas être vide.</span>
+            }
+            @if (f.message.errors?.['minlength']) {
+              <span>Au moins 10 caractères requis.</span>
+            }
+            @if (f.message.errors?.['maxlength']) {
+              <span>Maximum {{ messageMaxLength }} caractères.</span>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Soumission -->
+      <button
+        type="submit"
+        class="btn-submit"
+        [disabled]="isSubmitting() || !currentUser()"
+        [attr.aria-busy]="isSubmitting()"
+      >
+        @if (!isSubmitting()) {
+          <span>Envoyer le message</span>
+        } @else {
+          <span class="spinner-container">
+            <span class="spinner" aria-hidden="true"></span>
+            Envoi en cours…
+          </span>
+        }
+      </button>
+
+      <!-- Badge RGPD -->
+      <p class="privacy-note">
+        🔒 Vos données restent confidentielles et ne sont utilisées que pour vous répondre.
+      </p>
+    </form>
   </main>
 </div>

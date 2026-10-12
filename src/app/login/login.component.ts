@@ -35,8 +35,6 @@ import { AuthInputComponent } from '../shared/auth-input/auth-input.component';
 import { AuthLayoutComponent } from '../shared/auth-layout/auth-layout.component';
 import { GoogleButtonComponent } from '../shared/google-button/google-button.component';
 
- 
-
 @Component({
   selector: 'app-login',
   standalone: true,

@@ -1,14 +1,14 @@
 /* ═════════════════════════════════════════════════════════════════════
-   CONTACT — Version claire
+   CONTACT — Version claire, Angular 20
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
-  /* Fonds — conformes consigne : blanc pour le contenu */
+  /* Fonds */
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
   --bg-card: #ffffff;
 
-  /* Identité dorée — assombrie pour contraste AA sur fond blanc */
+  /* Identité dorée */
   --gold-primary: #b8860b;
   --gold-hover: #d4a017;
   --gold-soft: rgba(184, 134, 11, .08);
@@ -18,7 +18,7 @@
   --primary-hover: #1d4ed8;
   --primary-glow: rgba(37, 99, 235, .2);
   --success: #16a34a;
-  --warning: #ea580c;       /* 🟠 orange — actions importantes / CTA */
+  --warning: #ea580c;
   --warning-hover: #c2410c;
   --danger: #dc2626;
 
@@ -33,11 +33,13 @@
   --border-medium: rgba(15, 23, 42, .14);
   --border-gold: rgba(184, 134, 11, .3);
 
-  /* Rayons */
+  /* Rayons + transitions */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+  --t-fast: .2s ease;
+  --t-base: .3s ease;
 
   display: block;
   background-color: var(--bg-page);
@@ -63,14 +65,15 @@
 .contact-header {
   text-align: center;
   margin-bottom: 2.5rem;
+  animation: fadeUp .6s cubic-bezier(.22, 1, .36, 1);
+}
 
-  h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--text-dark);
-    margin: 0 0 .75rem 0;
-    line-height: 1.2;
-  }
+.contact-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 .75rem 0;
+  line-height: 1.2;
 }
 
 .badge {
@@ -92,6 +95,11 @@
   margin: 0 auto;
 }
 
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ═════════════════════════════════════════════════════════════════════
    CARTE FORMULAIRE
    ═════════════════════════════════════════════════════════════════════ */
@@ -100,18 +108,15 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 2rem;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, .05),
+    0 20px 40px -20px rgba(15, 23, 42, .08);
+  animation: fadeUp .7s cubic-bezier(.22, 1, .36, 1);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
    FORMULAIRE
    ═════════════════════════════════════════════════════════════════════ */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-}
-
 .form-group {
   display: flex;
   flex-direction: column;
@@ -125,44 +130,110 @@ label {
   margin-bottom: .5rem;
 }
 
-input,
-textarea {
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.textarea-wrapper {
+  align-items: flex-start;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  width: 18px;
+  height: 18px;
+  color: var(--text-dim);
+  pointer-events: none;
+  transition: color var(--t-fast);
+}
+
+.textarea-icon {
+  top: 1rem;
+}
+
+.input-wrapper input,
+.input-wrapper textarea {
+  width: 100%;
   background-color: var(--bg-card);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  padding: .75rem 1rem;
+  padding: .85rem 1rem .85rem 2.75rem;
   color: var(--text-dark);
   font-size: 1rem;
   font-family: inherit;
   outline: none;
-  transition: border-color .2s ease, box-shadow .2s ease;
-
-  &::placeholder {
-    color: var(--text-dim);
-  }
-
-  &:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-glow);
-  }
-
-  &.invalid {
-    border-color: var(--danger);
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, .15);
-  }
+  transition:
+    border-color var(--t-fast),
+    box-shadow var(--t-fast),
+    background-color var(--t-fast);
 }
 
-textarea {
+.input-wrapper textarea {
   resize: vertical;
-  min-height: 120px;
+  min-height: 140px;
   line-height: 1.5;
+  padding-top: .85rem;
 }
 
+.input-wrapper input::placeholder,
+.input-wrapper textarea::placeholder {
+  color: var(--text-dim);
+}
+
+.input-wrapper input:focus,
+.input-wrapper textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.input-wrapper:focus-within .input-icon {
+  color: var(--primary);
+}
+
+.input-wrapper input.invalid,
+.input-wrapper textarea.invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, .15);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPTEUR DE CARACTÈRES
+   ═════════════════════════════════════════════════════════════════════ */
+.char-counter {
+  align-self: flex-end;
+  margin-top: .35rem;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--t-fast);
+}
+
+.char-counter.warn {
+  color: var(--warning);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   MESSAGE D'ERREUR
+   ═════════════════════════════════════════════════════════════════════ */
 .error-text {
   color: var(--danger);
   font-size: .8125rem;
   margin-top: .35rem;
   font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  animation: shake .35s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -179,30 +250,44 @@ textarea {
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color .2s ease, transform .1s ease, box-shadow .2s ease;
+  transition:
+    background-color var(--t-fast),
+    transform .1s ease,
+    box-shadow var(--t-fast);
   margin-top: .5rem;
   box-shadow: 0 4px 12px rgba(234, 88, 12, .25);
+}
 
-  &:hover:not(:disabled) {
-    background-color: var(--warning-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(234, 88, 12, .35);
-  }
+.btn-submit:hover:not(:disabled) {
+  background-color: var(--warning-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(234, 88, 12, .35);
+}
 
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
+.btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
 
-  &:disabled {
-    opacity: .6;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
+.btn-submit:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
-  &:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 3px;
-  }
+.btn-submit:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   NOTE DE CONFIDENTIALITÉ (RGPD)
+   ═════════════════════════════════════════════════════════════════════ */
+.privacy-note {
+  margin: .85rem 0 0;
+  font-size: .75rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -215,24 +300,36 @@ textarea {
   padding: 1rem;
   border-radius: var(--radius-sm);
   margin-bottom: 1.5rem;
+  animation: fadeUp .35s cubic-bezier(.22, 1, .36, 1);
+}
 
-  svg {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-  }
+.alert svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
 
-  strong {
-    font-weight: 700;
-    display: block;
-    margin-bottom: .15rem;
-  }
+.alert strong {
+  font-weight: 700;
+  display: block;
+  margin-bottom: .15rem;
+}
 
-  p {
-    margin: .25rem 0 0 0;
-    font-size: .875rem;
-    line-height: 1.5;
-  }
+.alert p {
+  margin: .25rem 0 0 0;
+  font-size: .875rem;
+  line-height: 1.5;
+}
+
+.alert-link {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  transition: opacity var(--t-fast);
+}
+
+.alert-link:hover {
+  opacity: .75;
 }
 
 /* 🟢 Succès */
@@ -250,7 +347,7 @@ textarea {
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   LOADER
+   SPINNER (bouton submit)
    ═════════════════════════════════════════════════════════════════════ */
 .spinner-container {
   display: inline-flex;
@@ -275,21 +372,45 @@ textarea {
 /* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═════════════════════════════════════════════════════════════════════ */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .contact-container {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .contact-header h1 {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .contact-card {
+    padding: 1.75rem;
+  }
+}
+
+@media (max-width: 480px) {
   .contact-container {
     padding: 2rem 1rem;
   }
 
   .contact-header h1 {
-    font-size: 1.75rem;
+    font-size: 1.6rem;
   }
 
   .contact-card {
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
 
-  .form-grid {
-    grid-template-columns: 1fr;
+  .input-wrapper input,
+  .input-wrapper textarea {
+    font-size: .95rem;
+  }
+
+  .btn-submit {
+    font-size: .95rem;
+    padding: .8rem;
   }
 }
 
@@ -304,4 +425,13 @@ textarea {
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

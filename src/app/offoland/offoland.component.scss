@@ -2,6 +2,16 @@
    OFFOLAND — Version claire immersive
    ═════════════════════════════════════════════════════════════════════ */
 
+@use 'sass:list';
+
+/* ─── Mixin local ─── */
+@mixin gradient-text($gradient) {
+  background: $gradient;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 :host {
   /* Fonds */
   --offo-fond: #ffffff;
@@ -40,14 +50,6 @@
   font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-}
-
-/* ─── Mixin local ─── */
-@mixin gradient-text($gradient) {
-  background: $gradient;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -97,13 +99,13 @@ $auras: (
 );
 
 @each $name, $data in $auras {
-  $size: nth($data, 1);
-  $top: nth($data, 2);
-  $side: nth($data, 3);
-  $transform: nth($data, 4);
-  $duration: nth($data, 5);
-  $delay: nth($data, 6);
-  $color: nth($data, 7);
+  $size:      list.nth($data, 1);
+  $top:       list.nth($data, 2);
+  $side:      list.nth($data, 3);
+  $transform: list.nth($data, 4);
+  $duration:  list.nth($data, 5);
+  $delay:     list.nth($data, 6);
+  $color:     list.nth($data, 7);
 
   .aura-#{$name} {
     width: #{$size}px;
@@ -112,11 +114,11 @@ $auras: (
     animation-duration: $duration;
     animation-delay: $delay;
 
-    @if $top    { top: $top; }
+    @if $top { top: $top; }
+
+    /* Position horizontale selon la note */
     @if $name == do or $name == re or $name == mi or $name == fa {
       left: $side;
-    } @else if $name == sol or $name == la {
-      right: $side;
     } @else {
       right: $side;
     }
@@ -365,7 +367,6 @@ $auras: (
   box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
   transition: all var(--offo-t-base);
 
-  /* Bordure dégradée */
   &::before {
     content: '';
     position: absolute;
@@ -765,7 +766,6 @@ $auras: (
   }
 }
 
-/* Focus visible global */
 a:focus-visible,
 button:focus-visible,
 [role="link"]:focus-visible {

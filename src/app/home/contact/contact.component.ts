@@ -1,17 +1,18 @@
 import {
+  ChangeDetectionStrategy,
   Component,
-  OnDestroy,
-  OnInit,
-  inject
+  inject,
+  signal
 } from '@angular/core';
 
 import {
   FormBuilder,
-  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import {
   Auth,
@@ -26,140 +27,87 @@ import {
 } from '@angular/fire/database';
 
 import {
-  CommonModule
-} from '@angular/common';
+  ContactForm,
+  MessageData
+} from 'src/app/models/contact.model';
 
 import {
-  Subject
-} from 'rxjs';
+  MESSAGE_MAX_LENGTH,
+  MESSAGE_MIN_LENGTH,
+  SUBJECT_MAX_LENGTH,
+  SUBJECT_MIN_LENGTH
+} from 'src/app/constants/contact.constants';
 
-import {
-  takeUntil
-} from 'rxjs/operators';
-
-interface ContactForm {
-  subject: FormControl<string>;
-  message: FormControl<string>;
-}
-
-interface MessageData {
-  userId: string;
-  userEmail: string;
-  userName: string;
-  userPhoto: string;
-  subject: string;
-  message: string;
-  createdAt: string;
-  status: 'unread';
-}
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule
-  ],
+  imports: [ReactiveFormsModule],
   templateUrl: './contact.component.html',
-  styleUrls: ['./contact.component.scss'] // ⚠️ renommé de .css en .scss
+  styleUrls: ['./contact.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ContactComponent implements OnInit, OnDestroy {
+export class ContactComponent {
 
+  /* ─── Injection ─── */
   private readonly formBuilder = inject(FormBuilder);
   private readonly database = inject(Database);
   private readonly auth = inject(Auth);
 
-  private readonly destroy$ = new Subject<void>();
+  /* ─── Formulaire ─── */
+  readonly contactForm: FormGroup<ContactForm> = this.formBuilder.group<ContactForm>({
+    subject: this.formBuilder.nonNullable.control(
+      '',
+      [
+        Validators.required,
+        Validators.minLength(SUBJECT_MIN_LENGTH),
+        Validators.maxLength(SUBJECT_MAX_LENGTH)
+      ]
+    ),
+    message: this.formBuilder.nonNullable.control(
+      '',
+      [
+        Validators.required,
+        Validators.minLength(MESSAGE_MIN_LENGTH),
+        Validators.maxLength(MESSAGE_MAX_LENGTH)
+      ]
+    )
+  });
 
-  contactForm!: FormGroup<ContactForm>;
+  /* ─── Constantes exposées au template ─── */
+  readonly messageMaxLength = MESSAGE_MAX_LENGTH;
+  readonly subjectMaxLength = SUBJECT_MAX_LENGTH;
 
-  isSubmitting = false;
-  submitSuccess = false;
-  submitError = false;
-  errorMessage = '';
+  /* ─── États UI ─── */
+  readonly isSubmitting = signal(false);
+  readonly submitSuccess = signal(false);
+  readonly submitError = signal(false);
+  readonly errorMessage = signal('');
 
-  currentUser: User | null = null;
-  authLoading = true;
+  /* ─── Utilisateur courant ─── */
+  readonly currentUser = toSignal(authState(this.auth), {
+    initialValue: null as User | null
+  });
 
-  ngOnInit(): void {
-    window.scrollTo({
-      top: 0,
-      behavior: 'auto'
-    });
+  /* ═══════════════════════════════════════════════════════════════════
+     SOUMISSION
+     ═══════════════════════════════════════════════════════════════════ */
 
-    this.initForm();
-    this.checkCurrentUser();
-  }
-
-  /**
-   * Initialise le formulaire de contact.
-   */
-  private initForm(): void {
-    this.contactForm = this.formBuilder.group<ContactForm>({
-      subject: this.formBuilder.nonNullable.control(
-        '',
-        [
-          Validators.required,
-          Validators.minLength(3)
-        ]
-      ),
-
-      message: this.formBuilder.nonNullable.control(
-        '',
-        [
-          Validators.required,
-          Validators.minLength(10)
-        ]
-      )
-    });
-  }
-
-  /**
-   * Surveille l'état d'authentification Firebase.
-   */
-  private checkCurrentUser(): void {
-    authState(this.auth)
-      .pipe(
-        takeUntil(this.destroy$)
-      )
-      .subscribe({
-        next: (user: User | null) => {
-          this.currentUser = user;
-          this.authLoading = false;
-        },
-
-        error: (error: unknown) => {
-          console.error(
-            'Erreur lors de la récupération de l’utilisateur :',
-            error
-          );
-
-          this.currentUser = null;
-          this.authLoading = false;
-        }
-      });
-  }
-
-  /**
-   * Envoie le message dans Firebase Realtime Database.
-   */
   async onSubmit(): Promise<void> {
 
-    this.submitSuccess = false;
-    this.submitError = false;
-    this.errorMessage = '';
+    this.submitSuccess.set(false);
+    this.submitError.set(false);
+    this.errorMessage.set('');
 
-    if (this.authLoading) {
-      this.submitError = true;
-      this.errorMessage =
-        'Veuillez patienter pendant la vérification de votre connexion.';
-      return;
-    }
-
-    if (!this.currentUser) {
-      this.submitError = true;
-      this.errorMessage =
-        'Vous devez être connecté pour envoyer un message.';
+    const user = this.currentUser();
+    if (!user) {
+      this.submitError.set(true);
+      this.errorMessage.set(
+        'Vous devez être connecté pour envoyer un message.'
+      );
       return;
     }
 
@@ -168,9 +116,7 @@ export class ContactComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isSubmitting = true;
-
-    const user = this.currentUser;
+    this.isSubmitting.set(true);
 
     const messageData: MessageData = {
       userId: user.uid,
@@ -185,10 +131,9 @@ export class ContactComponent implements OnInit, OnDestroy {
 
     try {
       const messagesRef = ref(this.database, 'messages');
-
       await push(messagesRef, messageData);
 
-      this.submitSuccess = true;
+      this.submitSuccess.set(true);
 
       this.contactForm.reset({
         subject: '',
@@ -197,31 +142,31 @@ export class ContactComponent implements OnInit, OnDestroy {
 
     } catch (error: unknown) {
 
-      this.submitError = true;
-
-      this.errorMessage =
-        'Une erreur est survenue lors de l’envoi. Veuillez réessayer.';
-
-      console.error(
-        'Erreur Realtime Database :',
-        error
+      this.submitError.set(true);
+      this.errorMessage.set(
+        'Une erreur est survenue lors de l’envoi. Veuillez réessayer.'
       );
 
+      console.error('Erreur Realtime Database :', error);
+
     } finally {
-      this.isSubmitting = false;
+      this.isSubmitting.set(false);
     }
   }
 
-  /**
-   * Accès pratique aux contrôles du formulaire
-   * depuis le template HTML.
-   */
+  /* ═══════════════════════════════════════════════════════════════════
+     ACCÈS RAPIDE AUX CONTRÔLES
+     ═══════════════════════════════════════════════════════════════════ */
+
   get f(): FormGroup<ContactForm>['controls'] {
     return this.contactForm.controls;
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  /* ═══════════════════════════════════════════════════════════════════
+     HELPERS TEMPLATE — compteur de caractères
+     ═══════════════════════════════════════════════════════════════════ */
+
+  get messageLength(): number {
+    return this.contactForm.controls.message.value.length;
   }
 }

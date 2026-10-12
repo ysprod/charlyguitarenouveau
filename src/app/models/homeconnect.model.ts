@@ -8,21 +8,9 @@ export type QuickActionColor =
   | 'gold'
   | 'violet';
 
-export interface QuickAction {
-  readonly label: string;
-  readonly icon: string;
-  readonly route: string;
-  readonly description: string;
-  readonly color: QuickActionColor;
-}
+ 
 
-export interface ColorUniverse {
-  readonly name: string;
-  readonly route: string;
-  readonly emoji: string;
-  readonly color: string;
-  readonly description: string;
-}
+ 
 
 export type InboxFilter =
   | 'all'
@@ -53,4 +41,41 @@ export interface InboxMessage {
   readonly isUnread: boolean;
   readonly isStarred: boolean;
   readonly category: InboxCategory;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   HOMECONNECT — MODÈLES PARTAGÉS
+   ═════════════════════════════════════════════════════════════════════ */
+
+/** Action rapide présentée dans la bannière de bienvenue. */
+export interface QuickAction {
+  icon: string;
+  label: string;
+  description: string;
+  route: string;
+  color: 'primary' | 'success' | 'warning' | 'danger' | 'gold' | 'violet';
+}
+
+/** Univers de couleur (7 Dimensions d'Offoland). */
+export interface ColorUniverse {
+  emoji: string;
+  name: string;
+  description: string;
+  route: string;
+  color: string;
+}
+
+/** Pilier « Pourquoi nous ». */
+export interface WhyPillar {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+/** Témoignage d'élève. */
+export interface Testimonial {
+  quote: string;
+  avatar: string;
+  author: string;
+  role: string;
 }

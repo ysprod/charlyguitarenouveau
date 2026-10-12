@@ -3,7 +3,7 @@
   <!-- ═══════════════════════════════════════════════════════
        HERO — NOS OFFRES
        ═══════════════════════════════════════════════════════ -->
-  <section class="hero-offres" @heroEnter>
+  <section class="hero-offres">
 
     <div class="hero-bg" aria-hidden="true">
       <div class="hero-orb hero-orb-1"></div>
@@ -55,7 +55,6 @@
     #packsSection
     class="packs-section"
     [style.--accent]="category.accentColor"
-    @fadeInUp
   >
 
     <!-- En-tête de catégorie -->
@@ -72,7 +71,7 @@
     </header>
 
     <!-- Grille des 3 packs -->
-    <div class="packs-grid" @staggerPacks>
+    <div class="packs-grid">
       @for (pack of category.packs; track pack.id) {
       <article
         class="pack-card"
@@ -83,17 +82,14 @@
         (mouseleave)="onPackHover(null)"
       >
 
-        <!-- Glow décoratif -->
         <div class="pack-glow" aria-hidden="true"></div>
 
-        <!-- Badge -->
         @if (pack.badge) {
         <div class="pack-badge" [class]="'badge-' + pack.badgeColor">
           {{ pack.badge }}
         </div>
         }
 
-        <!-- En-tête du pack -->
         <header class="pack-header">
           <h3 class="pack-name">{{ pack.name }}</h3>
 
@@ -110,10 +106,8 @@
           </div>
         </header>
 
-        <!-- Séparateur -->
         <div class="pack-divider" aria-hidden="true"></div>
 
-        <!-- Fonctionnalités -->
         <ul class="pack-features">
           @for (feature of pack.features; track feature) {
           <li class="feature-item">
@@ -123,7 +117,6 @@
           }
         </ul>
 
-        <!-- CTA -->
         <footer class="pack-footer">
           <a
             class="pack-cta"

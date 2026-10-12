@@ -6,11 +6,11 @@ import {
   computed,
   inject,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Auth, authState } from '@angular/fire/auth';
 import { Database, objectVal, ref } from '@angular/fire/database';
 import { RouterLink } from '@angular/router';
-import { map, switchMap, of } from 'rxjs';
+import { switchMap, of } from 'rxjs';
 
 import { UserProfile } from 'src/app/models/user.model';
 import { getInitials } from 'src/app/utils/string.utils';
@@ -18,6 +18,8 @@ import { getInitials } from 'src/app/utils/string.utils';
 import {
   QUICK_ACTIONS,
   COLOR_UNIVERSES,
+  WHY_PILLARS,
+  TESTIMONIALS,
 } from 'src/app/constants/homeconnect.constants';
 
 import { FooterComponent } from 'src/app/footer/footer.component';
@@ -41,19 +43,18 @@ export class HomeconnectComponent {
   private readonly db = inject(Database);
 
   /* ═══════════════════════════════════════════════════════
-     UTILISATEUR CONNECTÉ
+     UTILISATEUR CONNECTÉ & PROFIL
      ═══════════════════════════════════════════════════════ */
 
-  private readonly currentUser = toSignal(authState(this.auth), {
+  readonly currentUser = toSignal(authState(this.auth), {
     initialValue: null,
   });
 
-  private readonly userProfile = toSignal(
-    authState(this.auth).pipe(
-      map((u) => u?.uid),
-      switchMap((uid) => {
-        if (!uid) return of(null);
-        return objectVal<UserProfile>(ref(this.db, `users/${uid}`));
+  readonly userProfile = toSignal(
+    toObservable(this.currentUser).pipe(
+      switchMap((u) => {
+        if (!u?.uid) return of(null);
+        return objectVal<UserProfile>(ref(this.db, `users/${u.uid}`));
       })
     ),
     { initialValue: null }
@@ -106,4 +107,6 @@ export class HomeconnectComponent {
 
   readonly quickActions = QUICK_ACTIONS;
   readonly colorUniverses = COLOR_UNIVERSES;
+  readonly whyPillars = WHY_PILLARS;
+  readonly testimonials = TESTIMONIALS;
 }

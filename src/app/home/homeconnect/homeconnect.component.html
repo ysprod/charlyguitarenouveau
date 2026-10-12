@@ -6,13 +6,12 @@
        BANNIÈRE DE BIENVENUE PERSONNALISÉE
        ═══════════════════════════════════════════════════════ -->
   <section class="welcome-banner" aria-labelledby="welcome-title">
-
     <div class="welcome-glow" aria-hidden="true"></div>
 
     <div class="welcome-content">
       <div class="welcome-avatar" aria-hidden="true">
-        @if (userPhoto()) {
-          <img [src]="userPhoto()!" [alt]="userName()" />
+        @if (userPhoto(); as photo) {
+          <img [src]="photo" [alt]="userName()" />
         } @else {
           <span>{{ userInitials() }}</span>
         }
@@ -30,7 +29,7 @@
     </div>
 
     <!-- Actions rapides -->
-    <div class="quick-actions" aria-label="Actions rapides">
+    <nav class="quick-actions" aria-label="Actions rapides">
       @for (action of quickActions; track action.route) {
         <a
           [routerLink]="action.route"
@@ -45,19 +44,21 @@
           <span class="qa-arrow" aria-hidden="true">→</span>
         </a>
       }
-    </div>
+    </nav>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════
-       ✉️ BOÎTE DE RÉCEPTION — Composant extrait
+       ✉️ BOÎTE DE RÉCEPTION
        ═══════════════════════════════════════════════════════ -->
   <app-inbox-panel />
 
   <!-- ═══════════════════════════════════════════════════════
        SECTION HEADER
        ═══════════════════════════════════════════════════════ -->
-  <section class="section-header">
-    <h2 class="section-title">OFFOLOMOU ECOSYSTEME ACADEMIE</h2>
+  <section class="section-header" aria-labelledby="ecosystem-title">
+    <h2 id="ecosystem-title" class="section-title">
+      Offolomou Écosystème Académie
+    </h2>
     <p class="section-desc">
       Jeux, formations, lives et expériences immersives — tout au même endroit.
     </p>
@@ -66,101 +67,51 @@
   <!-- ═══════════════════════════════════════════════════════
        POURQUOI NOUS — 3 PILIERS
        ═══════════════════════════════════════════════════════ -->
-  <section class="why-section">
+  <section class="why-section" aria-labelledby="why-title">
     <div class="section-header">
       <span class="section-eyebrow">POURQUOI NOUS</span>
-      <h2 class="section-title">L'apprentissage, réinventé</h2>
+      <h2 id="why-title" class="section-title">L'apprentissage, réinventé</h2>
     </div>
 
     <div class="why-grid">
-      <div class="why-card" appReveal>
-        <div class="why-icon" aria-hidden="true">🎯</div>
-        <h3>Méthode éprouvée</h3>
-        <p>
-          Un parcours progressif, structuré par niveaux, pensé par Charly
-          Guitare lui-même.
-        </p>
-      </div>
-      <div class="why-card" appReveal>
-        <div class="why-icon" aria-hidden="true">🎮</div>
-        <h3>Apprendre en jouant</h3>
-        <p>
-          Des jeux interactifs qui transforment chaque exercice en défi ludique
-          et mémorable.
-        </p>
-      </div>
-      <div class="why-card" appReveal>
-        <div class="why-icon" aria-hidden="true">🚀</div>
-        <h3>Communauté active</h3>
-        <p>
-          Masterclass, lives, entraide : progressez entouré de passionnés, pas
-          seul face à votre écran.
-        </p>
-      </div>
+      @for (pillar of whyPillars; track pillar.title) {
+        <article class="why-card" appReveal>
+          <div class="why-icon" aria-hidden="true">{{ pillar.icon }}</div>
+          <h3>{{ pillar.title }}</h3>
+          <p>{{ pillar.description }}</p>
+        </article>
+      }
     </div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════
        TÉMOIGNAGES
        ═══════════════════════════════════════════════════════ -->
-  <section class="testimonials-section">
+  <section class="testimonials-section" aria-labelledby="testimonials-title">
     <div class="section-header">
       <span class="section-eyebrow">ILS TÉMOIGNENT</span>
-      <h2 class="section-title">
+      <h2 id="testimonials-title" class="section-title">
         Rejoints par des centaines de passionnés
       </h2>
     </div>
 
     <div class="testimonials-grid">
-
-      <figure class="testimonial-card" appReveal>
-        <div class="quote-mark" aria-hidden="true">&ldquo;</div>
-        <blockquote>
-          En 6 mois, j'ai progressé plus qu'en 3 ans seul avec YouTube. La
-          méthode est claire et motivante.
-        </blockquote>
-        <figcaption>
-          <span class="author-avatar" aria-hidden="true">🎸</span>
-          <span class="author-info">
-            <strong>Sarah M.</strong>
-            <em>Élève depuis 2026</em>
-          </span>
-        </figcaption>
-      </figure>
-
-      <figure class="testimonial-card" appReveal>
-        <div class="quote-mark" aria-hidden="true">&ldquo;</div>
-        <blockquote>
-          Les jeux pédagogiques sont géniaux. On apprend sans s'en rendre
-          compte, c'est addictif !
-        </blockquote>
-        <figcaption>
-          <span class="author-avatar" aria-hidden="true">🎵</span>
-          <span class="author-info">
-            <strong>Thomas L.</strong>
-            <em>Membre Premium</em>
-          </span>
-        </figcaption>
-      </figure>
-
-      <figure class="testimonial-card" appReveal>
-        <div class="quote-mark" aria-hidden="true">&ldquo;</div>
-        <blockquote>
-          Enfin une plateforme complète : cours, lives, suivi. Charly a créé
-          une vraie école numérique.
-        </blockquote>
-        <figcaption>
-          <span class="author-avatar" aria-hidden="true">🎼</span>
-          <span class="author-info">
-            <strong>Amina K.</strong>
-            <em>Élève depuis 2026</em>
-          </span>
-        </figcaption>
-      </figure>
-
+      @for (item of testimonials; track item.author) {
+        <figure class="testimonial-card" appReveal>
+          <div class="quote-mark" aria-hidden="true">&ldquo;</div>
+          <blockquote>{{ item.quote }}</blockquote>
+          <figcaption>
+            <span class="author-avatar" aria-hidden="true">{{ item.avatar }}</span>
+            <span class="author-info">
+              <strong>{{ item.author }}</strong>
+              <em>{{ item.role }}</em>
+            </span>
+          </figcaption>
+        </figure>
+      }
     </div>
   </section>
 
-  <app-footer></app-footer>
+  <app-footer />
 
 </div>

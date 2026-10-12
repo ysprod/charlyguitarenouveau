@@ -30,3 +30,4 @@ export interface FestivalItem {
   readonly badge: string;
   readonly description: string;
 }
+

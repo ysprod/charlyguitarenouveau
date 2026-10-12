@@ -12,7 +12,7 @@ export class PrivacyComponent implements OnInit {
   readonly siteName = 'Charly Guitare';
   readonly siteUrl = 'https://charlyguitare.com';
   readonly contactEmail = 'yayasidibeproduction@gmail.com';
-  readonly lastUpdated = '8 Août 2026'; // ⚠️ date à vérifier
+  readonly lastUpdated = '8 Octobre 2026'; // ⚠️ date à vérifier
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
