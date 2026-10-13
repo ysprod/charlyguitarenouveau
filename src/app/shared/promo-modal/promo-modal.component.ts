@@ -5,13 +5,13 @@ import {
   Input,
   Output
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-promo-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './promo-modal.component.html',
   styleUrls: ['./promo-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

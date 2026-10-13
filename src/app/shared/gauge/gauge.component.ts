@@ -5,12 +5,12 @@ import {
   SimpleChanges,
   ChangeDetectionStrategy
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-gauge',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="gauge">
       <svg viewBox="0 0 120 120" class="gauge-svg">

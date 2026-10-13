@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-pourpre',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './pourpre.component.html',
   styleUrls: ['./pourpre.component.scss']
 })

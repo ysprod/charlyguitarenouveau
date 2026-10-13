@@ -8,7 +8,7 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 
 import { ChordShape, Difficulty } from '../../models/memory-chord.model';
@@ -32,7 +32,7 @@ type FeedbackType = 'success' | 'error';
 @Component({
   selector: 'app-memory',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './memory.component.html',
   styleUrls: ['./memory.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

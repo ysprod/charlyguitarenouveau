@@ -2,27 +2,31 @@
 
   <!-- Feuilles flottantes en fond -->
   <div class="leaves-bg">
-    <div class="leaf" *ngFor="let l of [1,2,3,4,5,6,7,8,9,10]"
-         [style.animation-delay]="(l * 0.7) + 's'"
-         [style.left.%]="(l * 10) % 100">
-      🍃
-    </div>
+    @for (l of [1,2,3,4,5,6,7,8,9,10]; track l) {
+      <div class="leaf"
+        [style.animation-delay]="(l * 0.7) + 's'"
+        [style.left.%]="(l * 10) % 100">
+        🍃
+      </div>
+    }
   </div>
 
   <!-- Particules vertes -->
   <div class="particles-bg">
-    <span *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]"
-          class="particle"
-          [style.left.%]="(p * 4) % 100"
-          [style.animation-delay]="(p * 0.5) + 's'">
-    </span>
+    @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track p) {
+      <span
+        class="particle"
+        [style.left.%]="(p * 4) % 100"
+        [style.animation-delay]="(p * 0.5) + 's'">
+      </span>
+    }
   </div>
 
   <!-- HEADER ÉPIQUE -->
   <header class="vert-header">
- 
+
     <h1 class="title-glow-vert"><br>LA DIMENSION VERTE</h1>
- 
+
     <div class="header-divider">
       <span class="line"></span>
       <span class="icon">🌿</span>
@@ -34,11 +38,11 @@
   <section class="video-section">
     <div class="video-wrapper">
       <div class="video-frame">
-        <iframe 
-          src="https://www.youtube.com/embed/hCWFGuh8jaA?autoplay=1&mute=1" 
+        <iframe
+          src="https://www.youtube.com/embed/hCWFGuh8jaA?autoplay=1&mute=1"
           title="Dimension Verte - Charly Guitare"
           frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen>
         </iframe>
       </div>
@@ -53,8 +57,8 @@
       <div class="intro-content">
         <h3>UNE NATURE INDOMTABLE</h3>
         <p>
-          Le monde de la nature regroupe tous les reliefs et climats naturels. Sa particularité : 
-          il provoque exprès des tremblements de terre pour rétablir l'équilibre de sa réalité virtuelle. 
+          Le monde de la nature regroupe tous les reliefs et climats naturels. Sa particularité :
+          il provoque exprès des tremblements de terre pour rétablir l'équilibre de sa réalité virtuelle.
           La nature agit selon sa propre volonté, sans se soucier des êtres qui l'habitent.
         </p>
       </div>
@@ -70,13 +74,15 @@
     </div>
 
     <div class="phenomenes-grid">
-      <div *ngFor="let p of phenomenes; let i = index"
-           class="phenomene-card"
-           [style.animation-delay]="(i * 0.15) + 's'">
-        <div class="phenomene-icon">{{ p.icone }}</div>
-        <h3>{{ p.nom }}</h3>
-        <p>{{ p.description }}</p>
-      </div>
+      @for (p of phenomenes; track p; let i = $index) {
+        <div
+          class="phenomene-card"
+          [style.animation-delay]="(i * 0.15) + 's'">
+          <div class="phenomene-icon">{{ p.icone }}</div>
+          <h3>{{ p.nom }}</h3>
+          <p>{{ p.description }}</p>
+        </div>
+      }
     </div>
   </section>
 
@@ -88,48 +94,44 @@
       <span class="material-icons">water</span>
     </div>
     <p class="sirene-intro">
-      Dans l'univers vert, trois sirènes vivent dans un lac appelé <strong>Wata</strong>. 
+      Dans l'univers vert, trois sirènes vivent dans un lac appelé <strong>Wata</strong>.
       Leur mission : empêcher quiconque pénètre dans l'univers vert d'en sortir.
     </p>
 
     <div class="sirenes-grid">
-      <div *ngFor="let s of sirenes; let i = index"
-           class="sirene-card"
-           [style.--accent]="s.couleur"
-           [style.animation-delay]="(i * 0.2) + 's'">
-        
-        <div class="card-glow"></div>
-        
-        <!-- Numéro de la sirène -->
-        <div class="sirene-numero">
-          <span class="numero-value">{{ s.numero }}</span>
-        </div>
-
-        <!-- Icône -->
-        <div class="sirene-icon-wrapper">
-          <div class="sirene-icon">{{ s.icone }}</div>
-          <div class="icon-ring"></div>
-        </div>
-
-        <div class="sirene-info">
-          <h3 class="sirene-nom">{{ s.nom }}</h3>
-          <div class="sirene-pouvoir">
-            <span class="material-icons">auto_awesome</span>
-            <span>{{ s.pouvoir }}</span>
+      @for (s of sirenes; track s; let i = $index) {
+        <div
+          class="sirene-card"
+          [style.--accent]="s.couleur"
+          [style.animation-delay]="(i * 0.2) + 's'">
+          <div class="card-glow"></div>
+          <!-- Numéro de la sirène -->
+          <div class="sirene-numero">
+            <span class="numero-value">{{ s.numero }}</span>
           </div>
-          <p class="sirene-description">{{ s.description }}</p>
-          
-          <div class="sirene-danger">
-            <span class="material-icons">dangerous</span>
-            <span>{{ s.danger }}</span>
+          <!-- Icône -->
+          <div class="sirene-icon-wrapper">
+            <div class="sirene-icon">{{ s.icone }}</div>
+            <div class="icon-ring"></div>
           </div>
+          <div class="sirene-info">
+            <h3 class="sirene-nom">{{ s.nom }}</h3>
+            <div class="sirene-pouvoir">
+              <span class="material-icons">auto_awesome</span>
+              <span>{{ s.pouvoir }}</span>
+            </div>
+            <p class="sirene-description">{{ s.description }}</p>
+            <div class="sirene-danger">
+              <span class="material-icons">dangerous</span>
+              <span>{{ s.danger }}</span>
+            </div>
+          </div>
+          <div class="corner top-left"></div>
+          <div class="corner top-right"></div>
+          <div class="corner bottom-left"></div>
+          <div class="corner bottom-right"></div>
         </div>
-
-        <div class="corner top-left"></div>
-        <div class="corner top-right"></div>
-        <div class="corner bottom-left"></div>
-        <div class="corner bottom-right"></div>
-      </div>
+      }
     </div>
 
     <!-- Faiblesse des sirènes -->
@@ -162,21 +164,23 @@
       <div class="charly-content">
         <h3 class="charly-titre">L'Hologramme Omnipotent</h3>
         <p class="charly-intro">
-          Le Charly Guitare Vert est un <strong>hologramme</strong> qui peut apparaître partout à la fois. 
+          Le Charly Guitare Vert est un <strong>hologramme</strong> qui peut apparaître partout à la fois.
           Il a le pouvoir de simuler tous les autres pouvoirs des autres Charly, sauf celui du Rouge.
         </p>
 
         <!-- Pouvoirs -->
         <div class="pouvoirs-grid">
-          <div *ngFor="let p of pouvoirsCharlyVert" class="pouvoir-card">
-            <div class="pouvoir-icon">{{ p.icone }}</div>
-            <h4>{{ p.nom }}</h4>
-            <p>{{ p.description }}</p>
-            <div class="pouvoir-limite">
-              <span class="material-icons">warning</span>
-              <span>{{ p.limite }}</span>
+          @for (p of pouvoirsCharlyVert; track p) {
+            <div class="pouvoir-card">
+              <div class="pouvoir-icon">{{ p.icone }}</div>
+              <h4>{{ p.nom }}</h4>
+              <p>{{ p.description }}</p>
+              <div class="pouvoir-limite">
+                <span class="material-icons">warning</span>
+                <span>{{ p.limite }}</span>
+              </div>
             </div>
-          </div>
+          }
         </div>
 
         <!-- Mission spéciale -->
@@ -186,7 +190,7 @@
             <h4>L'ORDRE ULTIME</h4>
           </div>
           <p>
-            Le Charly Vert apparaît avant que le Charly ne passe en mode Noir, car après lui vient le chaos total. 
+            Le Charly Vert apparaît avant que le Charly ne passe en mode Noir, car après lui vient le chaos total.
             Il reçoit un ordre ultime avant de laisser sa place au Noir.
           </p>
         </div>
@@ -203,16 +207,18 @@
     </div>
 
     <div class="correspondances-grid">
-      <div *ngFor="let c of correspondances"
-           class="correspondance-card"
-           [style.--accent]="c.couleur">
-        <span class="monde-badge" [style.background]="c.couleur" 
-              [style.color]="c.monde === 'BLANC' ? '#000' : '#fff'">
-          {{ c.monde }}
-        </span>
-        <span class="arrow">→</span>
-        <span class="repere">{{ c.repere }}</span>
-      </div>
+      @for (c of correspondances; track c) {
+        <div
+          class="correspondance-card"
+          [style.--accent]="c.couleur">
+          <span class="monde-badge" [style.background]="c.couleur"
+            [style.color]="c.monde === 'BLANC' ? '#000' : '#fff'">
+            {{ c.monde }}
+          </span>
+          <span class="arrow">→</span>
+          <span class="repere">{{ c.repere }}</span>
+        </div>
+      }
     </div>
   </section>
 
@@ -223,7 +229,7 @@
       <div class="regle-content">
         <h3>RÈGLE DES DIMENSIONS</h3>
         <p>
-          Pour pouvoir utiliser une guitare d'une autre couleur dans un monde X, 
+          Pour pouvoir utiliser une guitare d'une autre couleur dans un monde X,
           il faut <strong>sacrifier 500 points</strong>.
         </p>
       </div>

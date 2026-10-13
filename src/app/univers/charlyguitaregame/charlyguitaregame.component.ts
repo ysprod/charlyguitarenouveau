@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -18,9 +18,8 @@ export interface Dimension {
   selector: 'app-charlyguitaregame',
   standalone: true,
   imports: [
-    CommonModule,
     RouterLink
-  ],
+],
   templateUrl: './charlyguitaregame.component.html',
   styleUrls: ['./charlyguitaregame.component.scss']
 })

@@ -11,7 +11,7 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 
 import { ImageCropService } from '../../services/image-crop.service';
@@ -25,7 +25,7 @@ interface Point {
 @Component({
   selector: 'app-avatar-crop-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './avatar-crop-dialog.component.html',
   styleUrls: ['./avatar-crop-dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

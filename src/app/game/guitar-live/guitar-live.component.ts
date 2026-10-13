@@ -7,7 +7,7 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 
 import {
@@ -21,7 +21,7 @@ import { GuitarAudioService } from '../../services/guitar-audio.service';
 @Component({
   selector: 'app-guitar-live',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './guitar-live.component.html',
   styleUrls: ['./guitar-live.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

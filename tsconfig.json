@@ -10,11 +10,6 @@
 "module": "es2020",
 "moduleResolution": "bundler",
 
-"lib": [
-  "es2018",
-  "dom"
-],
-
 "strict": true,
 "noImplicitReturns": true,
 "noFallthroughCasesInSwitch": true,

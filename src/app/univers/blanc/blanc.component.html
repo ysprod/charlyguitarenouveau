@@ -8,11 +8,13 @@
 
   <!-- Particules de sable -->
   <div class="sand-particles">
-    <span *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]"
-          class="sand-grain"
-          [style.left.%]="(p * 4) % 100"
-          [style.animation-delay]="(p * 0.6) + 's'">
-    </span>
+    @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track p) {
+      <span
+        class="sand-grain"
+        [style.left.%]="(p * 4) % 100"
+        [style.animation-delay]="(p * 0.6) + 's'">
+      </span>
+    }
   </div>
 
   <!-- Dunes de sable animées -->
@@ -36,11 +38,11 @@
   <section class="video-section">
     <div class="video-wrapper">
       <div class="video-frame">
-        <iframe 
-          src="https://www.youtube.com/embed/XymowvqFhhw?autoplay=1&mute=1" 
+        <iframe
+          src="https://www.youtube.com/embed/XymowvqFhhw?autoplay=1&mute=1"
           title="Dimension Blanche - Charly Guitare"
           frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen>
         </iframe>
       </div>
@@ -57,28 +59,26 @@
     </div>
 
     <div class="caracteristiques-grid">
-      <div *ngFor="let c of caracteristiques; let i = index"
-           class="caracteristique-card"
-           [style.--accent]="c.couleur"
-           [style.animation-delay]="(i * 0.15) + 's'">
-        
-        <div class="card-glow"></div>
-        
-        <div class="caracteristique-icon-wrapper">
-          <div class="caracteristique-icon">{{ c.icone }}</div>
-          <div class="icon-ring"></div>
+      @for (c of caracteristiques; track c; let i = $index) {
+        <div
+          class="caracteristique-card"
+          [style.--accent]="c.couleur"
+          [style.animation-delay]="(i * 0.15) + 's'">
+          <div class="card-glow"></div>
+          <div class="caracteristique-icon-wrapper">
+            <div class="caracteristique-icon">{{ c.icone }}</div>
+            <div class="icon-ring"></div>
+          </div>
+          <div class="caracteristique-info">
+            <h3 class="caracteristique-titre">{{ c.titre }}</h3>
+            <p class="caracteristique-description">{{ c.description }}</p>
+          </div>
+          <div class="corner top-left"></div>
+          <div class="corner top-right"></div>
+          <div class="corner bottom-left"></div>
+          <div class="corner bottom-right"></div>
         </div>
-
-        <div class="caracteristique-info">
-          <h3 class="caracteristique-titre">{{ c.titre }}</h3>
-          <p class="caracteristique-description">{{ c.description }}</p>
-        </div>
-
-        <div class="corner top-left"></div>
-        <div class="corner top-right"></div>
-        <div class="corner bottom-left"></div>
-        <div class="corner bottom-right"></div>
-      </div>
+      }
     </div>
   </section>
 
@@ -102,8 +102,8 @@
       <div class="charly-content">
         <h3 class="charly-titre">L'Homme à l'État Brut</h3>
         <p class="charly-intro">
-          Le Charly Blanc est celui à l'<strong>état brut</strong>, très costaud, capable de soulever jusqu'à 
-          <strong>1 tonne d'obstacles</strong>. Il est le symbole de la paix, mais il prend beaucoup de temps pour agir. 
+          Le Charly Blanc est celui à l'<strong>état brut</strong>, très costaud, capable de soulever jusqu'à
+          <strong>1 tonne d'obstacles</strong>. Il est le symbole de la paix, mais il prend beaucoup de temps pour agir.
           Son défaut fatal : il casse toujours les cordes de sa guitare et perd toute sa force jusqu'à en mourir.
         </p>
 
@@ -114,11 +114,13 @@
             FORCES
           </h4>
           <div class="traits-grid">
-            <div *ngFor="let f of forces" class="trait-card force">
-              <div class="trait-icon">{{ f.icone }}</div>
-              <h5>{{ f.nom }}</h5>
-              <p>{{ f.description }}</p>
-            </div>
+            @for (f of forces; track f) {
+              <div class="trait-card force">
+                <div class="trait-icon">{{ f.icone }}</div>
+                <h5>{{ f.nom }}</h5>
+                <p>{{ f.description }}</p>
+              </div>
+            }
           </div>
         </div>
 
@@ -129,11 +131,13 @@
             FAIBLESSES
           </h4>
           <div class="traits-grid">
-            <div *ngFor="let f of faiblesses" class="trait-card faiblesse">
-              <div class="trait-icon">{{ f.icone }}</div>
-              <h5>{{ f.nom }}</h5>
-              <p>{{ f.description }}</p>
-            </div>
+            @for (f of faiblesses; track f) {
+              <div class="trait-card faiblesse">
+                <div class="trait-icon">{{ f.icone }}</div>
+                <h5>{{ f.nom }}</h5>
+                <p>{{ f.description }}</p>
+              </div>
+            }
           </div>
         </div>
 
@@ -141,7 +145,7 @@
         <div class="note-finale">
           <span class="material-icons">info</span>
           <p>
-            Le Charly Blanc vit dans une <strong>paix absolue</strong> qui cause un handicap sur ses missions. 
+            Le Charly Blanc vit dans une <strong>paix absolue</strong> qui cause un handicap sur ses missions.
             Il aime trop s'amuser et casse souvent sa guitare sans faire exprès.
           </p>
         </div>
@@ -158,16 +162,18 @@
     </div>
 
     <div class="correspondances-grid">
-      <div *ngFor="let c of correspondances"
-           class="correspondance-card"
-           [style.--accent]="c.couleur">
-        <span class="monde-badge" [style.background]="c.couleur" 
-              [style.color]="c.monde === 'BLANC' ? '#000' : '#fff'">
-          {{ c.monde }}
-        </span>
-        <span class="arrow">→</span>
-        <span class="repere">{{ c.repere }}</span>
-      </div>
+      @for (c of correspondances; track c) {
+        <div
+          class="correspondance-card"
+          [style.--accent]="c.couleur">
+          <span class="monde-badge" [style.background]="c.couleur"
+            [style.color]="c.monde === 'BLANC' ? '#000' : '#fff'">
+            {{ c.monde }}
+          </span>
+          <span class="arrow">→</span>
+          <span class="repere">{{ c.repere }}</span>
+        </div>
+      }
     </div>
   </section>
 

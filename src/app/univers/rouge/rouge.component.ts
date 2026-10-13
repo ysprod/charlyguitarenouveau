@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit } from '@angular/core';
 
 export interface Clan {
@@ -19,9 +19,7 @@ export interface Pouvoir {
 @Component({
   selector: 'app-rouge',
      standalone: true,
-        imports: [
-    CommonModule
-  ],
+        imports: [],
   templateUrl: './rouge.component.html',
   styleUrls: ['./rouge.component.scss']
 })

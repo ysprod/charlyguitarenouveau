@@ -4,7 +4,7 @@ import {
   effect,
   inject
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink, Router } from '@angular/router';
 import { Auth, authState } from '@angular/fire/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -14,9 +14,9 @@ import { FooterComponent } from '../footer/footer.component';
   selector: 'app-home',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterLink,FooterComponent
-  ],
+    RouterLink,
+    FooterComponent
+],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

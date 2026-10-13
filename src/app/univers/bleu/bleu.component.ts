@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit } from '@angular/core';
 
 export interface Creature {
@@ -24,9 +24,7 @@ export interface Climat {
 @Component({
   selector: 'app-bleu',
   standalone: true,
-  imports: [
-    CommonModule
-  ],
+  imports: [],
   templateUrl: './bleu.component.html',
   styleUrls: ['./bleu.component.scss']
 })

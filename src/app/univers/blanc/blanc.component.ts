@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit } from '@angular/core';
 
 export interface Caracteristique {
@@ -18,7 +18,7 @@ export interface Trait {
 @Component({
   selector: 'app-blanc',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './blanc.component.html',
   styleUrls: ['./blanc.component.scss']
 })

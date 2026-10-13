@@ -8,12 +8,12 @@ import {
   SimpleChanges,
   ChangeDetectionStrategy
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-sparkline',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <svg #svg class="sparkline" [attr.viewBox]="'0 0 ' + width + ' ' + height" preserveAspectRatio="none">
       <defs>

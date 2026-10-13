@@ -14,7 +14,7 @@ import {
   signal,
   untracked
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { fromEvent } from 'rxjs';
@@ -110,7 +110,7 @@ interface Particle {
 @Component({
   selector: 'app-pianovirtuel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './pianovirtuel.component.html',
   styleUrls: ['./pianovirtuel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

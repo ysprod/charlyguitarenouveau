@@ -8,11 +8,13 @@
 
   <!-- Particules sombres -->
   <div class="particles-bg">
-    <span *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]"
-          class="particle"
-          [style.left.%]="(p * 4) % 100"
-          [style.animation-delay]="(p * 0.5) + 's'">
-    </span>
+    @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track p) {
+      <span
+        class="particle"
+        [style.left.%]="(p * 4) % 100"
+        [style.animation-delay]="(p * 0.5) + 's'">
+      </span>
+    }
   </div>
 
   <!-- HEADER ÉPIQUE -->
@@ -29,11 +31,11 @@
   <section class="video-section">
     <div class="video-wrapper">
       <div class="video-frame">
-        <iframe 
-          src="https://www.youtube.com/embed/2E0VLP9kGlw?autoplay=1&mute=1" 
+        <iframe
+          src="https://www.youtube.com/embed/2E0VLP9kGlw?autoplay=1&mute=1"
           title="Dimension Noire - Charly Guitare"
           frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen>
         </iframe>
       </div>
@@ -46,43 +48,40 @@
   <section class="divinites-section">
 
     <div class="divinites-grid">
-      <div *ngFor="let div of divinites; let i = index"
-           class="divinite-card"
-           [style.--accent]="div.couleur"
-           [style.animation-delay]="(i * 0.15) + 's'">
-        
-        <div class="card-glow"></div>
-        
-        <!-- Icône du Dieu -->
-        <div class="divinite-icon-wrapper">
-          <div class="divinite-icon">{{ div.symbole }}</div>
-          <div class="icon-ring"></div>
-        </div>
-
-        <!-- Informations -->
-        <div class="divinite-info">
-          <h3 class="divinite-nom">{{ div.nom }}</h3>
-          <p class="divinite-titre">{{ div.titre }}</p>
-          
-          <div class="divinite-territoire">
-            <span class="material-icons">place</span>
-            <span>{{ div.territoire }}</span>
+      @for (div of divinites; track div; let i = $index) {
+        <div
+          class="divinite-card"
+          [style.--accent]="div.couleur"
+          [style.animation-delay]="(i * 0.15) + 's'">
+          <div class="card-glow"></div>
+          <!-- Icône du Dieu -->
+          <div class="divinite-icon-wrapper">
+            <div class="divinite-icon">{{ div.symbole }}</div>
+            <div class="icon-ring"></div>
           </div>
-
-          <p class="divinite-description">{{ div.description }}</p>
-
-          <div class="divinite-gardien" *ngIf="div.gardien">
-            <span class="material-icons">lock</span>
-            <span>{{ div.gardien }}</span>
+          <!-- Informations -->
+          <div class="divinite-info">
+            <h3 class="divinite-nom">{{ div.nom }}</h3>
+            <p class="divinite-titre">{{ div.titre }}</p>
+            <div class="divinite-territoire">
+              <span class="material-icons">place</span>
+              <span>{{ div.territoire }}</span>
+            </div>
+            <p class="divinite-description">{{ div.description }}</p>
+            @if (div.gardien) {
+              <div class="divinite-gardien">
+                <span class="material-icons">lock</span>
+                <span>{{ div.gardien }}</span>
+              </div>
+            }
           </div>
+          <!-- Coins décoratifs -->
+          <div class="corner top-left"></div>
+          <div class="corner top-right"></div>
+          <div class="corner bottom-left"></div>
+          <div class="corner bottom-right"></div>
         </div>
-
-        <!-- Coins décoratifs -->
-        <div class="corner top-left"></div>
-        <div class="corner top-right"></div>
-        <div class="corner bottom-left"></div>
-        <div class="corner bottom-right"></div>
-      </div>
+      }
     </div>
   </section>
 
@@ -95,30 +94,28 @@
     </div>
 
     <div class="passages-grid">
-      <div *ngFor="let p of passages; let i = index"
-           class="passage-card"
-           [style.--accent]="p.couleur"
-           [style.animation-delay]="(i * 0.15) + 's'">
-        
-        <div class="passage-de">
-          <span class="dimension-badge noir">NOIR</span>
+      @for (p of passages; track p; let i = $index) {
+        <div
+          class="passage-card"
+          [style.--accent]="p.couleur"
+          [style.animation-delay]="(i * 0.15) + 's'">
+          <div class="passage-de">
+            <span class="dimension-badge noir">NOIR</span>
+          </div>
+          <div class="passage-link">
+            <div class="link-line"></div>
+            <div class="link-icon">🔗</div>
+            <div class="link-line"></div>
+          </div>
+          <div class="passage-vers">
+            <span class="dimension-badge" [style.background]="p.couleur">{{ p.vers | uppercase }}</span>
+          </div>
+          <div class="passage-gardien">
+            <span class="material-icons">shield</span>
+            <span>Gardien : <strong>{{ p.gardien }}</strong></span>
+          </div>
         </div>
-
-        <div class="passage-link">
-          <div class="link-line"></div>
-          <div class="link-icon">🔗</div>
-          <div class="link-line"></div>
-        </div>
-
-        <div class="passage-vers">
-          <span class="dimension-badge" [style.background]="p.couleur">{{ p.vers | uppercase }}</span>
-        </div>
-
-        <div class="passage-gardien">
-          <span class="material-icons">shield</span>
-          <span>Gardien : <strong>{{ p.gardien }}</strong></span>
-        </div>
-      </div>
+      }
     </div>
   </section>
 

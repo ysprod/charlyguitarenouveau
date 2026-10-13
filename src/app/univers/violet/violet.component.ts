@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-violet',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './violet.component.html',
   styleUrls: ['./violet.component.scss']
 })
