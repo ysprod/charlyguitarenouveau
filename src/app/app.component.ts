@@ -161,8 +161,8 @@ export class AppComponent implements OnInit, OnDestroy {
       if (count > this.lastUnreadCount) {
         const diff = count - this.lastUnreadCount;
         const message = diff === 1
-          ? 'Tu as reçu un nouveau message de Charly Guitare.'
-          : `Tu as reçu ${diff} nouveaux messages de Charly Guitare.`;
+          ? 'Tu as reçu un nouveau message de Charly Guitare.com'
+          : `Tu as reçu ${diff} nouveaux messages de Charly Guitare.com`;
 
         this.scheduleVoiceAnnouncement(message);
       }

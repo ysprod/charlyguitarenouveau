@@ -1,7 +1,7 @@
 import { MembreEquipe } from '../models/membre.model';
 
 /* ============================================================
-   DONNÉES — Équipe technique Charly Guitare
+   DONNÉES  Charly Guitare
    ============================================================ */
 export const MEMBRES_EQUIPE: MembreEquipe[] = [
   {

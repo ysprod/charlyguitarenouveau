@@ -21,7 +21,7 @@ export const STATUS_BADGE_CLASS: Readonly<Record<MessageStatus, string>> = {
 
 export const STATUS_LABEL: Readonly<Record<MessageStatus, string>> = {
   unread: 'En attente',
-  read: 'Lu par l’équipe',
+  read: 'Lu',
   replied: 'Répondu',
   archived: 'Archivé',
 } as const;

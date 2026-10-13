@@ -12,7 +12,7 @@ import { MembreEquipe } from 'src/app/models/membre.model';
 })
 export class AgainComponent {
 
-  /** Liste complète des membres de l'équipe */
+  /** Liste complète des membres */
   readonly membres: MembreEquipe[] = MEMBRES_EQUIPE;
 
   /** Membres mis en avant (section "Piliers") */
