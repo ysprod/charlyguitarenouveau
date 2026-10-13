@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { RevealDirective } from '../shared/reveal.directive';
-import { CharlyguitaregameComponent } from '../univers/charlyguitaregame/charlyguitaregame.component';
+import { CharlyguitaregameComponent } from './charlyguitaregame/charlyguitaregame.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    OFFLOLAND — Portail d'entrée du royaume

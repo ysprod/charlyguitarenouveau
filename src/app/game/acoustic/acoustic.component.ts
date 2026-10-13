@@ -12,9 +12,9 @@ import { Router } from '@angular/router';
 import {
   QuizQuestion,
   Difficulty,
-} from '../../models/acoustic-quiz.model';
+} from '../acoustic-quiz.model';
 
-import { ACOUSTIC_QUESTIONS } from 'src/app/data/acoustic-questions';
+import { ACOUSTIC_QUESTIONS } from 'src/app/game/data/acoustic-questions';
 
 /* ═════════════════════════════════════════════════════════════════════
    TYPES

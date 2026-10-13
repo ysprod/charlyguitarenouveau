@@ -59,12 +59,12 @@ import {
 } from 'rxjs/operators';
 
 /* ✅ Nouveaux imports pour le recadrage */
-import { AvatarCropDialogComponent } from '../../shared/avatar-crop-dialog/avatar-crop-dialog.component';
-import { ImageCropService } from '../../services/image-crop.service';
+import { AvatarCropDialogComponent } from '../avatar-crop-dialog/avatar-crop-dialog.component';
+import { ImageCropService } from '../image-crop.service';
 import {
   CropResult,
   MAX_SOURCE_FILE_SIZE
-} from '../../models/avatar-crop.model';
+} from '../models/avatar-crop.model';
 
 /* ═══════════════════════════════════════════════════════════
    TYPES

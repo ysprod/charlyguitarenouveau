@@ -23,11 +23,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   InstrumentType,
   PianoAudioService
-} from 'src/app/services/piano-audio.service';
-import { GameAudioService } from 'src/app/services/game-audio.service';
-import { StorageService } from 'src/app/services/storage.service';
-import { PianoKey } from 'src/app/models/piano.model';
-import { randomFloat, randomInt } from 'src/app/utils/random.utils';
+} from 'src/app/game/piano-audio.service';
+import { GameAudioService } from 'src/app/game/game-audio.service';
+import { StorageService } from 'src/app/shared/services/storage.service';
+import { PianoKey } from 'src/app/game/piano.model';
+import { randomFloat, randomInt } from 'src/app/game/random.utils';
 
 /* ═════════════════════════════════════════════════════════════════════
    CONSTANTES

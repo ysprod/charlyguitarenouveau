@@ -14,9 +14,9 @@ import {
   FRETS,
   GUITAR_STRINGS,
   STRING_COLORS
-} from '../../constants/fretboard.constants';
+} from '../fretboard.constants';
 
-import { GuitarAudioService } from '../../services/guitar-audio.service';
+import { GuitarAudioService } from '../guitar-audio.service';
 
 @Component({
   selector: 'app-guitar-live',

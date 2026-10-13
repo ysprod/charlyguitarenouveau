@@ -1,0 +1,82 @@
+<!-- src/app/univers/charlyguitaregame/charlyguitaregame.component.html -->
+
+<div class="method-container">
+
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER ÉPIQUE
+       ═══════════════════════════════════════════════════════ -->
+  <header class="method-header">
+    <h1 class="title-glow">DIMENSIONS</h1>
+    <h2 class="title-sub">CHARLY GUITARE</h2>
+
+    <div class="header-divider" aria-hidden="true">
+      <span class="line"></span>
+      <span class="icon">🎸</span>
+      <span class="line"></span>
+    </div>
+
+    <p class="header-intro">
+      Les Dimensions de Charly Guitare
+    </p>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       GRILLE DES 7 DIMENSIONS
+       ═══════════════════════════════════════════════════════ -->
+  <main class="dimensions-grid">
+    @for (dim of dimensions; track dim.nom; let i = $index) {
+      <a
+        [routerLink]="dim.route"
+        class="dimension-card"
+        [style.--accent]="dim.couleur"
+        [style.--accent-light]="dim.couleurSecondaire"
+        [style.animation-delay]="(i * 0.15) + 's'"
+        [attr.title]="'Dimension ' + dim.nom + ' — ' + dim.sage"
+        [attr.aria-label]="'Explorer la dimension ' + dim.nom + ', gardée par ' + dim.sage"
+      >
+
+        <!-- Halo lumineux -->
+        <div class="card-halo" aria-hidden="true"></div>
+
+        <!-- Contenu de la carte -->
+        <div class="card-content">
+
+          <!-- Badge de couleur -->
+          <div class="dimension-badge">
+            <span class="badge-symbol" aria-hidden="true">{{ dim.symbole }}</span>
+            <span class="badge-name">{{ dim.nom }}</span>
+          </div>
+
+          <!-- Métadonnées -->
+          <div class="dimension-meta">
+            <div class="meta-item">
+              <span class="meta-label">Note</span>
+              <span class="meta-value">{{ dim.note }}</span>
+            </div>
+            <div class="meta-divider" aria-hidden="true"></div>
+            <div class="meta-item">
+              <span class="meta-label">Sage</span>
+              <span class="meta-value">{{ dim.sage }}</span>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <p class="dimension-description">{{ dim.description }}</p>
+
+          <!-- Action -->
+          <div class="card-action">
+            <span>Explorer</span>
+            <span class="material-icons" aria-hidden="true">arrow_forward</span>
+          </div>
+        </div>
+
+        <!-- Coins décoratifs -->
+        <div class="corner-decoration top-left" aria-hidden="true"></div>
+        <div class="corner-decoration top-right" aria-hidden="true"></div>
+        <div class="corner-decoration bottom-left" aria-hidden="true"></div>
+        <div class="corner-decoration bottom-right" aria-hidden="true"></div>
+      </a>
+    }
+  </main>
+
+</div>

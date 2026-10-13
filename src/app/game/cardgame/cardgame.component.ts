@@ -1,24 +1,34 @@
+// src/app/game/cardgame/cardgame.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
-  OnInit,
+  DestroyRef,
+  afterNextRender,
   computed,
   inject,
   signal,
 } from '@angular/core';
 
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DecimalPipe, Location } from '@angular/common';
+
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DecimalPipe, Location } from '@angular/common';
 
 import { CardData } from './CardData';
 import { RdialogComponent, RdialogResult } from './rdialog/rdialog.component';
 import { GamecardComponent } from './gamecard/gamecard.component';
-import { VoiceService, SpeakOptions } from '../../services/voice.service';
+
+import { VoiceService, SpeakOptions } from '../voice.service';
+import { shuffleArray, pickMatchPhrase, pickWrongPhrase } from 'src/app/game/cardgame.utils';
+import { createIntervalScheduler } from 'src/app/game/schedulers.util';
+import { createTimeoutScheduler } from 'src/app/game/timeout.util';
+
+ 
 
 /* ═════════════════════════════════════════════════════════════════════
-   TYPES
+   TYPES & CONSTANTES
    ═════════════════════════════════════════════════════════════════════ */
 
 type SoundType = 'flip' | 'match' | 'wrong' | 'victory' | 'defeat';
@@ -51,13 +61,12 @@ const INTRO_DELAY_MS = 600;
 
 @Component({
   selector: 'app-cardgame',
-  standalone: true,
   imports: [GamecardComponent, DecimalPipe],
   templateUrl: './cardgame.component.html',
   styleUrls: ['./cardgame.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CardgameComponent implements OnInit, OnDestroy {
+export class CardgameComponent {
 
   /* ─── Dépendances ─── */
   private readonly dialog = inject(MatDialog);
@@ -65,8 +74,13 @@ export class CardgameComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly voice = inject(VoiceService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  /* ─── État de jeu (signaux) ─── */
+  /* ─── Schedulers auto-nettoyés ─── */
+  private readonly scheduleTimeout = createTimeoutScheduler(this.destroyRef);
+  private readonly globalTimer = createIntervalScheduler(this.destroyRef);
+
+  /* ─── État de jeu — signals ─── */
   readonly lavie = signal(0);
   readonly lebonus = signal(0);
   readonly pointdevies = signal(0);
@@ -80,6 +94,10 @@ export class CardgameComponent implements OnInit, OnDestroy {
   readonly soundEnabled = signal(true);
 
   readonly cards = signal<CardData[]>([]);
+
+  /* ─── État interne — signals ─── */
+  private readonly flippedCards = signal<CardData[]>([]);
+  private readonly isProcessing = signal(false);
 
   /* ─── Constantes exposées au template ─── */
   readonly cardImages = CARD_IMAGES;
@@ -97,53 +115,41 @@ export class CardgameComponent implements OnInit, OnDestroy {
 
   readonly totalPairs = computed(() => this.cardImages.length);
 
-  /* ─── Interne ─── */
-  private flippedCards: CardData[] = [];
-  private isProcessing = false;
-
-  private globalTimerInterval?: ReturnType<typeof setInterval>;
+  /* ─── Interne (non-signal) ─── */
   private gameStartTime = 0;
   private currentRoundStartTime = 0;
-  private lastMatchHideTimeout?: ReturnType<typeof setTimeout>;
-
   private audioCtx?: AudioContext;
-
-  private readonly timeouts: number[] = [];
   private hasAnnouncedIntro = false;
 
   /* ═══════════════════════════════════════════════════════════════════
      LIFECYCLE
      ═══════════════════════════════════════════════════════════════════ */
 
-  ngOnInit(): void {
-    const params = this.activatedRoute.snapshot.queryParamMap;
+  constructor() {
+    /* Lecture des query params (SSR-safe via afterNextRender) */
+    afterNextRender(() => {
+      const params = this.activatedRoute.snapshot.queryParamMap;
 
-    const initialPv = parseInt(params.get('vie') ?? '1000', 10);
-    const initialBonus = parseInt(params.get('bonus') ?? '0', 10);
+      const initialPv = parseInt(params.get('vie') ?? '1000', 10);
+      const initialBonus = parseInt(params.get('bonus') ?? '0', 10);
 
-    this.pointdevies.set(initialPv);
-    this.lavie.set(initialPv);
-    this.lebonus.set(initialBonus);
+      this.pointdevies.set(initialPv);
+      this.lavie.set(initialPv);
+      this.lebonus.set(initialBonus);
 
-    this.initAudio();
-    this.setupCards();
-    this.startGlobalTimer();
-    this.announceGameRules();
-  }
+      this.initAudio();
+      this.setupCards();
+      this.startGlobalTimer();
+      this.announceGameRules();
+    });
 
-  ngOnDestroy(): void {
-    if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      void this.audioCtx.close();
-    }
-
-    this.stopGlobalTimer();
-
-    if (this.lastMatchHideTimeout) {
-      clearTimeout(this.lastMatchHideTimeout);
-    }
-
-    this.timeouts.forEach(t => clearTimeout(t));
-    this.voice.stopSpeaking();
+    /* Nettoyage de l'AudioContext */
+    this.destroyRef.onDestroy(() => {
+      if (this.audioCtx && this.audioCtx.state !== 'closed') {
+        void this.audioCtx.close();
+      }
+      this.voice.stopSpeaking();
+    });
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -151,12 +157,10 @@ export class CardgameComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════════════════ */
 
   private startGlobalTimer(): void {
-    this.stopGlobalTimer();
-
     this.gameStartTime = Date.now();
     this.elapsedSeconds.set(0);
 
-    this.globalTimerInterval = setInterval(() => {
+    this.globalTimer.start(() => {
       this.elapsedSeconds.set(
         Math.floor((Date.now() - this.gameStartTime) / 1000)
       );
@@ -164,10 +168,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
   }
 
   private stopGlobalTimer(): void {
-    if (this.globalTimerInterval) {
-      clearInterval(this.globalTimerInterval);
-      this.globalTimerInterval = undefined;
-    }
+    this.globalTimer.stop();
   }
 
   private startRoundTimer(): void {
@@ -183,11 +184,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
 
     this.lastMatchSeconds.set(duration);
 
-    if (this.lastMatchHideTimeout) {
-      clearTimeout(this.lastMatchHideTimeout);
-    }
-
-    this.lastMatchHideTimeout = setTimeout(() => {
+    this.scheduleTimeout(() => {
       this.lastMatchSeconds.set(0);
     }, LAST_MATCH_HIDE_MS);
   }
@@ -227,11 +224,9 @@ export class CardgameComponent implements OnInit, OnDestroy {
       `Tu as ${this.pointdevies()} points. ` +
       `Le chrono tourne ! Allez, c'est parti !`;
 
-    const timerId = window.setTimeout(() => {
+    this.scheduleTimeout(() => {
       void this.speakAsChild(intro, { rate: 1.05 });
     }, INTRO_DELAY_MS);
-
-    this.timeouts.push(timerId);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -267,9 +262,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
     if (!this.soundEnabled() || !this.audioCtx) return;
 
     if (this.audioCtx.state === 'suspended') {
-      void this.audioCtx.resume().catch(() => {
-        /* Silencieux */
-      });
+      void this.audioCtx.resume().catch(() => { /* silencieux */ });
     }
 
     const now = this.audioCtx.currentTime;
@@ -376,24 +369,17 @@ export class CardgameComponent implements OnInit, OnDestroy {
      🎴 LOGIQUE DU JEU
      ═══════════════════════════════════════════════════════════════════ */
 
-  private shuffleArray<T>(array: readonly T[]): T[] {
-    return array
-      .map(item => ({ sort: Math.random(), value: item }))
-      .sort((a, b) => a.sort - b.sort)
-      .map(item => item.value);
-  }
-
   private setupCards(): void {
     const cardPairs: CardData[] = [];
 
-    this.cardImages.forEach(image => {
+    this.cardImages.forEach((image) => {
       cardPairs.push({ imageId: image, state: 'default' });
       cardPairs.push({ imageId: image, state: 'default' });
     });
 
-    this.cards.set(this.shuffleArray(cardPairs));
-    this.flippedCards = [];
-    this.isProcessing = false;
+    this.cards.set(shuffleArray(cardPairs));
+    this.flippedCards.set([]);
+    this.isProcessing.set(false);
     this.currentRoundStartTime = 0;
   }
 
@@ -401,7 +387,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
     const list = this.cards();
     const cardInfo = list[index];
 
-    if (this.isProcessing || cardInfo.state !== 'default') return;
+    if (this.isProcessing() || cardInfo.state !== 'default') return;
 
     this.playSound('flip');
     this.decrementervie();
@@ -412,22 +398,24 @@ export class CardgameComponent implements OnInit, OnDestroy {
     newList[index] = updated;
     this.cards.set(newList);
 
-    this.flippedCards.push(updated);
+    const flipped = [...this.flippedCards(), updated];
+    this.flippedCards.set(flipped);
 
-    if (this.flippedCards.length === 1) {
+    if (flipped.length === 1) {
       this.startRoundTimer();
     }
 
-    if (this.flippedCards.length === 2) {
-      this.moves.update(m => m + 1);
-      this.isProcessing = true;
+    if (flipped.length === 2) {
+      this.moves.update((m) => m + 1);
+      this.isProcessing.set(true);
       this.checkForCardMatch();
     }
   }
 
   private checkForCardMatch(): void {
-    const timerId = window.setTimeout(() => {
-      const [cardOne, cardTwo] = this.flippedCards;
+    this.scheduleTimeout(() => {
+      const flipped = this.flippedCards();
+      const [cardOne, cardTwo] = flipped;
 
       if (cardOne.imageId === cardTwo.imageId) {
         this.handleMatch(cardOne, cardTwo);
@@ -435,19 +423,17 @@ export class CardgameComponent implements OnInit, OnDestroy {
         this.handleMismatch(cardOne, cardTwo);
       }
 
-      this.flippedCards = [];
-      this.isProcessing = false;
+      this.flippedCards.set([]);
+      this.isProcessing.set(false);
     }, FLIP_DELAY_MS);
-
-    this.timeouts.push(timerId);
   }
 
   private handleMatch(cardOne: CardData, cardTwo: CardData): void {
     this.playSound('match');
-    this.matchedCount.update(c => c + 1);
+    this.matchedCount.update((c) => c + 1);
 
     const list = this.cards();
-    const newList = list.map(c => {
+    const newList = list.map((c) => {
       if (c === cardOne || c === cardTwo) {
         return { ...c, state: 'matched' as const };
       }
@@ -456,7 +442,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
     this.cards.set(newList);
 
     this.captureRoundTime();
-    void this.speakAsChild(this.pickMatchPhrase(), {
+    void this.speakAsChild(pickMatchPhrase(), {
       pitch: 1.8,
       rate: 1.2,
     });
@@ -470,7 +456,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
     this.playSound('wrong');
 
     const list = this.cards();
-    const newList = list.map(c => {
+    const newList = list.map((c) => {
       if (c === cardOne || c === cardTwo) {
         return { ...c, state: 'default' as const };
       }
@@ -481,7 +467,7 @@ export class CardgameComponent implements OnInit, OnDestroy {
     this.currentRoundStartTime = 0;
 
     if (Math.random() < 0.5) {
-      void this.speakAsChild(this.pickWrongPhrase(), {
+      void this.speakAsChild(pickWrongPhrase(), {
         pitch: 1.5,
         rate: 1.1,
       });
@@ -504,32 +490,6 @@ export class CardgameComponent implements OnInit, OnDestroy {
     });
   }
 
-  private pickMatchPhrase(): string {
-    const phrases = [
-      'Bien joué !',
-      'Super !',
-      'Trop fort !',
-      'Youpi !',
-      'Encore une !',
-      'Génial !',
-      'Bravo !',
-      'Wow, quelle mémoire !',
-    ];
-    return phrases[Math.floor(Math.random() * phrases.length)];
-  }
-
-  private pickWrongPhrase(): string {
-    const phrases = [
-      'Oups, raté !',
-      'Presque !',
-      'Essaie encore !',
-      'Pas grave, retente !',
-      'Hop, essaie encore !',
-      'Tu vas y arriver !',
-    ];
-    return phrases[Math.floor(Math.random() * phrases.length)];
-  }
-
   /* ═══════════════════════════════════════════════════════════════════
      🏆 MODALE DE VICTOIRE
      ═══════════════════════════════════════════════════════════════════ */
@@ -540,18 +500,23 @@ export class CardgameComponent implements OnInit, OnDestroy {
       panelClass: 'victory-dialog-container',
     });
 
-    dialogRef.afterClosed().subscribe((result: RdialogResult | undefined) => {
-      if (result === 'menu') {
-        void this.speakAsChild('Retour au menu ! À bientôt !', { pitch: 1.8 });
-        this.goToPlay();
-        return;
-      }
+    dialogRef
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result: RdialogResult | undefined) => {
+        /* Fermeture sans résultat → on considère un "replay" */
+        if (result === 'menu') {
+          void this.speakAsChild('Retour au menu ! À bientôt !', { pitch: 1.8 });
+          this.goToPlay();
+          return;
+        }
 
-      void this.speakAsChild("Nouvelle partie ! C'est reparti !", {
-        pitch: 1.8,
+        /* result === 'replay' OU undefined */
+        void this.speakAsChild("Nouvelle partie ! C'est reparti !", {
+          pitch: 1.8,
+        });
+        this.restart();
       });
-      this.restart();
-    });
   }
 
   /* ═══════════════════════════════════════════════════════════════════

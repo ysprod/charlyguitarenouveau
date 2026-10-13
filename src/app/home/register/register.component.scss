@@ -1,0 +1,101 @@
+@use '../styles/auth-shared' as shared;
+
+:host {
+  @include shared.auth-host-variables;
+  display: block;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SÉPARATEUR
+   ═════════════════════════════════════════════════════════════════════ */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  color: var(--text-dim);
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   BOUTON SOUMISSION — 🟠 orange
+   ═════════════════════════════════════════════════════════════════════ */
+.btn-submit {
+  position: relative;
+  width: 100%;
+  padding: .95rem 1rem;
+  margin-top: .5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--warning);
+  color: #ffffff;
+  font-size: .95rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(234, 88, 12, .4);
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background .25s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: var(--warning-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px -10px rgba(234, 88, 12, .55);
+}
+
+.btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-submit:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+.btn-content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+}
+
+.btn-content svg {
+  width: 18px;
+  height: 18px;
+  transition: transform var(--t-fast);
+}
+
+.btn-submit:hover:not(:disabled) .btn-content svg {
+  transform: translateX(4px);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, .3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@include shared.auth-accessibility;

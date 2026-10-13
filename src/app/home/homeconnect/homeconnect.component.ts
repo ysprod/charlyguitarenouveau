@@ -12,17 +12,17 @@ import { Database, objectVal, ref } from '@angular/fire/database';
 import { RouterLink } from '@angular/router';
 import { switchMap, of } from 'rxjs';
 
-import { UserProfile } from 'src/app/models/user.model';
-import { getInitials } from 'src/app/utils/string.utils';
+import { UserProfile } from 'src/app/home/models/user.model';
+import { getInitials } from 'src/app/home/utils/string.utils';
 
 import {
   QUICK_ACTIONS,
   COLOR_UNIVERSES,
   WHY_PILLARS,
   TESTIMONIALS,
-} from 'src/app/constants/homeconnect.constants';
+} from 'src/app/home/constants/homeconnect.constants';
 
-import { FooterComponent } from 'src/app/footer/footer.component';
+import { FooterComponent } from 'src/app/home/footer/footer.component';
 import { RevealDirective } from 'src/app/shared/reveal.directive';
 import { InboxPanelComponent } from './inbox-panel/inbox-panel.component';
 

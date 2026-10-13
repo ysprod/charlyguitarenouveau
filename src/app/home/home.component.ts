@@ -8,7 +8,7 @@ import {
 import { RouterLink, Router } from '@angular/router';
 import { Auth, authState } from '@angular/fire/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FooterComponent } from '../footer/footer.component';
+import { FooterComponent } from './footer/footer.component';
 
 @Component({
   selector: 'app-home',

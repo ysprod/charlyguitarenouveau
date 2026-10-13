@@ -1,58 +1,56 @@
-import { DatePipe } from '@angular/common';
+
 import {
-    ChangeDetectionStrategy,
-    Component,
-    computed,
-    inject,
-    linkedSignal,
-    output,
-    signal,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
 } from '@angular/core';
+
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+
 import {
-    INBOX_FILTERS,
-    INBOX_PAGE_SIZE,
-    INBOX_PREVIEW_MAX_LENGTH,
-} from 'src/app/constants/homeconnect.constants';
+  INBOX_FILTERS,
+  INBOX_PAGE_SIZE,
+  INBOX_PREVIEW_MAX_LENGTH,
+} from 'src/app/home/constants/homeconnect.constants';
+
 import type {
-    InboxFilter,
-    InboxMessage,
-} from 'src/app/models/homeconnect.model';
-import { InboxService } from 'src/app/services/inbox.service';
-import { getCategoryIcon } from 'src/app/shared/category-icons.constants';
+  InboxFilter,
+  InboxMessage,
+} from 'src/app/home/homeconnect.model';
+
+import { InboxService } from 'src/app/home/inbox.service';
+import { getCategoryIcon } from 'src/app/home/category-icons.constants';
+
 import {
-    filterMessages,
-    formatRelativeDate,
-    truncate,
-} from 'src/app/utils/homeconnect.utils';
+  filterMessages,
+  formatRelativeDate,
+  truncate,
+} from 'src/app/home/utils/homeconnect.utils';
 
 /* ═════════════════════════════════════════════════════════════════════
-   INBOX PANEL — Boîte de réception (Gmail-like)
+   INBOX PANEL — Aperçu de la boîte de réception
    ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-inbox-panel',
-  standalone: true,
-  imports: [DatePipe,RouterLink],
+  imports: [RouterLink],
   templateUrl: './inbox-panel.component.html',
   styleUrls: ['./inbox-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InboxPanelComponent {
+
   /* ═══════════════════════════════════════════════════════
      INJECTION
      ═══════════════════════════════════════════════════════ */
 
   private readonly inboxService = inject(InboxService);
-
-  /* ═══════════════════════════════════════════════════════
-     OUTPUTS (Option C — prêts à brancher)
-     ═══════════════════════════════════════════════════════ */
-
-  readonly reply = output<InboxMessage>();
-  readonly forward = output<InboxMessage>();
+  private readonly router = inject(Router);
 
   /* ═══════════════════════════════════════════════════════
      CONSTANTES UI
@@ -66,7 +64,6 @@ export class InboxPanelComponent {
      ÉTAT UI
      ═══════════════════════════════════════════════════════ */
 
-  readonly selectedMessage = signal<InboxMessage | null>(null);
   readonly activeFilter = signal<InboxFilter>('all');
   readonly currentPage = signal(1);
 
@@ -134,65 +131,37 @@ export class InboxPanelComponent {
   setFilter(filter: InboxFilter): void {
     this.activeFilter.set(filter);
     this.currentPage.set(1);
-    this.selectedMessage.set(null);
   }
 
-  selectMessage(message: InboxMessage): void {
-    this.selectedMessage.set(message);
+  /**
+   * Ouvre la conversation dans la page `/inbox`.
+   * Utilise `msg.key` (clé Firebase) comme identifiant d'URL.
+   */
+  openMessage(message: InboxMessage): void {
+    const key = message.id;
+    if (!key) return;
 
-    if (message.isUnread) {
-      this.localMessages.update((list) =>
-        list.map((m) => (m.id === message.id ? { ...m, isUnread: false } : m))
-      );
-      this.selectedMessage.set({ ...message, isUnread: false });
-    }
-  }
-
-  closeMessage(): void {
-    this.selectedMessage.set(null);
+    void this.router.navigate(['/inbox', key]);
   }
 
   toggleStar(message: InboxMessage, event: Event): void {
     event.stopPropagation();
+
     this.localMessages.update((list) =>
       list.map((m) =>
         m.id === message.id ? { ...m, isStarred: !m.isStarred } : m
       )
     );
-
-    const selected = this.selectedMessage();
-    if (selected?.id === message.id) {
-      this.selectedMessage.set({
-        ...selected,
-        isStarred: !selected.isStarred,
-      });
-    }
   }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-    this.selectedMessage.set(null);
   }
 
   markAllAsRead(): void {
     this.localMessages.update((list) =>
       list.map((m) => ({ ...m, isUnread: false }))
     );
-    this.selectedMessage.update((m) => (m ? { ...m, isUnread: false } : null));
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     ACTIONS FOOTER (Option C — émises, pas traitées)
-     ═══════════════════════════════════════════════════════ */
-
-  onReply(): void {
-    const selected = this.selectedMessage();
-    if (selected) this.reply.emit(selected);
-  }
-
-  onForward(): void {
-    const selected = this.selectedMessage();
-    if (selected) this.forward.emit(selected);
   }
 }

@@ -11,9 +11,9 @@ import {
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { TictacduoService } from '../../services/tictacduo.service';
-import { DuoEndGameDialogComponent } from 'src/app/shared/duo-end-game-dialog/duo-end-game-dialog.component';
-import { DuoEndGameSummary } from 'src/app/models/duo-end-game-summary.model';
+import { TictacduoService } from '../tictacduo.service';
+ import { DuoEndGameSummary } from 'src/app/game/duo-end-game-summary.model';
+import { DuoEndGameDialogComponent } from '../duo-end-game-dialog/duo-end-game-dialog.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    TYPES & CONSTANTES

@@ -13,403 +13,270 @@
   <header class="page-header">
     <div class="header-content">
       <div class="header-text">
-        <span class="eyebrow">SUPPORT CHARLY GUITARE</span>
         <h1>Mes <span class="accent">Messages</span></h1>
-        <p>
-          Échangez avec nous, suivez vos demandes et recevez des réponses
-          personnalisées.
-        </p>
       </div>
 
       <!-- 📊 Statistiques -->
-      @if (stats$ | async; as stats) {
-        <div class="stats-grid" role="list">
-          <div class="stat-card" role="listitem">
-            <span class="stat-icon" aria-hidden="true">📨</span>
-            <span class="stat-value">{{ stats.total }}</span>
-            <span class="stat-label">Messages</span>
-          </div>
-          <div class="stat-card accent-amber" role="listitem">
-            <span class="stat-icon" aria-hidden="true">⏳</span>
-            <span class="stat-value">{{ stats.unread }}</span>
-            <span class="stat-label">En attente</span>
-          </div>
-          <div class="stat-card accent-emerald" role="listitem">
-            <span class="stat-icon" aria-hidden="true">✓✓</span>
-            <span class="stat-value">{{ stats.replied }}</span>
-            <span class="stat-label">Répondus</span>
-          </div>
+      <div class="stats-grid" role="list">
+        <div class="stat-card" role="listitem">
+          <span class="stat-value">{{ stats().total }}</span>
+          <span class="stat-label">Messages</span>
         </div>
-      }
+        <div class="stat-card accent-amber" role="listitem">
+          <span class="stat-value">{{ stats().unread }}</span>
+          <span class="stat-label">En attente</span>
+        </div>
+        <div class="stat-card accent-emerald" role="listitem">
+          <span class="stat-value">{{ stats().replied }}</span>
+          <span class="stat-label">Répondus</span>
+        </div>
+      </div>
     </div>
   </header>
 
-  @if (messages$ | async; as messages) {
+  <div class="content-wrapper">
 
-    <div class="content-wrapper">
+    <!-- 📋 LISTE DES MESSAGES -->
+    <aside class="messages-list-section" [class.hidden-mobile]="selectedMessage() !== null"
+      aria-label="Liste des messages">
 
-      <!-- 📋 LISTE DES MESSAGES -->
-      <aside
-        class="messages-list-section"
-        [class.hidden-mobile]="selectedMessage !== null"
-        aria-label="Liste des messages"
-      >
-
-        <!-- 🔍 Barre de recherche + filtres + tri -->
-        <div class="list-toolbar">
-          <div class="search-box">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Rechercher un message..."
-              [value]="searchTerm"
-              (input)="updateSearch($any($event.target).value)"
-              aria-label="Rechercher un message"
-            />
-            @if (searchTerm) {
-              <button
-                type="button"
-                class="clear-btn"
-                aria-label="Effacer la recherche"
-                (click)="updateSearch('')"
-              >
-                ×
-              </button>
-            }
-          </div>
-
-          <div class="filter-tabs" role="tablist">
-            @for (tab of filterTabs; track tab.value) {
-              <button
-                type="button"
-                role="tab"
-                [class.active]="activeFilter === tab.value"
-                [attr.aria-selected]="activeFilter === tab.value"
-                (click)="setFilter(tab.value)"
-              >
-                {{ tab.label }}
-                @if (tab.value === 'unread' && (stats$ | async); as stats) {
-                  @if (stats.unread) {
-                    <span class="count">{{ stats.unread }}</span>
-                  }
-                }
-              </button>
-            }
-          </div>
-
-          <div class="sort-row">
-            <label for="sort-select">Trier :</label>
-            <select
-              id="sort-select"
-              [value]="sortMode"
-              (change)="setSort($any($event.target).value)"
-              aria-label="Trier les messages"
-            >
-              @for (option of sortOptions; track option.value) {
-                <option [value]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </div>
-        </div>
-
-        <!-- 📭 État vide -->
-        @if ((filteredMessages$ | async)?.length === 0) {
-          <div class="empty-state">
-            <div class="empty-illustration" aria-hidden="true">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-              >
-                <path
-                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                />
-              </svg>
-            </div>
-            @if (messages.length === 0) {
-              <h3>{{ emptyStateMessages.noMessages.title }}</h3>
-              <p>{{ emptyStateMessages.noMessages.description }}</p>
-            } @else {
-              <h3>{{ emptyStateMessages.noResults.title }}</h3>
-              <p>{{ emptyStateMessages.noResults.description }}</p>
-            }
-          </div>
-        }
-
-        <!-- 💬 Liste -->
-        <div class="messages-scroll">
-          @for (msg of filteredMessages$ | async; track msg.key) {
-            <article
-              class="message-card"
-              [class.active]="selectedMessage?.key === msg.key"
-              [class.unread]="msg.status === 'unread'"
-              (click)="selectMessage(msg)"
-              (keydown.enter)="selectMessage(msg)"
-              (keydown.space)="selectMessage(msg); $event.preventDefault()"
-              tabindex="0"
-              role="button"
-              [attr.aria-pressed]="selectedMessage?.key === msg.key"
-              [attr.aria-label]="msg.subject || 'Message sans sujet'"
-            >
-              <div class="card-top">
-                <span
-                  class="category-icon"
-                  [title]="msg.category || 'autre'"
-                  aria-hidden="true"
-                >
-                  {{ categoryIcon(msg.category) }}
-                </span>
-                <span class="subject">{{ msg.subject || '(Sans sujet)' }}</span>
-                <span class="status-badge" [ngClass]="statusBadgeClass(msg.status)">
-                  {{ statusIcon(msg.status) }} {{ statusLabel(msg.status) }}
-                </span>
-              </div>
-
-              <p class="preview-text">{{ msg.message }}</p>
-
-              <div class="card-footer">
-                <span class="date">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  {{ msg.createdAt | date: 'dd MMM, HH:mm' }}
-                </span>
-                @if (msg.replies) {
-                  <span class="replies-count">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                      />
-                    </svg>
-                    {{ repliesCount(msg.replies) }}
-                  </span>
-                }
-              </div>
-            </article>
+      <!-- 🔍 Barre de recherche + filtres + tri -->
+      <div class="list-toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input type="text" placeholder="Rechercher un message..." [value]="searchTerm()"
+            (input)="updateSearch($any($event.target).value)" aria-label="Rechercher un message" />
+          @if (searchTerm()) {
+          <button type="button" class="clear-btn" aria-label="Effacer la recherche" (click)="updateSearch('')">
+            ×
+          </button>
           }
         </div>
-      </aside>
 
-      <!-- 💭 FIL DE DISCUSSION -->
-      <section
-        class="thread-section"
-        [class.active-mobile]="selectedMessage !== null"
-        aria-label="Fil de discussion"
-      >
-        @if (selectedMessage; as selected) {
-
-          <!-- Header du fil -->
-          <div class="thread-header">
-            <button
-              type="button"
-              class="btn-back"
-              (click)="closeThread()"
-              aria-label="Retour à la liste"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
-            </button>
-
-            <div class="thread-title">
-              <div class="thread-meta">
-                <span class="category-chip">
-                  <span aria-hidden="true">{{ categoryIcon(selected.category) }}</span>
-                  {{ selected.category || 'autre' }}
-                </span>
-                <span
-                  class="status-badge"
-                  [ngClass]="statusBadgeClass(selected.status)"
-                >
-                  {{ statusIcon(selected.status) }} {{ statusLabel(selected.status) }}
-                </span>
-              </div>
-              <h2>{{ selected.subject || '(Sans sujet)' }}</h2>
-            </div>
-          </div>
-
-          <!-- Corps du fil -->
-          <div class="thread-body" #threadBody>
-
-            <!-- Message initial -->
-            <div class="chat-bubble user-bubble">
-              <div class="avatar avatar-user">{{ userInitials }}</div>
-              <div class="bubble-content">
-                <div class="bubble-header">
-                  <span class="author">Vous</span>
-                  <span class="time">
-                    {{ selected.createdAt | date: 'dd/MM/yyyy · HH:mm' }}
-                  </span>
-                </div>
-                <p class="bubble-text">{{ selected.message }}</p>
-              </div>
-            </div>
-
-            <!-- Réponses -->
-            @for (reply of repliesOf(selected); track reply.key) {
-              <div
-                class="chat-bubble"
-                [class.admin-bubble]="reply.senderRole === 'admin'"
-                [class.user-bubble]="reply.senderRole === 'user'"
-              >
-                <div
-                  class="avatar"
-                  [class.avatar-admin]="reply.senderRole === 'admin'"
-                >
-                  @if (reply.senderRole === 'admin') {
-                    <span aria-hidden="true">🎸</span>
-                  } @else {
-                    {{ userInitials }}
-                  }
-                </div>
-                <div class="bubble-content">
-                  <div class="bubble-header">
-                    <span class="author">
-                      {{
-                        reply.senderRole === 'admin'
-                          ? 'Charly Guitare · Support'
-                          : 'Vous'
-                      }}
-                    </span>
-                    <span class="time">
-                      {{ reply.createdAt | date: 'dd/MM/yyyy · HH:mm' }}
-                    </span>
-                  </div>
-                  <p class="bubble-text">{{ reply.message }}</p>
-                </div>
-              </div>
+        <div class="filter-tabs" role="tablist">
+          @for (tab of filterTabs; track tab.value) {
+          <button type="button" role="tab" [class.active]="activeFilter() === tab.value"
+            [attr.aria-selected]="activeFilter() === tab.value" (click)="setFilter(tab.value)">
+            {{ tab.label }}
+            @if (tab.value === 'unread' && stats().unread > 0) {
+            <span class="count">{{ stats().unread }}</span>
             }
+          </button>
+          }
+        </div>
 
-            <!-- Indicateur d'attente -->
-            @if (selected.status === 'unread' && repliesOf(selected).length > 0) {
-              <div class="chat-bubble admin-bubble typing">
-                <div class="avatar avatar-admin">
-                  <span aria-hidden="true">🎸</span>
-                </div>
-                <div class="bubble-content">
-                  <div class="typing-dots" aria-hidden="true">
-                    <span></span><span></span><span></span>
-                  </div>
-                  <span class="typing-label">
-                    Message envoyé...
-                  </span>
-                </div>
-              </div>
+        <div class="sort-row">
+          <label for="sort-select">Trier :</label>
+          <select id="sort-select" [value]="sortMode()" (change)="setSort($any($event.target).value)"
+            aria-label="Trier les messages">
+            @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
             }
-          </div>
+          </select>
+        </div>
+      </div>
 
-          <!-- Formulaire de réponse -->
-          <div class="thread-reply-form">
-            <div class="reply-box">
-              <textarea
-                [(ngModel)]="replyText"
-                rows="3"
-                [attr.maxlength]="replyMaxLength"
-                placeholder="Écrivez votre réponse... (Entrée pour envoyer, Maj+Entrée pour un saut de ligne)"
-                class="reply-textarea"
-                (keydown.enter)="onReplyEnter($event)"
-                aria-label="Votre réponse"
-              ></textarea>
-
-              <div class="reply-footer">
-                <span
-                  class="char-count"
-                  [class.warning]="replyText.length > replyWarningThreshold"
-                >
-                  {{ replyText.length }} / {{ replyMaxLength }}
-                </span>
-
-                <button
-                  type="button"
-                  class="btn-send"
-                  [disabled]="isSending || !replyText.trim()"
-                  (click)="sendReply()"
-                  aria-label="Envoyer la réponse"
-                >
-                  @if (!isSending) {
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      class="send-icon"
-                      aria-hidden="true"
-                    >
-                      <line x1="22" y1="2" x2="11" y2="13" />
-                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    <span>Envoyer</span>
-                  } @else {
-                    <span class="mini-spinner" aria-hidden="true"></span>
-                    <span>Envoi...</span>
-                  }
-                </button>
-              </div>
-            </div>
-          </div>
-
+      <!-- 📭 État vide -->
+      @if (filteredMessages().length === 0) {
+      <div class="empty-state">
+        <div class="empty-illustration" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </div>
+        @if (messages().length === 0) {
+        <h3>{{ emptyStateMessages.noMessages.title }}</h3>
+        <p>{{ emptyStateMessages.noMessages.description }}</p>
         } @else {
-
-          <!-- Prompt de sélection -->
-          <div class="select-prompt">
-            <div class="prompt-illustration" aria-hidden="true">
-              <div class="pulse-ring"></div>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-              >
-                <path
-                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                />
-              </svg>
-            </div>
-            <h3>Choisissez une conversation</h3>
-            <p>
-              Sélectionnez un message à gauche pour afficher le fil complet.
-            </p>
-          </div>
+        <h3>{{ emptyStateMessages.noResults.title }}</h3>
+        <p>{{ emptyStateMessages.noResults.description }}</p>
         }
-      </section>
-    </div>
+      </div>
+      }
 
-  } @else {
+      <!-- 💬 Liste -->
+      <div class="messages-scroll">
+        @for (msg of filteredMessages(); track msg.key) {
+        <article class="message-card" [class.active]="selectedMessage()?.key === msg.key"
+          [class.unread]="msg.status === 'unread'" (click)="selectMessage(msg)" (keydown.enter)="selectMessage(msg)"
+          (keydown.space)="selectMessage(msg); $event.preventDefault()" tabindex="0" role="button"
+          [attr.aria-pressed]="selectedMessage()?.key === msg.key"
+          [attr.aria-label]="msg.subject || 'Message sans sujet'">
+          <div class="card-top">
+            <span class="category-icon" [title]="msg.category || 'autre'" aria-hidden="true">
+              {{ categoryIcon(msg.category) }}
+            </span>
+            <span class="subject">{{ msg.subject || '(Sans sujet)' }}</span>
+            <span class="status-badge" [class]="statusBadgeClass(msg.status)">
+              {{ statusIcon(msg.status) }} {{ statusLabel(msg.status) }}
+            </span>
+          </div>
 
-    <!-- Loader -->
-    <div class="loading-state" role="status" aria-live="polite">
-      <div class="spinner" aria-hidden="true"></div>
-      <p>Chargement de votre messagerie...</p>
-    </div>
-  }
+          <p class="preview-text">{{ msg.message }}</p>
+
+          <div class="card-footer">
+            <span class="date">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              {{ msg.createdAt | date: 'dd MMM, HH:mm' }}
+            </span>
+            @if (msg.replies) {
+            <span class="replies-count">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              {{ repliesCount(msg.replies) }}
+            </span>
+            }
+          </div>
+        </article>
+        }
+      </div>
+    </aside>
+
+    <!-- 💭 FIL DE DISCUSSION -->
+    <section class="thread-section" [class.active-mobile]="selectedMessage() !== null" aria-label="Fil de discussion">
+      @if (selectedMessage(); as selected) {
+
+      <!-- Header du fil -->
+      <div class="thread-header">
+        <button type="button" class="btn-back" (click)="closeThread()" aria-label="Retour à la liste">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+        </button>
+
+        <div class="thread-title">
+          <div class="thread-meta">
+            <span class="category-chip">
+              <span aria-hidden="true">{{ categoryIcon(selected.category) }}</span>
+              {{ selected.category || 'autre' }}
+            </span>
+            <span class="status-badge" [class]="statusBadgeClass(selected.status)">
+              {{ statusIcon(selected.status) }} {{ statusLabel(selected.status) }}
+            </span>
+          </div>
+          <h2>{{ selected.subject || '(Sans sujet)' }}</h2>
+        </div>
+      </div>
+
+      <!-- Corps du fil -->
+      <div class="thread-body" #threadBody>
+
+        <!-- Message initial -->
+        <div class="chat-bubble user-bubble">
+          <div class="avatar avatar-user">{{ userInitials() }}</div>
+          <div class="bubble-content">
+            <div class="bubble-header">
+              <span class="author">Vous</span>
+              <span class="time">
+                {{ selected.createdAt | date: 'dd/MM/yyyy · HH:mm' }}
+              </span>
+            </div>
+            <p class="bubble-text">{{ selected.message }}</p>
+          </div>
+        </div>
+
+        <!-- Réponses -->
+        @for (reply of repliesOf(selected); track reply.key) {
+        <div class="chat-bubble" [class.admin-bubble]="reply.senderRole === 'admin'"
+          [class.user-bubble]="reply.senderRole === 'user'">
+          <div class="avatar" [class.avatar-admin]="reply.senderRole === 'admin'">
+            @if (reply.senderRole === 'admin') {
+            <span aria-hidden="true">🎸</span>
+            } @else {
+            {{ userInitials() }}
+            }
+          </div>
+          <div class="bubble-content">
+            <div class="bubble-header">
+              <span class="author">
+                {{
+                reply.senderRole === 'admin'
+                ? 'Charly Guitare · Support'
+                : 'Vous'
+                }}
+              </span>
+              <span class="time">
+                {{ reply.createdAt | date: 'dd/MM/yyyy · HH:mm' }}
+              </span>
+            </div>
+            <p class="bubble-text">{{ reply.message }}</p>
+          </div>
+        </div>
+        }
+
+        <!-- Indicateur d'attente -->
+        @if (selected.status === 'unread' && repliesOf(selected).length > 0) {
+        <div class="chat-bubble admin-bubble typing">
+          <div class="avatar avatar-admin">
+            <span aria-hidden="true">🎸</span>
+          </div>
+          <div class="bubble-content">
+            <div class="typing-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="typing-label">
+              Message envoyé...
+            </span>
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Formulaire de réponse -->
+      <div class="thread-reply-form">
+        <div class="reply-box">
+          <textarea [ngModel]="replyText()" (ngModelChange)="replyText.set($event)" rows="3"
+            [attr.maxlength]="replyMaxLength"
+            placeholder="Écrivez votre réponse... (Entrée pour envoyer, Maj+Entrée pour un saut de ligne)"
+            class="reply-textarea" (keydown.enter)="onReplyEnter($event)" aria-label="Votre réponse"></textarea>
+
+          <div class="reply-footer">
+            <span class="char-count" [class.warning]="replyText().length > replyWarningThreshold">
+              {{ replyText().length }} / {{ replyMaxLength }}
+            </span>
+
+            <button type="button" class="btn-send" [disabled]="isSending() || !replyText().trim()" (click)="sendReply()"
+              aria-label="Envoyer la réponse">
+              @if (!isSending()) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="send-icon"
+                aria-hidden="true">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+              <span>Envoyer</span>
+              } @else {
+              <span class="mini-spinner" aria-hidden="true"></span>
+              <span>Envoi...</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+
+      } @else {
+
+      <!-- Prompt de sélection -->
+      <div class="select-prompt">
+        <div class="prompt-illustration" aria-hidden="true">
+          <div class="pulse-ring"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </div>
+        <h3>Choisissez une conversation</h3>
+        <p>
+          Sélectionnez un message à gauche pour afficher le fil complet.
+        </p>
+      </div>
+      }
+    </section>
+  </div>
 </div>

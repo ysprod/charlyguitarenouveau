@@ -3,8 +3,7 @@
    ═════════════════════════════════════════════════════════════════════ */
 
 /* ⚠️ L'import Google Fonts est déplacé dans styles.scss global
-   (un @import dans un composant encapsulé est un anti-pattern Angular).
-   Si tu ne l'as pas déjà dans styles.scss, ajoute-le là-bas. */
+   (un @import dans un composant encapsulé est un anti-pattern Angular). */
 
 /* ─── Variables ─── */
 :host {
@@ -13,12 +12,10 @@
   --primary-hover: #1d4ed8;
   --primary-glow: rgba(37, 99, 235, .35);
 
-  --success: #16a34a;
   --warning: #ea580c;
   --warning-hover: #c2410c;
 
-  --gold-primary: #b8860b;
-  --gold-hover: #d4a017;
+  --danger: #dc2626;
 
   /* Fonds — conformes consigne : blanc pour le contenu */
   --bg-page: #ffffff;
@@ -346,125 +343,38 @@
   background: var(--bg-page);
 }
 
-/* ─── CTA Contact ─── */
+/* ─── CTA Contact (style standard) ─── */
 .contact-cta {
-  width: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  text-align: center;
-  padding: 30px 20px;
-  background: var(--bg-page);
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem;
 
   a {
-    display: inline-block;
-    font-size: clamp(1.5rem, 3.5vw, 3rem);
-    font-weight: 900;
-    line-height: 1.15;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .85rem 1.35rem;
+    background: var(--warning);
+    color: #ffffff;
+    border-radius: 999px;
+    font-size: .9rem;
+    font-weight: 700;
     text-decoration: none;
-    color: #fff;
-    background: linear-gradient(135deg, var(--warning) 0%, #f97316 100%);
-    padding: 22px 36px;
-    border-radius: 20px;
-    letter-spacing: -.5px;
-    box-shadow:
-      0 8px 24px rgba(234, 88, 12, .35),
-      inset 0 1px 0 rgba(255, 255, 255, .2);
-    transition: transform var(--t-base), box-shadow var(--t-base);
+    box-shadow: 0 8px 22px -8px rgba(234, 88, 12, .35);
+    transition: transform var(--t-fast), background var(--t-fast);
 
     &:hover {
-      transform: scale(1.03) translateY(-2px);
-      box-shadow:
-        0 16px 40px rgba(234, 88, 12, .45),
-        inset 0 1px 0 rgba(255, 255, 255, .2);
+      background: var(--warning-hover);
+      transform: translateY(-2px);
     }
 
-    &:active {
-      transform: scale(.99);
+    &:focus-visible {
+      outline: 2px solid var(--warning);
+      outline-offset: 3px;
     }
-  }
-}
-
-/* ─── Footer ─── */
-app-footer {
-  flex-shrink: 0;
-  width: 100%;
-  margin-top: auto;
-}
-
-/* ═════════════════════════════════════════════════════════════════════
-   MAT-MENU PROFIL — Design surchargé
-   ═════════════════════════════════════════════════════════════════════ */
-
-::ng-deep .custom-user-menu {
-  background: #ffffff !important;
-  border: 1px solid var(--border-medium) !important;
-  border-radius: 16px !important;
-  padding: .5rem !important;
-  box-shadow: 0 20px 40px rgba(15, 23, 42, .15) !important;
-}
-
-.menu-header {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-  padding: .75rem;
-}
-
-.menu-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-dark);
-  font-weight: 700;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.menu-user-name {
-  color: var(--text-dark);
-  font-weight: 700;
-  font-size: .95rem;
-  margin: 0;
-}
-
-.menu-user-email {
-  color: var(--text-muted);
-  font-size: .8rem;
-  margin: 0;
-}
-
-::ng-deep .custom-user-menu button[mat-menu-item] {
-  color: var(--text-body) !important;
-  border-radius: 8px !important;
-  font-weight: 500 !important;
-
-  &:hover {
-    background: var(--bg-soft) !important;
-    color: var(--primary) !important;
-  }
-}
-
-.logout-item {
-  color: #dc2626 !important;
-
-  mat-icon {
-    color: #dc2626 !important;
   }
 }
 
@@ -549,6 +459,18 @@ app-footer {
   }
 }
 
+@media (max-width: 480px) {
+  .contact-cta {
+    flex-direction: column;
+    gap: .75rem;
+
+    a {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
 /* ─── Accessibilité ─── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -570,47 +492,4 @@ button:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
   border-radius: 4px;
-}
-
-.contact-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 1rem;
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: .85rem 1.35rem;
-    background: var(--warning, #ea580c);
-    color: #ffffff;
-    border-radius: 999px;
-    font-size: .9rem;
-    font-weight: 700;
-    text-decoration: none;
-    box-shadow: 0 8px 22px -8px rgba(234, 88, 12, .35);
-    transition: transform .2s ease, background .2s ease;
-
-    &:hover {
-      background: #c2410c;
-      transform: translateY(-2px);
-    }
-
-    &:focus-visible {
-      outline: 2px solid #ea580c;
-      outline-offset: 3px;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .contact-cta {
-    flex-direction: column;
-    gap: .75rem;
-
-    a { width: 100%; justify-content: center; }
-  }
 }

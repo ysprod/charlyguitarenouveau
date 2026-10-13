@@ -29,14 +29,14 @@ import {
 import {
   ContactForm,
   MessageData
-} from 'src/app/models/contact.model';
+} from 'src/app/home/models/contact.model';
 
 import {
   MESSAGE_MAX_LENGTH,
   MESSAGE_MIN_LENGTH,
   SUBJECT_MAX_LENGTH,
   SUBJECT_MIN_LENGTH
-} from 'src/app/constants/contact.constants';
+} from 'src/app/home/constants/contact.constants';
 
 /* ═════════════════════════════════════════════════════════════════════
    COMPOSANT

@@ -7,8 +7,8 @@ import {
 import { Auth, authState } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
-import { getSafeReturnUrl } from 'src/app/utils/url.utils';
-import { AUTH_ROUTES, RETURN_URL_PARAM } from 'src/app/constants/auth.constants';
+import { getSafeReturnUrl } from 'src/app/home/utils/url.utils';
+import { AUTH_ROUTES, RETURN_URL_PARAM } from 'src/app/home/constants/auth.constants';
 
  
 

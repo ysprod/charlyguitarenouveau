@@ -36,7 +36,7 @@ import {
   STAR_POWER_STARS,
   STRING_COLORS,
   TARGET_NOTES
-} from '../../constants/fretboard.constants';
+} from '../fretboard.constants';
 
 import {
   ConfettiParticle,
@@ -44,18 +44,18 @@ import {
   FeedbackKind,
   MelodyChord,
   Particle
-} from '../../models/fretboard.model';
+} from '../fretboard.model';
 
 import {
   randomElement,
   randomFloat,
   randomInt,
   randomSample
-} from '../../utils/random.utils';
+} from '../random.utils';
 
-import { GuitarAudioService } from '../../services/guitar-audio.service';
-import { GameAudioService } from '../../services/game-audio.service';
-import { StorageService } from '../../services/storage.service';
+import { GuitarAudioService } from '../guitar-audio.service';
+import { GameAudioService } from '../game-audio.service';
+import { StorageService } from '../../shared/services/storage.service';
 
 @Component({
   selector: 'app-fretboard',

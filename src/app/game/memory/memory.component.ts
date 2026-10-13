@@ -11,21 +11,21 @@ import {
 
 import { Router } from '@angular/router';
 
-import { ChordShape, Difficulty } from '../../models/memory-chord.model';
-import { DifficultyConfig, PinState } from '../../models/molkky.model';
+import { ChordShape, Difficulty } from '../memory-chord.model';
+import { DifficultyConfig, PinState } from '../molkky.model';
 
-import { CHORD_CATALOG } from '../../constants/chords.constants';
+import { CHORD_CATALOG } from '../chords.constants';
 import {
   MOLKKY_DIFFICULTIES,
   MOLKKY_DIFFICULTY_MAP,
   MOLKKY_RULES,
   MOLKKY_STORAGE_KEYS
-} from '../../constants/molkky.constants';
+} from '../molkky.constants';
 
-import { GameAudioService } from '../../services/game-audio.service';
-import { StorageService } from '../../services/storage.service';
+import { GameAudioService } from '../game-audio.service';
+import { StorageService } from '../../shared/services/storage.service';
 
-import { randomInt, randomSample } from '../../utils/random.utils';
+import { randomInt, randomSample } from '../random.utils';
 
 type FeedbackType = 'success' | 'error';
 

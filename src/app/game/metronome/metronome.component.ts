@@ -22,7 +22,7 @@ import {
   GameState,
   SessionHistory,
   TapRecord
-} from '../../models/metronome-challenge.model';
+} from '../metronome-challenge.model';
 
 import {
   METRONOME_BEAT_OPTIONS,
@@ -36,10 +36,10 @@ import {
   METRONOME_SOUNDS,
   METRONOME_STORAGE_KEYS,
   METRONOME_SUBDIVISION_OPTIONS
-} from '../../constants/metronome.constants';
+} from '../metronome.constants';
 
-import { MetronomeAudioService } from '../../services/metronome-audio.service';
-import { StorageService } from '../../services/storage.service';
+import { MetronomeAudioService } from '../metronome-audio.service';
+import { StorageService } from '../../shared/services/storage.service';
 
 @Component({
   selector: 'app-metronome',

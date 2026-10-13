@@ -1,0 +1,71 @@
+/* ═════════════════════════════════════════════════════════════════════
+   TOAST — Notification globale
+   ═════════════════════════════════════════════════════════════════════ */
+
+:host {
+  --primary: #2563eb;
+  --success: #16a34a;
+  --warning: #ea580c;
+  --danger: #dc2626;
+
+  --text-dark: #0f172a;
+
+  --border-medium: rgba(15, 23, 42, .14);
+
+  --r-md: 12px;
+
+  display: contents;
+}
+
+.toast-notification {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1rem 1.5rem;
+  background: #fff;
+  border: 1px solid var(--border-medium);
+  border-left-width: 4px;
+  border-radius: var(--r-md);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, .15);
+  animation: slideUp .3s ease;
+
+  /* 🟢 Succès */
+  &.success { border-left-color: var(--success); }
+  /* 🔴 Erreur */
+  &.error   { border-left-color: var(--danger); }
+  /* 🔵 Info */
+  &.info    { border-left-color: var(--primary); }
+
+  .toast-icon { font-size: 1.1rem; }
+
+  .toast-message {
+    color: var(--text-dark);
+    font-size: .9rem;
+    font-weight: 500;
+  }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 600px) {
+  .toast-notification {
+    right: 1rem;
+    left: 1rem;
+    bottom: 1rem;
+  }
+}
+
+/* ─── Accessibilité ─── */
+@media (prefers-reduced-motion: reduce) {
+  .toast-notification {
+    animation-duration: .01ms !important;
+  }
+}

@@ -62,143 +62,77 @@
     }
   </nav>
 
-  <!-- Grille principale : liste + lecture -->
-  <div class="inbox-grid" [class.has-selection]="selectedMessage() !== null">
+  <!-- 📋 LISTE -->
+  <div class="inbox-list" role="list">
 
-    <!-- 📋 LISTE -->
-    <div class="inbox-list" role="list">
+    @if (paginatedMessages().length === 0) {
+      <div class="inbox-empty" role="status">
+        <div class="inbox-empty-illustration" aria-hidden="true">📭</div>
+        <h3>Aucun message</h3>
+        <p>
+          @if (activeFilter() === 'unread') {
+            Vous êtes à jour, aucun message non lu.
+          } @else if (activeFilter() === 'starred') {
+            Aucun message suivi pour le moment.
+          } @else {
+            Votre boîte de réception est vide.
+          }
+        </p>
+      </div>
+    }
 
-      @if (paginatedMessages().length === 0) {
-        <div class="inbox-empty" role="status">
-          <div class="inbox-empty-illustration" aria-hidden="true">📭</div>
-          <h3>Aucun message</h3>
-          <p>
-            @if (activeFilter() === 'unread') {
-              Vous êtes à jour, aucun message non lu.
-            } @else if (activeFilter() === 'starred') {
-              Aucun message suivi pour le moment.
-            } @else {
-              Votre boîte de réception est vide.
-            }
-          </p>
-        </div>
-      }
-
-      @for (msg of paginatedMessages(); track msg.id) {
-        <article
-          class="inbox-item"
-          role="listitem"
-          tabindex="0"
-          [class.unread]="msg.isUnread"
-          [class.active]="selectedMessage()?.id === msg.id"
-          (click)="selectMessage(msg)"
-          (keydown.enter)="selectMessage(msg)"
-          (keydown.space)="selectMessage(msg); $event.preventDefault()"
-          [attr.aria-label]="msg.subject"
-        >
-          <!-- Colonne gauche : étoile + avatar -->
-          <div class="inbox-item-left">
-            <button
-              type="button"
-              class="inbox-star"
-              [class.is-starred]="msg.isStarred"
-              (click)="toggleStar(msg, $event)"
-              [attr.aria-label]="msg.isStarred ? 'Retirer le suivi' : 'Suivre ce message'"
-            >
-              {{ msg.isStarred ? '★' : '☆' }}
-            </button>
-            <span class="inbox-avatar" aria-hidden="true">
-              {{ msg.avatarEmoji }}
-            </span>
-          </div>
-
-          <!-- Colonne centrale : expéditeur + sujet + preview -->
-          <div class="inbox-item-body">
-            <div class="inbox-item-top">
-              <span class="inbox-from">{{ msg.from }}</span>
-              <span class="inbox-category" [attr.data-category]="msg.category">
-                <span aria-hidden="true">{{ getCategoryIcon(msg.category) }}</span>
-                {{ msg.category }}
-              </span>
-            </div>
-            <div class="inbox-subject">{{ msg.subject }}</div>
-            <p class="inbox-preview">
-              {{ truncate(msg.preview, previewMaxLength) }}
-            </p>
-          </div>
-
-          <!-- Colonne droite : date -->
-          <div class="inbox-item-right">
-            <span class="inbox-date">
-              {{ formatRelativeDate(msg.receivedAt) }}
-            </span>
-            @if (msg.isUnread) {
-              <span class="inbox-dot" aria-hidden="true"></span>
-            }
-          </div>
-        </article>
-      }
-    </div>
-
-    <!-- 📖 PANNEAU DE LECTURE (Gmail-like) -->
-    @if (selectedMessage(); as selected) {
-      <aside class="inbox-reader" aria-label="Lecture du message">
-        <header class="reader-header">
-          <button
-            type="button"
-            class="reader-back"
-            (click)="closeMessage()"
-            aria-label="Fermer le message"
-          >
-            <span aria-hidden="true">←</span>
-          </button>
-
-          <div class="reader-header-info">
-            <span class="inbox-avatar" aria-hidden="true">
-              {{ selected.avatarEmoji }}
-            </span>
-            <div class="reader-from">
-              <span class="reader-from-name">{{ selected.from }}</span>
-              <span class="reader-from-role">{{ selected.fromRole }}</span>
-            </div>
-          </div>
-
+    @for (msg of paginatedMessages(); track msg.id) {
+      <article
+        class="inbox-item"
+        role="listitem"
+        tabindex="0"
+        [class.unread]="msg.isUnread"
+        (click)="openMessage(msg)"
+        (keydown.enter)="openMessage(msg)"
+        (keydown.space)="openMessage(msg); $event.preventDefault()"
+        [attr.aria-label]="msg.subject"
+      >
+        <!-- Colonne gauche : étoile + avatar -->
+        <div class="inbox-item-left">
           <button
             type="button"
             class="inbox-star"
-            [class.is-starred]="selected.isStarred"
-            (click)="toggleStar(selected, $event)"
-            [attr.aria-label]="selected.isStarred ? 'Retirer le suivi' : 'Suivre ce message'"
+            [class.is-starred]="msg.isStarred"
+            (click)="toggleStar(msg, $event)"
+            [attr.aria-label]="msg.isStarred ? 'Retirer le suivi' : 'Suivre ce message'"
           >
-            {{ selected.isStarred ? '★' : '☆' }}
+            {{ msg.isStarred ? '★' : '☆' }}
           </button>
-        </header>
-
-        <div class="reader-body">
-          <h3 class="reader-subject">{{ selected.subject }}</h3>
-          <p class="reader-date">
-            {{ selected.receivedAt | date: 'dd MMMM yyyy · HH:mm' }}
-          </p>
-          <pre class="reader-text">{{ selected.body }}</pre>
+          <span class="inbox-avatar" aria-hidden="true">
+            {{ msg.avatarEmoji }}
+          </span>
         </div>
 
-        <footer class="reader-footer">
-          <button
-            type="button"
-            class="inbox-btn inbox-btn-blue"
-            (click)="onReply()"
-          >
-            <span aria-hidden="true">↩</span> Répondre
-          </button>
-          <button
-            type="button"
-            class="inbox-btn inbox-btn-grey"
-            (click)="onForward()"
-          >
-            <span aria-hidden="true">→</span> Transférer
-          </button>
-        </footer>
-      </aside>
+        <!-- Colonne centrale : expéditeur + sujet + preview -->
+        <div class="inbox-item-body">
+          <div class="inbox-item-top">
+            <span class="inbox-from">{{ msg.from }}</span>
+            <span class="inbox-category" [attr.data-category]="msg.category">
+              <span aria-hidden="true">{{ getCategoryIcon(msg.category) }}</span>
+              {{ msg.category }}
+            </span>
+          </div>
+          <div class="inbox-subject">{{ msg.subject }}</div>
+          <p class="inbox-preview">
+            {{ truncate(msg.preview, previewMaxLength) }}
+          </p>
+        </div>
+
+        <!-- Colonne droite : date -->
+        <div class="inbox-item-right">
+          <span class="inbox-date">
+            {{ formatRelativeDate(msg.receivedAt) }}
+          </span>
+          @if (msg.isUnread) {
+            <span class="inbox-dot" aria-hidden="true"></span>
+          }
+        </div>
+      </article>
     }
   </div>
 

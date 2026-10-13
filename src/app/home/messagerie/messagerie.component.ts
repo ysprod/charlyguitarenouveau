@@ -1,20 +1,30 @@
 // src/app/features/messagerie/messagerie.component.ts
 
 import {
-  AfterViewChecked,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   EnvironmentInjector,
-  OnDestroy,
-  OnInit,
-  ViewChild,
+  computed,
+  effect,
   inject,
   runInInjectionContext,
+  signal,
+  untracked,
+  viewChild,
 } from '@angular/core';
 
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {
+  takeUntilDestroyed,
+  toSignal,
+} from '@angular/core/rxjs-interop';
+
+import { ActivatedRoute } from '@angular/router';
+
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { Auth, User, authState } from '@angular/fire/auth';
 import {
@@ -28,64 +38,71 @@ import {
   update,
 } from '@angular/fire/database';
 
-import {
-  BehaviorSubject,
-  Observable,
-  Subject,
-  combineLatest,
-  of,
-} from 'rxjs';
-
-import {
-  map,
-  shareReplay,
-  startWith,
-  switchMap,
-  takeUntil,
-  tap,
-} from 'rxjs/operators';
+import { of } from 'rxjs';
+import { map, shareReplay, switchMap } from 'rxjs/operators';
 
 import {
   MessageCategory,
   MessageReply,
   MessageStatus,
   UserMessage,
-} from '../../models/user-message.model';
-import { FILTER_TABS, SORT_OPTIONS, EMPTY_STATE_MESSAGES, REPLY_MAX_LENGTH, REPLY_WARNING_THRESHOLD, STATUS_BADGE_CLASS, DEFAULT_STATUS_BADGE, STATUS_LABEL, DEFAULT_STATUS_LABEL, STATUS_ICON, DEFAULT_STATUS_ICON,   DEFAULT_CATEGORY_ICON } from 'src/app/constants/messagerie.constants';
-import { MessageStats, FilterStatus, SortMode, MessageFilters, INITIAL_FILTERS, INITIAL_STATS } from 'src/app/models/messagerie.model';
-import { sortByRecent, applyFilters, toRepliesArray, getTimestamp, formatResponseTime } from 'src/app/utils/messagerie.utils';
-import { getInitials } from 'src/app/utils/string.utils';
-import { CATEGORY_ICON } from 'src/app/shared/category-icons.constants';
- 
+} from '../models/user-message.model';
+
+import {
+  FILTER_TABS,
+  SORT_OPTIONS,
+  EMPTY_STATE_MESSAGES,
+  REPLY_MAX_LENGTH,
+  REPLY_WARNING_THRESHOLD,
+  STATUS_BADGE_CLASS,
+  DEFAULT_STATUS_BADGE,
+  STATUS_LABEL,
+  DEFAULT_STATUS_LABEL,
+  STATUS_ICON,
+  DEFAULT_STATUS_ICON,
+  DEFAULT_CATEGORY_ICON,
+} from 'src/app/home/constants/messagerie.constants';
+
+import {
+  MessageStats,
+  FilterStatus,
+  SortMode,
+} from 'src/app/home/messagerie.model';
+
+import {
+  sortByRecent,
+  applyFilters,
+  toRepliesArray,
+  getTimestamp,
+  formatResponseTime,
+} from 'src/app/home/utils/messagerie.utils';
+
+import { getInitials } from 'src/app/home/utils/string.utils';
+import { CATEGORY_ICON } from 'src/app/home/category-icons.constants';
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-messagerie',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [DatePipe, FormsModule, MatSnackBarModule],
   templateUrl: './messagerie.component.html',
   styleUrls: ['./messagerie.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MessagerieComponent
-  implements OnInit, OnDestroy, AfterViewChecked
-{
-  /* ─── ViewChild ─── */
-  @ViewChild('threadBody')
-  threadBody?: ElementRef<HTMLDivElement>;
+export class MessagerieComponent {
 
-  /* ─── Flux ─── */
-  messages$!: Observable<UserMessage[]>;
-  filteredMessages$!: Observable<UserMessage[]>;
-  stats$!: Observable<MessageStats>;
+  /* ─── ViewChild (signal-based, Angular 21) ─── */
+  readonly threadBody = viewChild<ElementRef<HTMLDivElement>>('threadBody');
 
-  /* ─── État UI ─── */
-  currentUser: User | null = null;
-  selectedMessage: UserMessage | null = null;
-  replyText = '';
-  isSending = false;
-  searchTerm = '';
-  activeFilter: FilterStatus = 'all';
-  sortMode: SortMode = 'recent';
+  /* ─── Injection ─── */
+  private readonly auth = inject(Auth);
+  private readonly database = inject(Database);
+  private readonly environmentInjector = inject(EnvironmentInjector);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly route = inject(ActivatedRoute);
 
   /* ─── Constantes exposées au template ─── */
   protected readonly filterTabs = FILTER_TABS;
@@ -94,63 +111,25 @@ export class MessagerieComponent
   protected readonly replyMaxLength = REPLY_MAX_LENGTH;
   protected readonly replyWarningThreshold = REPLY_WARNING_THRESHOLD;
 
-  /* ─── Injection ─── */
-  private readonly auth = inject(Auth);
-  private readonly database = inject(Database);
-  private readonly environmentInjector = inject(EnvironmentInjector);
+  /* ═══════════════════════════════════════════════════════════════════
+     FLUX SIGNAL — UTILISATEUR CONNECTÉ
+     ═══════════════════════════════════════════════════════════════════ */
 
-  /* ─── Internes ─── */
-  private readonly destroy$ = new Subject<void>();
-  private readonly filter$ = new BehaviorSubject<MessageFilters>(INITIAL_FILTERS);
+  readonly currentUser = toSignal(authState(this.auth), {
+    initialValue: null as User | null,
+  });
 
-  private scrollNeeded = false;
+  /* ═══════════════════════════════════════════════════════════════════
+     FLUX SIGNAL — MESSAGES
+     ═══════════════════════════════════════════════════════════════════ */
 
-  /**
-   * Cache des réponses triées par clé de message.
-   * Évite de recalculer toRepliesArray() à chaque cycle CD.
-   */
-  private readonly repliesCache = new Map<string, MessageReply[]>();
-
-  /* ═══════════════════════════════════════════════════════
-     CYCLE DE VIE
-     ═══════════════════════════════════════════════════════ */
-
-  ngOnInit(): void {
-    this.initializeMessages();
-    this.initializeFilteredMessages();
-    this.initializeStats();
-  }
-
-  ngAfterViewChecked(): void {
-    if (this.scrollNeeded && this.threadBody) {
-      this.scrollToBottom();
-      this.scrollNeeded = false;
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.repliesCache.clear();
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     INITIALISATION DES FLUX
-     ═══════════════════════════════════════════════════════ */
-
-  private initializeMessages(): void {
-    this.messages$ = runInInjectionContext(this.environmentInjector, () =>
+  private readonly messagesStream$ = runInInjectionContext(
+    this.environmentInjector,
+    () =>
       authState(this.auth).pipe(
-        takeUntil(this.destroy$),
-
+        takeUntilDestroyed(this.destroyRef),
         switchMap((user: User | null) => {
-          this.currentUser = user;
-
-          if (!user) {
-            this.selectedMessage = null;
-            this.repliesCache.clear();
-            return of([]);
-          }
+          if (!user) return of([] as UserMessage[]);
 
           const messagesQuery = query(
             ref(this.database, 'messages'),
@@ -159,96 +138,162 @@ export class MessagerieComponent
           );
 
           return listVal<UserMessage>(messagesQuery, { keyField: 'key' }).pipe(
-            map((messages) => sortByRecent(messages)),
-            tap((messages) => this.syncSelectedMessage(messages))
+            map((messages) => sortByRecent(messages))
           );
         }),
-
         shareReplay({ bufferSize: 1, refCount: true })
       )
-    );
-  }
+  );
 
-  private initializeFilteredMessages(): void {
-    this.filteredMessages$ = combineLatest([
-      this.messages$,
-      this.filter$,
-    ]).pipe(
-      map(([messages, filters]) =>
-        applyFilters(messages, filters.search, filters.status, filters.sort)
-      )
-    );
-  }
+  readonly messages = toSignal(this.messagesStream$, {
+    initialValue: [] as UserMessage[],
+  });
 
-  private initializeStats(): void {
-    this.stats$ = this.messages$.pipe(
-      map((messages): MessageStats => {
-        const total = messages.length;
-        const unread = messages.filter((m) => m.status === 'unread').length;
-        const replied = messages.filter((m) => m.status === 'replied').length;
+  /* ═══════════════════════════════════════════════════════════════════
+     PARAMÈTRE URL — :key du message à ouvrir
+     ═══════════════════════════════════════════════════════════════════ */
 
-        let totalResponseTimeMs = 0;
-        let responseCount = 0;
+  private readonly routeKey = toSignal(
+    this.route.paramMap.pipe(
+      map((params) => params.get('key'))
+    ),
+    { initialValue: null as string | null }
+  );
 
-        for (const message of messages) {
-          const replies = toRepliesArray(message.replies);
-          const firstAdminReply = replies.find((r) => r.senderRole === 'admin');
+  /* ═══════════════════════════════════════════════════════════════════
+     ÉTAT UI — SIGNALS
+     ═══════════════════════════════════════════════════════════════════ */
 
-          if (firstAdminReply && message.createdAt) {
-            const responseTime =
-              getTimestamp(firstAdminReply.createdAt) -
-              getTimestamp(message.createdAt);
+  readonly selectedMessage = signal<UserMessage | null>(null);
+  readonly replyText = signal('');
+  readonly isSending = signal(false);
 
-            if (responseTime >= 0) {
-              totalResponseTimeMs += responseTime;
-              responseCount++;
-            }
-          }
+  readonly searchTerm = signal('');
+  readonly activeFilter = signal<FilterStatus>('all');
+  readonly sortMode = signal<SortMode>('recent');
+
+  /* ═══════════════════════════════════════════════════════════════════
+     FLUX DÉRIVÉS — COMPUTED
+     ═══════════════════════════════════════════════════════════════════ */
+
+  readonly filteredMessages = computed(() =>
+    applyFilters(
+      this.messages(),
+      this.searchTerm(),
+      this.activeFilter(),
+      this.sortMode()
+    )
+  );
+
+  readonly stats = computed<MessageStats>(() => {
+    const messages = this.messages();
+    const total = messages.length;
+    const unread = messages.filter((m) => m.status === 'unread').length;
+    const replied = messages.filter((m) => m.status === 'replied').length;
+
+    let totalResponseTimeMs = 0;
+    let responseCount = 0;
+
+    for (const message of messages) {
+      const replies = toRepliesArray(message.replies);
+      const firstAdminReply = replies.find((r) => r.senderRole === 'admin');
+
+      if (firstAdminReply && message.createdAt) {
+        const responseTime =
+          getTimestamp(firstAdminReply.createdAt) -
+          getTimestamp(message.createdAt);
+
+        if (responseTime >= 0) {
+          totalResponseTimeMs += responseTime;
+          responseCount++;
         }
+      }
+    }
 
-        const average =
-          responseCount > 0 ? totalResponseTimeMs / responseCount : 0;
+    const average =
+      responseCount > 0 ? totalResponseTimeMs / responseCount : 0;
 
-        return {
-          total,
-          unread,
-          replied,
-          avgResponseTime: formatResponseTime(average),
-        };
-      }),
+    return {
+      total,
+      unread,
+      replied,
+      avgResponseTime: formatResponseTime(average),
+    };
+  });
 
-      startWith(INITIAL_STATS)
-    );
+  readonly userInitials = computed(() =>
+    getInitials(this.currentUser()?.displayName ?? 'Vous')
+  );
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CONSTRUCTEUR — EFFECTS
+     ═══════════════════════════════════════════════════════════════════ */
+
+  constructor() {
+
+    /* ─── Effect 1 : ouverture automatique du message depuis l'URL ─── */
+    effect(() => {
+      const key = this.routeKey();
+      const messages = this.messages();
+
+      if (!key) return;
+      if (messages.length === 0) return;
+
+      /* Éviter la boucle infinie si le message est déjà sélectionné */
+      const current = untracked(() => this.selectedMessage());
+      if (current?.key === key) return;
+
+      const target = messages.find((m) => m.key === key);
+      if (target) {
+        this.selectedMessage.set(target);
+        this.replyText.set('');
+      }
+    });
+
+    /* ─── Effect 2 : scroll automatique en bas du thread ─── */
+    effect(() => {
+      const selected = this.selectedMessage();
+      const repliesCount = selected
+        ? toRepliesArray(selected.replies).length
+        : 0;
+      const messagesCount = this.messages().length;
+
+      untracked(() => {
+        if (!selected && messagesCount === 0) return;
+        queueMicrotask(() => {
+          const element = this.threadBody()?.nativeElement;
+          if (element) {
+            element.scrollTop = element.scrollHeight;
+          }
+        });
+      });
+    });
   }
 
-  /* ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
      ACTIONS UI
-     ═══════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════════════════ */
 
   updateSearch(value: string): void {
-    this.searchTerm = value;
-    this.filter$.next({ ...this.filter$.value, search: value });
+    this.searchTerm.set(value);
   }
 
   setFilter(status: FilterStatus): void {
-    this.activeFilter = status;
-    this.filter$.next({ ...this.filter$.value, status });
+    this.activeFilter.set(status);
   }
 
   setSort(sort: SortMode): void {
-    this.sortMode = sort;
-    this.filter$.next({ ...this.filter$.value, sort });
+    this.sortMode.set(sort);
   }
 
   selectMessage(message: UserMessage): void {
-    this.selectedMessage = message;
-    this.replyText = '';
-    this.scrollNeeded = true;
+    this.selectedMessage.set(message);
+    this.replyText.set('');
   }
 
   closeThread(): void {
-    this.selectedMessage = null;
-    this.replyText = '';
+    this.selectedMessage.set(null);
+    this.replyText.set('');
   }
 
   onReplyEnter(event: Event): void {
@@ -256,23 +301,24 @@ export class MessagerieComponent
     if (keyboardEvent.shiftKey) return;
 
     keyboardEvent.preventDefault();
-    if (!this.isSending && this.replyText.trim()) {
+    if (!this.isSending() && this.replyText().trim()) {
       void this.sendReply();
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
      ENVOI
-     ═══════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════════════════ */
 
   async sendReply(): Promise<void> {
-    const message = this.selectedMessage;
-    const user = this.currentUser;
-    const content = this.replyText.trim();
+    const message = this.selectedMessage();
+    const user = this.currentUser();
+    const content = this.replyText().trim();
 
     if (!message?.key || !content || !user) return;
+    if (this.isSending()) return;
 
-    this.isSending = true;
+    this.isSending.set(true);
 
     try {
       const now = new Date().toISOString();
@@ -297,36 +343,31 @@ export class MessagerieComponent
         });
       });
 
-      if (message.key) {
-        this.repliesCache.delete(message.key);
-      }
-
-      this.replyText = '';
-      this.scrollNeeded = true;
+      this.replyText.set('');
     } catch (error) {
       console.error('Erreur lors de l’envoi de la réponse :', error);
-      window.alert('Impossible d’envoyer le message. Veuillez réessayer.');
+      this.snackBar.open(
+        'Impossible d’envoyer le message. Veuillez réessayer.',
+        'Fermer',
+        { duration: 4000, panelClass: ['snack-error'] }
+      );
     } finally {
-      this.isSending = false;
+      this.isSending.set(false);
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════════════════
      HELPERS TEMPLATE
-     ═══════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════════════════ */
 
   repliesOf(message: UserMessage): MessageReply[] {
-    return this.getRepliesArray(message.replies, message.key);
+    return toRepliesArray(message.replies);
   }
 
   repliesCount(
     replies: Record<string, MessageReply> | MessageReply[] | undefined
   ): number {
     return toRepliesArray(replies).length;
-  }
-
-  get userInitials(): string {
-    return getInitials(this.currentUser?.displayName ?? 'Vous');
   }
 
   statusBadgeClass(status: string | undefined): string {
@@ -345,56 +386,5 @@ export class MessagerieComponent
 
   categoryIcon(category: string | undefined): string {
     return CATEGORY_ICON[category as MessageCategory] ?? DEFAULT_CATEGORY_ICON;
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     HELPERS INTERNES
-     ═══════════════════════════════════════════════════════ */
-
-  private getRepliesArray(
-    replies: Record<string, MessageReply> | MessageReply[] | undefined,
-    cacheKey?: string
-  ): MessageReply[] {
-    if (!replies) return [];
-
-    if (cacheKey && !Array.isArray(replies)) {
-      const cached = this.repliesCache.get(cacheKey);
-      if (cached) return cached;
-    }
-
-    const result = toRepliesArray(replies);
-
-    if (cacheKey && !Array.isArray(replies)) {
-      this.repliesCache.set(cacheKey, result);
-    }
-
-    return result;
-  }
-
-  private syncSelectedMessage(messages: UserMessage[]): void {
-    const selected = this.selectedMessage;
-    if (!selected?.key) return;
-
-    const updated = messages.find((m) => m.key === selected.key);
-    if (!updated) return;
-
-    const previousRepliesCount = toRepliesArray(selected.replies).length;
-    const updatedRepliesCount = toRepliesArray(updated.replies).length;
-
-    if (updatedRepliesCount !== previousRepliesCount && updated.key) {
-      this.repliesCache.delete(updated.key);
-    }
-
-    this.selectedMessage = updated;
-
-    if (updatedRepliesCount > previousRepliesCount) {
-      this.scrollNeeded = true;
-    }
-  }
-
-  private scrollToBottom(): void {
-    const element = this.threadBody?.nativeElement;
-    if (!element) return;
-    element.scrollTop = element.scrollHeight;
   }
 }

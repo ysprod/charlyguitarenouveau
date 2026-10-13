@@ -23,25 +23,26 @@ import { MessagerieComponent } from './home/messagerie/messagerie.component';
 import { PrivacyComponent } from './home/privacy/privacy.component';
 import { ProfilComponent } from './home/profil/profil.component';
 import { LiveComponent } from './live/live.component';
-import { LoginComponent } from './login/login.component';
+import { LoginComponent } from './home/login/login.component';
 import { FinanceComponent } from './offoland/finance/finance.component';
 import { OffolandComponent } from './offoland/offoland.component';
-import { OffresComponent } from './offres/offres.component';
+import { OffresComponent } from './academie/offres/offres.component';
 import { PianoComponent } from './game/piano/piano.component';
-import { RegisterComponent } from './register/register.component';
-import { BlancComponent } from './univers/blanc/blanc.component';
-import { BleuComponent } from './univers/bleu/bleu.component';
-import { CharlyguitaregameComponent } from './univers/charlyguitaregame/charlyguitaregame.component';
-import { NoirComponent } from './univers/noir/noir.component';
-import { RougeComponent } from './univers/rouge/rouge.component';
-import { VertComponent } from './univers/vert/vert.component';
+import { RegisterComponent } from './home/register/register.component';
+import { BlancComponent } from './offoland/blanc/blanc.component';
+import { BleuComponent } from './offoland/bleu/bleu.component';
+import { CharlyguitaregameComponent } from './offoland/charlyguitaregame/charlyguitaregame.component';
+import { NoirComponent } from './offoland/noir/noir.component';
+import { RougeComponent } from './offoland/rouge/rouge.component';
+
 import { BcoComponent } from './offoland/bco/bco.component';
 import { PianovirtuelComponent } from './game/pianovirtuel/pianovirtuel.component';
 import { GuitarLiveComponent } from './game/guitar-live/guitar-live.component';
 import { OracleWidgetComponent } from './game/oracle-widget/oracle-widget.component';
-import { PourpreComponent } from './univers/pourpre/pourpre.component';
-import { VioletComponent } from './univers/violet/violet.component';
+import { PourpreComponent } from './offoland/pourpre/pourpre.component';
+import { VioletComponent } from './offoland/violet/violet.component';
 import { HomeconnectComponent } from './home/homeconnect/homeconnect.component';
+import { VertComponent } from './offoland/vert/vert.component';
 
 export const routes: Routes = [
   {
@@ -140,6 +141,11 @@ export const routes: Routes = [
 
   {
     path: 'inbox',
+    component: MessagerieComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'inbox/:key',
     component: MessagerieComponent,
     canActivate: [AuthGuard]
   },
