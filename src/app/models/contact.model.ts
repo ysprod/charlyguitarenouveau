@@ -20,4 +20,5 @@ export interface MessageData {
   message: string;
   createdAt: string;
   status: 'unread';
+  to: 'admin';
 }

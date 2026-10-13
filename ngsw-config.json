@@ -109,6 +109,21 @@
         "maxAge": "1h",
         "timeout": "5s"
       }
+    },
+    {
+      "name": "google-analytics",
+      "urls": [
+        "https://www.google-analytics.com/**",
+        "https://analytics.google.com/**",
+        "https://region1.google-analytics.com/**",
+        "https://stats.g.doubleclick.net/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 0,
+        "maxAge": "0s",
+        "timeout": "5s"
+      }
     }
   ],
   "navigationUrls": [

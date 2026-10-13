@@ -126,7 +126,8 @@ export class ContactComponent {
       subject: this.contactForm.controls.subject.value.trim(),
       message: this.contactForm.controls.message.value.trim(),
       createdAt: new Date().toISOString(),
-      status: 'unread'
+      status: 'unread',
+      to: 'admin'
     };
 
     try {

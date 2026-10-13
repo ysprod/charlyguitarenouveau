@@ -38,18 +38,25 @@ import {
 } from '@angular/fire/database';
 
 import {
+  getStorage,
+  provideStorage,
+} from '@angular/fire/storage';
+
+/* ✅ AJOUT — Analytics */
+import {
+  getAnalytics,
+  provideAnalytics,
+  ScreenTrackingService,
+  UserTrackingService,
+} from '@angular/fire/analytics';
+
+import {
   routes,
 } from './app.routes';
 
 import {
   environment,
 } from '../environments/environment';
-
-// ✅ AJOUT
-import {
-  getStorage,
-  provideStorage,
-} from '@angular/fire/storage';
 
 /* ═══════════════════════════════════════════════════════════
    APP CONFIG
@@ -62,8 +69,8 @@ export const appConfig: ApplicationConfig = {
        1. DÉTECTION DE CHANGEMENT — Zone.js optimisé
        ═══════════════════════════════════════════════════════ */
     provideZoneChangeDetection({
-      eventCoalescing: true,     // Regroupe les events (scroll, click…)
-      runCoalescing: true,       // Regroupe les cycles CD
+      eventCoalescing: true,
+      runCoalescing: true,
     }),
 
     /* ═══════════════════════════════════════════════════════
@@ -102,10 +109,8 @@ export const appConfig: ApplicationConfig = {
     provideAuth(() => {
       const auth = getAuth();
 
-      /* L'utilisateur reste connecté hors-ligne via IndexedDB. */
       void setPersistence(auth, indexedDBLocalPersistence)
         .catch(() => {
-          /* Fallback si IndexedDB indisponible. */
           return setPersistence(auth, browserLocalPersistence);
         });
 
@@ -116,10 +121,25 @@ export const appConfig: ApplicationConfig = {
        6. REALTIME DATABASE — offline-first natif
        ═══════════════════════════════════════════════════════ */
     provideDatabase(() => getDatabase()),
+
+    /* ═══════════════════════════════════════════════════════
+       7. STORAGE
+       ═══════════════════════════════════════════════════════ */
     provideStorage(() => getStorage()),
 
     /* ═══════════════════════════════════════════════════════
-       7. SERVICE WORKER — PWA
+       8. ✅ ANALYTICS — Google Analytics via Firebase
+       ═══════════════════════════════════════════════════════ */
+    provideAnalytics(() => getAnalytics()),
+
+    /* Suivi automatique des écrans (screen_view à chaque route). */
+    ScreenTrackingService,
+
+    /* Suivi automatique de l'utilisateur connecté (user_id). */
+    UserTrackingService,
+
+    /* ═══════════════════════════════════════════════════════
+       9. SERVICE WORKER — PWA
        ═══════════════════════════════════════════════════════ */
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
