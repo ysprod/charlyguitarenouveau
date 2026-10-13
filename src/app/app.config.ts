@@ -1,7 +1,6 @@
 import {
   ApplicationConfig,
   isDevMode,
-  provideZoneChangeDetection,
 } from '@angular/core';
 
 import {
@@ -65,13 +64,7 @@ import {
 export const appConfig: ApplicationConfig = {
   providers: [
 
-    /* ═══════════════════════════════════════════════════════
-       1. DÉTECTION DE CHANGEMENT — Zone.js optimisé
-       ═══════════════════════════════════════════════════════ */
-    provideZoneChangeDetection({
-      eventCoalescing: true,
-      runCoalescing: true,
-    }),
+   
 
     /* ═══════════════════════════════════════════════════════
        2. ROUTER
