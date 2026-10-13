@@ -1,14 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   inject
 } from '@angular/core';
+
 import {
   Router,
   RouterLink,
   RouterLinkActive
 } from '@angular/router';
+
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import {
@@ -19,6 +20,7 @@ import {
   query,
   ref
 } from '@angular/fire/database';
+
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { Observable, of } from 'rxjs';
@@ -30,7 +32,6 @@ import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-footer',
-  standalone: true,
   imports: [RouterLink, RouterLinkActive, InstallComponent],
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss'],
@@ -55,21 +56,14 @@ export class FooterComponent {
   private readonly hasSentMessage$: Observable<boolean> =
     this.buildHasSentMessageStream();
 
+  /**
+   * `true` dès que l'utilisateur a envoyé au moins un message.
+   * Utilisé pour afficher le CTA « Mes messages » à la place du
+   * CTA « Discutez avec Charly Guitare ».
+   */
   readonly hasSentMessage = toSignal(this.hasSentMessage$, {
     initialValue: false
   });
-
-  /** Route dynamique du CTA « Discuter avec Charly Guitare ». */
-  readonly contactCtaRoute = computed(() =>
-    this.hasSentMessage() ? '/inbox' : '/contact'
-  );
-
-  /** Libellé dynamique du CTA. */
-  readonly contactCtaLabel = computed(() =>
-    this.hasSentMessage()
-      ? 'MES MESSAGES AVEC CHARLY'
-      : 'DISCUTEZ AVEC CHARLY GUITARE'
-  );
 
   /* ═══════════════════════════════════════════════════════
      CONSTRUCTION DU FLUX

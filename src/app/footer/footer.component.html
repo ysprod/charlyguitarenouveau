@@ -1,32 +1,34 @@
- <!-- ═══════════════════════════════════════════
-       ZONE CTA (isolée en haut du footer)
-       ═══════════════════════════════════════════ -->
-  <section class="footer-cta-section" aria-labelledby="footer-cta-title">
-    <h2 id="footer-cta-title" class="visually-hidden">
-      Actions principales
-    </h2>
+<!-- ═══════════════════════════════════════════
+     ZONE CTA (isolée en haut du footer)
+     ═══════════════════════════════════════════ -->
+<section class="footer-cta-section" aria-labelledby="footer-cta-title">
+  <h2 id="footer-cta-title" class="visually-hidden">
+    Actions principales
+  </h2>
 
-    <div class="contact-cta">
-      <!-- 🟠 Bouton "Installer l'app" -->
-      <app-install />
+  <div class="contact-cta">
+    <!-- 🟠 Bouton "Installer l'app" -->
+    <app-install />
 
-      <!-- 🟠 CTA Contact -->
+    <!-- ═══════════ CTA CONDITIONNEL ═══════════ -->
+    @if (!hasSentMessage()) {
+      <!-- 🟠 Premier contact : jamais envoyé de message -->
       <a
-        [routerLink]="contactCtaRoute()"
+        [routerLink]="['/contact']"
         routerLinkActive="active"
-        class="cta-contact-link"
-        [attr.aria-label]="contactCtaLabel()"
+        class="cta-contact-link cta-contact-link--first"
+        aria-label="Discutez avec Charly Guitare"
       >
-        {{ contactCtaLabel() }}
+        DISCUTEZ AVEC CHARLY GUITARE
       </a>
-    </div>
-  </section>
+    }  
+  </div>
+</section>
+
 <footer class="app-footer">
 
   <!-- Décor lumineux supérieur -->
   <div class="footer-glow" aria-hidden="true"></div>
-
- 
 
   <!-- ═══════════════════════════════════════════
        CONTENU PRINCIPAL DU FOOTER
@@ -94,7 +96,7 @@
         </a>
         <a [routerLink]="['/again']" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
-        Dream Team
+          Dream Team
         </a>
       </div>
     </nav>

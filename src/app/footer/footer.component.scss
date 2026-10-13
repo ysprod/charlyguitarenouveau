@@ -16,6 +16,7 @@
 
   /* Accent bleu (cohérence avec le reste du site) */
   --primary: #2563eb;
+  --primary-hover: #1d4ed8;
 
   /* Orange (CTA) */
   --warning: #ea580c;
@@ -178,29 +179,27 @@
   flex-wrap: wrap;
 }
 
-/* 🟠 CTA Contact (lien principal) */
+/* ═════════════════════════════════════════════════════════════════════
+   CTA CONTACT — Styles communs + variantes
+   ═════════════════════════════════════════════════════════════════════ */
+
 .cta-contact-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: .5rem;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, var(--warning) 0%, #f97316 100%);
-  color: #ffffff;
   border-radius: 999px;
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: .5px;
   text-decoration: none;
-  box-shadow:
-    0 8px 24px -8px rgba(234, 88, 12, .45),
-    inset 0 1px 0 rgba(255, 255, 255, .2);
+  position: relative;
+  overflow: hidden;
   transition:
     transform var(--t-base),
     box-shadow var(--t-base),
     filter var(--t-base);
-  position: relative;
-  overflow: hidden;
 
   /* Effet shimmer au survol */
   &::before {
@@ -221,9 +220,6 @@
 
   &:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow:
-      0 14px 32px -8px rgba(234, 88, 12, .55),
-      inset 0 1px 0 rgba(255, 255, 255, .2);
     filter: brightness(1.05);
 
     &::before {
@@ -236,8 +232,38 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--warning);
+    outline: 2px solid currentColor;
     outline-offset: 3px;
+  }
+}
+
+/* 🟠 Premier contact — jamais envoyé de message */
+.cta-contact-link--first {
+  background: linear-gradient(135deg, var(--warning) 0%, #f97316 100%);
+  color: #ffffff;
+  box-shadow:
+    0 8px 24px -8px rgba(234, 88, 12, .45),
+    inset 0 1px 0 rgba(255, 255, 255, .2);
+
+  &:hover {
+    box-shadow:
+      0 14px 32px -8px rgba(234, 88, 12, .55),
+      inset 0 1px 0 rgba(255, 255, 255, .2);
+  }
+}
+
+/* 🔵 Mes messages — l'utilisateur a déjà envoyé */
+.cta-contact-link--inbox {
+  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+  color: #ffffff;
+  box-shadow:
+    0 8px 24px -8px rgba(37, 99, 235, .45),
+    inset 0 1px 0 rgba(255, 255, 255, .2);
+
+  &:hover {
+    box-shadow:
+      0 14px 32px -8px rgba(37, 99, 235, .55),
+      inset 0 1px 0 rgba(255, 255, 255, .2);
   }
 }
 
