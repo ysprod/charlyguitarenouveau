@@ -12,17 +12,17 @@ import {
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DEFAULT_INPUT, NOTES_SHARP, STORAGE_KEY } from 'src/app/game/chord.constants';
+import { DEFAULT_INPUT, NOTES_SHARP, STORAGE_KEY } from 'src/app/game/constants/chord.constants';
 import { Preset, PRESETS } from 'src/app/game/data/chord.presets';
 
 import {
   ChordDetail,
   GridBar,
   SavedGrid,
-} from 'src/app/game/chord-decoder.model';
-import { buildMidiFile, chordToMidiNotes } from 'src/app/game/chord-midi.utils';
-import { analyzeChord, transposeGrid } from 'src/app/game/chord.utils';
-import { createIntervalScheduler, createTimeoutScheduler } from 'src/app/game/schedulers.util';
+} from 'src/app/game/models/chord-decoder.model';
+import { buildMidiFile, chordToMidiNotes } from 'src/app/game/utils/chord-midi.utils';
+ import { createIntervalScheduler, createTimeoutScheduler } from 'src/app/game/utils/schedulers.util';
+import { analyzeChord, transposeGrid } from '../utils/chord.utils';
  
 
 /* ═════════════════════════════════════════════════════════════════════

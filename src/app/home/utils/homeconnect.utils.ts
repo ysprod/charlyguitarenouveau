@@ -1,6 +1,6 @@
 // src/app/homeconnect/homeconnect.utils.ts
 
- import { InboxMessage, InboxFilter } from "../homeconnect.model";
+ import { InboxMessage, InboxFilter } from "../models/homeconnect.model";
 
  
 

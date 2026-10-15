@@ -5,7 +5,7 @@ import {
   Component,
   inject,
 } from '@angular/core';
-import { ToastService } from 'src/app/academie/toast.service';
+import { ToastService } from 'src/app/academie/services/toast.service';
 
  
 

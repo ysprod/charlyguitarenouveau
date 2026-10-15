@@ -9,7 +9,7 @@ import type {
   InboxCategory,
   InboxMessage,
   SenderRole,
-} from 'src/app/home/homeconnect.model';
+} from 'src/app/home/models/homeconnect.model';
 
 /* ═══════════════════════════════════════════════════════
    MAPPINGS

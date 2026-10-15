@@ -24,23 +24,23 @@ import {
 
 import { catchError, map, of, switchMap } from 'rxjs';
 
-import { DocumentItem } from '../document.model';
+import { DocumentItem } from '../models/document.model';
 import {
   PendingPurchase,
   SortOption,
-} from '../documents-ui.model';
+} from '../models/documents-ui.model';
 
 import {
   DOCUMENTS_DB_PATHS,
   DOCUMENT_FILTERS,
   FILTER_ALL_LABEL,
-} from '../documents-ui.constants';
+} from '../constants/documents-ui.constants';
 
  import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
-import { ToastService } from 'src/app/academie/toast.service';
+import { ToastService } from 'src/app/academie/services/toast.service';
 import { FormatPricePipe } from 'src/app/academie/pipes/format-price.pipe';
 import { ToastComponent } from 'src/app/academie/toast/toast.component';
-import { matchesCategory, sortDocuments, formatPrice } from 'src/app/academie/documents.utils';
+import { matchesCategory, sortDocuments, formatPrice } from 'src/app/academie/utils/documents.utils';
 import { PromoCodeService } from 'src/app/shared/services/promo-code.service';
 
  

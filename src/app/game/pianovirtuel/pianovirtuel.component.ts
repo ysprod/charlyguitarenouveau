@@ -4,7 +4,6 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  HostListener,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -15,19 +14,19 @@ import {
   untracked
 } from '@angular/core';
 
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { fromEvent } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import {
   InstrumentType,
   PianoAudioService
-} from 'src/app/game/piano-audio.service';
-import { GameAudioService } from 'src/app/game/game-audio.service';
+} from 'src/app/game/services/piano-audio.service';
+import { PianoKey } from 'src/app/game/models/piano.model';
+import { randomFloat } from 'src/app/game/utils/random.utils';
 import { StorageService } from 'src/app/shared/services/storage.service';
-import { PianoKey } from 'src/app/game/piano.model';
-import { randomFloat, randomInt } from 'src/app/game/random.utils';
+import { GameAudioService } from '../services/game-audio.service';
 
 /* ═════════════════════════════════════════════════════════════════════
    CONSTANTES

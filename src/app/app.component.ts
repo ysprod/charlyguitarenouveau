@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  afterNextRender,
   effect,
   inject,
   signal,
@@ -32,15 +33,15 @@ import {
   RouterOutlet,
 } from '@angular/router';
 
-import { fromEvent, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 
 import { InstallPromptComponent } from './home/install-prompt/install-prompt.component';
 
 import { UserMessage } from './home/models/user-message.model';
 
-import { AuthService } from './home/auth.service';
-import { VoiceService } from './game/voice.service';
+import { AuthService } from './home/services/auth.service';
+import { VoiceService } from './game/services/voice.service';
 
 import { getInitials } from './home/utils/string.utils';
 
@@ -97,15 +98,7 @@ export class AppComponent {
      ═══════════════════════════════════════════════════════ */
 
   readonly isMobileMenuOpen = signal(false);
-
-  /** Détection du scroll (remplace @HostListener). */
-  readonly isScrolled = toSignal(
-    fromEvent(window, 'scroll', { passive: true }).pipe(
-      map(() => window.scrollY > 20),
-      distinctUntilChanged()
-    ),
-    { initialValue: false }
-  );
+  readonly isScrolled = signal(false);
 
   /* ═══════════════════════════════════════════════════════
      MESSAGES — COMPTEUR RÉACTIF
@@ -126,12 +119,30 @@ export class AppComponent {
   private voiceTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   /* ═══════════════════════════════════════════════════════
-     CONSTRUCTEUR — EFFECTS + CLEANUP
+     CONSTRUCTEUR
      ═══════════════════════════════════════════════════════ */
 
   constructor() {
+    /* Détection du scroll — SSR-safe, uniquement côté navigateur */
+    afterNextRender(() => {
+      const scrolled$ = new Observable<boolean>((subscriber) => {
+        const onScroll = () => subscriber.next(window.scrollY > 20);
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+
+        return () => window.removeEventListener('scroll', onScroll);
+      }).pipe(distinctUntilChanged());
+
+      scrolled$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((value) => this.isScrolled.set(value));
+    });
+
+    /* Surveillance des nouveaux messages */
     this.watchNewMessages();
 
+    /* Nettoyage du timeout vocal */
     this.destroyRef.onDestroy(() => {
       if (this.voiceTimeoutId !== null) {
         clearTimeout(this.voiceTimeoutId);
@@ -144,7 +155,7 @@ export class AppComponent {
      FLUX : compteur de messages "replied"
      ═══════════════════════════════════════════════════════ */
 
-  private watchUnreadMessages() {
+  private watchUnreadMessages(): Observable<number> {
     return this.auth.user$.pipe(
       takeUntilDestroyed(this.destroyRef),
 
@@ -244,7 +255,7 @@ export class AppComponent {
 
   onLogout(): void {
     this.closeMobileMenu();
-    this.auth.logout();
+    void this.auth.logout();
 
     this.snackBar.open('Déconnexion réussie', 'Fermer', { duration: 3000 });
 
@@ -260,5 +271,5 @@ export class AppComponent {
    * Retourne `'U'` par défaut si aucun nom n'est fourni.
    */
   getInitials = (name: string | null | undefined): string =>
-    getInitials(name, '', 'U');
+    getInitials(name, '', 'O');
 }

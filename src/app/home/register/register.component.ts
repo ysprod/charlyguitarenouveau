@@ -26,14 +26,14 @@ import {
   update
 } from '@angular/fire/database';
 import { DEFAULT_RETURN_URL_REGISTER } from '../constants/auth.constants';
-import { TOAST_DURATION_MS } from '../../academie/documents-ui.constants';
+import { TOAST_DURATION_MS } from '../../academie/constants/documents-ui.constants';
 import { UserOrigin, RealtimeUserProfile } from '../models/auth.model';
-import { AuthContextService } from '../auth-context.service';
-import { AuthAlertComponent } from '../auth-alert/auth-alert.component';
-import { AuthHeaderComponent } from '../auth-header/auth-header.component';
-import { AuthInputComponent } from '../auth-input/auth-input.component';
-import { AuthLayoutComponent } from '../auth-layout/auth-layout.component';
-import { GoogleButtonComponent } from '../google-button/google-button.component';
+import { AuthAlertComponent } from '../auth/auth-alert/auth-alert.component';
+import { AuthHeaderComponent } from '../auth/auth-header/auth-header.component';
+import { AuthInputComponent } from '../auth/auth-input/auth-input.component';
+import { AuthLayoutComponent } from '../auth/auth-layout/auth-layout.component';
+import { GoogleButtonComponent } from '../auth/google-button/google-button.component';
+import { AuthContextService } from '../services/auth-context.service';
 
 @Component({
   selector: 'app-register',

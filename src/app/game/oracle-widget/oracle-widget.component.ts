@@ -13,8 +13,8 @@ import {
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { OracleGameService } from '../oracle-game.service';
-import { ParticleService } from '../particle.service';
+import { OracleGameService } from '../services/oracle-game.service';
+import { ParticleService } from '../services/particle.service';
 
 @Component({
   selector: 'app-oracle-widget',

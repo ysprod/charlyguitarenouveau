@@ -1,7 +1,7 @@
 // src/app/features/messagerie/messagerie.utils.ts
 
 import { STATUS_RANK, DEFAULT_STATUS_RANK } from "../constants/messagerie.constants";
-import { SortMode } from "../messagerie.model";
+import { SortMode } from "../models/messagerie.model";
 import { UserMessage, MessageReply } from "../models/user-message.model";
 
  

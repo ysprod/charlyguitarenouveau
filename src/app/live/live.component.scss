@@ -225,10 +225,9 @@
   animation: heroEntry .9s .15s ease both;
 }
 
-.video-card { grid-area: video; }
-
-.live-card:nth-of-type(1) { grid-area: concerts; }
-.live-card:nth-of-type(2) { grid-area: replay; }
+.video-card    { grid-area: video; }
+.card-concerts { grid-area: concerts; }
+.card-replay   { grid-area: replay; }
 
 /* ============================================================
    CARTE VIDÉO (YouTube embarqué) — version claire
@@ -245,7 +244,7 @@
   transition: transform var(--t-base), box-shadow var(--t-base), border-color var(--t-base);
   box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
 
-  /* Shimmer au survol uniquement (retiré en permanence) */
+  /* Shimmer au survol uniquement */
   &::before {
     content: '';
     position: absolute;

@@ -7,8 +7,8 @@ import {
   signal,
 } from '@angular/core';
 
-import { GaugeComponent } from 'src/app/offoland/gauge/gauge.component';
-import { SparklineComponent } from 'src/app/offoland/sparkline/sparkline.component';
+import { GaugeComponent } from 'src/app/offoland/bco/gauge/gauge.component';
+import { SparklineComponent } from 'src/app/offoland/bco/sparkline/sparkline.component';
 
 /* ============================================================
    TYPES

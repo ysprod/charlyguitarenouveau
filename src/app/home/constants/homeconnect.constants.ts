@@ -1,6 +1,6 @@
 // src/app/homeconnect/homeconnect.constants.ts
 
-import { QuickAction, ColorUniverse, InboxMessage, InboxFilter, Testimonial, WhyPillar } from "../homeconnect.model";
+import { QuickAction, ColorUniverse, InboxMessage, InboxFilter, Testimonial, WhyPillar } from "../models/homeconnect.model";
 
  
 

@@ -67,7 +67,7 @@ import {
   MessageStats,
   FilterStatus,
   SortMode,
-} from 'src/app/home/messagerie.model';
+} from 'src/app/home/models/messagerie.model';
 
 import {
   sortByRecent,
@@ -78,8 +78,8 @@ import {
 } from 'src/app/home/utils/messagerie.utils';
 
 import { getInitials } from 'src/app/home/utils/string.utils';
-import { CATEGORY_ICON } from 'src/app/home/category-icons.constants';
-
+import { CATEGORY_ICON } from '../constants/category-icons.constants';
+ 
 /* ═════════════════════════════════════════════════════════════════════
    COMPOSANT
    ═════════════════════════════════════════════════════════════════════ */

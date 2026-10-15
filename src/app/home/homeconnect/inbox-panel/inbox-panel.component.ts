@@ -21,16 +21,17 @@ import {
 import type {
   InboxFilter,
   InboxMessage,
-} from 'src/app/home/homeconnect.model';
+} from 'src/app/home/models/homeconnect.model';
 
-import { InboxService } from 'src/app/home/inbox.service';
-import { getCategoryIcon } from 'src/app/home/category-icons.constants';
+import { InboxService } from 'src/app/home/services/inbox.service';
+ 
 
 import {
   filterMessages,
   formatRelativeDate,
   truncate,
 } from 'src/app/home/utils/homeconnect.utils';
+import { getCategoryIcon } from '../../constants/category-icons.constants';
 
 /* ═════════════════════════════════════════════════════════════════════
    INBOX PANEL — Aperçu de la boîte de réception

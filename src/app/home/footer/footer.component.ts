@@ -28,7 +28,7 @@ import { map, switchMap } from 'rxjs/operators';
 
 import { InstallComponent } from '../install/install.component';
 import { UserMessage } from '../models/user-message.model';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-footer',

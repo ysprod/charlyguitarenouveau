@@ -10,11 +10,11 @@ import {
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CONFETTI_COUNT } from 'src/app/game/fretboard.constants';
-import { ALIGNMENT_REWARD, CELL_PARTICLES, END_GAME_DELAY_MS, BOT_THINK_DELAY_MS, WINNING_HIGHLIGHT_MS, CONFETTI_DURATION_MS } from 'src/app/game/tictactoe.constants';
-import { EndGameSummary } from 'src/app/game/end-game-summary.model';
-import { TictactoeserviceService } from 'src/app/game/tictactoeservice.service';
-import { EndGameDialogComponent } from 'src/app/game/end-game-dialog/end-game-dialog.component';
+import { CONFETTI_COUNT } from 'src/app/game/constants/fretboard.constants';
+import { ALIGNMENT_REWARD, CELL_PARTICLES, END_GAME_DELAY_MS, BOT_THINK_DELAY_MS, WINNING_HIGHLIGHT_MS, CONFETTI_DURATION_MS } from 'src/app/game/constants/tictactoe.constants';
+import { EndGameSummary } from 'src/app/game/models/end-game-summary.model';
+import { TictactoeserviceService } from 'src/app/game/services/tictactoeservice.service';
+import { EndGameDialogComponent } from 'src/app/game/tictactoe/end-game-dialog/end-game-dialog.component';
 
 type SoundType = 'click' | 'win' | 'lose' | 'draw' | 'levelup' | 'bot';
 

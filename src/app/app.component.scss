@@ -343,41 +343,6 @@
   background: var(--bg-page);
 }
 
-/* ─── CTA Contact (style standard) ─── */
-.contact-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 1rem;
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: .85rem 1.35rem;
-    background: var(--warning);
-    color: #ffffff;
-    border-radius: 999px;
-    font-size: .9rem;
-    font-weight: 700;
-    text-decoration: none;
-    box-shadow: 0 8px 22px -8px rgba(234, 88, 12, .35);
-    transition: transform var(--t-fast), background var(--t-fast);
-
-    &:hover {
-      background: var(--warning-hover);
-      transform: translateY(-2px);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--warning);
-      outline-offset: 3px;
-    }
-  }
-}
-
 /* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═════════════════════════════════════════════════════════════════════ */
@@ -455,18 +420,6 @@
           background: var(--primary-hover);
         }
       }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .contact-cta {
-    flex-direction: column;
-    gap: .75rem;
-
-    a {
-      width: 100%;
-      justify-content: center;
     }
   }
 }

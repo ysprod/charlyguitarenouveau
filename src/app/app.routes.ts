@@ -29,20 +29,20 @@ import { OffolandComponent } from './offoland/offoland.component';
 import { OffresComponent } from './academie/offres/offres.component';
 import { PianoComponent } from './game/piano/piano.component';
 import { RegisterComponent } from './home/register/register.component';
-import { BlancComponent } from './offoland/blanc/blanc.component';
-import { BleuComponent } from './offoland/bleu/bleu.component';
-import { CharlyguitaregameComponent } from './offoland/charlyguitaregame/charlyguitaregame.component';
-import { NoirComponent } from './offoland/noir/noir.component';
-import { RougeComponent } from './offoland/rouge/rouge.component';
+import { BlancComponent } from './offoland/dimensions/blanc/blanc.component';
+import { BleuComponent } from './offoland/dimensions/bleu/bleu.component';
+import { CharlyguitaregameComponent } from './offoland/dimensions/charlyguitaregame/charlyguitaregame.component';
+import { NoirComponent } from './offoland/dimensions/noir/noir.component';
+import { RougeComponent } from './offoland/dimensions/rouge/rouge.component';
 
 import { BcoComponent } from './offoland/bco/bco.component';
 import { PianovirtuelComponent } from './game/pianovirtuel/pianovirtuel.component';
 import { GuitarLiveComponent } from './game/guitar-live/guitar-live.component';
 import { OracleWidgetComponent } from './game/oracle-widget/oracle-widget.component';
-import { PourpreComponent } from './offoland/pourpre/pourpre.component';
-import { VioletComponent } from './offoland/violet/violet.component';
+import { PourpreComponent } from './offoland/dimensions/pourpre/pourpre.component';
+import { VioletComponent } from './offoland/dimensions/violet/violet.component';
 import { HomeconnectComponent } from './home/homeconnect/homeconnect.component';
-import { VertComponent } from './offoland/vert/vert.component';
+import { VertComponent } from './offoland/dimensions/vert/vert.component';
 
 export const routes: Routes = [
   {

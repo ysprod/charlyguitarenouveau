@@ -20,10 +20,10 @@ import { CardData } from './CardData';
 import { RdialogComponent, RdialogResult } from './rdialog/rdialog.component';
 import { GamecardComponent } from './gamecard/gamecard.component';
 
-import { VoiceService, SpeakOptions } from '../voice.service';
-import { shuffleArray, pickMatchPhrase, pickWrongPhrase } from 'src/app/game/cardgame.utils';
-import { createIntervalScheduler } from 'src/app/game/schedulers.util';
-import { createTimeoutScheduler } from 'src/app/game/timeout.util';
+import { VoiceService, SpeakOptions } from '../services/voice.service';
+import { shuffleArray, pickMatchPhrase, pickWrongPhrase } from 'src/app/game/utils/cardgame.utils';
+import { createIntervalScheduler } from 'src/app/game/utils/schedulers.util';
+import { createTimeoutScheduler } from 'src/app/game/utils/timeout.util';
 
  
 

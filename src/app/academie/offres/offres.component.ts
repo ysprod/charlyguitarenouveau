@@ -10,8 +10,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { PackCategory, PackCategoryId } from '../../home/models/pack.model';
-import { PACK_CATEGORIES } from '../packs.data';
-
+import { PACK_CATEGORIES } from '../data/packs.data';
+ 
 /* ============================================================
    COMPOSANT — sans animations
    ============================================================ */

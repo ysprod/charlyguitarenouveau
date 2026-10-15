@@ -29,16 +29,16 @@ import {
   MelodyChord,
   Particle,
   PianoKey
-} from '../piano.model';
+} from '../models/piano.model';
 
 import {
   InstrumentType,
   PianoAudioService
-} from '../piano-audio.service';
+} from '../services/piano-audio.service';
 
-import { GameAudioService } from '../game-audio.service';
-import { StorageService } from '../../shared/services/storage.service';
-import { randomElement, randomFloat } from '../random.utils';
+ import { StorageService } from '../../shared/services/storage.service';
+import { randomElement, randomFloat } from '../utils/random.utils';
+import { GameAudioService } from '../services/game-audio.service';
 
 /* ═══════════════════════════════════════════════════════
    CONSTANTES DE JEU

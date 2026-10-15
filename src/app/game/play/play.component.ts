@@ -14,8 +14,8 @@ import { NgClass } from '@angular/common';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { GameItem } from '../play.model';
-import { GAME_FILTERS, TOAST_DURATION_MS, buildGamesList } from '../play.constants';
+import { GameItem } from '../models/play.model';
+import { GAME_FILTERS, TOAST_DURATION_MS, buildGamesList } from '../constants/play.constants';
 
 import { PromoCodeService } from '../../shared/services/promo-code.service';
 import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';

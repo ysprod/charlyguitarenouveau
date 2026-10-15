@@ -1,10 +1,14 @@
+<!-- src/app/live/live.component.html -->
+
 <div class="live-hub-container">
-  <!-- ============================================================
+
+  <!-- ═══════════════════════════════════════════════════════
        HERO BANNER
-       ============================================================ -->
+       ═══════════════════════════════════════════════════════ -->
   <section class="hero-banner" aria-labelledby="live-hero-title">
     <div class="hero-grid-bg" aria-hidden="true"></div>
     <div class="hero-glow" aria-hidden="true"></div>
+
     <div class="hero-content">
       <div class="live-badge">
         <span class="pulse-dot" aria-hidden="true"></span>
@@ -22,9 +26,9 @@
     </div>
   </section>
 
-  <!-- ============================================================
+  <!-- ═══════════════════════════════════════════════════════
        GRILLE DE CARTES
-       ============================================================ -->
+       ═══════════════════════════════════════════════════════ -->
   <section class="grid-section" aria-label="Contenus live">
 
     <!-- 🎥 CARTE VIDÉO ENRICHIE -->
@@ -32,24 +36,25 @@
       <div class="video-header">
         <span class="live-badge-card">
           <span class="dot-live" aria-hidden="true"></span>
-          LIVE
+          {{ video.badge }}
         </span>
-        <h3>Freestyle</h3>
+        <h3>{{ video.title }}</h3>
       </div>
 
       <div class="video-wrapper">
         <iframe
-          src="https://www.youtube.com/embed/5nQIsWKtMqU?autoplay=1&rel=0&modestbranding=1"
+          [src]="safeEmbedUrl()"
           title="Vidéo de présentation Charly Guitare"
           loading="lazy"
-          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
           allowfullscreen
         ></iframe>
       </div>
 
       <div class="video-footer">
         <a
-          href="https://www.youtube.com/watch?v=5nQIsWKtMqU"
+          [href]="video.watchUrl"
           target="_blank"
           rel="noopener noreferrer"
           class="yt-link-btn"
@@ -60,45 +65,28 @@
       </div>
     </div>
 
-    <!-- 🎤 CONCERTS -->
-    <article class="live-card">
-      <div class="card-content">
-        <div class="card-icon-wrap">
-          <span class="card-icon" aria-hidden="true">🎤</span>
+    <!-- 🎤 CARTES SECONDAIRES -->
+    @for (card of cards; track card.id) {
+      <article [class]="'live-card ' + card.cssClass">
+        <div class="card-content">
+          <div class="card-icon-wrap">
+            <span class="card-icon" aria-hidden="true">{{ card.icon }}</span>
+          </div>
+          <h3>{{ card.title }}</h3>
+          <p>{{ card.description }}</p>
         </div>
-        <h3>CONCERTS</h3>
-        <p>Vivre les grandes performances musicales</p>
-      </div>
-      <a
-        href="https://www.youtube.com/watch?v=ULlzhvrC7kE&list=PLY4Ohx8IPP3IeC71DL1Q6LGCWoz5EL85Y"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="card-action"
-      >
-        <span>Regarder</span>
-        <span class="arrow" aria-hidden="true">→</span>
-      </a>
-    </article>
 
-    <!-- ⏮️ REPLAY -->
-    <article class="live-card">
-      <div class="card-content">
-        <div class="card-icon-wrap">
-          <span class="card-icon" aria-hidden="true">⏮️</span>
-        </div>
-        <h3>REPLAY</h3>
-        <p>Revoir tous les directs et événements terminés</p>
-      </div>
-      <a
-        href="https://www.youtube.com/@CharlyGuitare"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="card-action"
-      >
-        <span>Accéder aux archives</span>
-        <span class="arrow" aria-hidden="true">→</span>
-      </a>
-    </article>
+        <a
+          [href]="card.actionUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="card-action"
+        >
+          <span>{{ card.actionLabel }}</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </article>
+    }
 
   </section>
 </div>

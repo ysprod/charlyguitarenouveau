@@ -1,4 +1,4 @@
-import { QuizQuestion } from "../acoustic-quiz.model";
+import { QuizQuestion } from "../models/acoustic-quiz.model";
 
 /**
  * Catalogue complet des questions du Quiz Acoustique & Lutherie.

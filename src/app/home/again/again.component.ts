@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { MEMBRES_EQUIPE } from 'src/app/home/equipe.data';
-import { MembreEquipe } from 'src/app/home/membre.model';
+ 
+import { MembreEquipe } from 'src/app/home/models/membre.model';
+import { MEMBRES_EQUIPE } from '../data/equipe.data';
 
 @Component({
   selector: 'app-again',
