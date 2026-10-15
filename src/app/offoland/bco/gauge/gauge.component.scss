@@ -1,3 +1,5 @@
+/* src/app/shared/gauge/gauge.component.scss */
+
 :host {
   display: block;
 }
@@ -43,4 +45,14 @@
   text-align: center;
   font-weight: 500;
   letter-spacing: 0.02em;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .gauge-progress {
+    transition: none;
+  }
 }

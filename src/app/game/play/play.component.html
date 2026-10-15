@@ -1,3 +1,5 @@
+<!-- src/app/game/play/play.component.html -->
+
 <div class="game-dashboard-container">
 
   <div class="main-game-area">
@@ -33,10 +35,11 @@
       @for (f of filters; track f.id) {
         <button
           type="button"
+          role="tab"
           class="filter-chip"
           [class.active]="selectedFilter() === f.id"
+          [attr.aria-selected]="selectedFilter() === f.id"
           (click)="selectFilter(f.id)"
-          [attr.aria-pressed]="selectedFilter() === f.id"
           [attr.aria-label]="'Filtrer : ' + f.label"
         >
           <span class="chip-icon" aria-hidden="true">{{ f.icon }}</span>
@@ -61,7 +64,7 @@
             <button
               type="button"
               class="btn-game"
-              [ngClass]="game.btnClass"
+              [class]="game.btnClass"
               (click)="tryLaunchGame(game)"
               [attr.aria-label]="'Lancer ' + game.title"
             >
@@ -69,7 +72,7 @@
               <span class="btn-border-anim" aria-hidden="true"></span>
               <span class="btn-icon" aria-hidden="true">{{ game.icon }}</span>
               <span class="btn-content">
-                <span class="btn-tag" [ngClass]="game.tagClass">{{ game.tag }}</span>
+                <span class="btn-tag" [class]="game.tagClass">{{ game.tag }}</span>
                 <span class="btn-text">{{ game.title }}</span>
                 <span class="btn-sub">{{ game.subtitle }}</span>
               </span>

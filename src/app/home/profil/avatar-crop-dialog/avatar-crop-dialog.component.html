@@ -1,10 +1,13 @@
+<!-- src/app/shared/avatar-crop-dialog/avatar-crop-dialog.component.html -->
+
 <div
   class="crop-backdrop"
   role="dialog"
   aria-modal="true"
   aria-labelledby="crop-title"
+  (keydown.escape)="onCancel()"
 >
-  <div class="crop-card">
+  <div class="crop-card" [attr.aria-busy]="isProcessing()">
 
     <!-- En-tête -->
     <header class="crop-header">
@@ -15,7 +18,9 @@
         (click)="onCancel()"
         [disabled]="isProcessing()"
         aria-label="Fermer"
-      >✕</button>
+      >
+        ✕
+      </button>
     </header>
 
     <!-- Zone de recadrage -->
@@ -31,6 +36,8 @@
         #canvasRef
         class="crop-canvas"
         [class.hidden]="!isReady()"
+        role="img"
+        aria-label="Aperçu du recadrage de la photo"
         (wheel)="onWheel($event)"
         (pointerdown)="onPointerDown($event)"
         (pointermove)="onPointerMove($event)"
@@ -53,8 +60,8 @@
         <input
           id="zoomRange"
           type="range"
-          min="1"
-          max="3"
+          [min]="minZoom"
+          [max]="maxZoom"
           step="0.05"
           [value]="zoom()"
           (input)="onZoomChange($any($event.target).value)"

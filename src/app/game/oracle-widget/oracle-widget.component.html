@@ -1,10 +1,18 @@
-<div class="arcade-card"
-     [class.fx-success]="game.showSuccessFx()"
-     [class.fx-victory]="game.gameCompleted()"
-     [style.--dim-color]="game.currentDimension()?.colorHex || '#a855f7'">
+<!-- src/app/game/oracle/oracle-widget.component.html -->
 
+<div
+  class="arcade-card"
+  [class.fx-success]="game.showSuccessFx()"
+  [class.fx-victory]="game.gameCompleted()"
+  [style.--dim-color]="game.currentDimension()?.colorHex || '#a855f7'"
+>
   <!-- Canvas de particules (overlay plein écran) -->
-  <canvas #particlesCanvas class="particles-overlay"></canvas>
+  <canvas
+    #particlesCanvas
+    class="particles-overlay"
+    role="img"
+    aria-label="Effets de particules décoratifs"
+  ></canvas>
 
   <!-- Effet Level Up -->
   @if (game.showLevelUp()) {
@@ -16,11 +24,13 @@
 
   <!-- HUD Header -->
   <header class="hud-header">
-    <button type="button"
-            class="btn-back-menu"
-            (click)="goBackToMenu()"
-            (mouseenter)="onHover()"
-            aria-label="Retour au menu des jeux">
+    <button
+      type="button"
+      class="btn-back-menu"
+      (click)="goBackToMenu()"
+      (mouseenter)="onHover()"
+      aria-label="Retour au menu des jeux"
+    >
       <span class="material-icons">arrow_back</span>
       <span class="back-label">Retour</span>
     </button>
@@ -33,11 +43,13 @@
     </div>
 
     <div class="stats-group">
-      <button type="button"
-              class="sound-toggle"
-              (click)="game.toggleSound()"
-              [attr.aria-pressed]="game.soundEnabled()"
-              [attr.aria-label]="game.soundEnabled() ? 'Couper le son' : 'Activer le son'">
+      <button
+        type="button"
+        class="sound-toggle"
+        (click)="game.toggleSound()"
+        [attr.aria-pressed]="game.soundEnabled()"
+        [attr.aria-label]="game.soundEnabled() ? 'Couper le son' : 'Activer le son'"
+      >
         {{ game.soundEnabled() ? '🔊' : '🔇' }}
       </button>
       <span class="stat-pill level-pill">Niv. {{ game.level() }}</span>
@@ -45,7 +57,7 @@
     </div>
   </header>
 
-  <!-- Bannière alerte micro optimisée -->
+  <!-- Bannière alerte micro -->
   @if (game.microphoneDiagnostic() && !game.canUseMicrophone() && game.microphonePermission() !== 'prompt') {
     <div class="mic-alert" role="alert">
       <div class="mic-alert-content">
@@ -54,27 +66,31 @@
           {{ game.microphoneDiagnostic()!.userMessage }}
         </span>
       </div>
-      <button type="button"
-              class="btn-mic-retry"
-              (click)="game.requestMicrophoneAccess()"
-              (mouseenter)="onHover()">
+      <button
+        type="button"
+        class="btn-mic-retry"
+        (click)="game.requestMicrophoneAccess()"
+        (mouseenter)="onHover()"
+      >
         🔄 Réactiver
       </button>
     </div>
   }
 
   <!-- Barre de progression XP -->
-  <div class="progress-container"
-       role="progressbar"
-       [attr.aria-valuenow]="game.xpProgress()"
-       aria-valuemin="0"
-       aria-valuemax="100">
+  <div
+    class="progress-container"
+    role="progressbar"
+    [attr.aria-valuenow]="game.xpProgress()"
+    aria-valuemin="0"
+    aria-valuemax="100"
+  >
     <div class="progress-bar-fill" [style.width.%]="game.xpProgress()">
       <span class="progress-glow"></span>
     </div>
   </div>
 
-  <!-- Barre de progression globale de l'aventure -->
+  <!-- Barre de progression globale -->
   <div class="quest-progress">
     <span class="quest-progress-label">Aventure</span>
     <div class="quest-progress-track">
@@ -87,15 +103,22 @@
 
   <!-- Zone Avatar & Visualiseur -->
   <div class="oracle-avatar-stage">
-    <div class="oracle-avatar"
-         [class.speaking]="game.isSpeaking()"
-         [class.listening]="game.isListening()">
+    <div
+      class="oracle-avatar"
+      [class.speaking]="game.isSpeaking()"
+      [class.listening]="game.isListening()"
+    >
       <div class="avatar-halo"></div>
       <div class="avatar-ring"></div>
       <span class="avatar-emoji">🧙‍♀️</span>
     </div>
     <span class="oracle-name">OFFOWA — Gardienne des Sept Portails</span>
-    <canvas #visualizerCanvas class="wave-canvas"></canvas>
+    <canvas
+      #visualizerCanvas
+      class="wave-canvas"
+      role="img"
+      aria-label="Visualiseur audio"
+    ></canvas>
   </div>
 
   <!-- Bulle de dialogue -->
@@ -176,24 +199,28 @@
   @if (!game.gameCompleted()) {
     <div class="achievements-strip">
       @for (ach of game.achievements(); track ach.id) {
-        <div class="achievement"
-             [class.unlocked]="ach.unlocked"
-             [title]="ach.title + ' — ' + ach.description">
+        <div
+          class="achievement"
+          [class.unlocked]="ach.unlocked"
+          [title]="ach.title + ' — ' + ach.description"
+        >
           <span class="ach-icon">{{ ach.icon }}</span>
         </div>
       }
     </div>
   }
 
-  <!-- Section Contrôles avec UX adaptative -->
+  <!-- Section Contrôles -->
   <div class="controls-section">
-    <button type="button"
-            class="btn-arcade-mic"
-            [class.active]="game.isListening()"
-            [class.disabled]="!game.canUseMicrophone() && game.microphonePermission() !== 'prompt'"
-            [disabled]="game.isListening() || game.gameCompleted()"
-            (click)="onMicClick()"
-            (mouseenter)="onHover()">
+    <button
+      type="button"
+      class="btn-arcade-mic"
+      [class.active]="game.isListening()"
+      [class.disabled]="!game.canUseMicrophone() && game.microphonePermission() !== 'prompt'"
+      [disabled]="game.isListening() || game.gameCompleted()"
+      (click)="onMicClick()"
+      (mouseenter)="onHover()"
+    >
       <span class="btn-glow"></span>
       <span class="mic-icon">
         {{ game.isListening() ? '🎙️' : (game.canUseMicrophone() ? '🎤' : '⌨️') }}
@@ -211,41 +238,51 @@
 
     @if (!game.gameCompleted()) {
       <div class="text-input-group" [class.input-highlighted]="!game.canUseMicrophone()">
-        <input #textInputElem
-               type="text"
-               class="arcade-input"
-               placeholder="Tape ta réponse ici..."
-               [ngModel]="textInput()"
-               (ngModelChange)="textInput.set($event); onTyping()"
-               (keyup.enter)="submitText()" />
-        <button type="button"
-                class="btn-send"
-                (click)="submitText()"
-                (mouseenter)="onHover()"
-                aria-label="Envoyer la réponse">
+        <input
+          #textInputElem
+          type="text"
+          class="arcade-input"
+          placeholder="Tape ta réponse ici..."
+          [ngModel]="textInput()"
+          (ngModelChange)="textInput.set($event); onTyping()"
+          (keyup.enter)="submitText()"
+        />
+        <button
+          type="button"
+          class="btn-send"
+          (click)="submitText()"
+          (mouseenter)="onHover()"
+          aria-label="Envoyer la réponse"
+        >
           🚀
         </button>
       </div>
 
       <div class="secondary-actions">
-        <button type="button"
-                class="btn-ghost"
-                (click)="game.repeatQuest()"
-                (mouseenter)="onHover()">
+        <button
+          type="button"
+          class="btn-ghost"
+          (click)="game.repeatQuest()"
+          (mouseenter)="onHover()"
+        >
           🔊 Répéter
         </button>
-        <button type="button"
-                class="btn-ghost"
-                (click)="game.giveHint()"
-                (mouseenter)="onHover()">
+        <button
+          type="button"
+          class="btn-ghost"
+          (click)="game.giveHint()"
+          (mouseenter)="onHover()"
+        >
           💡 Indice (-10 XP)
         </button>
       </div>
     } @else {
-      <button type="button"
-              class="btn-restart"
-              (click)="game.restartGame()"
-              (mouseenter)="onHover()">
+      <button
+        type="button"
+        class="btn-restart"
+        (click)="game.restartGame()"
+        (mouseenter)="onHover()"
+      >
         🔄 Rejouer l'Aventure des Sept Dimensions
       </button>
     }
@@ -264,11 +301,13 @@
   <!-- ═══════════ ROUE DES 7 DIMENSIONS ═══════════ -->
   <div class="dimensions-wheel">
     @for (dim of game.dimensions; track dim.id) {
-      <div class="dim-node"
-           [class.active]="game.currentDimension()?.id === dim.id"
-           [class.passed]="dim.id < (game.currentDimension()?.id || 0)"
-           [style.--dim-color]="dim.colorHex"
-           [title]="dim.name + ' — ' + dim.note + ' — ' + dim.sage">
+      <div
+        class="dim-node"
+        [class.active]="game.currentDimension()?.id === dim.id"
+        [class.passed]="dim.id < (game.currentDimension()?.id || 0)"
+        [style.--dim-color]="dim.colorHex"
+        [title]="dim.name + ' — ' + dim.note + ' — ' + dim.sage"
+      >
         <span class="dim-note">{{ dim.note }}</span>
         <span class="dim-emoji">{{ dim.totemEmoji }}</span>
       </div>

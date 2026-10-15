@@ -1,9 +1,15 @@
-// src/app/features/documents/shared/toast/toast.service.ts
+// src/app/academie/services/toast.service.ts
 
 import {
+  DestroyRef,
   Injectable,
+  inject,
   signal,
 } from '@angular/core';
+
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES
+   ═════════════════════════════════════════════════════════════════════ */
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -12,6 +18,10 @@ export interface ToastState {
   readonly message: string;
   readonly type: ToastType;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   CONSTANTES
+   ═════════════════════════════════════════════════════════════════════ */
 
 const INITIAL_STATE: ToastState = {
   show: false,
@@ -28,10 +38,30 @@ const TOAST_DURATION_MS = 4000;
 @Injectable({ providedIn: 'root' })
 export class ToastService {
 
+  /* ─── Injection ─── */
+  private readonly destroyRef = inject(DestroyRef);
+
+  /* ─── État interne ─── */
   private readonly _toast = signal<ToastState>(INITIAL_STATE);
+
+  /** Toast exposé en lecture seule. */
   readonly toast = this._toast.asReadonly();
 
+  /* ─── Timeout actif ─── */
   private timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR — cleanup
+     ═══════════════════════════════════════════════════════ */
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.timeoutId !== null) {
+        clearTimeout(this.timeoutId);
+        this.timeoutId = null;
+      }
+    });
+  }
 
   /* ═══════════════════════════════════════════════════════
      ACTIONS

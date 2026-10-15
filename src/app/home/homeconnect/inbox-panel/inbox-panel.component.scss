@@ -23,6 +23,10 @@
   --danger-hover: #b91c1c;
   --violet: #7c3aed;
 
+  /* 🟠 Orange — actions importantes / CTA */
+  --orange: #f97316;
+  --orange-hover: #ea580c;
+
   /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
@@ -119,6 +123,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    align-items: center;
   }
 }
 
@@ -136,9 +141,15 @@
   text-decoration: none;
   transition: transform var(--t-fast), box-shadow var(--t-fast),
     background var(--t-fast);
+  white-space: nowrap;
 
   &:hover { transform: translateY(-1px); }
   &:active { transform: translateY(0); }
+
+  &:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.45);
+    outline-offset: 2px;
+  }
 
   /* 🔵 Bleu — action principale */
   &.inbox-btn-blue {
@@ -149,6 +160,18 @@
     &:hover {
       background: var(--primary-hover);
       box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+  }
+
+  /* 🟠 Orange — action importante / CTA */
+  &.inbox-btn-orange {
+    background: var(--orange);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+
+    &:hover {
+      background: var(--orange-hover);
+      box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
     }
   }
 
@@ -468,6 +491,15 @@
     padding: 1.25rem 1.25rem 0.75rem;
   }
 
+  .inbox-header-actions {
+    width: 100%;
+
+    .inbox-btn {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+  }
+
   .inbox-filters {
     padding: 0 1.25rem 0.75rem;
     overflow-x: auto;
@@ -498,5 +530,9 @@
   .inbox-section,
   .inbox-dot {
     animation: none !important;
+  }
+
+  .inbox-btn {
+    transition: none;
   }
 }

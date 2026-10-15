@@ -1,54 +1,88 @@
+// src/app/game/oracle/oracle-widget.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
   NgZone,
-  OnDestroy,
-  ViewChild,
+  afterNextRender,
   effect,
   inject,
-  signal
+  signal,
+  viewChild,
 } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { OracleGameService } from '../services/oracle-game.service';
 import { ParticleService } from '../services/particle.service';
 
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTES
+   ═══════════════════════════════════════════════════════════ */
+
+const VISUALIZER_WIDTH = 280;
+const VISUALIZER_HEIGHT = 40;
+
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
+
 @Component({
   selector: 'app-oracle-widget',
-  standalone: true,
   imports: [FormsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './oracle-widget.component.html',
-  styleUrls: ['./oracle-widget.component.scss']
+  styleUrls: ['./oracle-widget.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OracleWidgetComponent implements OnDestroy {
+export class OracleWidgetComponent {
 
-  /* ─── Injection ─── */
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
+
   readonly game = inject(OracleGameService);
   readonly particles = inject(ParticleService);
+
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
 
-  /* ─── État local ─── */
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT LOCAL
+     ═══════════════════════════════════════════════════════ */
+
   readonly textInput = signal('');
 
-  /* ─── Refs canvas / input ─── */
-  @ViewChild('visualizerCanvas', { static: true })
-  private readonly canvasRef?: ElementRef<HTMLCanvasElement>;
+  /* ═══════════════════════════════════════════════════════
+     RÉFÉRENCES CANVAS / INPUT
+     ═══════════════════════════════════════════════════════ */
 
-  @ViewChild('particlesCanvas', { static: true })
-  private readonly particlesCanvasRef?: ElementRef<HTMLCanvasElement>;
+  private readonly canvasRef =
+    viewChild<ElementRef<HTMLCanvasElement>>('visualizerCanvas');
 
-  @ViewChild('textInputElem')
-  private readonly textInputElem?: ElementRef<HTMLInputElement>;
+  private readonly particlesCanvasRef =
+    viewChild<ElementRef<HTMLCanvasElement>>('particlesCanvas');
 
-  /* ─── Boucles d'animation ─── */
+  private readonly textInputElem =
+    viewChild<ElementRef<HTMLInputElement>>('textInputElem');
+
+  /* ═══════════════════════════════════════════════════════
+     BOUCLES D'ANIMATION
+     ═══════════════════════════════════════════════════════ */
+
   private waveAnimId: number | null = null;
   private particlesAnimId: number | null = null;
+
+  /** `ResizeObserver` pour le canvas des particules. */
+  private resizeObserver: ResizeObserver | null = null;
+
+  /** Vrai si l'utilisateur préfère les animations réduites. */
+  private readonly prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
   /* ═══════════════════════════════════════════════════════
      CYCLE DE VIE
@@ -60,6 +94,11 @@ export class OracleWidgetComponent implements OnDestroy {
       const speaking = this.game.isSpeaking();
       const listening = this.game.isListening();
 
+      if (this.prefersReducedMotion) {
+        this.stopWaveAnimation();
+        return;
+      }
+
       this.ngZone.runOutsideAngular(() => {
         if (speaking || listening) {
           this.startWaveAnimation(speaking ? '#a855f7' : '#06b6d4');
@@ -69,33 +108,35 @@ export class OracleWidgetComponent implements OnDestroy {
       });
     });
 
-    /* Configure les canvas après le prochain tick */
-    queueMicrotask(() => {
+    /* Configure les canvas après le prochain rendu */
+    afterNextRender(() => {
       this.setupParticlesCanvas();
       this.setupVisualizerCanvas();
+      this.observeParticlesCanvasResize();
+
+      /* Lance la boucle de particules hors zone Angular */
+      if (!this.prefersReducedMotion) {
+        this.ngZone.runOutsideAngular(() => {
+          this.startParticlesLoop();
+        });
+      }
     });
 
-    /* Lance la boucle de particules hors zone Angular */
-    this.ngZone.runOutsideAngular(() => {
-      this.startParticlesLoop();
+    /* Nettoyage à la destruction */
+    this.destroyRef.onDestroy(() => {
+      this.stopWaveAnimation();
+      this.stopParticlesLoop();
+      this.resizeObserver?.disconnect();
+      this.resizeObserver = null;
     });
-  }
-
-  ngOnDestroy(): void {
-    this.stopWaveAnimation();
-    this.stopParticlesLoop();
   }
 
   /* ═══════════════════════════════════════════════════════
-     CANVAS — SETUP HAUTE DÉFINITION (Retina)
+     CANVAS — SETUP HAUTE DÉFINITION (RETINA)
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Adapte la résolution du canvas des particules à la taille CSS
-   * ET au devicePixelRatio (rendu net sur écrans Retina).
-   */
   private setupParticlesCanvas(): void {
-    const canvas = this.particlesCanvasRef?.nativeElement;
+    const canvas = this.particlesCanvasRef()?.nativeElement;
     if (!canvas) return;
 
     const dpr = window.devicePixelRatio || 1;
@@ -110,25 +151,30 @@ export class OracleWidgetComponent implements OnDestroy {
     }
   }
 
-  /**
-   * Le canvas du visualiseur audio a une taille fixe (280×40),
-   * on ajuste juste pour la netteté Retina.
-   */
   private setupVisualizerCanvas(): void {
-    const canvas = this.canvasRef?.nativeElement;
+    const canvas = this.canvasRef()?.nativeElement;
     if (!canvas) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const logicalWidth = 280;
-    const logicalHeight = 40;
 
-    canvas.width = Math.floor(logicalWidth * dpr);
-    canvas.height = Math.floor(logicalHeight * dpr);
+    canvas.width = Math.floor(VISUALIZER_WIDTH * dpr);
+    canvas.height = Math.floor(VISUALIZER_HEIGHT * dpr);
 
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
+  }
+
+  private observeParticlesCanvasResize(): void {
+    const canvas = this.particlesCanvasRef()?.nativeElement;
+    if (!canvas || typeof ResizeObserver === 'undefined') return;
+
+    this.resizeObserver = new ResizeObserver(() => {
+      this.setupParticlesCanvas();
+    });
+
+    this.resizeObserver.observe(canvas);
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -144,7 +190,7 @@ export class OracleWidgetComponent implements OnDestroy {
     if (this.game.canUseMicrophone() || this.game.microphonePermission() === 'prompt') {
       this.game.startListening();
     } else {
-      this.textInputElem?.nativeElement.focus();
+      this.textInputElem()?.nativeElement.focus();
     }
   }
 
@@ -170,15 +216,14 @@ export class OracleWidgetComponent implements OnDestroy {
   private startWaveAnimation(color: string): void {
     this.stopWaveAnimation();
 
-    const canvas = this.canvasRef?.nativeElement;
+    const canvas = this.canvasRef()?.nativeElement;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    /* Dimensions LOGIQUES (indépendantes du DPR) */
-    const width = 280;
-    const height = 40;
+    const width = VISUALIZER_WIDTH;
+    const height = VISUALIZER_HEIGHT;
     const centerY = height / 2;
 
     let step = 0;
@@ -233,7 +278,7 @@ export class OracleWidgetComponent implements OnDestroy {
       this.waveAnimId = null;
     }
 
-    const canvas = this.canvasRef?.nativeElement;
+    const canvas = this.canvasRef()?.nativeElement;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -248,7 +293,7 @@ export class OracleWidgetComponent implements OnDestroy {
 
   private startParticlesLoop(): void {
     const loop = () => {
-      const canvas = this.particlesCanvasRef?.nativeElement;
+      const canvas = this.particlesCanvasRef()?.nativeElement;
 
       if (canvas) {
         const ctx = canvas.getContext('2d');

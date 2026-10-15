@@ -1,21 +1,42 @@
+<!-- src/app/shared/auth-alert/auth-alert.component.html -->
+
 <div
   class="alert-banner"
-  [class.error-banner]="type() === 'error'"
-  [class.success-banner]="type() === 'success'"
-  [attr.role]="type() === 'error' ? 'alert' : 'status'"
-  aria-live="polite"
+  [class]="bannerClass()"
+  [attr.role]="role()"
+  [attr.aria-live]="ariaLive()"
 >
-  @if (type() === 'error') {
-    <svg class="alert-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-  } @else {
-    <svg class="alert-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M22 4L12 14.01l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+  @switch (type()) {
+    @case ('error') {
+      <svg class="alert-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+        <path
+          d="M12 8v4M12 16h.01"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    }
+    @case ('success') {
+      <svg class="alert-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M22 11.08V12a10 10 0 11-5.93-9.14"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M22 4L12 14.01l-3-3"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    }
   }
 
-  <span>{{ message() }}</span>
+  <span class="alert-message">{{ message() }}</span>
 </div>

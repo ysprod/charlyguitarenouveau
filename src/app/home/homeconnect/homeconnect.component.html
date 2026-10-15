@@ -10,8 +10,8 @@
 
     <div class="welcome-content">
       <div class="welcome-avatar" aria-hidden="true">
-        @if (userPhoto(); as photo) {
-          <img [src]="photo" [alt]="userName()" />
+        @if (hasPhoto()) {
+          <img [src]="userPhoto()!" [alt]="userName()" />
         } @else {
           <span>{{ userInitials() }}</span>
         }
@@ -20,7 +20,7 @@
       <div class="welcome-text">
         <p class="welcome-greeting">{{ greeting() }},</p>
         <h1 id="welcome-title" class="welcome-name">
-          {{ userFirstName() }} 👋
+          {{ userFirstName() }} <span aria-hidden="true">👋</span>
         </h1>
         <p class="welcome-subtitle">
           Prêt à faire vibrer les cordes aujourd'hui ?
@@ -84,33 +84,26 @@
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════
-       TÉMOIGNAGES
-       ═══════════════════════════════════════════════════════ -->
-  <section class="testimonials-section" aria-labelledby="testimonials-title">
-    <div class="section-header">
-      <span class="section-eyebrow">ILS TÉMOIGNENT</span>
-      <h2 id="testimonials-title" class="section-title">
-        Rejoints par des centaines de passionnés
-      </h2>
+  <!-- ================= DOCUMENTS (lazy) ================= -->
+  @defer (on viewport; prefetch on idle) {
+    <app-documents />
+  } @placeholder (minimum 500ms) {
+    <div class="documents-placeholder" aria-hidden="true">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
     </div>
-
-    <div class="testimonials-grid">
-      @for (item of testimonials; track item.author) {
-        <figure class="testimonial-card" appReveal>
-          <div class="quote-mark" aria-hidden="true">&ldquo;</div>
-          <blockquote>{{ item.quote }}</blockquote>
-          <figcaption>
-            <span class="author-avatar" aria-hidden="true">{{ item.avatar }}</span>
-            <span class="author-info">
-              <strong>{{ item.author }}</strong>
-              <em>{{ item.role }}</em>
-            </span>
-          </figcaption>
-        </figure>
-      }
+  } @loading (after 100ms; minimum 300ms) {
+    <div class="documents-placeholder" aria-hidden="true">
+      <div class="skeleton skeleton-pulse"></div>
+      <div class="skeleton skeleton-pulse"></div>
+      <div class="skeleton skeleton-pulse"></div>
     </div>
-  </section>
+  } @error {
+    <div class="documents-error" role="alert">
+      Impossible de charger les documents pour le moment.
+    </div>
+  }
 
   <app-footer />
 

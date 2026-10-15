@@ -1,6 +1,10 @@
+<!-- src/app/academie/academie.component.html -->
+
 <div class="academie-container">
 
-  <!-- ================= HERO ================= -->
+  <!-- ═══════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════ -->
   <section class="hero-banner" aria-labelledby="academie-hero-title">
 
     <div class="hero-glow glow-1" aria-hidden="true"></div>
@@ -22,7 +26,9 @@
     </div>
   </section>
 
-  <!-- ================= DOCUMENTS (lazy) ================= -->
+  <!-- ═══════════════════════════════════════════════════════
+       DOCUMENTS (lazy)
+       ═══════════════════════════════════════════════════════ -->
   @defer (on viewport) {
     <app-documents></app-documents>
   } @placeholder {
@@ -33,136 +39,63 @@
     </div>
   }
 
-  <!-- ================= FORMATIONS ================= -->
+  <!-- ═══════════════════════════════════════════════════════
+       FORMATIONS
+       ═══════════════════════════════════════════════════════ -->
   <section class="grid-section" aria-label="Nos formations">
 
     <div class="cards-grid">
+      @for (formation of formations; track formation.id) {
+        <article
+          class="academy-card"
+          [class.highlight-card]="formation.highlighted"
+        >
 
-      <!-- APPRENDRE -->
-      <article class="academy-card highlight-card">
+          @if (formation.popular) {
+            <div class="popular-badge">
+              <span aria-hidden="true">⭐</span> POPULAIRE
+            </div>
+          }
 
-        <div class="popular-badge">
-          <span aria-hidden="true">⭐</span> POPULAIRE
-        </div>
+          <div class="card-number" aria-hidden="true">{{ formation.number }}</div>
 
-        <div class="card-number" aria-hidden="true">02</div>
+          <div class="card-header">
 
-        <div class="card-header">
+            <div class="card-icon-wrap">
+              <span class="card-icon" aria-hidden="true">{{ formation.icon }}</span>
+            </div>
 
-          <div class="card-icon-wrap">
-            <span class="card-icon" aria-hidden="true">🎓</span>
+            <div>
+              <span class="card-label">{{ formation.label }}</span>
+              <h3>{{ formation.title }}</h3>
+            </div>
+
           </div>
 
-          <div>
-            <span class="card-label">FORMATION</span>
-            <h3>APPRENDRE</h3>
-          </div>
+          <p class="card-description">{{ formation.description }}</p>
 
-        </div>
+          <ul class="subcategories-list">
+            @for (sub of formation.subcategories; track sub) {
+              <li>{{ sub }}</li>
+            }
+          </ul>
 
-        <p class="card-description">
-          Progressez à votre rythme grâce à nos cours,
-          exercices et contenus pédagogiques.
-        </p>
+          <a [routerLink]="formation.actionRoute" class="card-action">
+            <span>{{ formation.actionLabel }}</span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </a>
 
-        <ul class="subcategories-list">
-          <li>Cours de guitare</li>
-          <li>Piano</li>
-          <li>Solfège</li>
-          <li>MAO</li>
-          <li>Formation musicale</li>
-          <li>Exercices et vidéos</li>
-        </ul>
-
-        <a routerLink="/contact" class="card-action">
-          <span>Démarrer l'apprentissage</span>
-          <span class="arrow" aria-hidden="true">→</span>
-        </a>
-
-      </article>
-
-      <!-- MASTER CLASS -->
-      <article class="academy-card">
-
-        <div class="card-number" aria-hidden="true">03</div>
-
-        <div class="card-header">
-
-          <div class="card-icon-wrap">
-            <span class="card-icon" aria-hidden="true">🎤</span>
-          </div>
-
-          <div>
-            <span class="card-label">EXPERTS</span>
-            <h3>MASTER CLASS</h3>
-          </div>
-
-        </div>
-
-        <p class="card-description">
-          Découvrez les techniques et conseils de musiciens
-          expérimentés lors de sessions exclusives.
-        </p>
-
-        <ul class="subcategories-list">
-          <li>Prochaines master class</li>
-          <li>Programme détaillé</li>
-          <li>Dates et lieux</li>
-          <li>Inscription / Réservation</li>
-        </ul>
-
-        <a routerLink="/contact" class="card-action">
-          <span>S'inscrire aux sessions</span>
-          <span class="arrow" aria-hidden="true">→</span>
-        </a>
-
-      </article>
-
-      <!-- COURS PRIVÉS -->
-      <article class="academy-card">
-
-        <div class="card-number" aria-hidden="true">06</div>
-
-        <div class="card-header">
-
-          <div class="card-icon-wrap">
-            <span class="card-icon" aria-hidden="true">👨🏾‍🏫</span>
-          </div>
-
-          <div>
-            <span class="card-label">PERSONNALISÉ</span>
-            <h3>COURS PRIVÉS</h3>
-          </div>
-
-        </div>
-
-        <p class="card-description">
-          Bénéficiez d'un accompagnement personnalisé
-          adapté à votre niveau et à vos objectifs.
-        </p>
-
-        <ul class="subcategories-list">
-          <li>Cours à domicile</li>
-          <li>Cours en ligne</li>
-          <li>Programme privé</li>
-          <li>Accompagnement personnalisé</li>
-        </ul>
-
-        <a routerLink="/contact" class="card-action">
-          <span>Réserver un professeur</span>
-          <span class="arrow" aria-hidden="true">→</span>
-        </a>
-
-      </article>
-
+        </article>
+      }
     </div>
   </section>
 
-  <!-- ================= LIVE ================= -->
+  <!-- ═══════════════════════════════════════════════════════
+       LIVE
+       ═══════════════════════════════════════════════════════ -->
   <section class="live-section" aria-labelledby="live-heading-title">
 
     <div class="section-heading live-heading">
-
       <h2 id="live-heading-title">
         Apprenez <span>en live</span>
       </h2>
@@ -171,75 +104,40 @@
         Rejoignez nos sessions interactives et échangez directement
         avec nos formateurs.
       </p>
-
     </div>
 
     <div class="live-grid">
+      @for (live of liveCards; track live.id) {
+        <article class="live-card">
 
-      <!-- MASTER CLASS LIVE -->
-      <article class="live-card">
-
-        <div class="live-background-icon" aria-hidden="true">🎓</div>
-
-        <div class="live-card-content">
-
-          <div class="live-icon-wrap">
-            <span aria-hidden="true">🎓</span>
+          <div class="live-background-icon" aria-hidden="true">
+            {{ live.backgroundIcon }}
           </div>
 
-          <span class="live-label">
-            <span class="pulse-dot" aria-hidden="true"></span>
-            LIVE
-          </span>
+          <div class="live-card-content">
 
-          <h3>MASTER CLASS LIVE</h3>
+            <div class="live-icon-wrap">
+              <span aria-hidden="true">{{ live.icon }}</span>
+            </div>
 
-          <p>
-            Participez aux sessions interactives avec des experts
-            et développez votre technique.
-          </p>
+            <span class="live-label">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              LIVE
+            </span>
 
-        </div>
+            <h3>{{ live.title }}</h3>
 
-        <a routerLink="/contact" class="live-action">
-          Rejoindre la session
-          <span aria-hidden="true">→</span>
-        </a>
+            <p>{{ live.description }}</p>
 
-      </article>
-
-      <!-- COURS LIVE -->
-      <article class="live-card">
-
-        <div class="live-background-icon" aria-hidden="true">🎸</div>
-
-        <div class="live-card-content">
-
-          <div class="live-icon-wrap">
-            <span aria-hidden="true">🎸</span>
           </div>
 
-          <span class="live-label">
-            <span class="pulse-dot" aria-hidden="true"></span>
-            LIVE
-          </span>
+          <a [routerLink]="live.actionRoute" class="live-action">
+            {{ live.actionLabel }}
+            <span aria-hidden="true">→</span>
+          </a>
 
-          <h3>COURS LIVE</h3>
-
-          <p>
-            Apprenez en temps réel avec un formateur
-            et bénéficiez de conseils personnalisés.
-          </p>
-
-        </div>
-
-        <a routerLink="/contact" class="live-action">
-          S'inscrire au cours
-          <span aria-hidden="true">→</span>
-        </a>
-
-      </article>
-
+        </article>
+      }
     </div>
 
   </section>

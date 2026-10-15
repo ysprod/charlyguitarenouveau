@@ -1,15 +1,17 @@
+// src/app/features/contact/contact.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
   inject,
-  signal
+  signal,
 } from '@angular/core';
 
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
-  Validators
+  Validators,
 } from '@angular/forms';
 
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -17,25 +19,26 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import {
   Auth,
   User,
-  authState
+  authState,
 } from '@angular/fire/auth';
 
 import {
   Database,
   push,
-  ref
+  ref,
 } from '@angular/fire/database';
 
 import {
   ContactForm,
-  MessageData
+  MessageData,
 } from 'src/app/home/models/contact.model';
 
 import {
   MESSAGE_MAX_LENGTH,
   MESSAGE_MIN_LENGTH,
   SUBJECT_MAX_LENGTH,
-  SUBJECT_MIN_LENGTH
+  SUBJECT_MIN_LENGTH,
+  SUPPORT_UID,                  // ← ✅ AJOUT
 } from 'src/app/home/constants/contact.constants';
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -44,11 +47,10 @@ import {
 
 @Component({
   selector: 'app-contact',
-  standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContactComponent {
 
@@ -64,7 +66,7 @@ export class ContactComponent {
       [
         Validators.required,
         Validators.minLength(SUBJECT_MIN_LENGTH),
-        Validators.maxLength(SUBJECT_MAX_LENGTH)
+        Validators.maxLength(SUBJECT_MAX_LENGTH),
       ]
     ),
     message: this.formBuilder.nonNullable.control(
@@ -72,9 +74,9 @@ export class ContactComponent {
       [
         Validators.required,
         Validators.minLength(MESSAGE_MIN_LENGTH),
-        Validators.maxLength(MESSAGE_MAX_LENGTH)
+        Validators.maxLength(MESSAGE_MAX_LENGTH),
       ]
-    )
+    ),
   });
 
   /* ─── Constantes exposées au template ─── */
@@ -89,7 +91,7 @@ export class ContactComponent {
 
   /* ─── Utilisateur courant ─── */
   readonly currentUser = toSignal(authState(this.auth), {
-    initialValue: null as User | null
+    initialValue: null as User | null,
   });
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -127,7 +129,7 @@ export class ContactComponent {
       message: this.contactForm.controls.message.value.trim(),
       createdAt: new Date().toISOString(),
       status: 'unread',
-      to: 'admin'
+      to: SUPPORT_UID,             // ← ✅ UID du support
     };
 
     try {
@@ -138,7 +140,7 @@ export class ContactComponent {
 
       this.contactForm.reset({
         subject: '',
-        message: ''
+        message: '',
       });
 
     } catch (error: unknown) {

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   OFFOLAND FINANCE — Fond blanc, palette fonctionnelle
+   OFFOLAND FINANCE — Fond blanc, palette fonctionnelle (Angular 21)
    ========================================================================== */
 
 :host {
@@ -37,6 +37,10 @@
   /* Identité dorée pour accents */
   --gold: #b8860b;
   --gold-soft: rgba(184, 134, 11, .1);
+
+  /* Transitions */
+  --t-fast: .2s cubic-bezier(.4, 0, .2, 1);
+  --t-base: .3s cubic-bezier(.4, 0, .2, 1);
 
   display: block;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -161,7 +165,6 @@
           background: linear-gradient(135deg, #d97706 0%, #b8860b 50%, #92400e 100%);
           -webkit-background-clip: text;
           background-clip: text;
-          /* Fallback si le navigateur ne supporte pas : */
           color: #b8860b;
           -webkit-text-fill-color: transparent;
         }
@@ -240,7 +243,6 @@
       box-shadow: 0 2px 12px rgba(15, 23, 42, .04);
       animation: fadeInUp .6s cubic-bezier(.22, 1, .36, 1) both;
 
-      /* 🎨 Palette par variante */
       &.variant-primary { --card-color: var(--primary); --card-soft: var(--primary-soft); }
       &.variant-success { --card-color: var(--success); --card-soft: var(--success-soft); }
       &.variant-warning { --card-color: var(--warning); --card-soft: var(--warning-soft); }
@@ -248,7 +250,6 @@
       &.variant-violet  { --card-color: var(--violet);  --card-soft: var(--violet-soft);  }
       &.variant-orange  { --card-color: var(--orange);  --card-soft: var(--orange-soft);  }
 
-      /* Bande de couleur en haut */
       &::before {
         content: '';
         position: absolute;
@@ -431,8 +432,17 @@
         color: var(--text-muted);
       }
 
+      /* Flèche entre étapes — visible desktop, masquée mobile */
       .step-arrow {
-        display: none;
+        position: absolute;
+        top: 50%;
+        right: -1.25rem;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--primary);
+        opacity: .5;
+        pointer-events: none;
       }
     }
   }
@@ -625,7 +635,7 @@
       padding: 1rem 1.5rem;
       border-bottom: 1px solid var(--border-subtle);
       font-size: .92rem;
-      transition: background var(--t-fast, .2s);
+      transition: background var(--t-fast);
 
       &:last-child { border-bottom: none; }
 
@@ -709,8 +719,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1;   transform: scale(1);   }
-  50%      { opacity: .5;  transform: scale(1.4); }
+  0%, 100% { opacity: 1;  transform: scale(1);   }
+  50%      { opacity: .5; transform: scale(1.4); }
 }
 
 @keyframes fadeInUp {
@@ -727,6 +737,10 @@
 
   .hero {
     padding: 2.5rem 1rem 2rem;
+  }
+
+  .pipeline .pipeline-steps .pipeline-step .step-arrow {
+    display: none;
   }
 
   .exchange .exchange-table .exchange-row {

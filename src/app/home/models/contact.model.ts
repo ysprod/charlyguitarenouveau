@@ -20,5 +20,5 @@ export interface MessageData {
   message: string;
   createdAt: string;
   status: 'unread';
-  to: 'admin';
+  to: '4gKIsx61Ief3iIvNgWgIy8PKVpm2'  // ← ✅ UID du support
 }

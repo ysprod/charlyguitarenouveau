@@ -1,8 +1,14 @@
+/* src/app/shared/sparkline/sparkline.component.scss */
+
 :host {
   display: block;
   width: 100%;
   height: 100%;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   SPARKLINE
+   ═════════════════════════════════════════════════════════════════════ */
 
 .sparkline {
   width: 100%;
@@ -12,28 +18,57 @@
 
 .sparkline-line {
   filter: drop-shadow(0 0 4px currentColor);
-  animation: drawLine 1.5s ease-out;
+  stroke-dasharray: var(--dash-length, 1000);
+  stroke-dashoffset: var(--dash-length, 1000);
+  animation: drawLine 1.5s ease-out forwards;
 }
 
 .sparkline-area {
-  animation: fadeIn 1.2s ease-out;
+  opacity: 0;
+  animation: fadeIn 1.2s ease-out 0.2s forwards;
 }
 
 .sparkline-dot {
+  transform-box: fill-box;
+  transform-origin: center;
   animation: pulseDot 2s ease-in-out infinite;
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ═════════════════════════════════════════════════════════════════════ */
+
 @keyframes drawLine {
-  from { stroke-dasharray: 1000; stroke-dashoffset: 1000; }
-  to { stroke-dasharray: 1000; stroke-dashoffset: 0; }
+  from { stroke-dashoffset: var(--dash-length, 1000); }
+  to   { stroke-dashoffset: 0; }
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes pulseDot {
-  0%, 100% { r: 3; opacity: 1; }
-  50% { r: 5; opacity: 0.6; }
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%      { transform: scale(1.6); opacity: 0.6; }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkline-line,
+  .sparkline-area,
+  .sparkline-dot {
+    animation: none;
+  }
+
+  .sparkline-line {
+    stroke-dashoffset: 0;
+  }
+
+  .sparkline-area {
+    opacity: 1;
+  }
 }

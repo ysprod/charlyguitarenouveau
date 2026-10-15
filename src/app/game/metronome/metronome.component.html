@@ -1,3 +1,5 @@
+<!-- src/app/features/metronome/metronome.component.html -->
+
 <div class="challenge-container">
 
   <!-- ═══════════════════════════════════════════════════════
@@ -253,7 +255,7 @@
           <!-- Feedback récent -->
           <div class="recent-feedback">
             @for (record of tapRecords().slice(-5); track record.beatNumber) {
-              <div class="feedback-badge" [ngClass]="record.accuracy.toLowerCase()">
+              <div class="feedback-badge" [class]="record.accuracy.toLowerCase()">
                 <span class="fb-delta">
                   {{ record.deltaMs > 0 ? '+' : '' }}{{ record.deltaMs }} ms
                 </span>
@@ -344,7 +346,7 @@
         <div class="beat-bars">
           @for (b of beatResults(); track b.beatNumber) {
             <div class="beat-bar"
-                 [ngClass]="b.accuracy.toLowerCase()"
+                 [class]="b.accuracy.toLowerCase()"
                  [title]="'Temps ' + (b.beatNumber + 1) + ' · ' + (b.deltaMs !== null ? (b.deltaMs > 0 ? '+' : '') + b.deltaMs + ' ms' : 'manqué')">
               <div class="beat-bar-fill" [style.height.%]="getBeatBarHeight(b.deltaMs)"></div>
             </div>
@@ -376,7 +378,7 @@
                   }
                 </td>
                 <td>
-                  <span class="status-pill" [ngClass]="r.accuracy.toLowerCase()">
+                  <span class="status-pill" [class]="r.accuracy.toLowerCase()">
                     {{ r.accuracy }}
                   </span>
                 </td>

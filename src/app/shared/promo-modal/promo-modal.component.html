@@ -1,3 +1,5 @@
+<!-- src/app/shared/promo-modal/promo-modal.component.html -->
+
 <div
   class="promo-modal-backdrop"
   role="dialog"
@@ -10,30 +12,35 @@
 
     <div class="promo-modal-icon" aria-hidden="true">🎁</div>
 
-    <h2 id="promo-modal-title" class="promo-modal-title">{{ title }}</h2>
+    <h2 id="promo-modal-title" class="promo-modal-title">
+      {{ title() }}
+    </h2>
 
-    <p id="promo-modal-desc" class="promo-modal-message">{{ message }}</p>
+    <p id="promo-modal-desc" class="promo-modal-message">
+      {{ message() }}
+    </p>
 
     <div class="promo-modal-field">
       <label for="promoCodeInput">Votre code promo</label>
       <input
+        #codeInput
         type="text"
         id="promoCodeInput"
         name="promoCodeInput"
-        [value]="codeValue"
-        (input)="onInputChange($event)"
-        (keydown)="onKeydown($event)"
+        [ngModel]="codeValue()"
+        (ngModelChange)="codeValue.set($event)"
+        (keydown.enter)="submit(); $event.preventDefault()"
         autocomplete="off"
         maxlength="50"
-        [disabled]="isSaving"
+        [disabled]="isSaving()"
       />
       <small class="promo-modal-hint">
-        Ce code est obligatoire.  
+        Ce code est obligatoire.
       </small>
     </div>
 
-    @if (errorMessage) {
-      <p class="promo-modal-error" role="alert">{{ errorMessage }}</p>
+    @if (errorMessage()) {
+      <p class="promo-modal-error" role="alert">{{ errorMessage() }}</p>
     }
 
     <div class="promo-modal-actions">
@@ -41,7 +48,7 @@
         type="button"
         class="promo-btn promo-btn-secondary"
         (click)="close()"
-        [disabled]="isSaving"
+        [disabled]="isSaving()"
       >
         Annuler
       </button>
@@ -50,10 +57,10 @@
         type="button"
         class="promo-btn promo-btn-primary"
         (click)="submit()"
-        [disabled]="isSaving"
-        [attr.aria-busy]="isSaving"
+        [disabled]="isSaving()"
+        [attr.aria-busy]="isSaving()"
       >
-        @if (!isSaving) {
+        @if (!isSaving()) {
           <span>Continuer</span>
         } @else {
           <span class="spinner" aria-hidden="true"></span>

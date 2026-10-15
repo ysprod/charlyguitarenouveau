@@ -1,20 +1,27 @@
+// src/app/game/tictacbot/end-game-dialog/end-game-dialog.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   input,
-  output
+  output,
 } from '@angular/core';
 
 import { EndGameSummary } from '../../models/end-game-summary.model';
 
 @Component({
   selector: 'app-end-game-dialog',
-  standalone: true,
   templateUrl: './end-game-dialog.component.html',
   styleUrls: ['./end-game-dialog.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EndGameDialogComponent {
+
+  /* ═══════════════════════════════════════════════════════
+     ENTRÉES / SORTIES
+     ═══════════════════════════════════════════════════════ */
+
   readonly summary = input.required<EndGameSummary>();
 
   readonly replay = output<void>();
@@ -22,27 +29,31 @@ export class EndGameDialogComponent {
   readonly previousLevel = output<void>();
   readonly backToMenu = output<void>();
 
-  icon(): string {
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED
+     ═══════════════════════════════════════════════════════ */
+
+  readonly icon = computed(() => {
     switch (this.summary().result) {
       case 'victory': return '🏆';
-      case 'defeat':  return '⚖️';
+      case 'defeat':  return '😔';
       case 'draw':    return '⚖️';
     }
-  }
+  });
 
-  title(): string {
+  readonly title = computed(() => {
     switch (this.summary().result) {
       case 'victory': return 'VICTOIRE';
       case 'defeat':  return 'DÉFAITE';
       case 'draw':    return 'MATCH NUL';
     }
-  }
+  });
 
-  message(): string {
+  readonly message = computed(() => {
     switch (this.summary().result) {
       case 'victory': return 'Vous remportez le duel contre Lykö le Sage !';
       case 'defeat':  return 'Lykö le Sage a été plus malin… Retente ta chance !';
       case 'draw':    return 'Égalité parfaite. Qui prendra l’avantage ?';
     }
-  }
+  });
 }

@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   HOMECONNECT — Styles optimisés (version claire, Angular 20)
+   HOMECONNECT — Styles optimisés (version claire, Angular 21)
    ═════════════════════════════════════════════════════════════════════ */
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -229,7 +229,9 @@
   &:hover {
     transform: translateY(-3px);
     border-color: var(--qa-color);
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--qa-color) 25%, transparent);
+    box-shadow:
+      0 8px 24px rgba(15, 23, 42, .1),
+      0 0 0 1px var(--qa-color) inset;
 
     .qa-arrow {
       transform: translateX(4px);
@@ -459,6 +461,53 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
+   PLACEHOLDER & SKELETON (pour @defer)
+   ═════════════════════════════════════════════════════════════════════ */
+.documents-placeholder {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 3rem 0;
+  padding: 1.5rem;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.skeleton {
+  height: 140px;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, .04) 0%,
+    rgba(15, 23, 42, .08) 50%,
+    rgba(15, 23, 42, .04) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-pulse {
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.documents-error {
+  margin: 3rem 0;
+  padding: 1rem 1.25rem;
+  background: rgba(220, 38, 38, .06);
+  border: 1px solid rgba(220, 38, 38, .3);
+  border-radius: var(--radius-md);
+  color: var(--danger);
+  font-size: .9rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
@@ -511,5 +560,9 @@
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  .skeleton-pulse {
+    animation: none;
   }
 }

@@ -13,3 +13,10 @@ export const MESSAGE_MIN_LENGTH = 10;
 
 /** Longueur maximale du message. */
 export const MESSAGE_MAX_LENGTH = 5000;
+
+/* ═════════════════════════════════════════════════════════════════════
+   SUPPORT
+   ═════════════════════════════════════════════════════════════════════ */
+
+/** UID de l'utilisateur désigné pour répondre aux messages des utilisateurs. */
+export const SUPPORT_UID = '4gKIsx61Ief3iIvNgWgIy8PKVpm2';

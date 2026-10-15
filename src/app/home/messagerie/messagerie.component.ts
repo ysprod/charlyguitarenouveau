@@ -42,9 +42,7 @@ import { of } from 'rxjs';
 import { map, shareReplay, switchMap } from 'rxjs/operators';
 
 import {
-  MessageCategory,
   MessageReply,
-  MessageStatus,
   UserMessage,
 } from '../models/user-message.model';
 
@@ -54,13 +52,6 @@ import {
   EMPTY_STATE_MESSAGES,
   REPLY_MAX_LENGTH,
   REPLY_WARNING_THRESHOLD,
-  STATUS_BADGE_CLASS,
-  DEFAULT_STATUS_BADGE,
-  STATUS_LABEL,
-  DEFAULT_STATUS_LABEL,
-  STATUS_ICON,
-  DEFAULT_STATUS_ICON,
-  DEFAULT_CATEGORY_ICON,
 } from 'src/app/home/constants/messagerie.constants';
 
 import {
@@ -78,22 +69,39 @@ import {
 } from 'src/app/home/utils/messagerie.utils';
 
 import { getInitials } from 'src/app/home/utils/string.utils';
-import { CATEGORY_ICON } from '../constants/category-icons.constants';
- 
+
+import {
+  StatusBadgeClassPipe,
+  StatusLabelPipe,
+  StatusIconPipe,
+  CategoryIconPipe,
+} from '../pipes/status.pipe';
+
+import { RepliesCountPipe } from '../pipes/replies-count.pipe';
+
 /* ═════════════════════════════════════════════════════════════════════
    COMPOSANT
    ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-messagerie',
-  imports: [DatePipe, FormsModule, MatSnackBarModule],
+  imports: [
+    DatePipe,
+    FormsModule,
+    MatSnackBarModule,
+    StatusBadgeClassPipe,
+    StatusLabelPipe,
+    StatusIconPipe,
+    CategoryIconPipe,
+    RepliesCountPipe,
+  ],
   templateUrl: './messagerie.component.html',
   styleUrls: ['./messagerie.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MessagerieComponent {
 
-  /* ─── ViewChild (signal-based, Angular 21) ─── */
+  /* ─── ViewChild (signal-based) ─── */
   readonly threadBody = viewChild<ElementRef<HTMLDivElement>>('threadBody');
 
   /* ─── Injection ─── */
@@ -357,34 +365,11 @@ export class MessagerieComponent {
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     HELPERS TEMPLATE
+     HELPERS TEMPLATE — uniquement ce qui ne peut pas être un pipe
      ═══════════════════════════════════════════════════════════════════ */
 
+  /** Retourne le tableau des réponses triées. Nécessaire dans `@for`. */
   repliesOf(message: UserMessage): MessageReply[] {
     return toRepliesArray(message.replies);
-  }
-
-  repliesCount(
-    replies: Record<string, MessageReply> | MessageReply[] | undefined
-  ): number {
-    return toRepliesArray(replies).length;
-  }
-
-  statusBadgeClass(status: string | undefined): string {
-    return (
-      STATUS_BADGE_CLASS[status as MessageStatus] ?? DEFAULT_STATUS_BADGE
-    );
-  }
-
-  statusLabel(status: string | undefined): string {
-    return STATUS_LABEL[status as MessageStatus] ?? DEFAULT_STATUS_LABEL;
-  }
-
-  statusIcon(status: string | undefined): string {
-    return STATUS_ICON[status as MessageStatus] ?? DEFAULT_STATUS_ICON;
-  }
-
-  categoryIcon(category: string | undefined): string {
-    return CATEGORY_ICON[category as MessageCategory] ?? DEFAULT_CATEGORY_ICON;
   }
 }

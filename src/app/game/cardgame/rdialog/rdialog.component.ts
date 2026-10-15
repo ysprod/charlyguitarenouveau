@@ -1,8 +1,10 @@
+// src/app/game/cardgame/rdialog/rdialog.component.ts
+
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  afterNextRender,
   inject,
   viewChild,
 } from '@angular/core';
@@ -12,6 +14,10 @@ import {
   MatDialogRef,
 } from '@angular/material/dialog';
 
+/* ═════════════════════════════════════════════════════════════════════
+   TYPES
+   ═════════════════════════════════════════════════════════════════════ */
+
 /**
  * Valeur de sortie de la modale :
  *  - 'replay' : le joueur veut rejouer sur la même grille
@@ -19,28 +25,41 @@ import {
  */
 export type RdialogResult = 'replay' | 'menu';
 
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
+
 @Component({
   selector: 'app-rdialog',
-  standalone: true,
   imports: [MatDialogModule],
   templateUrl: './rdialog.component.html',
   styleUrls: ['./rdialog.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RdialogComponent implements AfterViewInit {
+export class RdialogComponent {
 
-  /** Référence à la modale pour fermer avec un résultat typé. */
+  /* ─── Injection ─── */
   private readonly dialogRef =
     inject<MatDialogRef<RdialogComponent, RdialogResult>>(MatDialogRef);
 
-  /** Référence au bouton "Rejouer" pour le focus initial garanti. */
+  /* ─── ViewChild (signal-based) ─── */
   private readonly replayButton =
     viewChild<ElementRef<HTMLButtonElement>>('replayBtn');
 
-  ngAfterViewInit(): void {
-    /* Focus initial sur le bouton principal (action par défaut). */
-    this.replayButton()?.nativeElement.focus();
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR — afterNextRender (focus initial)
+     ═══════════════════════════════════════════════════════ */
+
+  constructor() {
+    /* Focus initial sur le bouton principal (action par défaut) */
+    afterNextRender(() => {
+      this.replayButton()?.nativeElement.focus();
+    });
   }
+
+  /* ═══════════════════════════════════════════════════════
+     ACTIONS
+     ═══════════════════════════════════════════════════════ */
 
   /** Ferme la modale avec la valeur 'replay'. */
   replay(): void {

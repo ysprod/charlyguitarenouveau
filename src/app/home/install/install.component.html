@@ -1,18 +1,30 @@
+<!-- src/app/home/install/install.component.html -->
+
 @if (visible()) {
-  <button
-    type="button"
-    class="btn-install-app"
-    (click)="openModalOrPrompt()"
-    aria-label="Installer l'application Mymuisic"
-  >
-    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-      <polyline points="7 10 12 15 17 10"/>
-      <line x1="12" y1="15" x2="12" y2="3"/>
-    </svg>
-    <span>Installer l'app</span>
-  </button>
+  <div class="contact-cta">
+    <button
+      type="button"
+      class="btn-install-app"
+      (click)="openModalOrPrompt()"
+      aria-label="Installer l'application Charly Guitare"
+    >
+      <svg
+        class="btn-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
+      <span>Installer l'app</span>
+    </button>
+  </div>
 }
 
 @if (modalOpen()) {
@@ -23,19 +35,32 @@
     aria-labelledby="install-modal-title"
     aria-describedby="install-modal-desc"
     (click)="closeModal()"
+    (keydown)="onModalKeydown($event)"
+    tabindex="-1"
   >
-    <div class="install-modal-card" (click)="$event.stopPropagation()">
-
+    <div
+      #modalCard
+      class="install-modal-card"
+      role="document"
+      (click)="$event.stopPropagation()"
+    >
       <button
+        #modalCloseBtn
         type="button"
         class="modal-close"
         (click)="closeModal()"
         aria-label="Fermer la fenêtre d'installation"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-          stroke-linecap="round" aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
 
@@ -53,11 +78,19 @@
           <div class="step-body">
             <p class="step-text">
               Repère l'icône d'installation
-              <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
+              <svg
+                class="step-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
               à droite de la barre d'adresse
             </p>
@@ -69,10 +102,15 @@
           <div class="step-body">
             <p class="step-text">
               Ou ouvre le menu
-              <svg class="step-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <circle cx="12" cy="5" r="2"/>
-                <circle cx="12" cy="12" r="2"/>
-                <circle cx="12" cy="19" r="2"/>
+              <svg
+                class="step-icon"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="5" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="19" r="2" />
               </svg>
               → « Installer l'app »
             </p>
@@ -90,7 +128,6 @@
       <button type="button" class="btn-understand" (click)="closeModal()">
         Compris
       </button>
-
     </div>
   </div>
 }

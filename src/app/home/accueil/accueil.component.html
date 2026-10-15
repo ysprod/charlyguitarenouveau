@@ -1,39 +1,90 @@
+<!-- src/app/home/accueil/accueil.component.html -->
+
 <div class="artist-overview-container">
 
-  <!-- En-tête Hero & Badge d'Excellence -->
+  <!-- ═══════════════════════════════════════════════════════
+       HERO — Cinématographique
+       ═══════════════════════════════════════════════════════ -->
   <header class="artist-hero-header">
-    <h1 class="artist-title">CHARLY GUITARE</h1>
-    <p class="artist-tagline">
-      M. Kotchi Kacou Jean-Charles • Arranger, Composer &amp; Afro-Guitar Master
-    </p>
+
+    <!-- Auras lumineuses -->
+    <div class="hero-auras" aria-hidden="true">
+      <span class="aura aura-1"></span>
+      <span class="aura aura-2"></span>
+      <span class="aura aura-3"></span>
+    </div>
+
+    <!-- Particules dorées -->
+    <div class="hero-particles" aria-hidden="true">
+      @for (p of particles(); track p) {
+        <span
+          class="particle"
+          [style.left.%]="(p * 17) % 100"
+          [style.animation-delay]="(p * 0.4) + 's'"
+          [style.animation-duration]="(8 + (p % 5)) + 's'"
+        ></span>
+      }
+    </div>
+
+    <!-- Grille décorative -->
+    <div class="hero-grid-bg" aria-hidden="true"></div>
+
+    <!-- Contenu -->
+    <div class="hero-content">
+      <span class="hero-eyebrow" appReveal>
+        <span class="dot" aria-hidden="true"></span>
+        ARTISTE PREMIUM • CÔTE D’IVOIRE
+      </span>
+
+      <h1 class="artist-title" appReveal [revealDelay]="120">
+        {{ artistName }}
+      </h1>
+
+      <p class="artist-tagline" appReveal [revealDelay]="240">
+        {{ artistTagline }}
+      </p>
+
+      <div class="hero-divider" aria-hidden="true" appReveal [revealDelay]="320">
+        <span class="line"></span>
+        <span class="icon">🎸</span>
+        <span class="line"></span>
+      </div>
+    </div>
   </header>
 
-  <!-- Grille Principale 2 Colonnes (Vidéo + Carte Profil) -->
+  <!-- ═══════════════════════════════════════════════════════
+       GRILLE PRINCIPALE
+       ═══════════════════════════════════════════════════════ -->
   <div class="main-content-grid">
 
-    <!-- Colonne Gauche : Lecteur Vidéo & Métriques -->
+    <!-- ═══════════ COLONNE GAUCHE — Vidéo & Stats ═══════════ -->
     <div class="media-column">
 
       <!-- Carte vidéo -->
-      <div class="video-card glass-morphism">
+      <div class="video-card glass-morphism" appReveal>
         <div class="video-header">
-          <span class="live-badge">PREVIEW</span>
+          <span class="live-badge">
+            <span class="live-dot" aria-hidden="true"></span>
+            PREVIEW
+          </span>
           <h3>Performance &amp; Présentation Officielle</h3>
         </div>
 
         <div class="video-wrapper">
           <iframe
-            src="https://www.youtube.com/embed/6S8m0-hQ29k?rel=0"
+            [src]="safeVideoUrl()"
             title="Vidéo de présentation Charly Guitare"
-            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
             allowfullscreen
             loading="lazy"
           ></iframe>
+          <span class="video-shine" aria-hidden="true"></span>
         </div>
 
         <div class="video-footer">
           <a
-            href="https://www.youtube.com/watch?v=6S8m0-hQ29k"
+            [href]="artistYoutubeUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="yt-link-btn"
@@ -44,116 +95,90 @@
         </div>
       </div>
 
-      <!-- Statistiques Imposantes / Impact -->
+      <!-- Statistiques -->
       <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-number">15+</span>
-          <span class="stat-label">Années d'Expérience</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">25+</span>
-          <span class="stat-label">Artistes Majeurs Accompagnés</span>
-        </div>
-        <div class="stat-card highlight">
-          <span class="stat-number">
-            <span aria-hidden="true">🏆</span> PRIMUD
-          </span>
-          <span class="stat-label">Meilleur Musicien 2019</span>
-        </div>
+        @for (stat of stats; track stat.id; let i = $index) {
+          <div class="stat-card" appReveal [revealDelay]="i * 120">
+            <span class="stat-number">
+              {{ animatedStats()[stat.id] }}{{ stat.suffix }}
+            </span>
+            <span class="stat-label">{{ stat.label }}</span>
+          </div>
+        }
       </div>
     </div>
 
-    <!-- Colonne Droite : Carte Biographie & Détails -->
+    <!-- ═══════════ COLONNE DROITE — Profil ═══════════ -->
     <div class="profile-column">
-      <article class="artist-card glass-morphism">
+      <article class="artist-card glass-morphism" appReveal>
 
-        <!-- Bio Intro & Distinctions -->
+        <!-- Ornements dorés dans les coins -->
+        <span class="corner-decor top-left" aria-hidden="true"></span>
+        <span class="corner-decor top-right" aria-hidden="true"></span>
+        <span class="corner-decor bottom-left" aria-hidden="true"></span>
+        <span class="corner-decor bottom-right" aria-hidden="true"></span>
+
+        <!-- Bio -->
         <section class="card-section">
           <p class="bio-intro">
-            <strong>M. Kotchi Kacou Jean-Charles</strong>, connu sous le nom scénique de <em>Charly Guitare</em>, figure
-            parmi les leaders incontournables de la musique ivoirienne contemporaine. Arrangeur recherché,
-            auteur-compositeur et guitariste d'exception, il incarne l'excellence rythmique du Coupé-Décalé, du Reggae
-            et de la Pop Africaine.
+            <strong>{{ bioName }}</strong>, {{ bioIntro }}
           </p>
 
-          <!-- Distinction Phare -->
-          <div class="gold-award-banner">
-            <div class="award-icon-wrapper" aria-hidden="true">🏆</div>
-            <div class="award-details">
-              <h4>Lauréat PRIMUD 2019</h4>
-              <p>Sacré Meilleur Musicien de Côte d'Ivoire</p>
+          <!-- Awards -->
+          @for (award of awards; track award.id) {
+            <div class="gold-award-banner">
+              <span class="award-icon-wrapper" aria-hidden="true">{{ award.icon }}</span>
+              <div class="award-details">
+                <h4>{{ award.title }}</h4>
+                <p>{{ award.description }}</p>
+              </div>
             </div>
-          </div>
+          }
         </section>
 
-        <!-- Pôles d'Expertise & Styles -->
+        <!-- Expertises -->
         <section class="card-section">
           <h3 class="section-title">
             <span class="icon" aria-hidden="true">🎸</span>
             Domaines d'Expertise
           </h3>
           <div class="skills-tags">
-            <span class="tag">Guitare Solo &amp; Rythmique</span>
-            <span class="tag">Coupé-Décalé Method</span>
-            <span class="tag">Arrangement Studio</span>
-            <span class="tag">Direction Artistique</span>
-            <span class="tag">World Music &amp; Jazz Fusion</span>
+            @for (skill of skills; track skill.label) {
+              <span class="tag">{{ skill.label }}</span>
+            }
           </div>
         </section>
 
-        <!-- Collaborations Stratifiées -->
+        <!-- Collaborations -->
         <section class="card-section">
           <h3 class="section-title">
             <span class="icon" aria-hidden="true">🤝</span>
             Collaborations de Renommée
           </h3>
 
-          <div class="genre-group">
-            <span class="genre-label">Urban &amp; Coupé-Décalé :</span>
-            <p>Feu DJ Arafat, Ariel Sheney, Kerozen, Safarel Obiang, DJ Mix Premier, DJ Léo, Feu Ericson le Zoulou,
-              Vitale, Bamba Ami Sarah, Abou Nidal...</p>
-          </div>
-
-          <div class="genre-group">
-            <span class="genre-label">Reggae &amp; World Music :</span>
-            <p>Ismaël Isaac, Hamed Faras, Alain Spyrow, Jim Kamson, Rass Julian, Kadjim, Ken de Korhogo, Feu Larry
-              Cheick...</p>
-          </div>
-
-          <div class="genre-group">
-            <span class="genre-label">Gospel &amp; International :</span>
-            <p>O'nel Mala, Purichi Apo (Guinée Équatoriale), Nafasi, Two Boys, Afou Keïta...</p>
-          </div>
+          @for (group of collaborations; track group.id) {
+            <div class="genre-group" [style.--genre-color]="group.color">
+              <span class="genre-label">{{ group.label }} :</span>
+              <p>{{ group.artists }}</p>
+            </div>
+          }
         </section>
 
-        <!-- Scène & Création Contemporaine -->
+        <!-- Festivals -->
         <section class="card-section">
           <h3 class="section-title">
             <span class="icon" aria-hidden="true">🎭</span>
             Scène, Danse &amp; Festivals
           </h3>
-          <p class="scenic-desc">
-            Ancien collaborateur de la compagnie de danse contemporaine <strong>Jenny Mezile</strong> et révélé sur les
-            scènes de <em>Podium (2007, 2008)</em>.
-          </p>
+          <p class="scenic-desc">{{ scenicDesc }}</p>
 
           <div class="festivals-timeline">
-            <div class="timeline-item">
-              <span class="year-badge">FEMUA</span>
-              <span class="event-desc">Éditions majeurs 2017, 2018, 2019</span>
-            </div>
-            <div class="timeline-item">
-              <span class="year-badge">MASA</span>
-              <span class="event-desc">Présence continue (2015, 2016, 2017, 2018, 2019)</span>
-            </div>
-            <div class="timeline-item">
-              <span class="year-badge">Maroc</span>
-              <span class="event-desc">Equipo Completo (Rabat 2014-2015)</span>
-            </div>
-            <div class="timeline-item">
-              <span class="year-badge">Jazz</span>
-              <span class="event-desc">Jazz Inter 1<sup>ère</sup> Édition (Prix Don du Talent)</span>
-            </div>
+            @for (festival of festivals; track festival.id; let i = $index) {
+              <div class="timeline-item" [style.animation-delay]="(i * 0.1) + 's'">
+                <span class="year-badge">{{ festival.year }}</span>
+                <span class="event-desc">{{ festival.description }}</span>
+              </div>
+            }
           </div>
         </section>
       </article>

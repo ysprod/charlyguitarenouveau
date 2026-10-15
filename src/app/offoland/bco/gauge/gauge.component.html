@@ -1,0 +1,61 @@
+<!-- src/app/shared/gauge/gauge.component.html -->
+
+<div class="gauge">
+  <svg
+    viewBox="0 0 120 120"
+    class="gauge-svg"
+    role="img"
+    [attr.aria-label]="label() + ' : ' + displayValue() + ' ' + unit()"
+  >
+    <defs>
+      <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" [attr.stop-color]="colorFrom()" />
+        <stop offset="100%" [attr.stop-color]="colorTo()" />
+      </linearGradient>
+    </defs>
+
+    <!-- Cercle de fond -->
+    <circle
+      cx="60"
+      cy="60"
+      r="50"
+      fill="none"
+      stroke="rgba(255,255,255,0.06)"
+      stroke-width="8"
+    />
+
+    <!-- Arc de progression -->
+    <circle
+      cx="60"
+      cy="60"
+      r="50"
+      fill="none"
+      [attr.stroke]="'url(#' + gradientId + ')'"
+      stroke-width="8"
+      stroke-linecap="round"
+      [attr.stroke-dasharray]="circumference"
+      [attr.stroke-dashoffset]="dashOffset()"
+      transform="rotate(-90 60 60)"
+      class="gauge-progress"
+    />
+
+    <!-- Texte central -->
+    <text
+      x="60"
+      y="58"
+      text-anchor="middle"
+      class="gauge-value"
+    >{{ displayValue() }}</text>
+
+    <text
+      x="60"
+      y="74"
+      text-anchor="middle"
+      class="gauge-unit"
+    >{{ unit() }}</text>
+  </svg>
+
+  @if (label()) {
+    <div class="gauge-label">{{ label() }}</div>
+  }
+</div>

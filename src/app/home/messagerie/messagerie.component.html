@@ -107,11 +107,11 @@
           [attr.aria-label]="msg.subject || 'Message sans sujet'">
           <div class="card-top">
             <span class="category-icon" [title]="msg.category || 'autre'" aria-hidden="true">
-              {{ categoryIcon(msg.category) }}
+              {{ msg.category | categoryIcon }}
             </span>
             <span class="subject">{{ msg.subject || '(Sans sujet)' }}</span>
-            <span class="status-badge" [class]="statusBadgeClass(msg.status)">
-              {{ statusIcon(msg.status) }} {{ statusLabel(msg.status) }}
+            <span class="status-badge" [class]="msg.status | statusBadgeClass">
+              {{ msg.status | statusIcon }} {{ msg.status | statusLabel }}
             </span>
           </div>
 
@@ -130,7 +130,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              {{ repliesCount(msg.replies) }}
+              {{ msg.replies | repliesCount }}
             </span>
             }
           </div>
@@ -155,11 +155,11 @@
         <div class="thread-title">
           <div class="thread-meta">
             <span class="category-chip">
-              <span aria-hidden="true">{{ categoryIcon(selected.category) }}</span>
+              <span aria-hidden="true">{{ selected.category | categoryIcon }}</span>
               {{ selected.category || 'autre' }}
             </span>
-            <span class="status-badge" [class]="statusBadgeClass(selected.status)">
-              {{ statusIcon(selected.status) }} {{ statusLabel(selected.status) }}
+            <span class="status-badge" [class]="selected.status | statusBadgeClass">
+              {{ selected.status | statusIcon }} {{ selected.status | statusLabel }}
             </span>
           </div>
           <h2>{{ selected.subject || '(Sans sujet)' }}</h2>

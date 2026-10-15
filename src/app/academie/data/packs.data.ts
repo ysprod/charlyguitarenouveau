@@ -7,7 +7,7 @@
    (voir commentaires à côté de chaque accentColor)
    ============================================================ */
 
-import { PackCategory } from "src/app/home/models/pack.model";
+import { PackCategory } from "src/app/academie/models/pack.model";
 
 export const PACK_CATEGORIES: PackCategory[] = [
     /* ─────────────────────────────────────────────

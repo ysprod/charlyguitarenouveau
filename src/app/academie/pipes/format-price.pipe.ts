@@ -10,7 +10,6 @@ import { formatPrice } from 'src/app/academie/utils/documents.utils';
 
 @Pipe({
   name: 'formatPrice',
-  standalone: true,
   pure: true,
 })
 export class FormatPricePipe implements PipeTransform {

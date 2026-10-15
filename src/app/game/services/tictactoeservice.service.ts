@@ -100,8 +100,8 @@ export class TictactoeserviceService {
   }
 
   incrementDraw(): void {
-  this._draw.update(n => n + 1);
-}
+    this._draw.update(n => n + 1);
+  }
 
   /* ═══════════════════════════════════════════════════════════════════
      TOURS
@@ -143,12 +143,12 @@ export class TictactoeserviceService {
     const updatedBlocks = blocks.map((block, i) =>
       i === index
         ? {
-          ...block,
-          free: false,
-          value: symbol,
-          symbol: symbol === SYMBOL_PLAYER ? 'done' : 'close',
-          isNew: true
-        }
+            ...block,
+            free: false,
+            value: symbol,
+            symbol: symbol === SYMBOL_PLAYER ? 'done' : 'close',
+            isNew: true
+          }
         : block
     );
 
@@ -272,26 +272,62 @@ export class TictactoeserviceService {
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     IA
+     IA AMÉLIORÉE (STRATÉGIQUE)
      ═══════════════════════════════════════════════════════════════════ */
 
   figureBotMove(): number {
-    /* 1. Chercher un coup gagnant */
-    const winMove = this.findSmartMove(SYMBOL_BOT);
-    if (winMove !== -1 && this._blocks()[winMove].free) return winMove;
-
-    /* 2. Bloquer l'adversaire */
-    const blockMove = this.findSmartMove(SYMBOL_PLAYER);
-    if (blockMove !== -1 && this._blocks()[blockMove].free) return blockMove;
-
-    /* 3. Prendre le centre si libre */
+    const blocks = this._blocks();
     const N = this._gridSize();
-    const centerIdx = Math.floor((N * N) / 2);
-    const centerBlock = this._blocks()[centerIdx];
-    if (centerBlock && centerBlock.free) return centerIdx;
 
-    /* 4. Case libre aléatoire */
-    const freeIndices = this._blocks()
+    // 1. PRIORITÉ ABSOLUE : Gagner immédiatement si possible
+    const winMove = this.findSmartMove(SYMBOL_BOT);
+    if (winMove !== -1 && blocks[winMove].free) return winMove;
+
+    // 2. PRIORITÉ HAUTE : Bloquer le joueur s'il est sur le point de marquer
+    const blockMove = this.findSmartMove(SYMBOL_PLAYER);
+    if (blockMove !== -1 && blocks[blockMove].free) return blockMove;
+
+    // 3. STRATÉGIE AVANCÉE : Créer une double menace (fourchette) pour Lykö
+    const forkMove = this.findForkMove(SYMBOL_BOT);
+    if (forkMove !== -1 && blocks[forkMove].free) return forkMove;
+
+    // 4. PRÉVENTION : Empêcher le joueur de créer une fourchette
+    const blockForkMove = this.findForkMove(SYMBOL_PLAYER);
+    if (blockForkMove !== -1 && blocks[blockForkMove].free) return blockForkMove;
+
+    // 5. ÉVALUATION HEURISTIQUE : Choisir la case maximisant le potentiel d'alignement
+    let bestScore = -Infinity;
+    let bestMoves: number[] = [];
+
+    blocks.forEach((block, idx) => {
+      if (!block.free) return;
+
+      let score = 0;
+      // Bonus pour le centre et les zones proches du centre
+      const r = Math.floor(idx / N);
+      const c = idx % N;
+      const center = (N - 1) / 2;
+      score += (N - (Math.abs(r - center) + Math.abs(c - center)));
+
+      // Évaluer le potentiel de la case pour le Bot
+      score += this.evaluateCellPotential(idx, SYMBOL_BOT) * 2;
+      // Évaluer le danger si le joueur la prend
+      score += this.evaluateCellPotential(idx, SYMBOL_PLAYER) * 1.5;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMoves = [idx];
+      } else if (score === bestScore) {
+        bestMoves.push(idx);
+      }
+    });
+
+    if (bestMoves.length > 0) {
+      return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    }
+
+    // 6. Repli sur une case libre aléatoire
+    const freeIndices = blocks
       .map((block, idx) => (block.free ? idx : -1))
       .filter(idx => idx !== -1);
 
@@ -316,43 +352,138 @@ export class TictactoeserviceService {
       return -1;
     };
 
+    // Lignes
     for (let r = 0; r < N; r++) {
       for (let c = 0; c <= N - K; c++) {
-        const res = checkLine([r * N + c, r * N + c + 1, r * N + c + 2]);
+        const indices = Array.from({ length: K }, (_, i) => r * N + c + i);
+        const res = checkLine(indices);
         if (res !== -1) return res;
       }
     }
 
+    // Colonnes
     for (let c = 0; c < N; c++) {
       for (let r = 0; r <= N - K; r++) {
-        const res = checkLine([r * N + c, (r + 1) * N + c, (r + 2) * N + c]);
+        const indices = Array.from({ length: K }, (_, i) => (r + i) * N + c);
+        const res = checkLine(indices);
         if (res !== -1) return res;
       }
     }
 
+    // Diagonale ↘
     for (let r = 0; r <= N - K; r++) {
       for (let c = 0; c <= N - K; c++) {
-        const res = checkLine([
-          r * N + c,
-          (r + 1) * N + c + 1,
-          (r + 2) * N + c + 2
-        ]);
+        const indices = Array.from({ length: K }, (_, i) => (r + i) * N + c + i);
+        const res = checkLine(indices);
         if (res !== -1) return res;
       }
     }
 
+    // Diagonale ↙
     for (let r = 0; r <= N - K; r++) {
       for (let c = K - 1; c < N; c++) {
-        const res = checkLine([
-          r * N + c,
-          (r + 1) * N + c - 1,
-          (r + 2) * N + c - 2
-        ]);
+        const indices = Array.from({ length: K }, (_, i) => (r + i) * N + c - i);
+        const res = checkLine(indices);
         if (res !== -1) return res;
       }
     }
 
     return -1;
+  }
+
+  /**
+   * Cherche un coup qui crée une "fourchette" (plusieurs opportunités d'alignement simultanées).
+   */
+  private findForkMove(targetValue: string): number {
+    const blocks = this._blocks();
+    for (let i = 0; i < blocks.length; i++) {
+      if (!blocks[i].free) continue;
+
+      const testBlocks = [...blocks];
+      testBlocks[i] = { ...testBlocks[i], free: false, value: targetValue };
+
+      if (this.countPotentialWinningLines(testBlocks, targetValue) >= 2) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private countPotentialWinningLines(blocks: Block[], targetValue: string): number {
+    const N = this._gridSize();
+    const K = WINNING_STREAK;
+    let count = 0;
+
+    const check = (indices: number[]) => {
+      const filled = indices.filter(i => !blocks[i].free && blocks[i].value === targetValue);
+      const empty = indices.filter(i => blocks[i].free);
+      if (filled.length === K - 1 && empty.length === 1) count++;
+    };
+
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c <= N - K; c++) {
+        check(Array.from({ length: K }, (_, i) => r * N + c + i));
+      }
+    }
+    for (let c = 0; c < N; c++) {
+      for (let r = 0; r <= N - K; r++) {
+        check(Array.from({ length: K }, (_, i) => (r + i) * N + c));
+      }
+    }
+    for (let r = 0; r <= N - K; r++) {
+      for (let c = 0; c <= N - K; c++) {
+        check(Array.from({ length: K }, (_, i) => (r + i) * N + c + i));
+      }
+    }
+    for (let r = 0; r <= N - K; r++) {
+      for (let c = K - 1; c < N; c++) {
+        check(Array.from({ length: K }, (_, i) => (r + i) * N + c - i));
+      }
+    }
+
+    return count;
+  }
+
+  private evaluateCellPotential(index: number, targetValue: string): number {
+    const blocks = this._blocks();
+    const N = this._gridSize();
+    const K = WINNING_STREAK;
+    let potential = 0;
+
+    const r = Math.floor(index / N);
+    const c = index % N;
+
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        
+        let lineScore = 0;
+        let blocked = false;
+        
+        for (let step = 1; step < K; step++) {
+          const nr = r + dr * step;
+          const nc = c + dc * step;
+          if (nr < 0 || nr >= N || nc < 0 || nc >= N) {
+            blocked = true;
+            break;
+          }
+          const idx = nr * N + nc;
+          if (!blocks[idx].free) {
+            if (blocks[idx].value === targetValue) {
+              lineScore++;
+            } else {
+              blocked = true;
+              break;
+            }
+          }
+        }
+        if (!blocked) {
+          potential += lineScore;
+        }
+      }
+    }
+
+    return potential;
   }
 
   /* ═══════════════════════════════════════════════════════════════════

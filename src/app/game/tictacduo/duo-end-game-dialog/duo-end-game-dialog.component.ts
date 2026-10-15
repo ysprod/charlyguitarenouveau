@@ -1,20 +1,27 @@
+// src/app/game/tictacduo/duo-end-game-dialog/duo-end-game-dialog.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   input,
-  output
+  output,
 } from '@angular/core';
 
 import { DuoEndGameSummary } from '../../models/duo-end-game-summary.model';
 
 @Component({
   selector: 'app-duo-end-game-dialog',
-  standalone: true,
   templateUrl: './duo-end-game-dialog.component.html',
   styleUrls: ['./duo-end-game-dialog.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DuoEndGameDialogComponent {
+
+  /* ═══════════════════════════════════════════════════════
+     ENTRÉES / SORTIES
+     ═══════════════════════════════════════════════════════ */
+
   readonly summary = input.required<DuoEndGameSummary>();
 
   readonly replay = output<void>();
@@ -22,23 +29,27 @@ export class DuoEndGameDialogComponent {
   readonly previousLevel = output<void>();
   readonly backToMenu = output<void>();
 
-  icon(): string {
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED
+     ═══════════════════════════════════════════════════════ */
+
+  readonly icon = computed(() => {
     switch (this.summary().result) {
       case 'player1': return '🏆';
       case 'player2': return '🎉';
       case 'draw':    return '⚖️';
     }
-  }
+  });
 
-  title(): string {
+  readonly title = computed(() => {
     switch (this.summary().result) {
       case 'player1': return 'VICTOIRE JOUEUR 1';
       case 'player2': return 'VICTOIRE JOUEUR 2';
       case 'draw':    return 'MATCH NUL';
     }
-  }
+  });
 
-  message(): string {
+  readonly message = computed(() => {
     const s = this.summary();
     switch (s.result) {
       case 'player1':
@@ -48,5 +59,5 @@ export class DuoEndGameDialogComponent {
       case 'draw':
         return `Égalité parfaite (${s.player1Score} – ${s.player2Score}). Qui prendra l'avantage ?`;
     }
-  }
+  });
 }

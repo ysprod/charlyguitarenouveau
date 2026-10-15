@@ -1,34 +1,25 @@
+// src/app/home/install/install.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
-  OnInit,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  inject,
   signal,
+  viewChild,
 } from '@angular/core';
 
-/* ═══════════════════════════════════════════════════════════
-   TYPES
-   ═══════════════════════════════════════════════════════════ */
+import {
+  BeforeInstallPromptEvent,
+  NavigatorWithRelatedApps,
+} from '../models/install.model';
 
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
-
-/** Extension de Navigator pour `getInstalledRelatedApps` (non standardisé). */
-interface NavigatorWithRelatedApps extends Navigator {
-  getInstalledRelatedApps?: () => Promise<unknown[]>;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   CONSTANTES  ← ✅ AJOUT INDISPENSABLE
-   ═══════════════════════════════════════════════════════════ */
-
-const INSTALLED_KEY = 'mymuisic_app_installed';
+import {
+  FOCUSABLE_SELECTOR,
+  INSTALLED_KEY,
+} from '../constants/install.constants';
 
 /* ═══════════════════════════════════════════════════════════
    COMPOSANT
@@ -36,14 +27,21 @@ const INSTALLED_KEY = 'mymuisic_app_installed';
 
 @Component({
   selector: 'app-install',
-  standalone: true,
   imports: [],
   templateUrl: './install.component.html',
   styleUrl: './install.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InstallComponent implements OnInit, OnDestroy {
+export class InstallComponent {
 
+  /* ─── Injection ─── */
+  private readonly destroyRef = inject(DestroyRef);
+
+  /* ─── Références DOM (focus trap) ─── */
+  private readonly modalCard = viewChild<ElementRef<HTMLElement>>('modalCard');
+  private readonly modalCloseBtn = viewChild<ElementRef<HTMLButtonElement>>('modalCloseBtn');
+
+  /* ─── État ─── */
   /** Le bouton déclencheur est-il visible ? */
   readonly visible = signal(false);
 
@@ -53,14 +51,17 @@ export class InstallComponent implements OnInit, OnDestroy {
   /** Prompt natif conservé pour usage ultérieur. */
   private deferredPrompt: BeforeInstallPromptEvent | null = null;
 
-  /** Flag d'installation en cours de vérification (évite un flash). */
-  private installCheckDone = false;
+  /* ─── Élément précédemment focusé (restauration à la fermeture) ─── */
+  private previouslyFocused: HTMLElement | null = null;
+
+  /* ═══════════════════════════════════════════════════════
+     HANDLERS
+     ═══════════════════════════════════════════════════════ */
 
   private readonly onBeforeInstallPrompt = (e: Event) => {
     e.preventDefault();
     this.deferredPrompt = e as BeforeInstallPromptEvent;
 
-    // Ne pas réafficher si l'app est déjà installée
     if (!this.isInstalledSync()) {
       this.visible.set(true);
     }
@@ -74,28 +75,34 @@ export class InstallComponent implements OnInit, OnDestroy {
   };
 
   /* ═══════════════════════════════════════════════════════
-     LIFECYCLE
+     CONSTRUCTEUR
      ═══════════════════════════════════════════════════════ */
 
-  async ngOnInit(): Promise<void> {
-    /* 1. Détection synchrone rapide (standalone + localStorage) */
-    if (this.isInstalledSync()) {
-      this.installCheckDone = true;
-      return;
-    }
+  constructor() {
+    afterNextRender(() => {
+      void this.initInstallDetection();
+    });
 
-    /* 2. Détection asynchrone système (Chrome Android) */
+    this.destroyRef.onDestroy(() => {
+      if (typeof window === 'undefined') return;
+      window.removeEventListener('beforeinstallprompt', this.onBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', this.onAppInstalled);
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     DÉTECTION DE L'INSTALLATION
+     ═══════════════════════════════════════════════════════ */
+
+  private async initInstallDetection(): Promise<void> {
+    if (this.isInstalledSync()) return;
+
     const systemInstalled = await this.isInstalledSystem();
 
-    /* 3. Récap : si installée entre-temps, on abandonne */
     if (systemInstalled || this.isInstalledSync()) {
       this.markAsInstalled();
-      this.installCheckDone = true;
       return;
     }
-
-    /* 4. Aucune installation détectée → on peut afficher le bouton */
-    this.installCheckDone = true;
 
     window.addEventListener('beforeinstallprompt', this.onBeforeInstallPrompt);
     window.addEventListener('appinstalled', this.onAppInstalled);
@@ -106,18 +113,12 @@ export class InstallComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    window.removeEventListener('beforeinstallprompt', this.onBeforeInstallPrompt);
-    window.removeEventListener('appinstalled', this.onAppInstalled);
-  }
-
   /* ═══════════════════════════════════════════════════════
      ACTIONS
      ═══════════════════════════════════════════════════════ */
 
   /** Clic sur le bouton "Installer l'app". */
   async openModalOrPrompt(): Promise<void> {
-    /* 1. Prompt natif disponible → on déclenche */
     if (this.deferredPrompt) {
       try {
         await this.deferredPrompt.prompt();
@@ -131,40 +132,79 @@ export class InstallComponent implements OnInit, OnDestroy {
         this.deferredPrompt = null;
         return;
       } catch {
-        /* En cas d'échec, on bascule sur la modale explicative. */
+        /* Échec → on bascule sur la modale explicative. */
       }
     }
 
-    /* 2. Sinon → modale d'instructions manuelles */
-    this.modalOpen.set(true);
+    this.openModal();
   }
 
+  /** Ouvre la modale + gère focus / précédent focus. */
+  private openModal(): void {
+    if (typeof document !== 'undefined') {
+      this.previouslyFocused = document.activeElement as HTMLElement | null;
+    }
+    this.modalOpen.set(true);
+
+    /* Focus initial sur le bouton de fermeture (après le rendu) */
+    queueMicrotask(() => {
+      this.modalCloseBtn()?.nativeElement.focus();
+    });
+  }
+
+  /** Ferme la modale + restaure le focus. */
   closeModal(): void {
     this.modalOpen.set(false);
+    this.previouslyFocused?.focus();
+    this.previouslyFocused = null;
+  }
+
+  /** Gère la touche Escape + le focus trap (Tab / Shift+Tab). */
+  onModalKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeModal();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const card = this.modalCard()?.nativeElement;
+    if (!card) return;
+
+    const focusables = Array.from(
+      card.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+    );
+    if (focusables.length === 0) return;
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement as HTMLElement | null;
+
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   /* ═══════════════════════════════════════════════════════
      DÉTECTIONS
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Détection rapide et synchrone :
-   *  1. Mode `standalone` (app lancée depuis l'icône)
-   *  2. `navigator.standalone` (iOS Safari)
-   *  3. Flag `localStorage` (installation passée)
-   */
   private isInstalledSync(): boolean {
-    /* 1. Mode standalone */
+    if (typeof window === 'undefined') return false;
+
     if (window.matchMedia('(display-mode: standalone)').matches) {
       return true;
     }
 
-    /* 2. iOS */
     if ((window.navigator as { standalone?: boolean }).standalone === true) {
       return true;
     }
 
-    /* 3. Flag mémorisé */
     try {
       return localStorage.getItem(INSTALLED_KEY) === 'true';
     } catch {
@@ -172,12 +212,9 @@ export class InstallComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Détection asynchrone via `navigator.getInstalledRelatedApps()`.
-   * Disponible sur Chrome Android (et partiellement Edge).
-   * Nécessite `related_applications` dans le `manifest.webmanifest`.
-   */
   private async isInstalledSystem(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+
     const nav = window.navigator as NavigatorWithRelatedApps;
 
     if (typeof nav.getInstalledRelatedApps !== 'function') {

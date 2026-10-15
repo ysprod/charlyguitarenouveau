@@ -1,0 +1,43 @@
+<!-- src/app/shared/sparkline/sparkline.component.html -->
+
+<svg
+  class="sparkline"
+  [attr.viewBox]="viewBox()"
+  preserveAspectRatio="none"
+  role="img"
+  aria-hidden="true"
+>
+  <defs>
+    <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" [attr.stop-color]="color()" stop-opacity="0.4" />
+      <stop offset="100%" [attr.stop-color]="color()" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  @if (linePath(); as line) {
+    <path
+      [attr.d]="areaPath()"
+      [attr.fill]="'url(#' + gradientId + ')'"
+      class="sparkline-area"
+    />
+
+    <path
+      [attr.d]="line"
+      [attr.stroke]="color()"
+      fill="none"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="sparkline-line"
+      [style.--dash-length]="dashArray()"
+    />
+
+    <circle
+      [attr.cx]="lastX()"
+      [attr.cy]="lastY()"
+      r="3"
+      [attr.fill]="color()"
+      class="sparkline-dot"
+    />
+  }
+</svg>

@@ -1,3 +1,4 @@
+// src/app/home/homeconnect/inbox-panel/inbox-panel.component.ts
 
 import {
   ChangeDetectionStrategy,
@@ -23,15 +24,14 @@ import type {
   InboxMessage,
 } from 'src/app/home/models/homeconnect.model';
 
-import { InboxService } from 'src/app/home/services/inbox.service';
  
 
-import {
-  filterMessages,
-  formatRelativeDate,
-  truncate,
-} from 'src/app/home/utils/homeconnect.utils';
-import { getCategoryIcon } from '../../constants/category-icons.constants';
+import { filterMessages } from 'src/app/home/utils/homeconnect.utils';
+ 
+import { InboxService } from '../../services/inbox.service';
+import { RelativeDatePipe } from '../../pipes/relative-date.pipe';
+import { CategoryIconPipe } from '../../pipes/status.pipe';
+import { TruncatePipe } from '../../pipes/truncate.pipe';
 
 /* ═════════════════════════════════════════════════════════════════════
    INBOX PANEL — Aperçu de la boîte de réception
@@ -39,7 +39,12 @@ import { getCategoryIcon } from '../../constants/category-icons.constants';
 
 @Component({
   selector: 'app-inbox-panel',
-  imports: [RouterLink],
+  imports: [
+    RouterLink,
+    CategoryIconPipe,
+    RelativeDatePipe,
+    TruncatePipe,
+  ],
   templateUrl: './inbox-panel.component.html',
   styleUrls: ['./inbox-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,7 +74,7 @@ export class InboxPanelComponent {
   readonly currentPage = signal(1);
 
   /* ═══════════════════════════════════════════════════════
-     FLUX FIREBASE (readonly)
+     FLUX FIREBASE
      ═══════════════════════════════════════════════════════ */
 
   private readonly firebaseMessages = toSignal(this.inboxService.messages$, {
@@ -118,14 +123,6 @@ export class InboxPanelComponent {
   );
 
   /* ═══════════════════════════════════════════════════════
-     HELPERS TEMPLATE
-     ═══════════════════════════════════════════════════════ */
-
-  readonly formatRelativeDate = formatRelativeDate;
-  readonly truncate = truncate;
-  readonly getCategoryIcon = getCategoryIcon;
-
-  /* ═══════════════════════════════════════════════════════
      ACTIONS UI
      ═══════════════════════════════════════════════════════ */
 
@@ -136,7 +133,7 @@ export class InboxPanelComponent {
 
   /**
    * Ouvre la conversation dans la page `/inbox`.
-   * Utilise `msg.key` (clé Firebase) comme identifiant d'URL.
+   * Utilise `msg.id` comme identifiant d'URL.
    */
   openMessage(message: InboxMessage): void {
     const key = message.id;

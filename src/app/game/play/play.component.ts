@@ -1,38 +1,46 @@
+// src/app/game/play/play.component.ts
+
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
   NgZone,
-  OnDestroy,
+  afterNextRender,
   computed,
   inject,
-  signal
+  signal,
 } from '@angular/core';
-import { NgClass } from '@angular/common';
+
 import { Router } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import {
+  GAME_FILTERS,
+  TOAST_DURATION_MS,
+  buildGamesList,
+} from '../constants/play.constants';
 import { GameItem } from '../models/play.model';
-import { GAME_FILTERS, TOAST_DURATION_MS, buildGamesList } from '../constants/play.constants';
 
-import { PromoCodeService } from '../../shared/services/promo-code.service';
 import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
+import { PromoCodeService } from '../../shared/services/promo-code.service';
 
-const LOG_PREFIX = '[Play]';
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-play',
-  standalone: true,
-  imports: [NgClass, PromoModalComponent],
+  imports: [PromoModalComponent],
   templateUrl: './play.component.html',
   styleUrls: ['./play.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PlayComponent implements AfterViewInit, OnDestroy {
+export class PlayComponent {
 
-  /* ─── Injection ─── */
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
+
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
   private readonly hostEl = inject(ElementRef) as ElementRef<HTMLElement>;
@@ -40,22 +48,32 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
 
   /* ═══════════════════════════════════════════════════════
+     PRÉFÉRENCE D'ANIMATION
+     ═══════════════════════════════════════════════════════ */
+
+  private readonly prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
+  /* ═══════════════════════════════════════════════════════
      FILTRES
      ═══════════════════════════════════════════════════════ */
+
   readonly filters = GAME_FILTERS;
   readonly selectedFilter = signal<string>('all');
 
   /* ═══════════════════════════════════════════════════════
      JEUX
      ═══════════════════════════════════════════════════════ */
-  readonly games: readonly GameItem[] = buildGamesList(path =>
+
+  readonly games: readonly GameItem[] = buildGamesList((path) =>
     void this.router.navigateByUrl(path)
   );
 
   readonly visibleGames = computed(() => {
     const filter = this.selectedFilter();
     if (filter === 'all') return this.games;
-    return this.games.filter(g => g.category === filter);
+    return this.games.filter((g) => g.category === filter);
   });
 
   readonly visibleGameCount = computed(() => this.visibleGames().length);
@@ -63,6 +81,7 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      MODALE CODE PROMO
      ═══════════════════════════════════════════════════════ */
+
   readonly showPromoModal = signal(false);
   readonly isSavingPromo = signal(false);
   readonly promoError = signal('');
@@ -73,6 +92,7 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      TOAST
      ═══════════════════════════════════════════════════════ */
+
   readonly toastMessage = signal('');
   readonly toastType = signal<'success' | 'error'>('success');
   private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -80,40 +100,51 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      TILT 3D
      ═══════════════════════════════════════════════════════ */
-  private readonly tiltHandlers = new Map<HTMLElement, {
-    move: (e: MouseEvent) => void;
-    leave: () => void;
-  }>();
+
+  private readonly tiltHandlers = new Map<
+    HTMLElement,
+    {
+      move: (e: MouseEvent) => void;
+      leave: () => void;
+    }
+  >();
 
   /* ═══════════════════════════════════════════════════════
-     CYCLE DE VIE
+     CONSTRUCTEUR
      ═══════════════════════════════════════════════════════ */
-  ngAfterViewInit(): void {
-    this.ngZone.runOutsideAngular(() => this.initTiltEffect());
-  }
 
-  ngOnDestroy(): void {
-    this.tiltHandlers.forEach((handlers, card) => {
-      card.removeEventListener('mousemove', handlers.move);
-      card.removeEventListener('mouseleave', handlers.leave);
+  constructor() {
+    afterNextRender(() => {
+      if (this.prefersReducedMotion) return;
+      this.ngZone.runOutsideAngular(() => this.initTiltEffect());
     });
-    this.tiltHandlers.clear();
 
-    if (this.toastTimeoutId !== null) {
-      clearTimeout(this.toastTimeoutId);
-      this.toastTimeoutId = null;
-    }
+    this.destroyRef.onDestroy(() => {
+      /* Nettoyage du tilt 3D */
+      this.tiltHandlers.forEach((handlers, card) => {
+        card.removeEventListener('mousemove', handlers.move);
+        card.removeEventListener('mouseleave', handlers.leave);
+      });
+      this.tiltHandlers.clear();
+
+      /* Nettoyage du toast */
+      if (this.toastTimeoutId !== null) {
+        clearTimeout(this.toastTimeoutId);
+        this.toastTimeoutId = null;
+      }
+    });
   }
 
   /* ═══════════════════════════════════════════════════════
      EFFET TILT 3D
      ═══════════════════════════════════════════════════════ */
+
   private initTiltEffect(): void {
     const cards = Array.from(
       this.hostEl.nativeElement.querySelectorAll<HTMLElement>('.btn-game')
     );
 
-    cards.forEach(card => {
+    cards.forEach((card) => {
       const move = (e: MouseEvent) => {
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -125,6 +156,7 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
         card.style.transform =
           `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px) scale(1.02)`;
       };
+
       const leave = () => {
         card.style.transform = '';
       };
@@ -138,6 +170,7 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      FILTRAGE
      ═══════════════════════════════════════════════════════ */
+
   selectFilter(id: string): void {
     if (this.selectedFilter() === id) return;
     this.selectedFilter.set(id);
@@ -146,11 +179,11 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      LANCEMENT D'UN JEU
      ═══════════════════════════════════════════════════════ */
+
   async tryLaunchGame(game: GameItem): Promise<void> {
     this.clearToast();
     this.promoError.set('');
 
-    /* Vérifie le code promo via le service partagé */
     const result = await this.promoService.checkPromoCode();
 
     if (result.status === 'valid') {
@@ -163,7 +196,6 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    /* Aucun code → ouvre la modale */
     this.openPromoModal(game);
   }
 
@@ -177,14 +209,13 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
      MODALE CODE PROMO — Callbacks
      ═══════════════════════════════════════════════════════ */
 
-  /** Appelé quand l'utilisateur soumet un code depuis la modale. */
   onPromoCodeSubmitted(code: string): void {
     if (this.isSavingPromo()) return;
 
     this.isSavingPromo.set(true);
     this.promoError.set('');
 
-    void this.promoService.validatePromoCode(code).then(result => {
+    void this.promoService.validatePromoCode(code).then((result) => {
       this.isSavingPromo.set(false);
 
       if (!result.ok) {
@@ -192,7 +223,6 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
         return;
       }
 
-      /* Succès → ferme la modale + lance le jeu */
       this.showPromoModal.set(false);
       this.showToast(`Code « ${result.code} » validé ! Bon jeu 🎸`, 'success');
 
@@ -215,6 +245,7 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      LANCEMENT EFFECTIF
      ═══════════════════════════════════════════════════════ */
+
   private launchGame(game: GameItem): void {
     if (game.action) {
       game.action();
@@ -228,6 +259,7 @@ export class PlayComponent implements AfterViewInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      TOAST
      ═══════════════════════════════════════════════════════ */
+
   private showToast(message: string, type: 'success' | 'error'): void {
     this.toastMessage.set(message);
     this.toastType.set(type);

@@ -1,18 +1,20 @@
+// src/app/features/metronome/metronome.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  OnDestroy,
-  OnInit,
+  afterNextRender,
   computed,
   inject,
-  signal
+  signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { fromEvent, Subject } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import { fromEvent } from 'rxjs';
 
 import {
   BeatResult,
@@ -21,7 +23,7 @@ import {
   GameResults,
   GameState,
   SessionHistory,
-  TapRecord
+  TapRecord,
 } from '../models/metronome-challenge.model';
 
 import {
@@ -35,21 +37,24 @@ import {
   METRONOME_SCORING,
   METRONOME_SOUNDS,
   METRONOME_STORAGE_KEYS,
-  METRONOME_SUBDIVISION_OPTIONS
+  METRONOME_SUBDIVISION_OPTIONS,
 } from '../constants/metronome.constants';
 
-import { MetronomeAudioService } from '../services/metronome-audio.service';
 import { StorageService } from '../../shared/services/storage.service';
+import { MetronomeAudioService } from '../services/metronome-audio.service';
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-metronome',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './metronome.component.html',
   styleUrls: ['./metronome.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MetronomeComponent implements OnInit, OnDestroy {
+export class MetronomeComponent {
 
   /* ─── Injection ─── */
   private readonly router = inject(Router);
@@ -132,20 +137,32 @@ export class MetronomeComponent implements OnInit, OnDestroy {
   private playbackTimeoutId?: ReturnType<typeof setTimeout>;
   private readonly scheduledUiTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR — afterNextRender + cleanup
+     ═══════════════════════════════════════════════════════ */
+
   constructor() {
-    /* Écoute clavier globale (Espace / Entrée / Échap) */
-    fromEvent<KeyboardEvent>(window, 'keydown')
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(event => this.handleKeyDown(event));
-  }
 
-  ngOnInit(): void {
-    this.loadPersistedData();
-    this.loadSoundPreference();
-  }
+    /* ═══════════════════════════════════════════════════════
+       INITIALISATION APRÈS RENDU (SSR-safe)
+       ═══════════════════════════════════════════════════════ */
+    afterNextRender(() => {
+      /* Chargement de la persistance */
+      this.loadPersistedData();
+      this.loadSoundPreference();
 
-  ngOnDestroy(): void {
-    this.stopAllTimers();
+      /* Écoute clavier globale (Espace / Entrée / Échap) */
+      fromEvent<KeyboardEvent>(window, 'keydown')
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(event => this.handleKeyDown(event));
+    });
+
+    /* ═══════════════════════════════════════════════════════
+       NETTOYAGE À LA DESTRUCTION
+       ═══════════════════════════════════════════════════════ */
+    this.destroyRef.onDestroy(() => {
+      this.stopAllTimers();
+    });
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -196,7 +213,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       bpm: this.bpm(),
       score: results.scorePercentage,
       accuracy: results.avgDeltaMs,
-      difficulty: this.difficulty()
+      difficulty: this.difficulty(),
     };
 
     const updated = [session, ...this.sessions()].slice(0, METRONOME_HISTORY_LIMIT);
@@ -235,8 +252,8 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     if (event.code === 'Space' || event.code === 'Enter') {
       event.preventDefault();
       const state = this.gameState();
-      if (state === 'PLAYING')      this.registerTap();
-      else if (state === 'IDLE')    void this.startGame();
+      if (state === 'PLAYING') this.registerTap();
+      else if (state === 'IDLE') void this.startGame();
       else if (state === 'FINISHED') this.gameState.set('IDLE');
     }
     if (event.code === 'Escape' && this.gameState() === 'PLAYING') {
@@ -372,7 +389,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       expectedTime,
       actualTime: elapsedTime,
       deltaMs: Math.round(deltaMs),
-      accuracy
+      accuracy,
     };
 
     this.tapRecords.set([...records, record]);
@@ -406,8 +423,8 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     const absDelta = Math.abs(deltaMs);
 
     if (absDelta <= cfg.perfectThreshold) return 'PERFECT';
-    if (absDelta <= cfg.greatThreshold)   return 'GREAT';
-    if (absDelta <= cfg.okThreshold)      return 'OK';
+    if (absDelta <= cfg.greatThreshold) return 'GREAT';
+    if (absDelta <= cfg.okThreshold) return 'OK';
     return deltaMs > 0 ? 'LATE' : 'EARLY';
   }
 
@@ -447,7 +464,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
   private buildBeatResults(): void {
     const totalSub = this.totalBeatsToPlay() * this.subdivision();
     const records = this.tapRecords();
-    const subInterval = (60 / this.bpm()) * 1000 / this.subdivision();
+    const subInterval = ((60 / this.bpm()) * 1000) / this.subdivision();
 
     const results: BeatResult[] = [];
     for (let i = 0; i < totalSub; i++) {
@@ -458,7 +475,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
           expectedTime: tap.expectedTime,
           actualTime: tap.actualTime,
           deltaMs: tap.deltaMs,
-          accuracy: tap.accuracy
+          accuracy: tap.accuracy,
         });
       } else {
         results.push({
@@ -466,7 +483,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
           expectedTime: i * subInterval,
           actualTime: null,
           deltaMs: null,
-          accuracy: 'MISSED'
+          accuracy: 'MISSED',
         });
       }
     }
@@ -484,12 +501,12 @@ export class MetronomeComponent implements OnInit, OnDestroy {
     }
 
     const perfects = records.filter(r => r.accuracy === 'PERFECT').length;
-    const greats   = records.filter(r => r.accuracy === 'GREAT').length;
-    const oks      = records.filter(r => r.accuracy === 'OK').length;
+    const greats = records.filter(r => r.accuracy === 'GREAT').length;
+    const oks = records.filter(r => r.accuracy === 'OK').length;
 
     const scorePoints = perfects * METRONOME_SCORING.PERFECT_POINTS
-                      + greats   * METRONOME_SCORING.GREAT_POINTS
-                      + oks      * METRONOME_SCORING.OK_POINTS;
+      + greats * METRONOME_SCORING.GREAT_POINTS
+      + oks * METRONOME_SCORING.OK_POINTS;
     const maxPoints = totalBeats * METRONOME_SCORING.PERFECT_POINTS;
     const scorePercentage = Math.min(100, Math.round((scorePoints / maxPoints) * 100));
 
@@ -529,7 +546,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       okCount: oks,
       rankTitle: rank.title,
       rankEmoji: rank.emoji,
-      isNewRecord
+      isNewRecord,
     });
   }
 
@@ -550,7 +567,7 @@ export class MetronomeComponent implements OnInit, OnDestroy {
       okCount: 0,
       rankTitle: rank.title,
       rankEmoji: rank.emoji,
-      isNewRecord: false
+      isNewRecord: false,
     };
   }
 

@@ -17,6 +17,17 @@
     </div>
 
     <div class="inbox-header-actions">
+
+      <!-- 🟠 Nouveau message → /contact -->
+      <a
+        routerLink="/contact"
+        class="inbox-btn inbox-btn-orange"
+        aria-label="Créer un nouveau message"
+      >
+        <span aria-hidden="true">✉️</span>
+        Nouveau message
+      </a>
+
       @if (unreadCount() > 0) {
         <button
           type="button"
@@ -28,6 +39,8 @@
           Tout marquer comme lu
         </button>
       }
+
+      <!-- 🔵 Ouvrir la messagerie -->
       <a
         routerLink="/inbox"
         class="inbox-btn inbox-btn-blue"
@@ -84,7 +97,7 @@
     @for (msg of paginatedMessages(); track msg.id) {
       <article
         class="inbox-item"
-        role="listitem"
+        role="button"
         tabindex="0"
         [class.unread]="msg.isUnread"
         (click)="openMessage(msg)"
@@ -113,20 +126,20 @@
           <div class="inbox-item-top">
             <span class="inbox-from">{{ msg.from }}</span>
             <span class="inbox-category" [attr.data-category]="msg.category">
-              <span aria-hidden="true">{{ getCategoryIcon(msg.category) }}</span>
+              <span aria-hidden="true">{{ msg.category | categoryIcon }}</span>
               {{ msg.category }}
             </span>
           </div>
           <div class="inbox-subject">{{ msg.subject }}</div>
           <p class="inbox-preview">
-            {{ truncate(msg.preview, previewMaxLength) }}
+            {{ msg.preview | truncate: previewMaxLength }}
           </p>
         </div>
 
         <!-- Colonne droite : date -->
         <div class="inbox-item-right">
           <span class="inbox-date">
-            {{ formatRelativeDate(msg.receivedAt) }}
+            {{ msg.receivedAt | relativeDate }}
           </span>
           @if (msg.isUnread) {
             <span class="inbox-dot" aria-hidden="true"></span>

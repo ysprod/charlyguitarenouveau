@@ -1,8 +1,19 @@
-<div class="end-overlay" role="dialog" aria-modal="true" aria-labelledby="end-game-title">
-  <div class="end-card" [class.victory]="summary().result === 'victory'"
-       [class.defeat]="summary().result === 'defeat'"
-       [class.draw]="summary().result === 'draw'">
+<!-- src/app/game/tictacbot/end-game-dialog/end-game-dialog.component.html -->
 
+<div
+  class="end-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="end-game-title"
+  (keydown.escape)="backToMenu.emit()"
+>
+  <div
+    class="end-card"
+    role="document"
+    [class.victory]="summary().result === 'victory'"
+    [class.defeat]="summary().result === 'defeat'"
+    [class.draw]="summary().result === 'draw'"
+  >
     <div class="end-icon" aria-hidden="true">{{ icon() }}</div>
 
     <h1 id="end-game-title" class="end-title">{{ title() }}</h1>

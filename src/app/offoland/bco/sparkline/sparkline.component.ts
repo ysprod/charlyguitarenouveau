@@ -1,92 +1,108 @@
+// src/app/shared/sparkline/sparkline.component.ts
+
 import {
+  ChangeDetectionStrategy,
   Component,
-  Input,
-  ElementRef,
-  ViewChild,
-  AfterViewInit,
-  OnChanges,
-  SimpleChanges,
-  ChangeDetectionStrategy
+  computed,
+  input,
 } from '@angular/core';
 
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-sparkline',
-  standalone: true,
   imports: [],
-  template: `
-    <svg #svg class="sparkline" [attr.viewBox]="'0 0 ' + width + ' ' + height" preserveAspectRatio="none">
-      <defs>
-        <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" [attr.stop-color]="color" stop-opacity="0.4"/>
-          <stop offset="100%" [attr.stop-color]="color" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <path [attr.d]="areaPath" [attr.fill]="'url(#' + gradientId + ')'" class="sparkline-area"/>
-      <path [attr.d]="linePath" [attr.stroke]="color" fill="none" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" class="sparkline-line"/>
-      <circle [attr.cx]="lastX" [attr.cy]="lastY" r="3" [attr.fill]="color" class="sparkline-dot"/>
-    </svg>
-  `,
+  templateUrl: './sparkline.component.html',
   styleUrls: ['./sparkline.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SparklineComponent implements AfterViewInit, OnChanges {
-  @Input() data: number[] = [];
-  @Input() color = '#FFD700';
-  @Input() width = 200;
-  @Input() height = 60;
+export class SparklineComponent {
 
-  @ViewChild('svg', { static: true }) svg!: ElementRef<SVGSVGElement>;
+  /* ═══════════════════════════════════════════════════════
+     ENTRÉES
+     ═══════════════════════════════════════════════════════ */
 
-  gradientId = `spark-gradient-${Math.random().toString(36).substr(2, 9)}`;
-  linePath = '';
-  areaPath = '';
-  lastX = 0;
-  lastY = 0;
+  readonly data = input<readonly number[]>([]);
+  readonly color = input('#FFD700');
+  readonly width = input(200);
+  readonly height = input(60);
 
-  ngAfterViewInit(): void {
-    this.buildPaths();
-  }
+  /* ═══════════════════════════════════════════════════════
+     ID DE GRADIENT (stable par instance)
+     ═══════════════════════════════════════════════════════ */
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
-      this.buildPaths();
-    }
-  }
+  readonly gradientId = `spark-gradient-${Math.random().toString(36).slice(2, 11)}`;
 
-  private buildPaths(): void {
-    if (!this.data || this.data.length < 2) {
-      this.linePath = '';
-      this.areaPath = '';
-      return;
-    }
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED — GÉOMÉTRIE DU TRACÉ
+     ═══════════════════════════════════════════════════════ */
 
-    const min = Math.min(...this.data);
-    const max = Math.max(...this.data);
+  /** Points calculés à partir des données et des dimensions. */
+  private readonly points = computed(() => {
+    const data = this.data();
+    const w = this.width();
+    const h = this.height();
+
+    if (!data || data.length < 2) return [];
+
+    const min = Math.min(...data);
+    const max = Math.max(...data);
     const range = max - min || 1;
-    const stepX = this.width / (this.data.length - 1);
+    const stepX = w / (data.length - 1);
 
-    const points = this.data.map((v, i) => {
+    return data.map((v, i) => {
       const x = i * stepX;
-      const y = this.height - ((v - min) / range) * (this.height - 8) - 4;
+      const y = h - ((v - min) / range) * (h - 8) - 4;
       return { x, y };
     });
+  });
 
-    // Smooth path (bezier)
-    let line = `M ${points[0].x} ${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
+  /** Path SVG du tracé lissé (bezier). */
+  readonly linePath = computed(() => {
+    const pts = this.points();
+    if (pts.length < 2) return '';
+
+    let line = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1];
+      const curr = pts[i];
       const cx = (prev.x + curr.x) / 2;
       line += ` C ${cx} ${prev.y}, ${cx} ${curr.y}, ${curr.x} ${curr.y}`;
     }
-    this.linePath = line;
+    return line;
+  });
 
-    const last = points[points.length - 1];
-    this.lastX = last.x;
-    this.lastY = last.y;
+  /** Path SVG de l'aire (sous le tracé). */
+  readonly areaPath = computed(() => {
+    const line = this.linePath();
+    if (!line) return '';
+    const h = this.height();
+    const w = this.width();
+    return `${line} L ${w} ${h} L 0 ${h} Z`;
+  });
 
-    this.areaPath = `${line} L ${this.width} ${this.height} L 0 ${this.height} Z`;
-  }
+  /** Coordonnée X du dernier point. */
+  readonly lastX = computed(() => {
+    const pts = this.points();
+    return pts.length ? pts[pts.length - 1].x : 0;
+  });
+
+  /** Coordonnée Y du dernier point. */
+  readonly lastY = computed(() => {
+    const pts = this.points();
+    return pts.length ? pts[pts.length - 1].y : 0;
+  });
+
+  /** ViewBox du SVG (pré-calculé). */
+  readonly viewBox = computed(() => `0 0 ${this.width()} ${this.height()}`);
+
+  /** Valeur du `stroke-dasharray` (basée sur la largeur réelle). */
+  readonly dashArray = computed(() => {
+    const w = this.width();
+    const h = this.height();
+    /* Longueur approximative du tracé : diagonale du viewBox × 1.2 */
+    return Math.ceil(Math.hypot(w, h) * 1.2);
+  });
 }

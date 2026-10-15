@@ -1,10 +1,12 @@
+<!-- src/app/offoland/finance/finance.component.html -->
+
 <div class="offoland-finance">
 
   <!-- ==================== HERO ==================== -->
   <section class="hero">
     <div class="hero-background" aria-hidden="true">
       <div class="floating-coins">
-        @for (i of [1, 2, 3, 4, 5]; track i) {
+        @for (i of floatingCoins; track i) {
           <span class="coin" [style.animation-delay]="i * 0.5 + 's'">🪙</span>
         }
       </div>
@@ -26,8 +28,8 @@
         <span class="live-dot" aria-hidden="true"></span>
         Masse monétaire OFFO en direct
       </div>
-      <div class="supply-value" aria-live="polite">
-        {{ formatNumber(totalSupply()) }} <span class="unit">OFFO</span>
+      <div class="supply-value" aria-label="Masse monétaire OFFO en direct">
+        {{ formattedSupply() }} <span class="unit">OFFO</span>
       </div>
     </div>
   </section>
@@ -87,10 +89,7 @@
 
     <div class="pipeline-steps">
       @for (step of conversionSteps; track step.step; let i = $index; let last = $last) {
-        <div
-          class="pipeline-step"
-          [style.animation-delay.ms]="i * 150"
-        >
+        <div class="pipeline-step" [style.animation-delay.ms]="i * 150">
           <div class="step-number">0{{ step.step }}</div>
           <div class="step-icon" aria-hidden="true">{{ step.icon }}</div>
           <div class="step-label">{{ step.label }}</div>
@@ -135,7 +134,13 @@
       </p>
     </div>
 
-    <div class="exchange-table" role="table" aria-label="Taux de change en temps réel">
+    <div
+      class="exchange-table"
+      role="grid"
+      aria-label="Taux de change en temps réel"
+      [attr.aria-rowcount]="exchangeRates().length + 1"
+      aria-colcount="4"
+    >
       <div class="exchange-row exchange-header" role="row">
         <span role="columnheader">Devise</span>
         <span role="columnheader">Nom</span>
@@ -145,15 +150,17 @@
 
       @for (rate of exchangeRates(); track rate.code; let i = $index) {
         <div class="exchange-row" role="row" [style.animation-delay.ms]="i * 50">
-          <span class="exchange-flag" role="cell" aria-hidden="true">{{ rate.flag }}</span>
-          <span class="exchange-name" role="cell">
+          <span class="exchange-flag" role="gridcell" aria-hidden="true">{{ rate.flag }}</span>
+          <span class="exchange-name" role="gridcell">
             <strong>{{ rate.code }}</strong> — {{ rate.name }}
           </span>
-          <span class="exchange-rate" role="cell">{{ formatRate(rate.rate) }}</span>
+          <span class="exchange-rate" role="gridcell">{{ formatRate(rate.rate) }}</span>
           <span
             class="exchange-change"
-            role="cell"
-            [class]="getChangeClass(rate.change)"
+            role="gridcell"
+            [class.positive]="getChangeClass(rate.change) === 'positive'"
+            [class.negative]="getChangeClass(rate.change) === 'negative'"
+            [class.neutral]="getChangeClass(rate.change) === 'neutral'"
           >
             {{ getChangeIcon(rate.change) }} {{ formatChange(rate.change) }}
           </span>
@@ -186,7 +193,13 @@
       </p>
     </div>
 
-    <div class="ledger-table" role="table" aria-label="Journal des transactions">
+    <div
+      class="ledger-table"
+      role="grid"
+      aria-label="Journal des transactions"
+      [attr.aria-rowcount]="ledgerEntries.length + 1"
+      aria-colcount="5"
+    >
       <div class="ledger-row ledger-header" role="row">
         <span role="columnheader">ID</span>
         <span role="columnheader">Utilisateur</span>
@@ -197,13 +210,13 @@
 
       @for (entry of ledgerEntries; track entry.id) {
         <div class="ledger-row" role="row">
-          <span class="ledger-id" role="cell">{{ entry.id }}</span>
-          <span class="ledger-user" role="cell">{{ entry.user }}</span>
-          <span class="ledger-op" role="cell">{{ entry.op }}</span>
-          <span class="ledger-debit" role="cell" [class.empty]="entry.debit === '—'">
+          <span class="ledger-id" role="gridcell">{{ entry.id }}</span>
+          <span class="ledger-user" role="gridcell">{{ entry.user }}</span>
+          <span class="ledger-op" role="gridcell">{{ entry.op }}</span>
+          <span class="ledger-debit" role="gridcell" [class.empty]="entry.debit === '—'">
             {{ entry.debit }}
           </span>
-          <span class="ledger-credit" role="cell" [class.empty]="entry.credit === '—'">
+          <span class="ledger-credit" role="gridcell" [class.empty]="entry.credit === '—'">
             {{ entry.credit }}
           </span>
         </div>
@@ -212,7 +225,7 @@
 
     <div class="ledger-formula">
       <span class="formula-label">Formule du solde</span>
-      <span class="formula">Solde = Σ Crédits − Σ Débits</span>
+      <code class="formula">Solde = Σ Crédits − Σ Débits</code>
     </div>
   </section>
 

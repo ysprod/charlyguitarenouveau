@@ -1,29 +1,11 @@
+<!-- src/app/home/footer/footer.component.html -->
+
 <!-- ═══════════════════════════════════════════
      ZONE CTA (isolée en haut du footer)
      ═══════════════════════════════════════════ -->
-<section class="footer-cta-section" aria-labelledby="footer-cta-title">
-  <h2 id="footer-cta-title" class="visually-hidden">
-    Actions principales
-  </h2>
-
-  <div class="contact-cta">
-    <!-- 🟠 Bouton "Installer l'app" -->
-    <app-install />
-
-    <!-- ═══════════ CTA CONDITIONNEL ═══════════ -->
-    @if (!hasSentMessage()) {
-      <!-- 🟠 Premier contact : jamais envoyé de message -->
-      <a
-        [routerLink]="['/contact']"
-        routerLinkActive="active"
-        class="cta-contact-link cta-contact-link--first"
-        aria-label="Discutez avec Charly Guitare"
-      >
-        DISCUTEZ AVEC CHARLY GUITARE
-      </a>
-    }  
-  </div>
-</section>
+ <app-install />
+     
+ 
 
 <footer class="app-footer">
 
@@ -37,7 +19,7 @@
 
     <!-- COLONNE 1 : IDENTITÉ & MARQUE -->
     <div class="footer-brand">
-      <a [routerLink]="['/']" class="brand-logo" aria-label="CHARLY GUITARE — Retour à l'accueil">
+      <a routerLink="/" class="brand-logo" aria-label="CHARLY GUITARE — Retour à l'accueil">
         <div class="logo-icon-wrapper">
           <span class="logo-icon" aria-hidden="true">🎸</span>
           <span class="logo-ring" aria-hidden="true"></span>
@@ -55,20 +37,35 @@
 
       <!-- Réseaux Sociaux -->
       <div class="social-links" aria-label="Réseaux sociaux">
-        <a href="https://www.youtube.com/@CharlyGuitare" target="_blank" rel="noopener noreferrer"
-          aria-label="YouTube — Charly Guitare" class="social-link social-youtube">
+        <a
+          href="https://www.youtube.com/@CharlyGuitare"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="YouTube — Charly Guitare"
+          class="social-link social-youtube"
+        >
           <img src="assets/youtube.png" alt="" class="social-img" loading="lazy" />
           <span class="social-tooltip" aria-hidden="true">YouTube</span>
         </a>
 
-        <a href="https://facebook.com/charlyguitare2020" target="_blank" rel="noopener noreferrer"
-          aria-label="Facebook — Charly Guitare" class="social-link social-facebook">
+        <a
+          href="https://facebook.com/charlyguitare2020"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Facebook — Charly Guitare"
+          class="social-link social-facebook"
+        >
           <img src="assets/facebook.png" alt="" class="social-img" loading="lazy" />
           <span class="social-tooltip" aria-hidden="true">Facebook</span>
         </a>
 
-        <a href="https://www.instagram.com/charlyguitare" target="_blank" rel="noopener noreferrer"
-          aria-label="Instagram — Charly Guitare" class="social-link social-instagram">
+        <a
+          href="https://www.instagram.com/charlyguitare"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram — Charly Guitare"
+          class="social-link social-instagram"
+        >
           <img src="assets/instagram.png" alt="" class="social-img" loading="lazy" />
           <span class="social-tooltip" aria-hidden="true">Instagram</span>
         </a>
@@ -82,19 +79,19 @@
         Navigation
       </h4>
       <div class="footer-nav">
-        <a [routerLink]="['/']" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
           <span class="nav-dot" aria-hidden="true"></span>
           Accueil
         </a>
-        <a [routerLink]="['/accueil']" routerLinkActive="active">
+        <a routerLink="/accueil" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           Qui est Charly Guitare ?
         </a>
-        <a [routerLink]="['/academie']" routerLinkActive="active">
+        <a routerLink="/academie" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           Formations
         </a>
-        <a [routerLink]="['/again']" routerLinkActive="active">
+        <a routerLink="/again" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           Dream Team
         </a>
@@ -108,19 +105,19 @@
         Découvrir
       </h4>
       <div class="footer-nav">
-        <a [routerLink]="['/play']" routerLinkActive="active">
+        <a routerLink="/play" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           Jeux
         </a>
-        <a [routerLink]="['/abonnement']" routerLinkActive="active">
+        <a routerLink="/abonnement" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           Offres
         </a>
-        <a [routerLink]="['/academie']" routerLinkActive="active">
+        <a routerLink="/academie" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           L'Académie
         </a>
-        <a [routerLink]="['/live']" routerLinkActive="active">
+        <a routerLink="/live" routerLinkActive="active">
           <span class="nav-dot" aria-hidden="true"></span>
           Live
         </a>
@@ -143,13 +140,18 @@
       </p>
 
       <div class="legal-links">
-        <a [routerLink]="['/mentions']">Mentions légales</a>
+        <a routerLink="/mentions">Mentions légales</a>
         <span class="link-separator" aria-hidden="true">/</span>
-        <a [routerLink]="['/privacy']">Confidentialité</a>
+        <a routerLink="/privacy">Confidentialité</a>
       </div>
 
-      <button type="button" class="back-to-top" (click)="scrollToTop()"
-        aria-label="Retour en haut de page" title="Retour en haut">
+      <button
+        type="button"
+        class="back-to-top"
+        (click)="scrollToTop()"
+        aria-label="Retour en haut de page"
+        title="Retour en haut"
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <polyline points="18 15 12 9 6 15" />
         </svg>

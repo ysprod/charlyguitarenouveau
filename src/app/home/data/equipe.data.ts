@@ -14,13 +14,13 @@ export const MEMBRES_EQUIPE: MembreEquipe[] = [
     isFeatured: true
   },
   {
-    nom: 'Ahoulou Josiane née Koné',
+    nom: 'kotchi offolomou amanda danielle',
     role: 'Marketing',
     icone: '📈',
     couleur: '#ef4444'
   },
   {
-    nom: 'Simon Porquet',
+    nom: 'kotchi offola inaya emeraude',
     role: 'Community Management',
     icone: '💬',
     couleur: '#3b82f6'
@@ -57,23 +57,16 @@ export const MEMBRES_EQUIPE: MembreEquipe[] = [
     couleur: '#ec4899'
   },
   {
-    nom: 'Soumahoro Moussa',
+    nom: 'Yaya Sidibé',
     role: 'Chef de Projet',
     icone: '👑',
     couleur: '#eab308',
     isFeatured: true
   },
   {
-    nom: 'Sidibé Dieudonné Chris Mohamed',
+    nom: 'Sidibé Yaya Dieudonné Chris Mohamed',
     role: 'Bêta Testing',
     icone: '🧪',
     couleur: '#06b6d4'
-  },
-  {
-    nom: '???',
-    role: 'Créateur de la Dimension Rouge',
-    icone: '🔴',
-    couleur: '#dc2626',
-    anonyme: true
-  }
+  }, 
 ];

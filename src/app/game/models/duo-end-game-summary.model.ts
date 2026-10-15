@@ -1,43 +1,20 @@
-/* ═════════════════════════════════════════════════════════════════════
-   RÉCAPITULATIF DE FIN DE PARTIE — LYKO DUEL (2 joueurs)
-   ═════════════════════════════════════════════════════════════════════ */
+// src/app/game/models/duo-end-game-summary.model.ts
 
+/** Résultat d'une manche de Lyko Duel. */
 export type DuoEndGameResult = 'player1' | 'player2' | 'draw';
 
+/** Résumé complet affiché dans le dialogue de fin de manche. */
 export interface DuoEndGameSummary {
-  /** Résultat de la manche. */
-  result: DuoEndGameResult;
-
-  /** Score final du Joueur 1. */
-  player1Score: number;
-
-  /** Score final du Joueur 2. */
-  player2Score: number;
-
-  /** Nombre d'égalités cumulées. */
-  drawCount: number;
-
-  /** Niveau en cours (= gridSize - 2). */
-  level: number;
-
-  /** Taille de la grille (ex : 3, 4, 5…). */
-  gridSize: number;
-
-  /** Alignements réalisés par le Joueur 1 durant la manche. */
-  player1Alignments: number;
-
-  /** Alignements réalisés par le Joueur 2 durant la manche. */
-  player2Alignments: number;
-
-  /** PV gagnés par le Joueur 1 durant la manche. */
-  player1GainedPv: number;
-
-  /** PV gagnés par le Joueur 2 durant la manche. */
-  player2GainedPv: number;
-
-  /** Indique si un niveau précédent est disponible. */
-  hasPreviousLevel: boolean;
-
-  /** Indique si un niveau suivant est disponible. */
-  hasNextLevel: boolean;
+  readonly result: DuoEndGameResult;
+  readonly player1Score: number;
+  readonly player2Score: number;
+  readonly drawCount: number;
+  readonly level: number;
+  readonly gridSize: number;
+  readonly player1Alignments: number;
+  readonly player2Alignments: number;
+  readonly player1GainedPv: number;
+  readonly player2GainedPv: number;
+  readonly hasPreviousLevel: boolean;
+  readonly hasNextLevel: boolean;
 }

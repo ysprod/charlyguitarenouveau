@@ -9,8 +9,8 @@ import { LiveCard, LiveVideo } from '../models/live.model';
 export const LIVE_VIDEO: LiveVideo = {
   title: 'Freestyle',
   embedUrl:
-    'https://www.youtube.com/embed/5nQIsWKtMqU?autoplay=1&rel=0&modestbranding=1',
-  watchUrl: 'https://www.youtube.com/watch?v=5nQIsWKtMqU',
+    'https://www.youtube.com/embed/3bvbSb43SvM?autoplay=1&rel=0&modestbranding=1',
+  watchUrl: 'https://www.youtube.com/watch?v=3bvbSb43SvM',
   badge: 'LIVE',
 };
 
@@ -26,7 +26,7 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     description: 'Vivre les grandes performances musicales',
     actionLabel: 'Regarder',
     actionUrl:
-      'https://www.youtube.com/watch?v=ULlzhvrC7kE&list=PLY4Ohx8IPP3IeC71DL1Q6LGCWoz5EL85Y',
+      'https://www.youtube.com/watch?v=RjDWzzwbeUM',
     cssClass: 'card-concerts',
   },
   {

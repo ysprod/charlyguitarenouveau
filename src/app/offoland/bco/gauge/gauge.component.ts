@@ -1,90 +1,158 @@
+// src/app/shared/gauge/gauge.component.ts
+
 import {
+  ChangeDetectionStrategy,
   Component,
-  Input,
-  OnChanges,
-  SimpleChanges,
-  ChangeDetectionStrategy
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
 } from '@angular/core';
 
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTES
+   ═══════════════════════════════════════════════════════════ */
+
+const RADIUS = 50;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const ANIMATION_DURATION_MS = 1200;
+
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-gauge',
-  standalone: true,
   imports: [],
-  template: `
-    <div class="gauge">
-      <svg viewBox="0 0 120 120" class="gauge-svg">
-        <defs>
-          <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" [attr.stop-color]="colorFrom"/>
-            <stop offset="100%" [attr.stop-color]="colorTo"/>
-          </linearGradient>
-        </defs>
-
-        <!-- Cercle de fond -->
-        <circle cx="60" cy="60" r="50" fill="none"
-                stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
-
-        <!-- Arc de progression -->
-        <circle cx="60" cy="60" r="50" fill="none"
-                [attr.stroke]="'url(#' + gradientId + ')'"
-                stroke-width="8"
-                stroke-linecap="round"
-                [attr.stroke-dasharray]="circumference"
-                [attr.stroke-dashoffset]="dashOffset"
-                transform="rotate(-90 60 60)"
-                class="gauge-progress"/>
-
-        <!-- Aiguille / Texte central -->
-        <text x="60" y="58" text-anchor="middle"
-              class="gauge-value">{{ displayValue }}</text>
-        <text x="60" y="74" text-anchor="middle"
-              class="gauge-unit">{{ unit }}</text>
-      </svg>
-      <div class="gauge-label">{{ label }}</div>
-    </div>
-  `,
+  templateUrl: './gauge.component.html',
   styleUrls: ['./gauge.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GaugeComponent implements OnChanges {
-  @Input() value = 0;         // 0-100
-  @Input() label = '';
-  @Input() unit = '%';
-  @Input() colorFrom = '#FFD700';
-  @Input() colorTo = '#FF8C00';
+export class GaugeComponent {
 
-  gradientId = `gauge-gradient-${Math.random().toString(36).substr(2, 9)}`;
-  circumference = 2 * Math.PI * 50;
-  dashOffset = this.circumference;
-  displayValue = '0';
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['value']) {
-      this.animateValue();
-    }
+  private readonly destroyRef = inject(DestroyRef);
+
+  /* ═══════════════════════════════════════════════════════
+     ENTRÉES
+     ═══════════════════════════════════════════════════════ */
+
+  /** Valeur 0-100. */
+  readonly value = input(0);
+
+  /** Libellé sous la jauge. */
+  readonly label = input('');
+
+  /** Unité affichée sous la valeur. */
+  readonly unit = input('%');
+
+  /** Couleur de départ du dégradé. */
+  readonly colorFrom = input('#FFD700');
+
+  /** Couleur de fin du dégradé. */
+  readonly colorTo = input('#FF8C00');
+
+  /* ═══════════════════════════════════════════════════════
+     CONSTANTES EXPOSÉES
+     ═══════════════════════════════════════════════════════ */
+
+  readonly circumference = CIRCUMFERENCE;
+
+  readonly gradientId = `gauge-gradient-${Math.random().toString(36).slice(2, 11)}`;
+
+  /* ═══════════════════════════════════════════════════════
+     VALEUR ANIMÉE (linkedSignal)
+     ═══════════════════════════════════════════════════════ */
+
+  /** Valeur cible clampée 0-100. */
+  private readonly clampedValue = computed(() =>
+    Math.max(0, Math.min(100, this.value()))
+  );
+
+  /**
+   * Valeur animée : se met à jour quand `clampedValue` change.
+   * L'animation est déclenchée dans l'`effect` ci-dessous.
+   */
+  readonly animatedValue = linkedSignal(() => this.clampedValue());
+
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED — GÉOMÉTRIE
+     ═══════════════════════════════════════════════════════ */
+
+  /** Décalage du trait de progression (stroke-dashoffset). */
+  readonly dashOffset = computed(() => {
+    const ratio = this.animatedValue() / 100;
+    return CIRCUMFERENCE - ratio * CIRCUMFERENCE;
+  });
+
+  /** Valeur affichée au centre (1 décimale). */
+  readonly displayValue = computed(() => this.animatedValue().toFixed(1));
+
+  /* ═══════════════════════════════════════════════════════
+     CYCLE DE VIE
+     ═══════════════════════════════════════════════════════ */
+
+  constructor() {
+    /* Cleanup de l'animation en cours à la destruction */
+    this.destroyRef.onDestroy(() => {
+      if (this.rafId !== null) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+    });
+
+    /* Déclenche l'animation quand la valeur cible change */
+    effect(() => {
+      const target = this.clampedValue();
+      this.animateTo(target);
+    });
   }
 
-  private animateValue(): void {
-    const clamped = Math.max(0, Math.min(100, this.value));
-    const targetOffset = this.circumference - (clamped / 100) * this.circumference;
+  /* ═══════════════════════════════════════════════════════
+     ANIMATION
+     ═══════════════════════════════════════════════════════ */
 
-    const startOffset = this.dashOffset;
-    const startValue = parseFloat(this.displayValue) || 0;
-    const duration = 1200;
+  private rafId: number | null = null;
+
+  private animateTo(target: number): void {
+    /* Annule l'animation précédente */
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
+    if (prefersReducedMotion || typeof window === 'undefined') {
+      this.animatedValue.set(target);
+      return;
+    }
+
+    const startValue = this.animatedValue();
     const startTime = performance.now();
 
     const animate = (now: number) => {
       const elapsed = now - startTime;
-      const t = Math.min(1, elapsed / duration);
+      const t = Math.min(1, elapsed / ANIMATION_DURATION_MS);
       const eased = 1 - Math.pow(1 - t, 3);
 
-      this.dashOffset = startOffset + (targetOffset - startOffset) * eased;
-      this.displayValue = (startValue + (clamped - startValue) * eased).toFixed(1);
+      this.animatedValue.set(startValue + (target - startValue) * eased);
 
-      if (t < 1) requestAnimationFrame(animate);
-      else this.displayValue = clamped.toFixed(1);
+      if (t < 1) {
+        this.rafId = requestAnimationFrame(animate);
+      } else {
+        this.animatedValue.set(target);
+        this.rafId = null;
+      }
     };
-    requestAnimationFrame(animate);
+
+    this.rafId = requestAnimationFrame(animate);
   }
 }

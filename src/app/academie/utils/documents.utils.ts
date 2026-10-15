@@ -1,5 +1,3 @@
-// src/app/features/documents/utils/documents.utils.ts
-
 import { DocumentItem } from 'src/app/academie/models/document.model';
 import { SortOption } from 'src/app/academie/models/documents-ui.model';
 

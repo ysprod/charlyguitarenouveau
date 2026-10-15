@@ -1,65 +1,113 @@
+// src/app/offres/offres.component.ts
+
 import {
+  ChangeDetectionStrategy,
   Component,
-  ElementRef,
-  ViewChild,
-  signal,
+  DestroyRef,
+  afterNextRender,
   computed,
-  ChangeDetectionStrategy
+  inject,
+  signal,
+  viewChild,
+  ElementRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink } from '@angular/router';
 
-import { PackCategory, PackCategoryId } from '../../home/models/pack.model';
+import { PackCategory, PackCategoryId } from '../models/pack.model';
 import { PACK_CATEGORIES } from '../data/packs.data';
- 
-/* ============================================================
-   COMPOSANT — sans animations
-   ============================================================ */
+
+import { FormatPricePipe } from '../pipes/format-price.pipe';
+
+/* ═════════════════════════════════════════════════════════════════════
+   OFFRES — Packs pédagogiques
+   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-offres',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    RouterLink,
+    FormatPricePipe,
+  ],
   templateUrl: './offres.component.html',
   styleUrls: ['./offres.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OffresComponent {
 
-  @ViewChild('packsSection') packsSection?: ElementRef<HTMLElement>;
+  /* ─── Injection ─── */
+  private readonly destroyRef = inject(DestroyRef);
 
-  readonly categories: PackCategory[] = PACK_CATEGORIES;
+  /* ─── ViewChild (signal-based) ─── */
+  readonly packsSection = viewChild<ElementRef<HTMLElement>>('packsSection');
 
+  /* ─── Données ─── */
+  readonly categories: readonly PackCategory[] = PACK_CATEGORIES;
+
+  /* ─── État UI ─── */
   readonly activeCategory = signal<PackCategoryId>('debutant');
   readonly hoveredPack = signal<string | null>(null);
 
-  readonly currentCategory = computed(() =>
-    this.categories.find(c => c.id === this.activeCategory())!
-  );
+  /* ─── Computed ─── */
+  readonly currentCategory = computed<PackCategory | null>(() => {
+    const id = this.activeCategory();
+    return this.categories.find((c) => c.id === id) ?? this.categories[0] ?? null;
+  });
 
-  formatPrice(price: number): string {
-    return new Intl.NumberFormat('fr-FR').format(price);
+  /* ─── Timeout actif (nettoyé à la destruction) ─── */
+  private scrollTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR — cleanup
+     ═══════════════════════════════════════════════════════ */
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.scrollTimeoutId !== null) {
+        clearTimeout(this.scrollTimeoutId);
+        this.scrollTimeoutId = null;
+      }
+    });
   }
+
+  /* ═══════════════════════════════════════════════════════
+     ACTIONS
+     ═══════════════════════════════════════════════════════ */
 
   selectCategory(id: PackCategoryId): void {
     this.activeCategory.set(id);
-    this.scrollToPacks();
+    this.scheduleScrollToPacks();
   }
 
   onPackHover(id: string | null): void {
     this.hoveredPack.set(id);
   }
 
-  private scrollToPacks(): void {
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  /* ═══════════════════════════════════════════════════════
+     SCROLL — planifié après le rendu
+     ═══════════════════════════════════════════════════════ */
 
-    setTimeout(() => {
-      this.packsSection?.nativeElement?.scrollIntoView({
-        behavior: prefersReducedMotion ? 'auto' : 'smooth',
-        block: 'start',
-      });
+  private scheduleScrollToPacks(): void {
+    if (this.scrollTimeoutId !== null) {
+      clearTimeout(this.scrollTimeoutId);
+    }
+
+    this.scrollTimeoutId = setTimeout(() => {
+      this.scrollTimeoutId = null;
+      this.scrollToPacks();
     }, 50);
+  }
+
+  private scrollToPacks(): void {
+    const element = this.packsSection()?.nativeElement;
+    if (!element || typeof window === 'undefined') return;
+
+    const prefersReducedMotion =
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+    element.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
   }
 }

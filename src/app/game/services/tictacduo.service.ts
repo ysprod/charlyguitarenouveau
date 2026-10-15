@@ -1,68 +1,34 @@
-import { Injectable } from '@angular/core';
+// src/app/game/services/tictacduo.service.ts
+
+import { Injectable, computed, signal } from '@angular/core';
+
+import {
+  ASSET_BOT,
+  ASSET_PLAYER,
+  GRID_MIN_SIZE,
+  WINNING_STREAK,
+} from '../constants/tictacduo.constants';
 
 /* ═════════════════════════════════════════════════════════════════════
    TYPES
    ═════════════════════════════════════════════════════════════════════ */
 
-export class Block {
-  free = true;
-  value = '';               // "tick" (Joueur 1) ou "cross" (Joueur 2)
-  symbol = '';
-  isWinningCell = false;
-  isNew = false;
-  isHovered = false;
-
-  private timerId: ReturnType<typeof setTimeout> | null = null;
-
-  setValue(value: string): void {
-    this.value = value;
-    this.symbol = value === 'tick' ? 'done' : 'close';
-    this.isNew = true;
-
-    if (this.timerId !== null) {
-      clearTimeout(this.timerId);
-    }
-
-    this.timerId = setTimeout(() => {
-      this.isNew = false;
-      this.timerId = null;
-    }, 500);
-  }
-
-  urlimg(): string {
-    return this.symbol === 'done'
-      ? 'assets/rouge.jpg'
-      : 'assets/gblanc.jpg';
-  }
-
-  reset(): void {
-    if (this.timerId !== null) {
-      clearTimeout(this.timerId);
-      this.timerId = null;
-    }
-    this.free = true;
-    this.value = '';
-    this.symbol = '';
-    this.isWinningCell = false;
-    this.isNew = false;
-    this.isHovered = false;
-  }
+/** Représentation immutable d'une case du plateau. */
+export interface Block {
+  readonly index: number;
+  readonly free: boolean;
+  readonly value: string;              // 'tick' (J1) ou 'cross' (J2)
+  readonly symbol: string;             // 'done' ou 'close'
+  readonly isWinningCell: boolean;
+  readonly isNew: boolean;
 }
 
-export class Player {
-  bot = false;
-  score = 0;
-  name = '';
-  avatar = '';
-
-  updateScore(points: number): number {
-    this.score += points;
-    return this.score;
-  }
-
-  resetScore(): void {
-    this.score = 0;
-  }
+/** Représentation immutable d'un joueur. */
+export interface Player {
+  readonly bot: boolean;
+  readonly score: number;
+  readonly name: string;
+  readonly avatar: string;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -72,135 +38,184 @@ export class Player {
 @Injectable({ providedIn: 'root' })
 export class TictacduoService {
 
-  players: Player[] = [];
-  turn = 0;                   // 0 = Joueur 1, 1 = Joueur 2
-  draw = 0;
-  blocks: Block[] = [];
-  freeBlocksRemaining = 9;
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT — SIGNALS PRIVÉS
+     ═══════════════════════════════════════════════════════ */
 
-  gridSize = 3;
-  readonly winningStreak = 3;
-  readonly GRID_MIN_SIZE = 3;
+  private readonly _gridSize = signal<number>(GRID_MIN_SIZE);
+  private readonly _blocks = signal<readonly Block[]>(this.createBlocks(GRID_MIN_SIZE));
+  private readonly _players = signal<readonly Player[]>(this.createPlayers());
+  private readonly _turn = signal<number>(0);
+  private readonly _draw = signal<number>(0);
+  private readonly _freeBlocksRemaining = signal<number>(GRID_MIN_SIZE * GRID_MIN_SIZE);
+  private readonly _scoredAlignments = signal<ReadonlySet<string>>(new Set());
 
-  /** Empêche de recompter les alignements déjà validés (ex: "h-0-1-2"). */
-  private scoredAlignments = new Set<string>();
+  /* ═══════════════════════════════════════════════════════
+     API PUBLIQUE — LECTURE (signals readonly)
+     ═══════════════════════════════════════════════════════ */
 
-  constructor() {
-    this.initPlayers();
-    this.initBlocks();
+  readonly gridSize = this._gridSize.asReadonly();
+  readonly blocks = this._blocks.asReadonly();
+  readonly players = this._players.asReadonly();
+  readonly draw = this._draw.asReadonly();
+  readonly turn = this._turn.asReadonly();
+  readonly freeBlocksRemaining = this._freeBlocksRemaining.asReadonly();
+
+  /** Constantes exposées. */
+  readonly winningStreak = WINNING_STREAK;
+  readonly GRID_MIN_SIZE = GRID_MIN_SIZE;
+
+  /** Vrai lorsque la partie est terminée. */
+  readonly isGameOver = computed(() => this._freeBlocksRemaining() <= 0);
+
+  /* ═══════════════════════════════════════════════════════
+     ACCÈS MUTABLE (setters)
+     ═══════════════════════════════════════════════════════ */
+
+  setTurn(value: number): void {
+    this._turn.set(value);
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      INITIALISATION
-    ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
-  initBlocks(size: number = this.gridSize): void {
-    this.gridSize = Math.max(this.GRID_MIN_SIZE, size);
-    const totalCells = this.gridSize * this.gridSize;
-
-    this.blocks = Array.from({ length: totalCells }, () => new Block());
-    this.freeBlocksRemaining = totalCells;
-    this.scoredAlignments.clear();
+  private createBlocks(size: number): readonly Block[] {
+    const total = size * size;
+    return Array.from({ length: total }, (_, index) => ({
+      index,
+      free: true,
+      value: '',
+      symbol: '',
+      isWinningCell: false,
+      isNew: false,
+    }));
   }
+
+  private createPlayers(): readonly Player[] {
+    return [
+      { bot: false, score: 0, name: 'JOUEUR 1', avatar: '🎸' },
+      { bot: false, score: 0, name: 'JOUEUR 2', avatar: '🎸' },
+    ];
+  }
+
+  initBlocks(size: number = this._gridSize()): void {
+    const safeSize = Math.max(GRID_MIN_SIZE, size);
+    this._gridSize.set(safeSize);
+    this._blocks.set(this.createBlocks(safeSize));
+    this._freeBlocksRemaining.set(safeSize * safeSize);
+    this._scoredAlignments.set(new Set());
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     NIVEAUX
+     ═══════════════════════════════════════════════════════ */
 
   nextLevel(): void {
-    this.gridSize += 1;
-    this.initBlocks(this.gridSize);
+    this.initBlocks(this._gridSize() + 1);
   }
 
   previousLevel(): void {
-    if (this.gridSize > this.GRID_MIN_SIZE) {
-      this.gridSize -= 1;
-      this.initBlocks(this.gridSize);
+    if (this._gridSize() > GRID_MIN_SIZE) {
+      this.initBlocks(this._gridSize() - 1);
     }
   }
 
-  initPlayers(): void {
-    const p1 = new Player();
-    p1.name = 'JOUEUR 1';
-    p1.avatar = '🎸';
-
-    const p2 = new Player();
-    p2.name = 'JOUEUR 2';
-    p2.avatar = '🎸';
-
-    this.players = [p1, p2];
-  }
+  /* ═══════════════════════════════════════════════════════
+     TOURS
+     ═══════════════════════════════════════════════════════ */
 
   changeTurn(): number {
-    this.turn = this.turn === 0 ? 1 : 0;
-    return this.turn;
+    const next = this._turn() === 0 ? 1 : 0;
+    this._turn.set(next);
+    return next;
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
-     ÉTAT DU JEU
-    ═══════════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     JEU
+     ═══════════════════════════════════════════════════════ */
 
-  /** La partie est terminée quand il ne reste plus aucune case libre. */
-  get isGameOver(): boolean {
-    if (this.blocks.length === 0) return false;
-    // ✅ Double vérification fiable : compteur ET scan réel
-    return this.freeBlocksRemaining <= 0 || this.blocks.every(b => !b.free);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     ⚡ JOUEUR — Effectue un coup
-    ═══════════════════════════════════════════════════════════════════ */
-
+  /**
+   * Joue un coup sur la case d'index donné.
+   *
+   * @returns
+   *   - `-1` si le coup est invalide (case occupée ou index hors limites)
+   *   - `0`  si le coup est valide mais sans nouvel alignement
+   *   - `>0` si `n` nouveaux alignements ont été marqués
+   */
   playMove(index: number): number {
-    if (
-      index < 0 ||
-      index >= this.blocks.length ||
-      !this.blocks[index].free
-    ) {
-      return 0;
+    const blocks = this._blocks();
+
+    if (index < 0 || index >= blocks.length || !blocks[index].free) {
+      return -1;
     }
 
-    const currentBlock = this.blocks[index];
-    currentBlock.free = false;
-    currentBlock.setValue(this.turn === 0 ? 'tick' : 'cross');
+    const symbol = this._turn() === 0 ? 'tick' : 'cross';
+    const symbolName = symbol === 'tick' ? 'done' : 'close';
 
-    // ✅ Décrémentation directe (fiable et synchrone, pas de re-scan coûteux)
-    this.freeBlocksRemaining = Math.max(0, this.freeBlocksRemaining - 1);
+    const updatedBlocks: readonly Block[] = blocks.map((block, i) =>
+      i === index
+        ? {
+            ...block,
+            free: false,
+            value: symbol,
+            symbol: symbolName,
+            isNew: true,
+          }
+        : block
+    );
 
-    /* Évaluation ciblée du coup joué */
+    this._blocks.set(updatedBlocks);
+    this._freeBlocksRemaining.update((n) => Math.max(0, n - 1));
+
     const newAlignments = this.checkNewAlignments(index);
-
     if (newAlignments > 0) {
-      this.players[this.turn].updateScore(newAlignments);
+      this.updatePlayerScore(this._turn(), newAlignments);
     }
 
     return newAlignments;
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /** Marque une case comme "plus nouvelle" (fin d'animation). */
+  clearIsNew(index: number): void {
+    this._blocks.update((blocks) =>
+      blocks.map((b, i) => (i === index ? { ...b, isNew: false } : b))
+    );
+  }
+
+  private updatePlayerScore(playerIndex: number, points: number): void {
+    this._players.update((players) =>
+      players.map((p, i) =>
+        i === playerIndex ? { ...p, score: p.score + points } : p
+      )
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════════
      ALIGNEMENTS
-    ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
-  checkNewAlignments(lastIndex?: number): number {
-    if (lastIndex === undefined) {
-      return this.globalScanAlignments();
-    }
+  checkNewAlignments(lastIndex: number): number {
+    const N = this._gridSize();
+    const K = WINNING_STREAK;
+    const blocks = this._blocks();
+    const scored = new Set(this._scoredAlignments());
 
-    const N = this.gridSize;
-    const K = this.winningStreak;
     let newAlignmentsCount = 0;
     const newlyWinningIndices = new Set<number>();
 
-    const checkAndScoreLine = (indices: number[], lineKey: string) => {
-      const firstBlock = this.blocks[indices[0]];
+    const checkAndScoreLine = (indices: readonly number[], lineKey: string): void => {
+      const firstBlock = blocks[indices[0]];
       if (firstBlock.free || !firstBlock.value) return;
 
       const isMatch = indices.every(
-        idx =>
-          !this.blocks[idx].free &&
-          this.blocks[idx].value === firstBlock.value
+        (idx) => !blocks[idx].free && blocks[idx].value === firstBlock.value
       );
 
-      if (isMatch && !this.scoredAlignments.has(lineKey)) {
-        this.scoredAlignments.add(lineKey);
+      if (isMatch && !scored.has(lineKey)) {
+        scored.add(lineKey);
         newAlignmentsCount++;
-        indices.forEach(idx => newlyWinningIndices.add(idx));
+        indices.forEach((idx) => newlyWinningIndices.add(idx));
       }
     };
 
@@ -247,93 +262,53 @@ export class TictacduoService {
       }
     }
 
+    this._scoredAlignments.set(scored);
+
     if (newlyWinningIndices.size > 0) {
-      this.highlightWinningCells(Array.from(newlyWinningIndices));
+      const winning = newlyWinningIndices;
+      this._blocks.update((bs) =>
+        bs.map((b, i) =>
+          winning.has(i) ? { ...b, isWinningCell: true } : b
+        )
+      );
     }
 
     return newAlignmentsCount;
   }
 
-  private globalScanAlignments(): number {
-    const N = this.gridSize;
-    const K = this.winningStreak;
-    let count = 0;
-    const newlyWinningIndices = new Set<number>();
-
-    const checkLine = (indices: number[], lineKey: string) => {
-      const first = this.blocks[indices[0]];
-      if (first.free || !first.value) return;
-
-      const isMatch = indices.every(
-        idx =>
-          !this.blocks[idx].free &&
-          this.blocks[idx].value === first.value
-      );
-
-      if (isMatch && !this.scoredAlignments.has(lineKey)) {
-        this.scoredAlignments.add(lineKey);
-        count++;
-        indices.forEach(idx => newlyWinningIndices.add(idx));
-      }
-    };
-
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c <= N - K; c++) {
-        checkLine([r * N + c, r * N + c + 1, r * N + c + 2], `h-${r}-${c}`);
-      }
-    }
-
-    for (let c = 0; c < N; c++) {
-      for (let r = 0; r <= N - K; r++) {
-        checkLine([r * N + c, (r + 1) * N + c, (r + 2) * N + c], `v-${r}-${c}`);
-      }
-    }
-
-    for (let r = 0; r <= N - K; r++) {
-      for (let c = 0; c <= N - K; c++) {
-        checkLine(
-          [r * N + c, (r + 1) * N + c + 1, (r + 2) * N + c + 2],
-          `d1-${r}-${c}`
-        );
-      }
-    }
-
-    for (let r = 0; r <= N - K; r++) {
-      for (let c = K - 1; c < N; c++) {
-        checkLine(
-          [r * N + c, (r + 1) * N + c - 1, (r + 2) * N + c - 2],
-          `d2-${r}-${c}`
-        );
-      }
-    }
-
-    if (newlyWinningIndices.size > 0) {
-      this.highlightWinningCells(Array.from(newlyWinningIndices));
-    }
-
-    return count;
-  }
-
-  private highlightWinningCells(indices: number[]): void {
-    indices.forEach(idx => {
-      if (this.blocks[idx]) {
-        this.blocks[idx].isWinningCell = true;
-      }
-    });
-  }
-
   clearWinningHighlight(): void {
-    this.blocks.forEach(b => (b.isWinningCell = false));
+    this._blocks.update((blocks) =>
+      blocks.map((b) => (b.isWinningCell ? { ...b, isWinningCell: false } : b))
+    );
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
+     ASSETS
+     ═══════════════════════════════════════════════════════ */
+
+  getAssetForSymbol(symbol: string): string {
+    return symbol === 'done' ? ASSET_PLAYER : ASSET_BOT;
+  }
+
+  /* ═══════════════════════════════════════════════════════
      RESET
-    ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   resetAll(): void {
-    this.blocks.forEach(b => b.reset());
-    this.freeBlocksRemaining = this.gridSize * this.gridSize;
-    this.scoredAlignments.clear();
-    this.players.forEach(p => p.resetScore());
+    const size = this._gridSize();
+    this._blocks.set(this.createBlocks(size));
+    this._freeBlocksRemaining.set(size * size);
+    this._scoredAlignments.set(new Set());
+    this._players.update((players) =>
+      players.map((p) => ({ ...p, score: 0 }))
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     INCRÉMENTATION D'ÉGALITÉS
+     ═══════════════════════════════════════════════════════ */
+
+  incrementDraw(): void {
+    this._draw.update((n) => n + 1);
   }
 }

@@ -1,7 +1,8 @@
+// src/app/game/acoustic/acoustic.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   computed,
   inject,
   signal,
@@ -10,49 +11,56 @@ import {
 import { Router } from '@angular/router';
 
 import {
-  QuizQuestion,
   Difficulty,
+  DifficultyFilter,
+  QuizQuestion,
 } from '../models/acoustic-quiz.model';
 
 import { ACOUSTIC_QUESTIONS } from 'src/app/game/data/acoustic-questions';
 
-/* ═════════════════════════════════════════════════════════════════════
-   TYPES
-   ═════════════════════════════════════════════════════════════════════ */
+import {
+  DIFFICULTIES,
+  LETTERS,
+} from '../constants/acoustic.constants';
 
-type DifficultyFilter = Difficulty | 'Toutes';
+import { getDifficultyClass } from '../utils/difficulty.util';
 
-const LETTERS = ['A', 'B', 'C', 'D'] as const;
-
-/* ═════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    COMPOSANT
-   ═════════════════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-acoustic',
-  standalone: true,
   imports: [],
   templateUrl: './acoustic.component.html',
   styleUrls: ['./acoustic.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AcousticComponent implements OnInit {
+export class AcousticComponent {
+
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
 
   private readonly router = inject(Router);
 
-  /* ─── Données ─── */
-  readonly questions: QuizQuestion[] = ACOUSTIC_QUESTIONS;
+  /* ═══════════════════════════════════════════════════════
+     DONNÉES
+     ═══════════════════════════════════════════════════════ */
 
-  /* ─── Filtres ─── */
-  readonly difficulties: DifficultyFilter[] = [
-    'Toutes',
-    'Facile',
-    'Intermédiaire',
-    'Expert',
-  ];
+  readonly questions: readonly QuizQuestion[] = ACOUSTIC_QUESTIONS;
+
+  /* ═══════════════════════════════════════════════════════
+     FILTRES
+     ═══════════════════════════════════════════════════════ */
+
+  readonly difficulties: readonly DifficultyFilter[] = DIFFICULTIES;
   readonly selectedDifficulty = signal<DifficultyFilter>('Toutes');
 
-  /* ─── État du quiz (signals) ─── */
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT DU QUIZ
+     ═══════════════════════════════════════════════════════ */
+
   readonly currentQuestionIndex = signal(0);
   readonly score = signal(0);
   readonly selectedOptionIndex = signal<number | null>(null);
@@ -61,12 +69,15 @@ export class AcousticComponent implements OnInit {
   readonly streak = signal(0);
   readonly bestStreak = signal(0);
 
-  /* ─── Computed ─── */
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED
+     ═══════════════════════════════════════════════════════ */
+
   readonly filteredQuestions = computed(() => {
     const filter = this.selectedDifficulty();
     return filter === 'Toutes'
       ? this.questions
-      : this.questions.filter(q => q.difficulty === filter);
+      : this.questions.filter((q) => q.difficulty === filter);
   });
 
   readonly totalQuestions = computed(() => this.filteredQuestions().length);
@@ -117,20 +128,24 @@ export class AcousticComponent implements OnInit {
     return '📚';
   });
 
-  /* ─── Helpers exposés au template ─── */
+  /* ═══════════════════════════════════════════════════════
+     HELPERS EXPOSÉS AU TEMPLATE
+     ═══════════════════════════════════════════════════════ */
+
   readonly letters = LETTERS;
+  readonly getDifficultyClass = getDifficultyClass;
 
-  /* ═══════════════════════════════════════════════════════════════════
-     LIFECYCLE
-     ═══════════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════ */
 
-  ngOnInit(): void {
+  constructor() {
     this.resetQuiz();
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      ACTIONS
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   filterByDifficulty(d: DifficultyFilter): void {
     if (this.selectedDifficulty() === d) return;
@@ -155,9 +170,9 @@ export class AcousticComponent implements OnInit {
     const isCorrect = question.options[selected].isCorrect;
 
     if (isCorrect) {
-      this.score.update(s => s + 1);
-      this.streak.update(s => s + 1);
-      this.bestStreak.update(b => Math.max(b, this.streak()));
+      this.score.update((s) => s + 1);
+      this.streak.update((s) => s + 1);
+      this.bestStreak.update((b) => Math.max(b, this.streak()));
     } else {
       this.streak.set(0);
     }
@@ -165,7 +180,7 @@ export class AcousticComponent implements OnInit {
 
   nextQuestion(): void {
     if (!this.isLastQuestion()) {
-      this.currentQuestionIndex.update(i => i + 1);
+      this.currentQuestionIndex.update((i) => i + 1);
       this.selectedOptionIndex.set(null);
       this.isAnswerSubmitted.set(false);
       return;
@@ -183,20 +198,11 @@ export class AcousticComponent implements OnInit {
     this.bestStreak.set(0);
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      NAVIGATION
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   goToPlay(): void {
     void this.router.navigate(['/play']);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     HELPERS TEMPLATE
-     ═══════════════════════════════════════════════════════════════════ */
-
-  /** Retourne la classe de difficulté pour le badge. */
-  getDifficultyClass(difficulty: Difficulty): string {
-    return difficulty.toLowerCase().replace('é', 'e');
   }
 }

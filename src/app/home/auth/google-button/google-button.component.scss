@@ -1,6 +1,13 @@
+/* src/app/shared/google-button/google-button.component.scss */
+
 :host {
   display: block;
+  width: 100%;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   BOUTON GOOGLE
+   ═════════════════════════════════════════════════════════════════════ */
 
 .btn-google {
   display: flex;
@@ -22,26 +29,53 @@
     background-color .2s ease,
     box-shadow .2s ease,
     border-color .2s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-soft, #f8fafc);
+    border-color: var(--border-gold, rgba(184, 134, 11, .3));
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -8px rgba(15, 23, 42, .12);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary, #2563eb);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+  }
 }
 
-.btn-google:hover:not(:disabled) {
-  background: var(--bg-soft, #f8fafc);
-  border-color: var(--border-gold, rgba(184, 134, 11, .3));
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -8px rgba(15, 23, 42, .12);
-}
-
-.btn-google:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-google:disabled {
-  opacity: .6;
-  cursor: not-allowed;
-}
-
+/* ─── Icône Google ─── */
 .google-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+/* ─── Label ─── */
+.btn-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-google {
+    transition: none;
+
+    &:hover:not(:disabled) {
+      transform: none;
+    }
+  }
 }
