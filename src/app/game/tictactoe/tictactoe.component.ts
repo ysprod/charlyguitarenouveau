@@ -1,100 +1,179 @@
+// src/app/game/tictactoe/tictactoe.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
-  OnInit,
+  DestroyRef,
+  afterNextRender,
   computed,
   inject,
-  signal
+  signal,
 } from '@angular/core';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
+
 import { CONFETTI_COUNT } from 'src/app/game/constants/fretboard.constants';
-import { ALIGNMENT_REWARD, CELL_PARTICLES, END_GAME_DELAY_MS, BOT_THINK_DELAY_MS, WINNING_HIGHLIGHT_MS, CONFETTI_DURATION_MS } from 'src/app/game/constants/tictactoe.constants';
+import {
+  ALIGNMENT_REWARD,
+  CELL_PARTICLES,
+  END_GAME_DELAY_MS,
+  BOT_THINK_DELAY_MS,
+  WINNING_HIGHLIGHT_MS,
+  CONFETTI_DURATION_MS,
+} from 'src/app/game/constants/tictactoe.constants';
+
 import { EndGameSummary } from 'src/app/game/models/end-game-summary.model';
 import { TictactoeserviceService } from 'src/app/game/services/tictactoeservice.service';
 import { EndGameDialogComponent } from 'src/app/game/tictactoe/end-game-dialog/end-game-dialog.component';
 
+/* ═══════════════════════════════════════════════════════════
+   TYPES
+   ═══════════════════════════════════════════════════════════ */
+
 type SoundType = 'click' | 'win' | 'lose' | 'draw' | 'levelup' | 'bot';
+
+interface ConfettiPiece {
+  readonly left: number;
+  readonly delay: string;
+  readonly color: string;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTES
+   ═══════════════════════════════════════════════════════════ */
+
+const SOUND_PREF_KEY = 'tictactoe_sound_enabled';
+const CONFETTI_COLORS = ['#b45309', '#ea580c', '#16a34a'] as const;
+
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-tictactoe',
-  standalone: true,
   imports: [EndGameDialogComponent],
   templateUrl: './tictactoe.component.html',
   styleUrls: ['./tictactoe.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TictactoeComponent implements OnInit, OnDestroy {
+export class TictactoeComponent {
+
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
+
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   public readonly gs = inject(TictactoeserviceService);
 
-  /* ─── Constantes exposées au template ─── */
-  readonly alignmentReward = ALIGNMENT_REWARD;
-  readonly cellParticles = CELL_PARTICLES;
+  /* ═══════════════════════════════════════════════════════
+     CONSTANTES EXPOSÉES
+     ═══════════════════════════════════════════════════════ */
 
-  /* ─── État UI (signals) ─── */
+  readonly alignmentReward = ALIGNMENT_REWARD;
+  readonly cellParticles: readonly number[] = CELL_PARTICLES;
+
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT UI
+     ═══════════════════════════════════════════════════════ */
+
   readonly lock = signal(false);
   readonly rejouer = signal(false);
   readonly messageLyko = signal('Lykö le Sage observe votre stratégie…');
   readonly showConfetti = signal(false);
   readonly showEndDialog = signal(false);
-  readonly particles = signal<number[]>([]);
+  readonly confettiParticles = signal<readonly number[]>([]);
   readonly endSummary = signal<EndGameSummary | null>(null);
 
-  /* ─── État persistant ─── */
-  lavie = 0;
-  lebonus = 0;
-  pointdevies = 0;
-  pointdebonus = 0;
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT PERSISTANT (signals)
+     ═══════════════════════════════════════════════════════ */
 
-  /* ─── Suivi de manche ─── */
+  readonly lavie = signal(0);
+  readonly lebonus = signal(0);
+  readonly pointdevies = signal(0);
+  readonly pointdebonus = signal(0);
+
+  /* ═══════════════════════════════════════════════════════
+     SUIVI DE MANCHE
+     ═══════════════════════════════════════════════════════ */
+
   private readonly playerAlignmentsThisRound = signal(0);
   private readonly botAlignmentsThisRound = signal(0);
   private readonly playerGainedPvThisRound = signal(0);
   private readonly botGainedPvThisRound = signal(0);
 
-  /* ─── État dérivé ─── */
-  readonly canGoPrevious = computed(() => this.gs.gridSize() > this.gs.GRID_MIN_SIZE);
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT DÉRIVÉ
+     ═══════════════════════════════════════════════════════ */
 
-  /* ─── Audio ─── */
+  readonly canGoPrevious = computed(
+    () => this.gs.gridSize() > this.gs.GRID_MIN_SIZE
+  );
+
+  /** Particules de confetti pré-calculées pour le template. */
+  readonly confettiView = computed<readonly ConfettiPiece[]>(() =>
+    this.confettiParticles().map((p) => ({
+      left: (p * 7) % 100,
+      delay: `${p * 0.05}s`,
+      color: CONFETTI_COLORS[p % CONFETTI_COLORS.length],
+    }))
+  );
+
+  /* ═══════════════════════════════════════════════════════
+     SON
+     ═══════════════════════════════════════════════════════ */
+
+  readonly soundEnabled = signal(true);
+
+  /* ═══════════════════════════════════════════════════════
+     AUDIO
+     ═══════════════════════════════════════════════════════ */
+
   private audioCtx?: AudioContext;
   private readonly timeouts: ReturnType<typeof setTimeout>[] = [];
 
-  /* ═══════════════════════════════════════════════════════════════════
-     LIFECYCLE
-     ═══════════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════ */
 
-  ngOnInit(): void {
-    const params = this.activatedRoute.snapshot.queryParamMap;
+  constructor() {
+    afterNextRender(() => {
+      const params = this.activatedRoute.snapshot.queryParamMap;
 
-    this.lavie = parseInt(params.get('vie') ?? '500', 10);
-    this.lebonus = parseInt(params.get('bonus') ?? '0', 10);
- 
-    this.pointdevies = this.lavie;
-    this.pointdebonus = this.lebonus;
+      const vie = parseInt(params.get('vie') ?? '500', 10);
+      const bonus = parseInt(params.get('bonus') ?? '0', 10);
 
-    this.initAudio();
-    this.resetjeu();
+      this.lavie.set(vie);
+      this.lebonus.set(bonus);
+      this.pointdevies.set(vie);
+      this.pointdebonus.set(bonus);
+
+      this.initAudio();
+      this.loadSoundPreference();
+      this.resetjeu();
+    });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.audioCtx && this.audioCtx.state !== 'closed') {
+        void this.audioCtx.close();
+      }
+      this.timeouts.forEach((t) => clearTimeout(t));
+      this.timeouts.length = 0;
+    });
   }
 
-  ngOnDestroy(): void {
-    if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      void this.audioCtx.close();
-    }
-    this.timeouts.forEach(t => clearTimeout(t));
-    this.timeouts.length = 0;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     AUDIO (inchangé)
-     ═══════════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     AUDIO
+     ═══════════════════════════════════════════════════════ */
 
   private initAudio(): void {
+    if (typeof window === 'undefined') return;
+
     const Ctor =
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext })
@@ -103,12 +182,40 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     if (Ctor) this.audioCtx = new Ctor();
   }
 
+  private loadSoundPreference(): void {
+    try {
+      const saved = localStorage.getItem(SOUND_PREF_KEY);
+      if (saved === 'false') {
+        this.soundEnabled.set(false);
+      }
+    } catch {
+      /* silencieux */
+    }
+  }
+
+  toggleSound(): void {
+    const next = !this.soundEnabled();
+    this.soundEnabled.set(next);
+
+    try {
+      localStorage.setItem(SOUND_PREF_KEY, String(next));
+    } catch {
+      /* silencieux */
+    }
+
+    if (next) {
+      this.playSound('click');
+    }
+  }
+
   private playSound(type: SoundType): void {
     const ctx = this.audioCtx;
-    if (!ctx) return;
+    if (!ctx || !this.soundEnabled()) return;
 
     if (ctx.state === 'suspended') {
-      void ctx.resume().catch(() => { /* silencieux */ });
+      void ctx.resume().catch(() => {
+        /* silencieux */
+      });
     }
 
     const now = ctx.currentTime;
@@ -172,9 +279,9 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     osc.stop(opts.now + opts.duration + 0.05);
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      RESET & NIVEAUX
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   resetjeu(): void {
     this.rejouer.set(false);
@@ -225,9 +332,9 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     );
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      JOUEUR — Clic sur une case
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   playerClick(i: number): void {
     if (this.lock() || !this.gs.blocks()[i].free || this.gs.turn() !== 0) return;
@@ -237,14 +344,11 @@ export class TictactoeComponent implements OnInit, OnDestroy {
 
   private executeMove(index: number): void {
     const currentTurn = this.gs.turn();
-    const scoreBefore = this.gs.players()[currentTurn].score;
-
     const result = this.gs.playMove(index);
     if (result < 0) return;
 
     this.playSound(currentTurn === 0 ? 'click' : 'bot');
 
-    /* Nettoyage du flag isNew après animation */
     const clearId = setTimeout(() => this.gs.clearIsNew(index), 500);
     this.timeouts.push(clearId);
 
@@ -253,7 +357,10 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     }
 
     if (this.gs.isGameOver()) {
-      const timerId = setTimeout(() => this.handleGameEnd(), END_GAME_DELAY_MS);
+      const timerId = setTimeout(
+        () => this.handleGameEnd(),
+        END_GAME_DELAY_MS
+      );
       this.timeouts.push(timerId);
       return;
     }
@@ -294,21 +401,21 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      ALIGNEMENTS & FIN DE PARTIE
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   private handleAlignment(playerTurn: number, count: number): void {
     const gain = count * this.alignmentReward;
 
     if (playerTurn === 0) {
-      this.pointdevies += gain;
-      this.lavie = this.pointdevies;
-      this.playerAlignmentsThisRound.update(n => n + count);
-      this.playerGainedPvThisRound.update(n => n + gain);
+      this.pointdevies.update((v) => v + gain);
+      this.lavie.set(this.pointdevies());
+      this.playerAlignmentsThisRound.update((n) => n + count);
+      this.playerGainedPvThisRound.update((n) => n + gain);
     } else {
-      this.botAlignmentsThisRound.update(n => n + count);
-      this.botGainedPvThisRound.update(n => n + gain);
+      this.botAlignmentsThisRound.update((n) => n + count);
+      this.botGainedPvThisRound.update((n) => n + gain);
     }
 
     this.playSound('win');
@@ -375,7 +482,7 @@ export class TictactoeComponent implements OnInit, OnDestroy {
       playerGainedPv: this.playerGainedPvThisRound(),
       botGainedPv: this.botGainedPvThisRound(),
       hasPreviousLevel: this.canGoPrevious(),
-      hasNextLevel: true
+      hasNextLevel: true,
     };
 
     this.endSummary.set(summary);
@@ -384,18 +491,21 @@ export class TictactoeComponent implements OnInit, OnDestroy {
 
   private triggerConfetti(): void {
     this.showConfetti.set(true);
-    this.particles.set(Array.from({ length: CONFETTI_COUNT }, (_, i) => i));
+    this.confettiParticles.set(
+      Array.from({ length: CONFETTI_COUNT }, (_, i) => i)
+    );
 
     const timerId = setTimeout(() => {
       this.showConfetti.set(false);
+      this.confettiParticles.set([]);
     }, CONFETTI_DURATION_MS);
 
     this.timeouts.push(timerId);
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      ACTIONS DIALOGUE FIN
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   onDialogReplay(): void {
     this.resetjeu();
@@ -413,17 +523,17 @@ export class TictactoeComponent implements OnInit, OnDestroy {
     this.onrecommencer();
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      NAVIGATION
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   goToPlay(lavie: number, lebonus: number, letape: string): void {
     void this.router.navigate(['/play'], {
-      queryParams: { vie: lavie, bonus: lebonus, etape: letape }
+      queryParams: { vie: lavie, bonus: lebonus, etape: letape },
     });
   }
 
   onrecommencer(): void {
-    this.goToPlay(this.lavie, this.lebonus,"1");
+    this.goToPlay(this.lavie(), this.lebonus(), '1');
   }
 }

@@ -1,3 +1,5 @@
+<!-- src/app/game/fretboard/fretboard.component.html -->
+
 <div class="fret-game-container"
      [class.star-power-active]="isStarPowerActive()"
      [class.screen-shake]="screenShake()"
@@ -80,7 +82,8 @@
     </div>
 
     @if (isPlaying()) {
-      <div class="target-card" [@starPowerPulse]="isStarPowerActive() ? 'active' : 'inactive'">
+      <div class="target-card"
+           [class.star-power-pulse]="isStarPowerActive()">
         <span class="sub-text">TROUVE</span>
         <h2 class="target-note">{{ targetNote() }}</h2>
       </div>
@@ -88,7 +91,7 @@
 
     <div class="hud-box combo-box"
          [class.multiplier-active]="multiplier() > 1"
-         [@comboFlash]="comboFlashKey()">
+         [class.combo-flash]="comboFlashKey() > 0">
       <span class="label">COMBO</span>
       <span class="value">x{{ effectiveMultiplier() }}</span>
     </div>
@@ -114,11 +117,11 @@
                 (click)="activateStarPower()"
                 type="button">
           @if (isStarPowerActive()) {
-            ⚡ {{ starPowerTimeLeft() | number:'1.1-1' }}s
+            ⚡ {{ starPowerTimeLeftFormatted() }}s
           } @else if (starPowerGauge() >= 100) {
             ⚡ BOOSTER
           } @else {
-            ⚡ {{ starPowerGauge() | number:'1.0-0' }}%
+            ⚡ {{ starPowerGaugeFormatted() }}%
           }
         </button>
 
@@ -137,8 +140,8 @@
 
   <!-- ═══════════ FEEDBACK ═══════════ -->
   @if (feedbackMessage()) {
-    <div class="feedback-overlay" [@feedbackAnim] [attr.data-key]="feedbackKey()">
-      <span class="feedback-badge"
+    <div class="feedback-overlay" [attr.data-key]="feedbackKey()">
+      <span class="feedback-badge feedback-enter"
             [class.success]="feedbackType() === 'success'"
             [class.error]="feedbackType() === 'error'"
             [class.perfect]="feedbackType() === 'perfect'">
@@ -149,7 +152,8 @@
 
   <!-- ═══════════ MÉLODIE DES ORIGINES ═══════════ -->
   @if (melodyPlaying()) {
-    <div class="melody-overlay" [@melodyBanner] [style.--melody-color]="melodyChordColor()">
+    <div class="melody-overlay melody-enter"
+         [style.--melody-color]="melodyChordColor()">
       <div class="melody-sparkles" aria-hidden="true">
         @for (i of SPARKLES; track i) {
           <span class="sparkle" [style.--i]="i">✨</span>
@@ -348,7 +352,7 @@
     <div class="overlay-screen">
 
       @if (!isGameOver()) {
-        <div class="card-modal" [@modalAnim]>
+        <div class="card-modal modal-enter">
           <div class="modal-icon" aria-hidden="true">🎸</div>
           <h1>CHARLY GUITARE HERO</h1>
           <p class="modal-description">
@@ -381,7 +385,7 @@
       }
 
       @if (isGameOver()) {
-        <div class="card-modal game-over-modal" [@modalAnim]>
+        <div class="card-modal game-over-modal modal-enter">
           <div class="game-over-header">
             <span class="game-over-icon" aria-hidden="true">🎸</span>
             <h2>PARTIE TERMINÉE</h2>

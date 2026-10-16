@@ -1,14 +1,16 @@
+<!-- src/app/game/tictactoe/tictactoe.component.html -->
+
 <!-- ═══════════════════════════════════════════════════════
      CONFETTI
      ═══════════════════════════════════════════════════════ -->
 @if (showConfetti()) {
   <div class="confetti-wrapper" aria-hidden="true">
-    @for (p of particles(); track p) {
+    @for (p of confettiView(); track $index) {
       <div
         class="confetti-piece"
-        [style.left.%]="(p * 7) % 100"
-        [style.animation-delay]="(p * 0.05) + 's'"
-        [style.background]="p % 3 === 0 ? '#b45309' : (p % 3 === 1 ? '#ea580c' : '#16a34a')"
+        [style.left.%]="p.left"
+        [style.animation-delay]="p.delay"
+        [style.background]="p.color"
       ></div>
     }
   </div>
@@ -28,6 +30,21 @@
 }
 
 <div class="temple-container py-4">
+
+  <!-- ═══════════ HEADER (bouton son) ═══════════ -->
+  <div class="header-row">
+    <button
+      class="btn-sound"
+      (click)="toggleSound()"
+      type="button"
+      [attr.aria-pressed]="soundEnabled()"
+      [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
+    >
+      <span aria-hidden="true">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
+      <span class="sound-label">{{ soundEnabled() ? 'Son activé' : 'Son coupé' }}</span>
+    </button>
+  </div>
+
   <div class="row g-4 align-items-start">
 
     <!-- ═══════════ GRILLE ═══════════ -->
@@ -43,7 +60,7 @@
             <div
               (click)="playerClick(i)"
               (keydown.enter)="playerClick(i)"
-              (keydown.space)="playerClick(i)"
+              (keydown.space)="playerClick(i); $event.preventDefault()"
               [class.disabled]="!block.free || lock() || gs.turn() !== 0"
               [class.winning-cell]="block.isWinningCell"
               [class.new-cell]="block.isNew"
@@ -68,7 +85,8 @@
               @if (block.isNew) {
                 <div class="cell-particles" aria-hidden="true">
                   @for (p of cellParticles; track p) {
-                    <span></span>
+                    <span [style.--x.px]="(p % 2 === 0 ? 1 : -1) * 40"
+                          [style.--y.px]="(p < 2 ? -1 : 1) * 40"></span>
                   }
                 </div>
               }

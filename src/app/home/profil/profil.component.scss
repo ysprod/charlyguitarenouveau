@@ -886,16 +886,3 @@ a:focus-visible {
   outline-offset: 2px;
   border-radius: 4px;
 }
-
-/* ═════════════════════════════════════════════════════════════════════
-   SNACKBAR GLOBAL
-   ═════════════════════════════════════════════════════════════════════ */
-::ng-deep .snack-success {
-  background: linear-gradient(135deg, #16a34a, #15803d) !important;
-  color: #fff !important;
-}
-
-::ng-deep .snack-error {
-  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-  color: #fff !important;
-}

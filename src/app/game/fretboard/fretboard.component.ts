@@ -1,25 +1,18 @@
+// src/app/game/fretboard/fretboard.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  OnDestroy,
-  OnInit,
+  afterNextRender,
   computed,
   effect,
   inject,
   signal,
-  untracked
+  untracked,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
-import {
-  animate,
-  keyframes,
-  state,
-  style,
-  transition,
-  trigger
-} from '@angular/animations';
 
 import {
   CHORD_POOL,
@@ -35,7 +28,7 @@ import {
   SPARKLES_INDICES,
   STAR_POWER_STARS,
   STRING_COLORS,
-  TARGET_NOTES
+  TARGET_NOTES,
 } from '../constants/fretboard.constants';
 
 import {
@@ -43,86 +36,47 @@ import {
   Difficulty,
   FeedbackKind,
   MelodyChord,
-  Particle
+  Particle,
 } from '../models/fretboard.model';
 
 import {
   randomElement,
   randomFloat,
   randomInt,
-  randomSample
+  randomSample,
 } from '../utils/random.utils';
 
 import { GuitarAudioService } from '../services/guitar-audio.service';
- import { StorageService } from '../../shared/services/storage.service';
+import { StorageService } from '../../shared/services/storage.service';
 import { GameAudioService } from '../services/game-audio.service';
+
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-fretboard',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './fretboard.component.html',
   styleUrls: ['./fretboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('feedbackAnim', [
-      transition(':enter', [
-        animate('700ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', keyframes([
-          style({ transform: 'scale(0.2) rotate(-15deg)', opacity: 0, offset: 0 }),
-          style({ transform: 'scale(1.4) rotate(8deg)',   opacity: 1, offset: 0.35 }),
-          style({ transform: 'scale(0.95) rotate(-3deg)', opacity: 1, offset: 0.6 }),
-          style({ transform: 'scale(1.05) rotate(0deg)',  opacity: 1, offset: 0.8 }),
-          style({ transform: 'scale(1.2) rotate(0deg)',   opacity: 0, offset: 1 })
-        ]))
-      ])
-    ]),
-    trigger('modalAnim', [
-      transition(':enter', [
-        animate('600ms cubic-bezier(0.34, 1.56, 0.64, 1)', keyframes([
-          style({ transform: 'scale(0.5) translateY(80px) rotateX(20deg)',   opacity: 0, offset: 0 }),
-          style({ transform: 'scale(1.08) translateY(-10px) rotateX(-2deg)', opacity: 1, offset: 0.7 }),
-          style({ transform: 'scale(1) translateY(0) rotateX(0)',           opacity: 1, offset: 1 })
-        ]))
-      ])
-    ]),
-    trigger('melodyBanner', [
-      transition(':enter', [
-        animate('800ms cubic-bezier(0.22, 1, 0.36, 1)', keyframes([
-          style({ transform: 'scale(0.3) translateY(-60px)', opacity: 0, offset: 0 }),
-          style({ transform: 'scale(1.15) translateY(10px)', opacity: 1, offset: 0.5 }),
-          style({ transform: 'scale(1) translateY(0)',       opacity: 1, offset: 1 })
-        ]))
-      ]),
-      transition(':leave', [
-        animate('400ms ease-in', style({ transform: 'scale(0.85)', opacity: 0 }))
-      ])
-    ]),
-    trigger('starPowerPulse', [
-      state('inactive', style({ transform: 'scale(1)' })),
-      state('active',   style({ transform: 'scale(1.02)' })),
-      transition('inactive <=> active', animate('400ms ease-in-out'))
-    ]),
-    trigger('comboFlash', [
-      transition('* => *', [
-        animate('500ms ease-out', keyframes([
-          style({ transform: 'scale(1)',   offset: 0 }),
-          style({ transform: 'scale(1.5)', color: '#FFD700', offset: 0.3 }),
-          style({ transform: 'scale(1)',   offset: 1 })
-        ]))
-      ])
-    ])
-  ]
 })
-export class FretboardComponent implements OnInit, OnDestroy {
+export class FretboardComponent {
 
-  /* ─── Injection ─── */
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
+
   private readonly router = inject(Router);
   private readonly storage = inject(StorageService);
   private readonly guitarAudio = inject(GuitarAudioService);
   private readonly uiAudio = inject(GameAudioService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /* ─── Constantes exposées au template ─── */
+  /* ═══════════════════════════════════════════════════════
+     CONSTANTES EXPOSÉES AU TEMPLATE
+     ═══════════════════════════════════════════════════════ */
+
   readonly strings = GUITAR_STRINGS;
   readonly notesList = TARGET_NOTES;
   readonly frets = FRETS;
@@ -131,7 +85,10 @@ export class FretboardComponent implements OnInit, OnDestroy {
   readonly SPARKLES = SPARKLES_INDICES;
   readonly LIVES_INDICES = LIVES_INDICES;
 
-  /* ─── État de jeu ─── */
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT DE JEU
+     ═══════════════════════════════════════════════════════ */
+
   readonly score = signal(0);
   readonly combo = signal(0);
   readonly maxCombo = signal(0);
@@ -176,14 +133,17 @@ export class FretboardComponent implements OnInit, OnDestroy {
   readonly melodyActiveNote = signal<{ stringIdx: number; fretIdx: number } | null>(null);
   readonly melodySequence = signal<MelodyChord[]>([]);
 
-  /* ─── Computed ─── */
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED
+     ═══════════════════════════════════════════════════════ */
+
   readonly multiplier = computed(() => {
     const c = this.combo();
     if (c >= 20) return 6;
     if (c >= 15) return 5;
     if (c >= 12) return 4;
-    if (c >= 8)  return 3;
-    if (c >= 4)  return 2;
+    if (c >= 8) return 3;
+    if (c >= 4) return 2;
     return 1;
   });
 
@@ -207,7 +167,25 @@ export class FretboardComponent implements OnInit, OnDestroy {
     return 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)';
   });
 
-  /* ─── Timers ─── */
+  /** Formate le temps restant de Star Power (1 décimale). */
+  readonly starPowerTimeLeftFormatted = computed(() =>
+    this.starPowerTimeLeft().toFixed(1)
+  );
+
+  /** Formate la jauge Star Power (sans décimale). */
+  readonly starPowerGaugeFormatted = computed(() =>
+    Math.round(this.starPowerGauge()).toString()
+  );
+
+  /** Indique si le label de note doit être affiché. */
+  readonly shouldShowNoteLabel = computed(
+    () => this.difficulty() !== 'hardcore'
+  );
+
+  /* ═══════════════════════════════════════════════════════
+     TIMERS — GESTION CENTRALISÉE
+     ═══════════════════════════════════════════════════════ */
+
   private timerInterval?: ReturnType<typeof setInterval>;
   private starPowerInterval?: ReturnType<typeof setInterval>;
   private readonly timeouts = new Set<ReturnType<typeof setTimeout>>();
@@ -216,7 +194,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
   private confettiId = 0;
 
   /* ═══════════════════════════════════════════════════════
-     CYCLE DE VIE
+     CONSTRUCTEUR
      ═══════════════════════════════════════════════════════ */
 
   constructor() {
@@ -225,24 +203,24 @@ export class FretboardComponent implements OnInit, OnDestroy {
       const c = this.combo();
       untracked(() => {
         if (c > 0 && c % 4 === 0) {
-          this.comboFlashKey.update(k => k + 1);
+          this.comboFlashKey.update((k) => k + 1);
         }
       });
     });
-  }
 
-  ngOnInit(): void {
-    this.loadHighScore();
-  }
+    afterNextRender(() => {
+      this.loadHighScore();
+    });
 
-  ngOnDestroy(): void {
-    this.clearAllTimers();
-    this.stopMelody();
-    this.stopConfetti();
+    this.destroyRef.onDestroy(() => {
+      this.clearAllTimers();
+      this.stopMelody();
+      this.stopConfetti();
+    });
   }
 
   /* ═══════════════════════════════════════════════════════
-     TIMERS — GESTION CENTRALISÉE
+     TIMERS
      ═══════════════════════════════════════════════════════ */
 
   private setManagedTimeout(fn: () => void, delayMs: number): void {
@@ -254,7 +232,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   private clearAllTimers(): void {
-    this.timeouts.forEach(id => clearTimeout(id));
+    this.timeouts.forEach((id) => clearTimeout(id));
     this.timeouts.clear();
     clearInterval(this.timerInterval);
     clearInterval(this.starPowerInterval);
@@ -296,7 +274,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
       if (!this.isPlaying()) return;
       if (this.isTimerPaused()) return;
 
-      this.timeLeft.update(t => t - this.getTimeMultiplier());
+      this.timeLeft.update((t) => t - this.getTimeMultiplier());
       if (this.timeLeft() <= 0) this.handleMiss(true);
     }, GAME_RULES.TIMER_TICK_MS);
   }
@@ -337,19 +315,23 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   private handleSuccess(fretIdx: number, stringIdx: number): void {
-    this.combo.update(c => c + 1);
-    this.streak.update(s => s + 1);
-    this.notesHit.update(n => n + 1);
+    this.combo.update((c) => c + 1);
+    this.streak.update((s) => s + 1);
+    this.notesHit.update((n) => n + 1);
     if (this.combo() > this.maxCombo()) this.maxCombo.set(this.combo());
 
     const starPowerBonus = this.isStarPowerActive() ? 2 : 1;
     const perfectBonus =
-      this.timeLeft() > GAME_RULES.MAX_TIME * GAME_RULES.PERFECT_TIME_THRESHOLD ? 1.5 : 1;
-    const basePoints = Math.round(100 * this.multiplier() * starPowerBonus * perfectBonus);
-    this.score.update(s => s + basePoints);
+      this.timeLeft() > GAME_RULES.MAX_TIME * GAME_RULES.PERFECT_TIME_THRESHOLD
+        ? 1.5
+        : 1;
+    const basePoints = Math.round(
+      100 * this.multiplier() * starPowerBonus * perfectBonus
+    );
+    this.score.update((s) => s + basePoints);
 
     if (!this.isStarPowerActive()) {
-      this.starPowerGauge.update(g =>
+      this.starPowerGauge.update((g) =>
         Math.min(100, g + GAME_RULES.STAR_POWER_GAIN_ON_HIT)
       );
     }
@@ -360,7 +342,8 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.triggerHitEffect(stringIdx, fretIdx);
 
     const isPerfect = this.timeLeft() > GAME_RULES.MAX_TIME * 0.75;
-    const comboText = this.effectiveMultiplier() > 1 ? ` x${this.effectiveMultiplier()}` : '';
+    const comboText =
+      this.effectiveMultiplier() > 1 ? ` x${this.effectiveMultiplier()}` : '';
 
     if (isPerfect) {
       this.showFeedback(`PARFAIT ! +${basePoints}${comboText}`, 'perfect');
@@ -369,11 +352,17 @@ export class FretboardComponent implements OnInit, OnDestroy {
       this.showFeedback(`BIEN ! +${basePoints}${comboText}`, 'success');
     }
 
-    if (this.combo() > 0 && this.combo() % GAME_RULES.COMBO_MELODY_TRIGGER === 0) {
+    if (
+      this.combo() > 0 &&
+      this.combo() % GAME_RULES.COMBO_MELODY_TRIGGER === 0
+    ) {
       void this.playMelodieDesOrigines();
     }
 
-    if (this.combo() > 0 && this.combo() % GAME_RULES.COMBO_SHAKE_TRIGGER === 0) {
+    if (
+      this.combo() > 0 &&
+      this.combo() % GAME_RULES.COMBO_SHAKE_TRIGGER === 0
+    ) {
       this.triggerScreenShake();
     }
 
@@ -385,8 +374,8 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
     this.combo.set(0);
     this.streak.set(0);
-    this.notesMissed.update(n => n + 1);
-    this.lives.update(l => l - 1);
+    this.notesMissed.update((n) => n + 1);
+    this.lives.update((l) => l - 1);
     this.uiAudio.play('error');
     this.triggerScreenShake();
     this.showFeedback(isTimeout ? 'TEMPS ÉCOULÉ !' : 'RATÉ !', 'error');
@@ -410,8 +399,8 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
     clearInterval(this.starPowerInterval);
     this.starPowerInterval = setInterval(() => {
-      this.starPowerTimeLeft.update(t => t - 0.1);
-      this.starPowerGauge.update(g => {
+      this.starPowerTimeLeft.update((t) => t - 0.1);
+      this.starPowerGauge.update((g) => {
         if (g <= 0) {
           clearInterval(this.starPowerInterval);
           this.isStarPowerActive.set(false);
@@ -461,19 +450,25 @@ export class FretboardComponent implements OnInit, OnDestroy {
       this.guitarAudio.playMelodyNote(6, chord.bassNote, 2.8, 0.55, chordStart);
 
       chord.arpeggio.forEach((note, nIdx) => {
-        const noteDelay = chordStart + 0.10 + nIdx * ARPEGGIO_DELAY;
-        const toneNote = this.guitarAudio.getToneNote(note.stringIdx, note.fretIdx);
+        const noteDelay = chordStart + 0.1 + nIdx * ARPEGGIO_DELAY;
+        const toneNote = this.guitarAudio.getToneNote(
+          note.stringIdx,
+          note.fretIdx
+        );
 
         this.guitarAudio.playMelodyNote(
           note.stringIdx,
           toneNote,
           2.4,
-          0.40,
+          0.4,
           noteDelay
         );
 
         this.setManagedTimeout(() => {
-          this.melodyActiveNote.set({ stringIdx: note.stringIdx, fretIdx: note.fretIdx });
+          this.melodyActiveNote.set({
+            stringIdx: note.stringIdx,
+            fretIdx: note.fretIdx,
+          });
           this.activeVibratingString.set(note.stringIdx);
           this.spawnMelodyParticle(note.stringIdx, note.fretIdx, chord.color);
         }, noteDelay * 1000);
@@ -495,18 +490,22 @@ export class FretboardComponent implements OnInit, OnDestroy {
     }, totalDuration * 1000);
   }
 
-  private spawnMelodyParticle(stringIdx: number, fretIdx: number, color: string): void {
+  private spawnMelodyParticle(
+    stringIdx: number,
+    fretIdx: number,
+    color: string
+  ): void {
     const particle: Particle = {
       id: this.particleId++,
       x: (fretIdx / 12) * 100,
       y: ((stringIdx - 1) / 6) * 100 + 8,
       color,
       size: 14,
-      rotation: randomFloat(0, 360)
+      rotation: randomFloat(0, 360),
     };
-    this.particles.update(p => [...p, particle]);
+    this.particles.update((p) => [...p, particle]);
     this.setManagedTimeout(() => {
-      this.particles.update(p => p.filter(x => x.id !== particle.id));
+      this.particles.update((p) => p.filter((x) => x.id !== particle.id));
     }, 1400);
   }
 
@@ -523,9 +522,11 @@ export class FretboardComponent implements OnInit, OnDestroy {
 
   isMelodyNote(stringIdx: number, fretIdx: number): boolean {
     const active = this.melodyActiveNote();
-    return active !== null
-      && active.stringIdx === stringIdx
-      && active.fretIdx === fretIdx;
+    return (
+      active !== null &&
+      active.stringIdx === stringIdx &&
+      active.fretIdx === fretIdx
+    );
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -533,21 +534,24 @@ export class FretboardComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   private spawnConfetti(count = CONFETTI_COUNT): void {
-    const newConfetti: ConfettiParticle[] = Array.from({ length: count }, () => ({
-      id: this.confettiId++,
-      x: randomFloat(0, 100),
-      color: randomElement(CONFETTI_COLORS),
-      size: randomFloat(6, 14),
-      delay: randomFloat(0, 1500),
-      duration: randomFloat(2500, 4500),
-      rotation: randomFloat(0, 360)
-    }));
+    const newConfetti: ConfettiParticle[] = Array.from(
+      { length: count },
+      () => ({
+        id: this.confettiId++,
+        x: randomFloat(0, 100),
+        color: randomElement(CONFETTI_COLORS),
+        size: randomFloat(6, 14),
+        delay: randomFloat(0, 1500),
+        duration: randomFloat(2500, 4500),
+        rotation: randomFloat(0, 360),
+      })
+    );
 
-    this.confettiParticles.update(c => [...c, ...newConfetti]);
+    this.confettiParticles.update((c) => [...c, ...newConfetti]);
 
-    const ids = new Set(newConfetti.map(n => n.id));
+    const ids = new Set(newConfetti.map((n) => n.id));
     this.setManagedTimeout(() => {
-      this.confettiParticles.update(c => c.filter(x => !ids.has(x.id)));
+      this.confettiParticles.update((c) => c.filter((x) => !ids.has(x.id)));
     }, 6000);
   }
 
@@ -577,10 +581,6 @@ export class FretboardComponent implements OnInit, OnDestroy {
      THÉORIE MUSICALE
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Nom français de la note (avec dièses) pour une case donnée.
-   * ⚠️ On garde les dièses : DO ≠ DO#.
-   */
   getNoteAt(stringIndex: number, fret: number): string {
     return this.guitarAudio.getDisplayNote(stringIndex, fret);
   }
@@ -611,21 +611,21 @@ export class FretboardComponent implements OnInit, OnDestroy {
       y: ((stringIdx - 1) / 6) * 100,
       color: this.getStringColor(stringIdx),
       size: randomFloat(4, 12),
-      rotation: randomFloat(0, 360)
+      rotation: randomFloat(0, 360),
     }));
 
-    const ids = new Set(newParticles.map(p => p.id));
-    this.particles.update(p => [...p, ...newParticles]);
+    const ids = new Set(newParticles.map((p) => p.id));
+    this.particles.update((p) => [...p, ...newParticles]);
     this.setManagedTimeout(() => {
-      this.particles.update(p => p.filter(x => !ids.has(x.id)));
+      this.particles.update((p) => p.filter((x) => !ids.has(x.id)));
     }, 1200);
   }
 
   private triggerHitEffect(stringIdx: number, fretIdx: number): void {
     const key = `${stringIdx}:${fretIdx}`;
-    this.hitEffects.update(set => new Set(set).add(key));
+    this.hitEffects.update((set) => new Set(set).add(key));
     this.setManagedTimeout(() => {
-      this.hitEffects.update(set => {
+      this.hitEffects.update((set) => {
         const copy = new Set(set);
         copy.delete(key);
         return copy;
@@ -643,7 +643,7 @@ export class FretboardComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   showFeedback(msg: string, type: FeedbackKind): void {
-    this.feedbackKey.update(k => k + 1);
+    this.feedbackKey.update((k) => k + 1);
     this.feedbackMessage.set(msg);
     this.feedbackType.set(type);
     this.setManagedTimeout(() => this.feedbackMessage.set(null), 900);
@@ -669,10 +669,6 @@ export class FretboardComponent implements OnInit, OnDestroy {
     this.uiAudio.play('click');
   }
 
-  shouldShowNoteLabel(): boolean {
-    return this.difficulty() !== 'hardcore';
-  }
-
   private getTimeMultiplier(): number {
     return DIFFICULTY_MAP[this.difficulty()].timeMultiplier;
   }
@@ -682,14 +678,20 @@ export class FretboardComponent implements OnInit, OnDestroy {
   }
 
   private loadHighScore(): void {
-    const saved = this.storage.getNumber(FRETBOARD_STORAGE_KEYS.HIGH_SCORE, -1);
+    const saved = this.storage.getNumber(
+      FRETBOARD_STORAGE_KEYS.HIGH_SCORE,
+      -1
+    );
     if (saved >= 0) this.highScore.set(saved);
   }
 
   private saveHighScore(): void {
     if (this.score() > this.highScore()) {
       this.highScore.set(this.score());
-      this.storage.setNumber(FRETBOARD_STORAGE_KEYS.HIGH_SCORE, this.score());
+      this.storage.setNumber(
+        FRETBOARD_STORAGE_KEYS.HIGH_SCORE,
+        this.score()
+      );
     }
   }
 

@@ -1,16 +1,18 @@
+<!-- src/app/auth/auth-header/auth-header.component.html -->
+
 <header class="card-header">
   <h2>{{ title() }}</h2>
+
+  <p class="subtitle">{{ subtitle() }}</p>
 
   <div class="toggle-mode">
     <span>{{ promptText() }}</span>
     <a
       [routerLink]="[linkRoute()]"
       [queryParams]="{ returnUrl: returnUrl() }"
-      class="btn-link-highlight"
+      [attr.aria-label]="promptText() + ' ' + linkLabel()"
     >
       {{ linkLabel() }}
     </a>
   </div>
-
-  <p class="subtitle">{{ subtitle() }}</p>
 </header>

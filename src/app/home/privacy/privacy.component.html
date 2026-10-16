@@ -1,3 +1,5 @@
+<!-- src/app/legal/privacy/privacy.component.html -->
+
 <div class="privacy-container">
   <header class="privacy-header">
     <div class="header-content">
@@ -11,6 +13,7 @@
   </header>
 
   <main class="privacy-body">
+
     <!-- Section 1 -->
     <section class="privacy-section">
       <div class="section-icon" aria-hidden="true">
@@ -21,7 +24,9 @@
       <div class="section-content">
         <h2>1. Préambule : Pas de blabla, juste de la musique</h2>
         <p>
-          La présente politique détaille la façon dont <strong>{{ siteName }}</strong> (accessible sur <a [href]="siteUrl">{{ siteUrl }}</a>) collecte, utilise et protège vos données personnelles. Conformément au Règlement Général sur la Protection des Données (RGPD), nous veillons à ce que votre navigation et votre apprentissage se fassent en toute sécurité.
+          La présente politique détaille la façon dont <strong>{{ siteName }}</strong> (accessible sur
+          <a [href]="siteUrl" target="_blank" rel="noopener noreferrer">{{ siteUrl }}</a>)
+          collecte, utilise et protège vos données personnelles. Conformément au Règlement Général sur la Protection des Données (RGPD), nous veillons à ce que votre navigation et votre apprentissage se fassent en toute sécurité.
         </p>
       </div>
     </section>
@@ -124,5 +129,6 @@
         </p>
       </div>
     </section>
-  </main> 
+
+  </main>
 </div>

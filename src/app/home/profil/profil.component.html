@@ -1,3 +1,5 @@
+<!-- src/app/profil/profil.component.html -->
+
 <div class="profile-update-container">
 
   <!-- ═══════════════════════════════════════════════════════
@@ -54,7 +56,7 @@
             <span>Changer</span>
           </div>
 
-          <input type="file" id="avatar-input" (change)="onAvatarSelected($event)"
+          <input type="file" id="avatar-input" #avatarInput (change)="onAvatarSelected($event)"
             accept="image/png, image/jpeg, image/webp" hidden />
         </div>
 
@@ -81,8 +83,8 @@
             {{ profileForm.get('email')?.value || 'email@exemple.com' }}
           </div>
           <div class="preview-meta">
-            <span class="role-chip" [ngClass]="userRole">
-              {{ getRoleLabel() }}
+            <span class="role-chip" [class]="userRole">
+              {{ roleLabel() }}
             </span>
             <span class="member-since">
               Membre depuis {{ formatMemberSince() }}
@@ -266,9 +268,10 @@
       </div>
     </main>
   </form>
+
   <!-- ═══════════════════════════════════════════════════════
-     MODALE DE RECADRAGE
-     ═══════════════════════════════════════════════════════ -->
+       MODALE DE RECADRAGE
+       ═══════════════════════════════════════════════════════ -->
   @if (pendingCropFile(); as file) {
   <app-avatar-crop-dialog [sourceFile]="file" (validated)="onCropValidated($event)" (cancelled)="onCropCancelled()" />
   }

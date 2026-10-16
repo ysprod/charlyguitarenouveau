@@ -1,12 +1,12 @@
+// src/app/game/memory/memory.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  OnDestroy,
-  OnInit,
   computed,
   inject,
-  signal
+  signal,
 } from '@angular/core';
 
 import { Router } from '@angular/router';
@@ -19,37 +19,59 @@ import {
   MOLKKY_DIFFICULTIES,
   MOLKKY_DIFFICULTY_MAP,
   MOLKKY_RULES,
-  MOLKKY_STORAGE_KEYS
+  MOLKKY_STORAGE_KEYS,
 } from '../constants/molkky.constants';
 
- import { StorageService } from '../../shared/services/storage.service';
+import { StorageService } from '../../shared/services/storage.service';
 
 import { randomInt, randomSample } from '../utils/random.utils';
 import { GameAudioService } from '../services/game-audio.service';
 
+/* ═══════════════════════════════════════════════════════════
+   TYPES INTERNES
+   ═══════════════════════════════════════════════════════════ */
+
 type FeedbackType = 'success' | 'error';
+
+interface ParticleView {
+  readonly left: number;
+  readonly delay: string;
+  readonly color: string;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-memory',
-  standalone: true,
   imports: [],
   templateUrl: './memory.component.html',
   styleUrls: ['./memory.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MemoryComponent implements OnInit, OnDestroy {
+export class MemoryComponent {
 
-  /* ─── Injection ─── */
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
+
   private readonly router = inject(Router);
   private readonly audio = inject(GameAudioService);
   private readonly storage = inject(StorageService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /* ─── Constantes exposées au template ─── */
+  /* ═══════════════════════════════════════════════════════
+     CONSTANTES EXPOSÉES
+     ═══════════════════════════════════════════════════════ */
+
   readonly difficulties = MOLKKY_DIFFICULTIES;
   readonly chordCatalog = CHORD_CATALOG;
 
-  /* ─── État (signals) ─── */
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT — SIGNALS
+     ═══════════════════════════════════════════════════════ */
+
   readonly pins = signal<PinState[]>([]);
   readonly score = signal(0);
   readonly strikes = signal(0);
@@ -65,9 +87,14 @@ export class MemoryComponent implements OnInit, OnDestroy {
   readonly feedbackType = signal<FeedbackType>('success');
   readonly particles = signal<number[]>([]);
 
-  /* ─── Computed ─── */
-  readonly currentDifficulty = computed<DifficultyConfig>(() =>
-    MOLKKY_DIFFICULTY_MAP[this.difficulty()] ?? MOLKKY_DIFFICULTY_MAP.normal
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED
+     ═══════════════════════════════════════════════════════ */
+
+  readonly currentDifficulty = computed<DifficultyConfig>(
+    () =>
+      MOLKKY_DIFFICULTY_MAP[this.difficulty()] ??
+      MOLKKY_DIFFICULTY_MAP.normal
   );
 
   readonly strikeLimit = computed(() => this.currentDifficulty().strikeLimit);
@@ -87,19 +114,36 @@ export class MemoryComponent implements OnInit, OnDestroy {
     return 'linear-gradient(90deg, #10b981, #06b6d4)';
   });
 
-  readonly showNoteLabels = computed(() => this.difficulty() !== 'difficile');
+  readonly showNoteLabels = computed(
+    () => this.difficulty() !== 'difficile'
+  );
 
-  /* ─── Timers centralisés ─── */
+  /** Particules pré-calculées (position, délai, couleur). */
+  readonly particlesView = computed<readonly ParticleView[]>(() =>
+    this.particles().map((p) => ({
+      left: (p * 5) % 100,
+      delay: `${p * 0.05}s`,
+      color: p % 3 === 0 ? '#f59e0b' : p % 3 === 1 ? '#fbbf24' : '#10b981',
+    }))
+  );
+
+  /* ═══════════════════════════════════════════════════════
+     TIMERS CENTRALISÉS
+     ═══════════════════════════════════════════════════════ */
+
   private readonly timeouts = new Set<ReturnType<typeof setTimeout>>();
   private timerInterval?: ReturnType<typeof setInterval>;
 
-  /* ─── Cycle de vie ─── */
-  ngOnInit(): void {
-    this.loadDifficulty();
-  }
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════ */
 
-  ngOnDestroy(): void {
-    this.clearAllTimers();
+  constructor() {
+    this.loadDifficulty();
+
+    this.destroyRef.onDestroy(() => {
+      this.clearAllTimers();
+    });
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -115,9 +159,10 @@ export class MemoryComponent implements OnInit, OnDestroy {
   }
 
   private clearAllTimers(): void {
-    this.timeouts.forEach(id => clearTimeout(id));
+    this.timeouts.forEach((id) => clearTimeout(id));
     this.timeouts.clear();
     clearInterval(this.timerInterval);
+    this.timerInterval = undefined;
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -125,8 +170,11 @@ export class MemoryComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   private loadDifficulty(): void {
-    const saved = this.storage.getString(MOLKKY_STORAGE_KEYS.DIFFICULTY, '');
-    if (saved && this.difficulties.some(d => d.id === saved)) {
+    const saved = this.storage.getString(
+      MOLKKY_STORAGE_KEYS.DIFFICULTY,
+      ''
+    );
+    if (saved && this.difficulties.some((d) => d.id === saved)) {
       this.difficulty.set(saved as Difficulty);
     }
   }
@@ -148,21 +196,23 @@ export class MemoryComponent implements OnInit, OnDestroy {
     const config = this.currentDifficulty();
     const diff = this.difficulty();
 
-    /* Filtre les accords selon la difficulté */
-    const filtered = this.chordCatalog.filter(c => {
-      if (diff === 'facile')    return c.difficulty === 'facile';
-      if (diff === 'normal')    return c.difficulty === 'facile' || c.difficulty === 'normal';
+    const filtered = this.chordCatalog.filter((c) => {
+      if (diff === 'facile') return c.difficulty === 'facile';
+      if (diff === 'normal')
+        return c.difficulty === 'facile' || c.difficulty === 'normal';
       return true;
     });
 
     const shuffled = randomSample(filtered, config.pinCount);
 
-    this.pins.set(shuffled.map(chord => ({
-      chord,
-      isDown: false,
-      isRevealed: false,
-      isShaking: false
-    })));
+    this.pins.set(
+      shuffled.map((chord) => ({
+        chord,
+        isDown: false,
+        isRevealed: false,
+        isShaking: false,
+      }))
+    );
 
     this.score.set(0);
     this.strikes.set(0);
@@ -195,7 +245,6 @@ export class MemoryComponent implements OnInit, OnDestroy {
       const next = this.timeLeft() - multiplier;
       this.timeLeft.set(next);
 
-      /* Tick sonore quand on approche de la fin */
       if (
         next < MOLKKY_RULES.TICK_SOUND_THRESHOLD &&
         next > 0 &&
@@ -215,7 +264,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   private nextRound(): void {
-    const activePins = this.pins().filter(p => !p.isDown);
+    const activePins = this.pins().filter((p) => !p.isDown);
     if (activePins.length === 0) {
       this.checkEndCondition();
       return;
@@ -223,11 +272,12 @@ export class MemoryComponent implements OnInit, OnDestroy {
 
     const randomIndex = randomInt(0, activePins.length);
     this.targetChord.set(activePins[randomIndex].chord);
-    this.roundNumber.update(n => n + 1);
+    this.roundNumber.update((n) => n + 1);
     this.timeLeft.set(MOLKKY_RULES.MAX_TIME);
 
-    /* Reset visuel */
-    this.pins.update(pins => pins.map(p => ({ ...p, isRevealed: false })));
+    this.pins.update((pins) =>
+      pins.map((p) => ({ ...p, isRevealed: false }))
+    );
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -237,10 +287,9 @@ export class MemoryComponent implements OnInit, OnDestroy {
   onPinClick(pin: PinState, index: number): void {
     if (!this.isPlaying() || pin.isDown) return;
 
-    /* Marque la quille comme révélée */
-    this.pins.update(pins => pins.map((p, i) =>
-      i === index ? { ...p, isRevealed: true } : p
-    ));
+    this.pins.update((pins) =>
+      pins.map((p, i) => (i === index ? { ...p, isRevealed: true } : p))
+    );
 
     if (pin.chord.id === this.targetChord()?.id) {
       this.handleSuccess(pin, index);
@@ -250,16 +299,19 @@ export class MemoryComponent implements OnInit, OnDestroy {
   }
 
   private handleSuccess(pin: PinState, index: number): void {
-    this.pins.update(pins => pins.map((p, i) =>
-      i === index ? { ...p, isDown: true, isRevealed: true } : p
-    ));
+    this.pins.update((pins) =>
+      pins.map((p, i) =>
+        i === index ? { ...p, isDown: true, isRevealed: true } : p
+      )
+    );
 
     this.strikes.set(0);
-    this.perfectRounds.update(n => n + 1);
+    this.perfectRounds.update((n) => n + 1);
 
-    const comboBonus = this.perfectRounds() >= MOLKKY_RULES.COMBO_THRESHOLD
-      ? MOLKKY_RULES.COMBO_BONUS
-      : 1;
+    const comboBonus =
+      this.perfectRounds() >= MOLKKY_RULES.COMBO_THRESHOLD
+        ? MOLKKY_RULES.COMBO_BONUS
+        : 1;
     const points = Math.round(pin.chord.points * comboBonus);
     const newScore = this.score() + points;
     this.score.set(newScore);
@@ -275,28 +327,33 @@ export class MemoryComponent implements OnInit, OnDestroy {
 
     if (newScore > MOLKKY_RULES.SCORE_TARGET) {
       this.score.set(MOLKKY_RULES.SCORE_PENALTY);
-      this.showFeedback(`DÉPASSÉ ! RETOUR À ${MOLKKY_RULES.SCORE_PENALTY} PTS`, 'error');
+      this.showFeedback(
+        `DÉPASSÉ ! RETOUR À ${MOLKKY_RULES.SCORE_PENALTY} PTS`,
+        'error'
+      );
     }
 
     this.setManagedTimeout(() => this.nextRound(), 400);
   }
 
   private handleFailure(index: number): void {
-    this.pins.update(pins => pins.map((p, i) =>
-      i === index ? { ...p, isShaking: true } : p
-    ));
+    this.pins.update((pins) =>
+      pins.map((p, i) => (i === index ? { ...p, isShaking: true } : p))
+    );
 
     this.setManagedTimeout(() => {
-      this.pins.update(pins => pins.map((p, i) =>
-        i === index ? { ...p, isShaking: false, isRevealed: false } : p
-      ));
+      this.pins.update((pins) =>
+        pins.map((p, i) =>
+          i === index ? { ...p, isShaking: false, isRevealed: false } : p
+        )
+      );
     }, 800);
 
     this.handleMiss(false);
   }
 
   private handleMiss(isTimeout: boolean): void {
-    this.strikes.update(n => n + 1);
+    this.strikes.update((n) => n + 1);
     this.perfectRounds.set(0);
     this.audio.play('miss');
 
@@ -323,7 +380,7 @@ export class MemoryComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   private checkEndCondition(): void {
-    const remaining = this.pins().filter(p => !p.isDown).length;
+    const remaining = this.pins().filter((p) => !p.isDown).length;
     if (remaining === 0) {
       this.endGame(this.score() === MOLKKY_RULES.SCORE_TARGET);
     }

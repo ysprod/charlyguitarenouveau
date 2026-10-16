@@ -1,12 +1,14 @@
+// src/app/auth/register/register.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
-  OnInit,
-  inject
+  DestroyRef,
+  afterNextRender,
+  inject,
+  signal,
 } from '@angular/core';
 
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import {
@@ -15,7 +17,7 @@ import {
   User,
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  signInWithPopup
+  signInWithPopup,
 } from '@angular/fire/auth';
 
 import {
@@ -23,104 +25,123 @@ import {
   get,
   ref,
   set,
-  update
+  update,
 } from '@angular/fire/database';
+
 import { DEFAULT_RETURN_URL_REGISTER } from '../constants/auth.constants';
 import { TOAST_DURATION_MS } from '../../academie/constants/documents-ui.constants';
 import { UserOrigin, RealtimeUserProfile } from '../models/auth.model';
+
 import { AuthAlertComponent } from '../auth/auth-alert/auth-alert.component';
 import { AuthHeaderComponent } from '../auth/auth-header/auth-header.component';
 import { AuthInputComponent } from '../auth/auth-input/auth-input.component';
 import { AuthLayoutComponent } from '../auth/auth-layout/auth-layout.component';
 import { GoogleButtonComponent } from '../auth/google-button/google-button.component';
 import { AuthContextService } from '../services/auth-context.service';
+import { isValidEmail } from '../utils/validation.util';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-register',
-  standalone: true,
   imports: [
-    FormsModule,
     AuthLayoutComponent,
     AuthHeaderComponent,
     AuthAlertComponent,
     GoogleButtonComponent,
-    AuthInputComponent
+    AuthInputComponent,
+    FormsModule,
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RegisterComponent implements OnInit, OnDestroy {
+export class RegisterComponent {
 
-  /* ─── Formulaire ─── */
-  email = '';
-  password = '';
-  confirmPassword = '';
-  errorMessage = '';
-  successMessage = '';
-  loading = false;
-  showPassword = false;
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
 
-  returnUrl: string = DEFAULT_RETURN_URL_REGISTER;
-
-  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  /* ─── Injection ─── */
   private readonly auth = inject(Auth);
   private readonly database = inject(Database);
   private readonly router = inject(Router);
   private readonly authContext = inject(AuthContextService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  /* ═══════════════════════════════════════════════════════════════════
-     CYCLE DE VIE
-     ═══════════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT — SIGNALS
+     ═══════════════════════════════════════════════════════ */
 
-  ngOnInit(): void {
-    this.returnUrl = this.authContext.resolveReturnUrl(
-      DEFAULT_RETURN_URL_REGISTER
-    );
+  /** Formulaire */
+  readonly email = signal('');
+  readonly password = signal('');
+  readonly confirmPassword = signal('');
+  readonly showPassword = signal(false);
+
+  /** États UI */
+  readonly errorMessage = signal('');
+  readonly successMessage = signal('');
+  readonly loading = signal(false);
+
+  /** URL de retour après inscription. */
+  readonly returnUrl = signal(DEFAULT_RETURN_URL_REGISTER);
+
+  /* ─── Timer interne ─── */
+  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════ */
+
+  constructor() {
+    afterNextRender(() => {
+      this.returnUrl.set(
+        this.authContext.resolveReturnUrl(DEFAULT_RETURN_URL_REGISTER)
+      );
+    });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.toastTimeoutId !== null) {
+        clearTimeout(this.toastTimeoutId);
+        this.toastTimeoutId = null;
+      }
+    });
   }
 
-  ngOnDestroy(): void {
-    if (this.toastTimeoutId !== null) {
-      clearTimeout(this.toastTimeoutId);
-      this.toastTimeoutId = null;
-    }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      UI HELPERS
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
+    this.showPassword.update((v) => !v);
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      INSCRIPTION EMAIL / MOT DE PASSE
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   async handleSubmit(): Promise<void> {
     this.clearMessages();
 
-    if (!this.email || !this.password || !this.confirmPassword) {
+    const email = this.email().trim();
+    const password = this.password();
+    const confirmPassword = this.confirmPassword();
+
+    if (!email || !password || !confirmPassword) {
       this.showToast('Veuillez remplir tous les champs.', 'error');
       return;
     }
 
-    const email = this.email.trim();
-
-    if (!this.isValidEmail(email)) {
+    if (!isValidEmail(email)) {
       this.showToast('Adresse e-mail invalide.', 'error');
       return;
     }
 
-    if (this.password !== this.confirmPassword) {
+    if (password !== confirmPassword) {
       this.showToast('Les mots de passe ne correspondent pas.', 'error');
       return;
     }
 
-    if (this.password.length < 6) {
+    if (password.length < 6) {
       this.showToast(
         'Le mot de passe doit contenir au moins 6 caractères.',
         'error'
@@ -128,11 +149,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.loading = true;
+    this.loading.set(true);
 
     try {
       const credential = await this.authContext.runInContext(() =>
-        createUserWithEmailAndPassword(this.auth, email, this.password)
+        createUserWithEmailAndPassword(this.auth, email, password)
       );
 
       const user = credential.user;
@@ -144,8 +165,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
       try {
         await this.saveUserDataInRealtimeDB(user, 'email');
-      } catch (dbError) {
-        console.error('❌ Erreur écriture DB :', dbError);
+      } catch {
         this.showToast(
           "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.",
           'error'
@@ -153,27 +173,26 @@ export class RegisterComponent implements OnInit, OnDestroy {
       }
 
       void this.authContext.runInContext(() =>
-        sendEmailVerification(user).catch((error) => {
-          console.warn('Envoi email vérification échoué :', error);
+        sendEmailVerification(user).catch(() => {
+          /* Envoi email vérification échoué — silencieux */
         })
       );
 
-      await this.router.navigateByUrl(this.returnUrl);
-
+      await this.router.navigateByUrl(this.returnUrl());
     } catch (error: unknown) {
       this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      INSCRIPTION GOOGLE
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   async signUpWithGoogle(): Promise<void> {
     this.clearMessages();
-    this.loading = true;
+    this.loading.set(true);
 
     try {
       const provider = new GoogleAuthProvider();
@@ -192,16 +211,14 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
       try {
         await this.saveUserDataInRealtimeDB(user, 'google');
-      } catch (dbError) {
-        console.error('❌ Erreur écriture DB :', dbError);
+      } catch {
         this.showToast(
           "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.",
           'error'
         );
       }
 
-      await this.router.navigateByUrl(this.returnUrl);
-
+      await this.router.navigateByUrl(this.returnUrl());
     } catch (error: unknown) {
       const code = this.authContext.getFirebaseErrorCode(error);
 
@@ -209,13 +226,13 @@ export class RegisterComponent implements OnInit, OnDestroy {
         this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
       }
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      SYNCHRONISATION REALTIME DATABASE
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   private async saveUserDataInRealtimeDB(
     user: User,
@@ -238,7 +255,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
           lastLogin: now,
           email,
           displayName,
-          photoURL
+          photoURL,
         })
       );
       return;
@@ -253,7 +270,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       createdAt: now,
       lastLogin: now,
       disabled: false,
-      origine
+      origine,
     };
 
     await this.authContext.runInContext(() =>
@@ -261,30 +278,22 @@ export class RegisterComponent implements OnInit, OnDestroy {
     );
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      HELPERS
-     ═══════════════════════════════════════════════════════════════════ */
-
-  private isValidEmail(email: string): boolean {
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailPattern.test(email);
-  }
+     ═══════════════════════════════════════════════════════ */
 
   private clearMessages(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
-  private showToast(
-    message: string,
-    type: 'success' | 'error'
-  ): void {
+  private showToast(message: string, type: 'success' | 'error'): void {
     if (type === 'success') {
-      this.successMessage = message;
-      this.errorMessage = '';
+      this.successMessage.set(message);
+      this.errorMessage.set('');
     } else {
-      this.errorMessage = message;
-      this.successMessage = '';
+      this.errorMessage.set(message);
+      this.successMessage.set('');
     }
 
     if (this.toastTimeoutId !== null) {
@@ -292,8 +301,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
     }
 
     this.toastTimeoutId = setTimeout(() => {
-      if (this.successMessage === message) this.successMessage = '';
-      if (this.errorMessage === message) this.errorMessage = '';
+      if (this.successMessage() === message) this.successMessage.set('');
+      if (this.errorMessage() === message) this.errorMessage.set('');
       this.toastTimeoutId = null;
     }, TOAST_DURATION_MS);
   }

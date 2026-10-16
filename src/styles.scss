@@ -837,3 +837,17 @@ app-footer {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   SNACKBAR GLOBAL (Angular Material)
+   ═════════════════════════════════════════════════════════════════════ */
+
+.snack-success {
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  color: #fff !important;
+}
+
+.snack-error {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  color: #fff !important;
+}

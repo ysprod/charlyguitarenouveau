@@ -1,75 +1,62 @@
+// src/app/game/kronos/kronos.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
-  OnDestroy,
-  OnInit,
+  DestroyRef,
+  afterNextRender,
   computed,
   inject,
   signal,
 } from '@angular/core';
 
-import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
-/* ═════════════════════════════════════════════════════════════════════
-   TYPES
-   ═════════════════════════════════════════════════════════════════════ */
+import { HistoryEntry, PowerUp, SoundType } from '../models/kronos.model';
 
-interface PowerUp {
-  id: string;
-  name: string;
-  icon: string;
-  cost: number;
-  description: string;
-  cooldown: number;
-  currentCooldown: number;
-  active: boolean;
-}
+import {
+  COUT_LANCER,
+  FACES,
+  SEUIL_LYKO,
+  SOUND_PREF_KEY,
+} from '../constants/kronos.constants';
 
-interface HistoryEntry {
-  face: number;
-  avant: number;
-  apres: number;
-  date: Date;
-}
+import { formatNumber, getFaceInfo } from '../utils/kronos.util';
 
-interface DiceFace {
-  value: number;
-  symbol: string;
-  name: string;
-}
-
-type SoundType = 'roll' | 'win' | 'power';
-
-const SOUND_PREF_KEY = 'kronos_sound_enabled';
-
-/* ═════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    COMPOSANT
-   ═════════════════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-kronos',
-  standalone: true,
-  imports: [DecimalPipe],
+  imports: [],
   templateUrl: './kronos.component.html',
   styleUrls: ['./kronos.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class KronosComponent implements OnInit, OnDestroy {
+export class KronosComponent {
+
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
 
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
-  /* ═══════════════════════════════════════════════════════════════════
-     CONSTANTES
-     ═══════════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     CONSTANTES EXPOSÉES
+     ═══════════════════════════════════════════════════════ */
 
-  readonly SEUIL_LYKO = 1_000_000_000;
-  readonly COUT_LANCER = 2_000;
+  readonly SEUIL_LYKO = SEUIL_LYKO;
+  readonly COUT_LANCER = COUT_LANCER;
 
-  /* ═══════════════════════════════════════════════════════════════════
-     ÉTAT
-     ═══════════════════════════════════════════════════════════════════ */
+  /** Helpers exposés au template. */
+  readonly getFaceInfo = getFaceInfo;
+
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT — SIGNALS
+     ═══════════════════════════════════════════════════════ */
 
   readonly pointdevies = signal(5_000);
   readonly pointdebonus = signal(100);
@@ -82,27 +69,55 @@ export class KronosComponent implements OnInit, OnDestroy {
   readonly historique = signal<HistoryEntry[]>([]);
   readonly rejouer = signal(false);
   readonly etapedujeu = signal('0');
+  readonly soundEnabled = signal(true);
 
-  /* ─── Son ─── */
-  readonly soundEnabled = signal<boolean>(true);
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED — FORMATAGE
+     ═══════════════════════════════════════════════════════ */
 
-  /* ─── Computed ─── */
+  readonly pointdeviesFormatted = computed(() =>
+    formatNumber(this.pointdevies())
+  );
+
+  readonly pointdebonusFormatted = computed(() =>
+    formatNumber(this.pointdebonus())
+  );
+
+  readonly seuilFormatted = computed(() => formatNumber(SEUIL_LYKO));
+
+  readonly coutLancerFormatted = computed(() => formatNumber(COUT_LANCER));
+
+  /* ═══════════════════════════════════════════════════════
+     COMPUTED — JEU
+     ═══════════════════════════════════════════════════════ */
 
   readonly progressionSeuil = computed(() =>
-    Math.min((this.pointdevies() / this.SEUIL_LYKO) * 100, 100)
+    Math.min((this.pointdevies() / SEUIL_LYKO) * 100, 100)
   );
 
-  readonly gagnant = computed(() =>
-    this.rejouer() && this.randomnumber() >= 5
+  readonly gagnant = computed(
+    () => this.rejouer() && this.randomnumber() >= 5
   );
 
-  readonly casuffit = computed(() =>
-    this.pointdevies() >= this.SEUIL_LYKO
+  readonly casuffit = computed(
+    () => this.pointdevies() >= SEUIL_LYKO
   );
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /** Symbole de la face courante (si > 0). */
+  readonly currentFaceSymbol = computed(
+    () => getFaceInfo(this.randomnumber())?.symbol ?? ''
+  );
+
+  /** Nom de la face courante (si > 0). */
+  readonly currentFaceName = computed(
+    () => getFaceInfo(this.derniereFace())?.name ?? ''
+  );
+
+  /* ═══════════════════════════════════════════════════════
      DONNÉES
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
+
+  readonly faces = FACES;
 
   readonly powers: PowerUp[] = [
     {
@@ -137,53 +152,45 @@ export class KronosComponent implements OnInit, OnDestroy {
     },
   ];
 
-  readonly faces: DiceFace[] = [
-    { value: 1,  symbol: '⚀', name: 'Le Commencement' },
-    { value: 2,  symbol: '⚁', name: 'Le Doute' },
-    { value: 3,  symbol: '⚂', name: 'La Trinité' },
-    { value: 4,  symbol: '⚃', name: 'Les Fondations' },
-    { value: 5,  symbol: '⚄', name: 'Le Changement' },
-    { value: 6,  symbol: '⚅', name: "L'Harmonie" },
-    { value: 7,  symbol: '✦', name: 'La Chance' },
-    { value: 8,  symbol: '✧', name: "L'Infini" },
-    { value: 9,  symbol: '❂', name: 'La Sagesse' },
-    { value: 10, symbol: '❖', name: 'La Puissance' },
-    { value: 11, symbol: '✵', name: 'Le Destin' },
-    { value: 12, symbol: '✹', name: "L'Apothéose" },
-  ];
+  /* ═══════════════════════════════════════════════════════
+     AUDIO
+     ═══════════════════════════════════════════════════════ */
 
-  /* ─── Audio ─── */
   private audioCtx?: AudioContext;
   private rollIntervalId: ReturnType<typeof setInterval> | null = null;
 
-  /* ═══════════════════════════════════════════════════════════════════
-     LIFECYCLE
-     ═══════════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════ */
 
-  ngOnInit(): void {
-    this.etapedujeu.set(
-      this.activatedRoute.snapshot.queryParamMap.get('etape') ?? '0'
-    );
+  constructor() {
+    afterNextRender(() => {
+      this.etapedujeu.set(
+        this.activatedRoute.snapshot.queryParamMap.get('etape') ?? '0'
+      );
+      this.initAudio();
+      this.loadSoundPreference();
+    });
 
-    this.initAudio();
-    this.loadSoundPreference();
+    this.destroyRef.onDestroy(() => {
+      if (this.rollIntervalId !== null) {
+        clearInterval(this.rollIntervalId);
+        this.rollIntervalId = null;
+      }
+
+      if (this.audioCtx && this.audioCtx.state !== 'closed') {
+        void this.audioCtx.close();
+      }
+    });
   }
 
-  ngOnDestroy(): void {
-    if (this.rollIntervalId !== null) {
-      clearInterval(this.rollIntervalId);
-    }
-
-    if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      void this.audioCtx.close();
-    }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      SON
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   private initAudio(): void {
+    if (typeof window === 'undefined') return;
+
     const Ctor =
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext })
@@ -225,7 +232,9 @@ export class KronosComponent implements OnInit, OnDestroy {
     if (!this.soundEnabled() || !ctx) return;
 
     if (ctx.state === 'suspended') {
-      void ctx.resume().catch(() => { /* silencieux */ });
+      void ctx.resume().catch(() => {
+        /* silencieux */
+      });
     }
 
     const osc = ctx.createOscillator();
@@ -262,9 +271,9 @@ export class KronosComponent implements OnInit, OnDestroy {
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      POUVOIRS
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   activatePower(power: PowerUp): void {
     if (
@@ -275,18 +284,18 @@ export class KronosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.pointdebonus.update(v => v - power.cost);
+    this.pointdebonus.update((v) => v - power.cost);
     power.active = true;
     this.playSound('power');
     this.messageKronos.set(`Pouvoir activé : ${power.name} !`);
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      LANCER
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   resetjeu(): void {
-    if (this.pointdevies() < this.COUT_LANCER) {
+    if (this.pointdevies() < COUT_LANCER) {
       this.messageKronos.set(
         "Vous n'avez pas assez de points de vie pour défier Kronos."
       );
@@ -317,14 +326,12 @@ export class KronosComponent implements OnInit, OnDestroy {
     this.rejouer.set(true);
 
     const avant = this.pointdevies();
-    const presageActive = this.powers.find(p => p.id === 'presage')?.active;
+    const presageActive = this.powers.find((p) => p.id === 'presage')?.active;
 
-    /* Tirage avec Vision du Destin */
     const minRoll = presageActive ? 6 : 1;
     let roll = this.randomInteger(minRoll, 12);
 
-    /* Inversion Chrono */
-    const rewindPower = this.powers.find(p => p.id === 'rewind');
+    const rewindPower = this.powers.find((p) => p.id === 'rewind');
     if (rewindPower?.active && roll < 5) {
       this.messageKronos.set(
         'Inversion Temporelle ! Nouveau tirage automatique…'
@@ -335,17 +342,15 @@ export class KronosComponent implements OnInit, OnDestroy {
     this.randomnumber.set(roll);
     this.derniereFace.set(roll);
 
-    /* Bouclier Temporel */
-    const shieldActive = this.powers.find(p => p.id === 'shield')?.active;
-    let coutEffectif = this.COUT_LANCER;
+    const shieldActive = this.powers.find((p) => p.id === 'shield')?.active;
+    let coutEffectif = COUT_LANCER;
     if (shieldActive && roll < 4) {
       coutEffectif = 0;
       this.messageKronos.set('Bouclier actif : Coût de lancer absorbé !');
     }
 
-    /* Combos */
     if (roll >= 7) {
-      this.comboStreak.update(s => s + 1);
+      this.comboStreak.update((s) => s + 1);
       this.multiplierBonus.set(1 + this.comboStreak() * 0.1);
       this.playSound('win');
     } else {
@@ -353,16 +358,13 @@ export class KronosComponent implements OnInit, OnDestroy {
       this.multiplierBonus.set(1);
     }
 
-    /* Calcul des PV */
     const calculBrut = (this.pointdevies() - coutEffectif) * roll;
     const nouveauScore = Math.round(calculBrut * this.multiplierBonus());
     this.pointdevies.set(nouveauScore);
 
-    /* Cooldowns */
     this.updateCooldowns();
 
-    /* Narration */
-    const faceInfo = this.getFaceInfo(roll);
+    const faceInfo = getFaceInfo(roll);
     if (roll >= 10) {
       this.messageKronos.set(
         `APOTHÉOSE ! Face ${roll} (${faceInfo?.name}). Combo x${this.multiplierBonus().toFixed(1)} !`
@@ -377,8 +379,7 @@ export class KronosComponent implements OnInit, OnDestroy {
       );
     }
 
-    /* Historique */
-    this.historique.update(list => {
+    this.historique.update((list) => {
       const updated = [
         { face: roll, avant, apres: nouveauScore, date: new Date() },
         ...list,
@@ -386,7 +387,7 @@ export class KronosComponent implements OnInit, OnDestroy {
       return updated.slice(0, 5);
     });
 
-    if (this.pointdevies() >= this.SEUIL_LYKO) {
+    if (this.pointdevies() >= SEUIL_LYKO) {
       this.messageKronos.set(
         "Seuil suprême atteint ! Lykö s'incline devant votre maestria."
       );
@@ -394,7 +395,7 @@ export class KronosComponent implements OnInit, OnDestroy {
   }
 
   private updateCooldowns(): void {
-    this.powers.forEach(p => {
+    this.powers.forEach((p) => {
       if (p.active) {
         p.active = false;
         p.currentCooldown = p.cooldown;
@@ -404,9 +405,9 @@ export class KronosComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      NAVIGATION
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   onrecommencer(): void {
     void this.router.navigate(['/play'], {
@@ -418,15 +419,11 @@ export class KronosComponent implements OnInit, OnDestroy {
     });
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
      HELPERS
-     ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════ */
 
   private randomInteger(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  getFaceInfo(value: number): DiceFace | undefined {
-    return this.faces.find(f => f.value === value);
   }
 }

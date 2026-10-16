@@ -1,21 +1,26 @@
+// src/app/profil/profil.component.ts
+
 import {
+  ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  ElementRef,
   EnvironmentInjector,
-  OnDestroy,
-  OnInit,
+  afterNextRender,
+  computed,
   inject,
   runInInjectionContext,
-  signal
+  signal,
+  viewChild,
 } from '@angular/core';
 
 import {
   AbstractControl,
   FormBuilder,
-  FormControl,
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
-  Validators
+  Validators,
 } from '@angular/forms';
 
 import {
@@ -26,96 +31,48 @@ import {
   reauthenticateWithCredential,
   updateEmail,
   updatePassword,
-  updateProfile
+  updateProfile,
 } from '@angular/fire/auth';
 
-import {
-  Database,
-  objectVal,
-  ref,
-  set
-} from '@angular/fire/database';
+import { Database, objectVal, ref, set } from '@angular/fire/database';
 
 import {
   Storage,
   getDownloadURL,
   ref as storageRef,
-  uploadBytes
+  uploadBytes,
 } from '@angular/fire/storage';
 
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-
-import { CommonModule } from '@angular/common';
+import {
+  MatSnackBar,
+  MatSnackBarModule,
+} from '@angular/material/snack-bar';
 
 import { Router } from '@angular/router';
 
-import { Observable, Subject, of, timer } from 'rxjs';
-import {
-  filter,
-  map,
-  switchMap,
-  take,
-  takeUntil
-} from 'rxjs/operators';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-/* ✅ Nouveaux imports pour le recadrage */
+import { of, timer } from 'rxjs';
+import { filter, map, switchMap, take } from 'rxjs/operators';
+
 import { AvatarCropDialogComponent } from './avatar-crop-dialog/avatar-crop-dialog.component';
- 
+
 import {
   CropResult,
-  MAX_SOURCE_FILE_SIZE
+  MAX_SOURCE_FILE_SIZE,
 } from '../models/avatar-crop.model';
+
 import { ImageCropService } from '../services/image-crop.service';
 
-/* ═══════════════════════════════════════════════════════════
-   TYPES
-   ═══════════════════════════════════════════════════════════ */
+import { ProfileFormControls, UserProfile, UserRole } from '../models/profile.model';
 
-export interface UserProfile {
-  uid: string;
-  email: string;
-  fullName?: string;
-  displayName?: string;
-  phone?: string;
-  photoURL?: string;
-  role?: 'admin' | 'user' | 'subscriber';
-  updatedAt?: number;
-  createdAt?: number;
-}
-
-interface ProfileFormControls {
-  fullName: FormControl<string>;
-  email: FormControl<string>;
-  phone: FormControl<string>;
-  currentPassword: FormControl<string>;
-  newPassword: FormControl<string>;
-  confirmPassword: FormControl<string>;
-}
-
-type UserRole = 'admin' | 'user' | 'subscriber';
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  admin: 'Administrateur',
-  user: 'Utilisateur',
-  subscriber: 'Abonné'
-};
-
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-const PHONE_PATTERN = /^\+?[0-9\s\-()]{8,20}$/;
-const AUTH_GRACE_PERIOD_MS = 800;
-
-const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
-  'auth/wrong-password': 'Mot de passe actuel incorrect.',
-  'auth/invalid-credential': 'Mot de passe actuel incorrect.',
-  'auth/requires-recent-login': 'Veuillez vous reconnecter avant de poursuivre.',
-  'auth/email-already-in-use': 'Cet email est déjà utilisé.',
-  'auth/invalid-email': 'Email invalide.',
-  'auth/weak-password': 'Mot de passe trop faible.',
-  'auth/network-request-failed': 'Problème de connexion réseau.',
-  'storage/unauthorized': "Vous n'êtes pas autorisé à modifier cette photo.",
-  'storage/canceled': "L'envoi de la photo a été annulé.",
-  'storage/quota-exceeded': 'La capacité de stockage est dépassée.'
-};
+import {
+  AUTH_GRACE_PERIOD_MS,
+  FIREBASE_ERROR_MESSAGES,
+  MAX_AVATAR_SIZE,
+  PHONE_PATTERN,
+  ROLE_LABELS,
+} from '../constants/profile.constants';
 
 /* ═══════════════════════════════════════════════════════════
    COMPOSANT
@@ -123,17 +80,20 @@ const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
 
 @Component({
   selector: 'app-profil',
-  standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatSnackBarModule,
-    AvatarCropDialogComponent
+    AvatarCropDialogComponent,
   ],
   templateUrl: './profil.component.html',
-  styleUrls: ['./profil.component.scss']
+  styleUrls: ['./profil.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProfilComponent implements OnInit, OnDestroy {
+export class ProfilComponent {
+
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly auth = inject(Auth);
@@ -143,14 +103,33 @@ export class ProfilComponent implements OnInit, OnDestroy {
   private readonly environmentInjector = inject(EnvironmentInjector);
   private readonly router = inject(Router);
   private readonly cropService = inject(ImageCropService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  private readonly destroy$ = new Subject<void>();
+  /* ═══════════════════════════════════════════════════════
+     RÉFÉRENCES DOM
+     ═══════════════════════════════════════════════════════ */
 
-  readonly currentUser$: Observable<User | null> = authState(this.auth);
+  private readonly avatarInput =
+    viewChild<ElementRef<HTMLInputElement>>('avatarInput');
+
+  /* ═══════════════════════════════════════════════════════
+     UTILISATEUR COURANT (signal)
+     ═══════════════════════════════════════════════════════ */
+
+  readonly currentUser = toSignal(authState(this.auth), {
+    initialValue: null as User | null,
+  });
+
+  /* ═══════════════════════════════════════════════════════
+     FORMULAIRE
+     ═══════════════════════════════════════════════════════ */
 
   profileForm!: FormGroup<ProfileFormControls>;
 
-  /* ─── État profil ─── */
+  /* ═══════════════════════════════════════════════════════
+     ÉTAT PROFIL
+     ═══════════════════════════════════════════════════════ */
+
   selectedFile: File | null = null;
   avatarPreview: string | null = null;
   isSubmitting = false;
@@ -162,23 +141,30 @@ export class ProfilComponent implements OnInit, OnDestroy {
   private currentUid: string | null = null;
   private cachedProfile: Partial<UserProfile> = {};
 
-  /* ─── Recadrage ─── */
+  /* ═══════════════════════════════════════════════════════
+     RECADRAGE
+     ═══════════════════════════════════════════════════════ */
+
   readonly pendingCropFile = signal<File | null>(null);
   private croppedResult: CropResult | null = null;
 
   /* ═══════════════════════════════════════════════════════
-     CYCLE DE VIE
+     COMPUTED
      ═══════════════════════════════════════════════════════ */
 
-  ngOnInit(): void {
+  /** Rôle formaté pour l'affichage. */
+  readonly roleLabel = computed(
+    () => ROLE_LABELS[this.userRole] ?? 'Utilisateur'
+  );
+
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════ */
+
+  constructor() {
     this.initForm();
     this.loadUserProfile();
     this.watchAuthState();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -186,24 +172,16 @@ export class ProfilComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   private watchAuthState(): void {
-    this.currentUser$
-      .pipe(
-        filter((u): u is User => !!u),
-        take(1),
-        takeUntil(this.destroy$)
-      )
-      .subscribe();
-
     timer(AUTH_GRACE_PERIOD_MS)
       .pipe(
-        switchMap(() => this.currentUser$.pipe(take(1))),
+        switchMap(() => authState(this.auth).pipe(take(1))),
         filter((u) => !u),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => {
         void this.router.navigate(['/login'], {
           queryParams: { returnUrl: '/profil' },
-          replaceUrl: true
+          replaceUrl: true,
         });
       });
   }
@@ -217,26 +195,26 @@ export class ProfilComponent implements OnInit, OnDestroy {
       {
         fullName: this.formBuilder.nonNullable.control('', [
           Validators.required,
-          Validators.minLength(2)
+          Validators.minLength(2),
         ]),
         email: this.formBuilder.nonNullable.control('', [
           Validators.required,
-          Validators.email
+          Validators.email,
         ]),
         phone: this.formBuilder.nonNullable.control('', [
-          Validators.pattern(PHONE_PATTERN)
+          Validators.pattern(PHONE_PATTERN),
         ]),
         currentPassword: this.formBuilder.nonNullable.control(''),
         newPassword: this.formBuilder.nonNullable.control('', [
-          Validators.minLength(8)
+          Validators.minLength(8),
         ]),
-        confirmPassword: this.formBuilder.nonNullable.control('')
+        confirmPassword: this.formBuilder.nonNullable.control(''),
       },
       { validators: this.passwordMatchValidator }
     );
 
     this.profileForm.controls.newPassword.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((newPassword) => {
         const control = this.profileForm.controls.currentPassword;
         control.setValidators(
@@ -246,9 +224,13 @@ export class ProfilComponent implements OnInit, OnDestroy {
       });
   }
 
-  private passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+  private passwordMatchValidator(
+    group: AbstractControl
+  ): ValidationErrors | null {
     const newPassword = group.get('newPassword')?.value as string | undefined;
-    const confirmPassword = group.get('confirmPassword')?.value as string | undefined;
+    const confirmPassword = group.get('confirmPassword')?.value as
+      | string
+      | undefined;
 
     if (newPassword && newPassword !== confirmPassword) {
       return { passwordMismatch: true };
@@ -261,69 +243,69 @@ export class ProfilComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   private loadUserProfile(): void {
-    this.currentUser$
-      .pipe(
-        switchMap((currentUser) => {
-          if (!currentUser) {
-            this.resetLocalState();
-            return of(null);
-          }
+    afterNextRender(() => {
+      authState(this.auth)
+        .pipe(
+          switchMap((currentUser) => {
+            if (!currentUser) {
+              this.resetLocalState();
+              return of(null);
+            }
 
-          this.currentUid = currentUser.uid;
-          this.avatarPreview = currentUser.photoURL ?? null;
+            this.currentUid = currentUser.uid;
+            this.avatarPreview = currentUser.photoURL ?? null;
 
-          const profileReference = ref(this.database, `users/${currentUser.uid}`);
+            const profileReference = ref(
+              this.database,
+              `users/${currentUser.uid}`
+            );
 
-          return runInInjectionContext(
-            this.environmentInjector,
-            () => objectVal<UserProfile>(profileReference)
-          ).pipe(
-            map((profileData) => ({ currentUser, profileData }))
-          );
-        }),
-        takeUntil(this.destroy$)
-      )
-      .subscribe({
-        next: (result) => {
-          if (!result) return;
+            return runInInjectionContext(this.environmentInjector, () =>
+              objectVal<UserProfile>(profileReference)
+            ).pipe(map((profileData) => ({ currentUser, profileData })));
+          }),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe({
+          next: (result) => {
+            if (!result) return;
 
-          const { currentUser, profileData } = result;
+            const { currentUser, profileData } = result;
 
-          if (profileData) {
-            this.cachedProfile = profileData;
-            this.userRole = profileData.role ?? 'user';
-            this.userCreatedAt = profileData.createdAt;
+            if (profileData) {
+              this.cachedProfile = profileData;
+              this.userRole = profileData.role ?? 'user';
+              this.userCreatedAt = profileData.createdAt;
 
-            this.profileForm.patchValue({
-              fullName:
-                profileData.fullName ??
-                profileData.displayName ??
-                currentUser.displayName ??
-                '',
-              email: profileData.email ?? currentUser.email ?? '',
-              phone: profileData.phone ?? ''
-            });
+              this.profileForm.patchValue({
+                fullName:
+                  profileData.fullName ??
+                  profileData.displayName ??
+                  currentUser.displayName ??
+                  '',
+                email: profileData.email ?? currentUser.email ?? '',
+                phone: profileData.phone ?? '',
+              });
 
-            this.avatarPreview =
-              profileData.photoURL ?? currentUser.photoURL ?? null;
+              this.avatarPreview =
+                profileData.photoURL ?? currentUser.photoURL ?? null;
+            } else {
+              this.cachedProfile = {};
+              this.userRole = 'user';
+              this.userCreatedAt = undefined;
 
-          } else {
-            this.cachedProfile = {};
-            this.userRole = 'user';
-            this.userCreatedAt = undefined;
-
-            this.profileForm.patchValue({
-              email: currentUser.email ?? '',
-              fullName: currentUser.displayName ?? '',
-              phone: ''
-            });
-          }
-        },
-        error: (error) => {
-          console.error('Erreur lors du chargement du profil :', error);
-          this.showToast('✕ Impossible de charger votre profil.', 'error');
-        }
-      });
+              this.profileForm.patchValue({
+                email: currentUser.email ?? '',
+                fullName: currentUser.displayName ?? '',
+                phone: '',
+              });
+            }
+          },
+          error: () => {
+            this.showToast('✕ Impossible de charger votre profil.', 'error');
+          },
+        });
+    });
   }
 
   private resetLocalState(): void {
@@ -408,10 +390,6 @@ export class ProfilComponent implements OnInit, OnDestroy {
     if (file) this.processAvatarFile(file);
   }
 
-  /**
-   * Valide le fichier puis ouvre la modale de recadrage.
-   * Le fichier recadré (300×300 JPEG) sera ensuite stocké dans `selectedFile`.
-   */
   private processAvatarFile(file: File): void {
     if (!file.type.startsWith('image/')) {
       this.showToast('✕ Seules les images sont acceptées.', 'error');
@@ -423,31 +401,28 @@ export class ProfilComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ Ouvre la modale de recadrage
     this.pendingCropFile.set(file);
   }
 
-  /** Appelé quand l'utilisateur valide le recadrage. */
   onCropValidated(result: CropResult): void {
     this.pendingCropFile.set(null);
     this.croppedResult = result;
 
-    // Aperçu immédiat (dataUrl 300×300)
     this.avatarPreview = result.dataUrl;
-
-    // Convertit le Blob en File pour l'upload Firebase
     this.selectedFile = this.cropService.blobToFile(result.blob);
 
-    this.showToast("✓ Photo recadrée. N'oubliez pas d'enregistrer.", 'success');
+    this.showToast(
+      "✓ Photo recadrée. N'oubliez pas d'enregistrer.",
+      'success'
+    );
   }
 
-  /** Appelé quand l'utilisateur annule le recadrage. */
   onCropCancelled(): void {
     this.pendingCropFile.set(null);
   }
 
   triggerFileInput(): void {
-    document.getElementById('avatar-input')?.click();
+    this.avatarInput()?.nativeElement.click();
   }
 
   removeAvatar(): void {
@@ -458,13 +433,16 @@ export class ProfilComponent implements OnInit, OnDestroy {
   }
 
   /* ═══════════════════════════════════════════════════════
-     SOUMISSION DU FORMULAIRE PRINCIPAL
+     SOUMISSION
      ═══════════════════════════════════════════════════════ */
 
   async onSubmit(): Promise<void> {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
-      this.showToast('✕ Veuillez corriger les erreurs du formulaire.', 'error');
+      this.showToast(
+        '✕ Veuillez corriger les erreurs du formulaire.',
+        'error'
+      );
       return;
     }
 
@@ -513,11 +491,10 @@ export class ProfilComponent implements OnInit, OnDestroy {
           storageRef(this.storage, `avatars/${this.currentUid}`)
         );
 
-        // ✅ Le fichier est déjà recadré en 300×300 JPEG
         await this.runInContext(() =>
           uploadBytes(avatarReference, this.selectedFile as File, {
             contentType: 'image/jpeg',
-            cacheControl: 'public, max-age=31536000'
+            cacheControl: 'public, max-age=31536000',
           })
         );
 
@@ -525,7 +502,6 @@ export class ProfilComponent implements OnInit, OnDestroy {
           getDownloadURL(avatarReference)
         );
 
-        // Reset après upload réussi
         this.croppedResult = null;
       }
 
@@ -545,12 +521,11 @@ export class ProfilComponent implements OnInit, OnDestroy {
         await this.runInContext(() =>
           updateProfile(currentUser, {
             displayName: normalizedFullName,
-            photoURL: photoURL || null
+            photoURL: photoURL || null,
           })
         );
       }
 
-      /* ✅ On préserve les champs existants (rôle, createdAt…) */
       const updatedProfile: UserProfile = {
         ...this.cachedProfile,
         uid: this.currentUid,
@@ -559,7 +534,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
         displayName: normalizedFullName,
         phone: normalizedPhone,
         photoURL,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
 
       await this.runInContext(() =>
@@ -569,7 +544,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
       this.profileForm.patchValue({
         currentPassword: '',
         newPassword: '',
-        confirmPassword: ''
+        confirmPassword: '',
       });
       this.profileForm.markAsPristine();
       this.profileForm.markAsUntouched();
@@ -581,10 +556,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
       this.avatarPreview = updatedProfile.photoURL ?? null;
 
       this.showToast('✓ Profil mis à jour avec succès !', 'success');
-
     } catch (error) {
-      console.error('Erreur profil :', error);
-
       const { code } = this.getFirebaseError(error);
       const errorMessage =
         (code && FIREBASE_ERROR_MESSAGES[code]) ??
@@ -617,7 +589,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
       phone: this.cachedProfile.phone ?? '',
       currentPassword: '',
       newPassword: '',
-      confirmPassword: ''
+      confirmPassword: '',
     });
 
     this.profileForm.markAsPristine();
@@ -644,16 +616,12 @@ export class ProfilComponent implements OnInit, OnDestroy {
     ).toUpperCase();
   }
 
-  getRoleLabel(): string {
-    return ROLE_LABELS[this.userRole] ?? 'Utilisateur';
-  }
-
   formatMemberSince(): string {
     if (!this.userCreatedAt) return 'Récemment';
 
     return new Date(this.userCreatedAt).toLocaleDateString('fr-FR', {
       year: 'numeric',
-      month: 'long'
+      month: 'long',
     });
   }
 
@@ -665,12 +633,18 @@ export class ProfilComponent implements OnInit, OnDestroy {
     return runInInjectionContext(this.environmentInjector, fn);
   }
 
-  private getFirebaseError(error: unknown): { code?: string; message?: string } {
+  private getFirebaseError(error: unknown): {
+    code?: string;
+    message?: string;
+  } {
     if (typeof error === 'object' && error !== null) {
-      const { code, message } = error as { code?: unknown; message?: unknown };
+      const { code, message } = error as {
+        code?: unknown;
+        message?: unknown;
+      };
       return {
         code: typeof code === 'string' ? code : undefined,
-        message: typeof message === 'string' ? message : undefined
+        message: typeof message === 'string' ? message : undefined,
       };
     }
     return {};
@@ -679,7 +653,7 @@ export class ProfilComponent implements OnInit, OnDestroy {
   private showToast(message: string, type: 'success' | 'error'): void {
     this.snackBar.open(message, 'Fermer', {
       duration: 4000,
-      panelClass: type === 'success' ? ['snack-success'] : ['snack-error']
+      panelClass: type === 'success' ? ['snack-success'] : ['snack-error'],
     });
   }
 }

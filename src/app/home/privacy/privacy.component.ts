@@ -1,20 +1,44 @@
-import { Component, OnInit } from '@angular/core';
+// src/app/legal/privacy/privacy.component.ts
+
+import {
+  ChangeDetectionStrategy,
+  Component,
+  afterNextRender,
+} from '@angular/core';
+
+import {
+  CONTACT_EMAIL,
+  LAST_UPDATED,
+  SITE_NAME,
+  SITE_URL,
+} from '../constants/privacy.constants';
 
 @Component({
   selector: 'app-privacy',
-  standalone: true,
   imports: [],
   templateUrl: './privacy.component.html',
-  styleUrls: ['./privacy.component.scss'] // ⚠️ renommé de .css en .scss
+  styleUrls: ['./privacy.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PrivacyComponent implements OnInit {
+export class PrivacyComponent {
 
-  readonly siteName = 'Charly Guitare';
-  readonly siteUrl = 'https://charlyguitare.com';
-  readonly contactEmail = 'yayasidibeproduction@gmail.com';
-  readonly lastUpdated = '8 Octobre 2026'; // ⚠️ date à vérifier
+  /* ═══════════════════════════════════════════════════════
+     DONNÉES EXPOSÉES AU TEMPLATE
+     ═══════════════════════════════════════════════════════ */
 
-  ngOnInit(): void {
-    window.scrollTo(0, 0);
+  readonly siteName = SITE_NAME;
+  readonly siteUrl = SITE_URL;
+  readonly contactEmail = CONTACT_EMAIL;
+  readonly lastUpdated = LAST_UPDATED;
+
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════ */
+
+  constructor() {
+    afterNextRender(() => {
+      if (typeof window === 'undefined') return;
+      window.scrollTo(0, 0);
+    });
   }
 }

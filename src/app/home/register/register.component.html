@@ -1,3 +1,5 @@
+<!-- src/app/auth/register/register.component.html -->
+
 <app-auth-layout>
   <app-auth-header
     title="Créer un compte"
@@ -5,20 +7,20 @@
     promptText="Déjà membre ?"
     linkLabel="Se connecter"
     linkRoute="/login"
-    [returnUrl]="returnUrl"
+    [returnUrl]="returnUrl()"
   />
 
-  @if (errorMessage) {
-    <app-auth-alert type="error" [message]="errorMessage" />
+  @if (errorMessage()) {
+    <app-auth-alert type="error" [message]="errorMessage()" />
   }
 
-  @if (successMessage) {
-    <app-auth-alert type="success" [message]="successMessage" />
+  @if (successMessage()) {
+    <app-auth-alert type="success" [message]="successMessage()" />
   }
 
   <app-google-button
     label="S'inscrire avec Google"
-    [disabled]="loading"
+    [disabled]="loading()"
     (clicked)="signUpWithGoogle()"
   />
 
@@ -28,9 +30,8 @@
 
   <form
     (ngSubmit)="handleSubmit()"
-    #registerForm="ngForm"
     novalidate
-    [attr.aria-busy]="loading"
+    [attr.aria-busy]="loading()"
   >
     <app-auth-input
       inputId="email"
@@ -39,7 +40,7 @@
       type="email"
       autocomplete="email"
       icon="email"
-      [disabled]="loading"
+      [disabled]="loading()"
       [(value)]="email"
     />
 
@@ -50,7 +51,7 @@
       type="password"
       autocomplete="new-password"
       icon="lock"
-      [disabled]="loading"
+      [disabled]="loading()"
       [withPasswordToggle]="true"
       [(value)]="password"
       [(showPassword)]="showPassword"
@@ -63,7 +64,7 @@
       type="password"
       autocomplete="new-password"
       icon="check"
-      [disabled]="loading"
+      [disabled]="loading()"
       [withPasswordToggle]="true"
       [(value)]="confirmPassword"
       [(showPassword)]="showPassword"
@@ -72,14 +73,20 @@
     <button
       type="submit"
       class="btn-submit"
-      [disabled]="loading"
-      [attr.aria-busy]="loading"
+      [disabled]="loading()"
+      [attr.aria-busy]="loading()"
     >
-      @if (!loading) {
+      @if (!loading()) {
         <span class="btn-content">
           Créer mon compte
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M5 12h14M12 5l7 7-7 7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </span>
       } @else {

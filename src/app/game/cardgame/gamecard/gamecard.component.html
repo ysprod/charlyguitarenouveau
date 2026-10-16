@@ -1,18 +1,19 @@
+<!-- src/app/game/gamecard/gamecard.component.html -->
+
 @if (isVisible()) {
   <div
     class="card-container"
     role="button"
     tabindex="0"
-    [attr.aria-label]="'Carte retournable'"
-    (keydown.enter)="onClick()"
-    (keydown.space)="onClick()"
+    [attr.aria-label]="ariaLabel()"
+    (keydown.enter)="cardClicked.emit()"
+    (keydown.space)="cardClicked.emit(); $event.preventDefault()"
   >
     <div
       class="card-3d"
-      (click)="onClick()"
-      [@cardFlip]="data().state"
-      [class.is-flipped]="data().state === 'flipped'"
-      [class.is-matched]="data().state === 'matched'"
+      [class.is-flipped]="isFlipped()"
+      [class.is-matched]="isMatched()"
+      (click)="cardClicked.emit()"
     >
 
       <!-- ═══════════════════════════════════════════════════════

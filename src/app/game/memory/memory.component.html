@@ -1,3 +1,5 @@
+<!-- src/app/game/memory/memory.component.html -->
+
 <div class="molkky-container">
 
   <!-- ═══════════════════════════════════════════════════════
@@ -89,7 +91,7 @@
        FEEDBACK
        ═══════════════════════════════════════════════════════ -->
   @if (feedbackMessage()) {
-    <div class="feedback-overlay">
+    <div class="feedback-overlay" role="status" aria-live="polite">
       <span class="feedback-badge"
             [class.success]="feedbackType() === 'success'"
             [class.error]="feedbackType() === 'error'">
@@ -101,13 +103,13 @@
   <!-- ═══════════════════════════════════════════════════════
        PARTICULES
        ═══════════════════════════════════════════════════════ -->
-  @if (particles().length > 0) {
-    <div class="particles-overlay">
-      @for (p of particles(); track p) {
+  @if (particlesView().length > 0) {
+    <div class="particles-overlay" aria-hidden="true">
+      @for (p of particlesView(); track $index) {
         <span class="particle"
-              [style.left.%]="(p * 5) % 100"
-              [style.animation-delay]="(p * 0.05) + 's'"
-              [style.background]="p % 3 === 0 ? '#f59e0b' : (p % 3 === 1 ? '#fbbf24' : '#10b981')">
+              [style.left.%]="p.left"
+              [style.animation-delay]="p.delay"
+              [style.background]="p.color">
         </span>
       }
     </div>

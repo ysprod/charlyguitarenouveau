@@ -1,14 +1,16 @@
+<!-- src/app/offoland/dimensions/blanc/blanc.component.html -->
+
 <div class="blanc-container">
 
   <!-- Ciel duel : Soleil et Lune -->
-  <div class="sky-duel">
+  <div class="sky-duel" aria-hidden="true">
     <div class="sun"></div>
     <div class="moon"></div>
   </div>
 
   <!-- Particules de sable -->
-  <div class="sand-particles">
-    @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track p) {
+  <div class="sand-particles" aria-hidden="true">
+    @for (p of sandParticles; track p) {
       <span
         class="sand-grain"
         [style.left.%]="(p * 4) % 100"
@@ -18,7 +20,7 @@
   </div>
 
   <!-- Dunes de sable animées -->
-  <div class="dunes-bg">
+  <div class="dunes-bg" aria-hidden="true">
     <div class="dune dune-1"></div>
     <div class="dune dune-2"></div>
     <div class="dune dune-3"></div>
@@ -26,8 +28,8 @@
 
   <!-- HEADER ÉPIQUE -->
   <header class="blanc-header">
-    <h1 class="title-glow-blanc"><br>LA DIMENSION BLANCHE</h1>
-    <div class="header-divider">
+    <h1 class="title-glow-blanc">LA DIMENSION BLANCHE</h1>
+    <div class="header-divider" aria-hidden="true">
       <span class="line"></span>
       <span class="icon">🌗</span>
       <span class="line"></span>
@@ -35,37 +37,37 @@
   </header>
 
   <!-- SECTION VIDÉO -->
-  <section class="video-section">
+  <section class="video-section" aria-labelledby="video-title">
+    <h2 id="video-title" class="visually-hidden">Vidéo de la Dimension Blanche</h2>
     <div class="video-wrapper">
       <div class="video-frame">
         <iframe
           src="https://www.youtube.com/embed/XymowvqFhhw?autoplay=1&mute=1"
           title="Dimension Blanche - Charly Guitare"
-          frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen>
         </iframe>
       </div>
-      <div class="video-glow"></div>
+      <div class="video-glow" aria-hidden="true"></div>
     </div>
   </section>
 
   <!-- SECTION CARACTÉRISTIQUES -->
-  <section class="caracteristiques-section">
+  <section class="caracteristiques-section" aria-labelledby="carac-title">
     <div class="section-title">
-      <span class="material-icons">auto_awesome</span>
-      <h2>LES CARACTÉRISTIQUES DU MONDE BLANC</h2>
-      <span class="material-icons">auto_awesome</span>
+      <span class="material-icons" aria-hidden="true">auto_awesome</span>
+      <h2 id="carac-title">LES CARACTÉRISTIQUES DU MONDE BLANC</h2>
+      <span class="material-icons" aria-hidden="true">auto_awesome</span>
     </div>
 
     <div class="caracteristiques-grid">
-      @for (c of caracteristiques; track c; let i = $index) {
-        <div
+      @for (c of caracteristiques; track c.titre; let i = $index) {
+        <article
           class="caracteristique-card"
           [style.--accent]="c.couleur"
           [style.animation-delay]="(i * 0.15) + 's'">
-          <div class="card-glow"></div>
-          <div class="caracteristique-icon-wrapper">
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="caracteristique-icon-wrapper" aria-hidden="true">
             <div class="caracteristique-icon">{{ c.icone }}</div>
             <div class="icon-ring"></div>
           </div>
@@ -73,28 +75,28 @@
             <h3 class="caracteristique-titre">{{ c.titre }}</h3>
             <p class="caracteristique-description">{{ c.description }}</p>
           </div>
-          <div class="corner top-left"></div>
-          <div class="corner top-right"></div>
-          <div class="corner bottom-left"></div>
-          <div class="corner bottom-right"></div>
-        </div>
+          <div class="corner top-left" aria-hidden="true"></div>
+          <div class="corner top-right" aria-hidden="true"></div>
+          <div class="corner bottom-left" aria-hidden="true"></div>
+          <div class="corner bottom-right" aria-hidden="true"></div>
+        </article>
       }
     </div>
   </section>
 
   <!-- SECTION CHARLY BLANC -->
-  <section class="charly-section">
+  <section class="charly-section" aria-labelledby="charly-title">
     <div class="section-title">
-      <span class="material-icons">person</span>
-      <h2>LE CHARLY GUITARE BLANC</h2>
-      <span class="material-icons">person</span>
+      <span class="material-icons" aria-hidden="true">person</span>
+      <h2 id="charly-title">LE CHARLY GUITARE BLANC</h2>
+      <span class="material-icons" aria-hidden="true">person</span>
     </div>
 
     <div class="charly-card">
       <div class="charly-portrait">
-        <div class="portrait-glow"></div>
-        <div class="portrait-icon">🎸</div>
-        <div class="portrait-symbols">
+        <div class="portrait-glow" aria-hidden="true"></div>
+        <div class="portrait-icon" aria-hidden="true">🎸</div>
+        <div class="portrait-symbols" aria-hidden="true">
           <span>☀️</span><span>🌙</span><span>☀️</span>
         </div>
       </div>
@@ -110,13 +112,13 @@
         <!-- Forces -->
         <div class="traits-section">
           <h4 class="traits-titre forces-titre">
-            <span class="material-icons">trending_up</span>
+            <span class="material-icons" aria-hidden="true">trending_up</span>
             FORCES
           </h4>
           <div class="traits-grid">
-            @for (f of forces; track f) {
+            @for (f of forces; track f.nom) {
               <div class="trait-card force">
-                <div class="trait-icon">{{ f.icone }}</div>
+                <div class="trait-icon" aria-hidden="true">{{ f.icone }}</div>
                 <h5>{{ f.nom }}</h5>
                 <p>{{ f.description }}</p>
               </div>
@@ -127,13 +129,13 @@
         <!-- Faiblesses -->
         <div class="traits-section">
           <h4 class="traits-titre faiblesses-titre">
-            <span class="material-icons">trending_down</span>
+            <span class="material-icons" aria-hidden="true">trending_down</span>
             FAIBLESSES
           </h4>
           <div class="traits-grid">
-            @for (f of faiblesses; track f) {
+            @for (f of faiblesses; track f.nom) {
               <div class="trait-card faiblesse">
-                <div class="trait-icon">{{ f.icone }}</div>
+                <div class="trait-icon" aria-hidden="true">{{ f.icone }}</div>
                 <h5>{{ f.nom }}</h5>
                 <p>{{ f.description }}</p>
               </div>
@@ -143,7 +145,7 @@
 
         <!-- Note finale -->
         <div class="note-finale">
-          <span class="material-icons">info</span>
+          <span class="material-icons" aria-hidden="true">info</span>
           <p>
             Le Charly Blanc vit dans une <strong>paix absolue</strong> qui cause un handicap sur ses missions.
             Il aime trop s'amuser et casse souvent sa guitare sans faire exprès.
@@ -154,15 +156,15 @@
   </section>
 
   <!-- SECTION CORRESPONDANCES -->
-  <section class="correspondances-section">
+  <section class="correspondances-section" aria-labelledby="corresp-title">
     <div class="section-title">
-      <span class="material-icons">swap_horiz</span>
-      <h2>LES CORRESPONDANCES ENTRE LES MONDES</h2>
-      <span class="material-icons">swap_horiz</span>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
+      <h2 id="corresp-title">LES CORRESPONDANCES ENTRE LES MONDES</h2>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
     </div>
 
     <div class="correspondances-grid">
-      @for (c of correspondances; track c) {
+      @for (c of correspondances; track c.monde) {
         <div
           class="correspondance-card"
           [style.--accent]="c.couleur">
@@ -170,7 +172,7 @@
             [style.color]="c.monde === 'BLANC' ? '#000' : '#fff'">
             {{ c.monde }}
           </span>
-          <span class="arrow">→</span>
+          <span class="arrow" aria-hidden="true">→</span>
           <span class="repere">{{ c.repere }}</span>
         </div>
       }
@@ -178,11 +180,11 @@
   </section>
 
   <!-- SECTION RÈGLE -->
-  <section class="regle-section">
+  <section class="regle-section" aria-labelledby="regle-title">
     <div class="regle-card">
-      <div class="regle-icon">⚖️</div>
+      <div class="regle-icon" aria-hidden="true">⚖️</div>
       <div class="regle-content">
-        <h3>{{ reglePoints.titre }}</h3>
+        <h3 id="regle-title">{{ reglePoints.titre }}</h3>
         <p>{{ reglePoints.description }}</p>
       </div>
     </div>
@@ -191,16 +193,16 @@
   <!-- FOOTER ÉPIQUE -->
   <footer class="blanc-footer">
     <div class="footer-quote">
-      <span class="quote-mark">«</span>
+      <span class="quote-mark" aria-hidden="true">«</span>
       <p>Dans la Dimension Blanche, la paix est un fardeau et le savoir une solitude. Marcher seul sous un soleil éternel, c'est apprendre à se connaître.</p>
-      <span class="quote-mark">»</span>
+      <span class="quote-mark" aria-hidden="true">»</span>
     </div>
     <p class="footer-signature">— Les Chroniques d'Offoland, Livre XI</p>
 
     <div class="footer-badge">
-      <span class="icon">🌗</span>
+      <span class="icon" aria-hidden="true">🌗</span>
       <span>DIMENSION BLANCHE</span>
-      <span class="dot">•</span>
+      <span class="dot" aria-hidden="true">•</span>
       <span>CHARLY GUITARE 5D</span>
     </div>
   </footer>

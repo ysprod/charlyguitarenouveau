@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   CHARLY GUITARE HERO — Styles optimisés
+   CHARLY GUITARE HERO — Styles optimisés (Angular 21)
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
@@ -1477,6 +1477,84 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
+   TRANSITIONS CSS PURES (remplacent @angular/animations)
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* Feedback : apparition "WAHOU" */
+.feedback-enter {
+  animation: feedbackEnter 700ms cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes feedbackEnter {
+  0%   { transform: scale(0.2) rotate(-15deg); opacity: 0; }
+  35%  { transform: scale(1.4) rotate(8deg);   opacity: 1; }
+  60%  { transform: scale(0.95) rotate(-3deg); opacity: 1; }
+  80%  { transform: scale(1.05) rotate(0deg);  opacity: 1; }
+  100% { transform: scale(1.2) rotate(0deg);   opacity: 0; }
+}
+
+/* Modal : entrée dynamique */
+.modal-enter {
+  animation: modalEnter 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes modalEnter {
+  0% {
+    transform: scale(0.5) translateY(80px) rotateX(20deg);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08) translateY(-10px) rotateX(-2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0) rotateX(0);
+    opacity: 1;
+  }
+}
+
+/* Mélodie : entrée par le haut (conserve le translateX(-50%)) */
+.melody-enter {
+  animation: melodyEnter 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes melodyEnter {
+  0% {
+    transform: translateX(-50%) scale(0.3) translateY(-60px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.15) translateY(10px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Star Power : pulse doux */
+.target-card.star-power-pulse {
+  animation: starPowerPulse 400ms ease-in-out infinite alternate;
+}
+
+@keyframes starPowerPulse {
+  from { transform: scale(1); }
+  to   { transform: scale(1.02); }
+}
+
+/* Combo : flash doré */
+.combo-box.combo-flash .value {
+  animation: comboFlash 500ms ease-out both;
+}
+
+@keyframes comboFlash {
+  0%   { transform: scale(1);   color: inherit; }
+  30%  { transform: scale(1.5); color: #FFD700; }
+  100% { transform: scale(1);   color: inherit; }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
@@ -1584,6 +1662,13 @@
   }
 }
 
+/* Fix — éviter les débordements de texte sur petits écrans */
+@media (max-width: 480px) {
+  .game-hud .target-card .target-note {
+    font-size: 1.3rem;
+  }
+}
+
 /* ═════════════════════════════════════════════════════════════════════
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
@@ -1595,17 +1680,19 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* Désactive explicitement les animations CSS pures */
+  .feedback-enter,
+  .modal-enter,
+  .melody-enter,
+  .target-card.star-power-pulse,
+  .combo-box.combo-flash .value {
+    animation: none !important;
+  }
 }
 
 button:focus-visible,
 .note-cell:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
-}
-
-/* Fix — éviter les débordements de texte sur petits écrans */
-@media (max-width: 480px) {
-  .game-hud .target-card .target-note {
-    font-size: 1.3rem;
-  }
 }

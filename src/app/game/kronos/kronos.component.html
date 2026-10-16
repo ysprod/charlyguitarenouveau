@@ -1,3 +1,5 @@
+<!-- src/app/game/kronos/kronos.component.html -->
+
 <div class="kronos-container">
 
   <!-- ═══════════════════════════════════════════════════════
@@ -57,7 +59,7 @@
           Points de Vie
         </div>
         <div class="stat-value" aria-live="polite">
-          {{ pointdevies() | number }}
+          {{ pointdeviesFormatted() }}
         </div>
         <div
           class="progress-container"
@@ -70,7 +72,7 @@
         </div>
         <div class="progress-label">
           <span>0</span>
-          <span>Seuil Lykö : {{ SEUIL_LYKO | number }}</span>
+          <span>Seuil Lykö : {{ seuilFormatted() }}</span>
         </div>
       </div>
 
@@ -83,7 +85,7 @@
         <div class="stat-value-group">
           <div>
             <span class="sub-label">Bonus</span>
-            <div class="stat-subvalue">{{ pointdebonus() | number }}</div>
+            <div class="stat-subvalue">{{ pointdebonusFormatted() }}</div>
           </div>
           <div>
             <span class="sub-label">Combo</span>
@@ -105,9 +107,9 @@
             <div class="history-item">
               <span class="face-badge">{{ h.face }}</span>
               <div class="history-details">
-                <span class="avant">{{ h.avant | number }}</span>
+                <span class="avant">{{ h.avant }}</span>
                 <span class="arrow">→</span>
-                <span class="apres">{{ h.apres | number }}</span>
+                <span class="apres">{{ h.apres }}</span>
               </div>
             </div>
           }
@@ -143,7 +145,7 @@
           } @else if (randomnumber() > 0) {
             <div class="dice-face">
               <span class="dice-number">{{ randomnumber() }}</span>
-              <span class="dice-symbol">{{ getFaceInfo(randomnumber())?.symbol }}</span>
+              <span class="dice-symbol">{{ currentFaceSymbol() }}</span>
             </div>
           } @else {
             <div class="dice-face empty">
@@ -157,7 +159,7 @@
       @if (derniereFace() > 0 && !isRolling()) {
         <div class="face-name">
           <span class="label">Face {{ derniereFace() }} :</span>
-          <span class="name">{{ getFaceInfo(derniereFace())?.name }}</span>
+          <span class="name">{{ currentFaceName() }}</span>
         </div>
       }
 
@@ -207,7 +209,7 @@
             {{ isRolling() ? 'INVOCATION EN COURS…' : 'LANCER LE DÉ' }}
           </span>
           <span class="sub-text">
-            Coût : {{ COUT_LANCER | number }} PV • Multiplicateur x(1 à 12)
+            Coût : {{ coutLancerFormatted() }} PV • Multiplicateur x(1 à 12)
           </span>
         </div>
       </button>
@@ -237,7 +239,7 @@
         <div class="alert info" role="status">
           <span class="alert-icon" aria-hidden="true">ℹ️</span>
           <p>
-            Il vous faut au moins {{ COUT_LANCER | number }} PV
+            Il vous faut au moins {{ coutLancerFormatted() }} PV
             pour invoquer le dé.
           </p>
         </div>
@@ -259,7 +261,7 @@
           </li>
           <li>
             <span class="rule-icon" aria-hidden="true">📉</span>
-            Déduction de {{ COUT_LANCER | number }} PV par lancer.
+            Déduction de {{ coutLancerFormatted() }} PV par lancer.
           </li>
           <li>
             <span class="rule-icon" aria-hidden="true">✨</span>

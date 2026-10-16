@@ -1,20 +1,26 @@
+// src/app/auth/auth-header/auth-header.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
-  input
+  input,
 } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-auth-header',
-  standalone: true,
   imports: [RouterLink],
   templateUrl: './auth-header.component.html',
   styleUrls: ['./auth-header.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthHeaderComponent {
+
+  /* ═══════════════════════════════════════════════════════
+     ENTRÉES
+     ═══════════════════════════════════════════════════════ */
+
   /** Titre principal (ex : "Bienvenue", "Créer un compte"). */
   readonly title = input.required<string>();
 
@@ -31,5 +37,5 @@ export class AuthHeaderComponent {
   readonly linkRoute = input.required<string>();
 
   /** URL de retour propagée en query param. */
-  readonly returnUrl = input<string>('/');
+  readonly returnUrl = input('/');
 }

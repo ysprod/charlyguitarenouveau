@@ -1,25 +1,19 @@
+// src/app/game/piano/piano.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
-  OnDestroy,
-  OnInit,
+  afterNextRender,
   computed,
   effect,
   inject,
   signal,
   untracked,
-  viewChild
+  viewChild,
 } from '@angular/core';
-import {
-  animate,
-  keyframes,
-  state,
-  style,
-  transition,
-  trigger
-} from '@angular/animations';
+
 import { Router } from '@angular/router';
 
 import {
@@ -28,94 +22,51 @@ import {
   HitEffect,
   MelodyChord,
   Particle,
-  PianoKey
+  PianoKey,
 } from '../models/piano.model';
 
 import {
   InstrumentType,
-  PianoAudioService
+  PianoAudioService,
 } from '../services/piano-audio.service';
 
- import { StorageService } from '../../shared/services/storage.service';
+import { StorageService } from '../../shared/services/storage.service';
 import { randomElement, randomFloat } from '../utils/random.utils';
 import { GameAudioService } from '../services/game-audio.service';
 
-/* ═══════════════════════════════════════════════════════
-   CONSTANTES DE JEU
-   ═══════════════════════════════════════════════════════ */
+import {
+  COMBO_MELODY_TRIGGER,
+  COMBO_SHAKE_TRIGGER,
+  HEARTS,
+  MAX_TIME,
+  MELODY_PARTICLES,
+  NOTE_COLORS,
+  PIANO_KEYS,
+  STAR_POWER_DURATION,
+  STAR_POWER_GAIN_MAX,
+  STAR_POWER_GAIN_PER_HIT,
+  STORAGE_KEYS,
+  TAP_THRESHOLD_PX,
+  WHITE_NOTES_LIST,  
+} from '../constants/piano.constants';
 
-const MAX_TIME = 200;
-const STAR_POWER_DURATION = 8;
-const STAR_POWER_GAIN_PER_HIT = 12;
-const STAR_POWER_GAIN_MAX = 100;
-const COMBO_MELODY_TRIGGER = 12;
-const COMBO_SHAKE_TRIGGER = 10;
-const TAP_THRESHOLD_PX = 8;
-
-const STORAGE_KEYS = {
-  HIGH_SCORE: 'charly_piano_highscore',
-  SOUND_ENABLED: 'piano_hero_sound_enabled'
-} as const;
+/* ═══════════════════════════════════════════════════════════
+   COMPOSANT
+   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-piano',
-  standalone: true,
   imports: [],
   templateUrl: './piano.component.html',
   styleUrls: ['./piano.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('feedbackAnim', [
-      transition(':enter', [
-        animate('700ms cubic-bezier(0.175, 0.885, 0.32, 1.275)', keyframes([
-          style({ transform: 'scale(0.2) rotate(-15deg)', opacity: 0, offset: 0 }),
-          style({ transform: 'scale(1.4) rotate(8deg)',   opacity: 1, offset: 0.35 }),
-          style({ transform: 'scale(0.95) rotate(-3deg)', opacity: 1, offset: 0.6 }),
-          style({ transform: 'scale(1.05) rotate(0deg)',  opacity: 1, offset: 0.8 }),
-          style({ transform: 'scale(1.2) rotate(0deg)',   opacity: 0, offset: 1 })
-        ]))
-      ])
-    ]),
-    trigger('modalAnim', [
-      transition(':enter', [
-        animate('600ms cubic-bezier(0.34, 1.56, 0.64, 1)', keyframes([
-          style({ transform: 'scale(0.5) translateY(80px) rotateX(20deg)',   opacity: 0, offset: 0 }),
-          style({ transform: 'scale(1.08) translateY(-10px) rotateX(-2deg)', opacity: 1, offset: 0.7 }),
-          style({ transform: 'scale(1) translateY(0) rotateX(0)',           opacity: 1, offset: 1 })
-        ]))
-      ])
-    ]),
-    trigger('melodyBanner', [
-      transition(':enter', [
-        animate('800ms cubic-bezier(0.22, 1, 0.36, 1)', keyframes([
-          style({ transform: 'scale(0.3) translateY(-60px)', opacity: 0, offset: 0 }),
-          style({ transform: 'scale(1.15) translateY(10px)', opacity: 1, offset: 0.5 }),
-          style({ transform: 'scale(1) translateY(0)',       opacity: 1, offset: 1 })
-        ]))
-      ]),
-      transition(':leave', [
-        animate('400ms ease-in', style({ transform: 'scale(0.85)', opacity: 0 }))
-      ])
-    ]),
-    trigger('starPowerPulse', [
-      state('inactive', style({ transform: 'scale(1)' })),
-      state('active',   style({ transform: 'scale(1.02)' })),
-      transition('inactive <=> active', animate('400ms ease-in-out'))
-    ]),
-    trigger('comboFlash', [
-      transition('* => *', [
-        animate('500ms ease-out', keyframes([
-          style({ transform: 'scale(1)',   offset: 0 }),
-          style({ transform: 'scale(1.5)', color: '#FFD700', offset: 0.3 }),
-          style({ transform: 'scale(1)',   offset: 1 })
-        ]))
-      ])
-    ])
-  ]
 })
-export class PianoComponent implements OnInit, OnDestroy {
+export class PianoComponent {
 
-  /* ─── Injection ─── */
+  /* ═══════════════════════════════════════════════════════
+     INJECTION
+     ═══════════════════════════════════════════════════════ */
+
   private readonly router = inject(Router);
   private readonly audio = inject(PianoAudioService);
   private readonly uiAudio = inject(GameAudioService);
@@ -126,51 +77,20 @@ export class PianoComponent implements OnInit, OnDestroy {
     viewChild<ElementRef<HTMLDivElement>>('keyboardScroll');
 
   /* ═══════════════════════════════════════════════════════
-     CLAVIER (C3 → C5)
+     CONSTANTES EXPOSÉES
      ═══════════════════════════════════════════════════════ */
-  readonly pianoKeys: readonly PianoKey[] = [
-    { index: 0,  note: 'C3',  frenchNote: 'DO',   octave: 3, isBlack: false, whiteIndex: 0 },
-    { index: 1,  note: 'C#3', frenchNote: 'DO#',  octave: 3, isBlack: true,  whiteIndex: 0 },
-    { index: 2,  note: 'D3',  frenchNote: 'RÉ',   octave: 3, isBlack: false, whiteIndex: 1 },
-    { index: 3,  note: 'D#3', frenchNote: 'RÉ#',  octave: 3, isBlack: true,  whiteIndex: 1 },
-    { index: 4,  note: 'E3',  frenchNote: 'MI',   octave: 3, isBlack: false, whiteIndex: 2 },
-    { index: 5,  note: 'F3',  frenchNote: 'FA',   octave: 3, isBlack: false, whiteIndex: 3 },
-    { index: 6,  note: 'F#3', frenchNote: 'FA#',  octave: 3, isBlack: true,  whiteIndex: 3 },
-    { index: 7,  note: 'G3',  frenchNote: 'SOL',  octave: 3, isBlack: false, whiteIndex: 4 },
-    { index: 8,  note: 'G#3', frenchNote: 'SOL#', octave: 3, isBlack: true,  whiteIndex: 4 },
-    { index: 9,  note: 'A3',  frenchNote: 'LA',   octave: 3, isBlack: false, whiteIndex: 5 },
-    { index: 10, note: 'A#3', frenchNote: 'LA#',  octave: 3, isBlack: true,  whiteIndex: 5 },
-    { index: 11, note: 'B3',  frenchNote: 'SI',   octave: 3, isBlack: false, whiteIndex: 6 },
-    { index: 12, note: 'C4',  frenchNote: 'DO',   octave: 4, isBlack: false, whiteIndex: 7 },
-    { index: 13, note: 'C#4', frenchNote: 'DO#',  octave: 4, isBlack: true,  whiteIndex: 7 },
-    { index: 14, note: 'D4',  frenchNote: 'RÉ',   octave: 4, isBlack: false, whiteIndex: 8 },
-    { index: 15, note: 'D#4', frenchNote: 'RÉ#',  octave: 4, isBlack: true,  whiteIndex: 8 },
-    { index: 16, note: 'E4',  frenchNote: 'MI',   octave: 4, isBlack: false, whiteIndex: 9 },
-    { index: 17, note: 'F4',  frenchNote: 'FA',   octave: 4, isBlack: false, whiteIndex: 10 },
-    { index: 18, note: 'F#4', frenchNote: 'FA#',  octave: 4, isBlack: true,  whiteIndex: 10 },
-    { index: 19, note: 'G4',  frenchNote: 'SOL',  octave: 4, isBlack: false, whiteIndex: 11 },
-    { index: 20, note: 'G#4', frenchNote: 'SOL#', octave: 4, isBlack: true,  whiteIndex: 11 },
-    { index: 21, note: 'A4',  frenchNote: 'LA',   octave: 4, isBlack: false, whiteIndex: 12 },
-    { index: 22, note: 'A#4', frenchNote: 'LA#',  octave: 4, isBlack: true,  whiteIndex: 12 },
-    { index: 23, note: 'B4',  frenchNote: 'SI',   octave: 4, isBlack: false, whiteIndex: 13 },
-    { index: 24, note: 'C5',  frenchNote: 'DO',   octave: 5, isBlack: false, whiteIndex: 14 }
-  ];
 
-  readonly whiteNotesList = ['DO', 'RÉ', 'MI', 'FA', 'SOL', 'LA', 'SI'];
-
-  readonly noteColors: Readonly<Record<string, string>> = {
-    'DO':  '#FF3366', 'DO#': '#FF3366',
-    'RÉ':  '#FFD700', 'RÉ#': '#FFD700',
-    'MI':  '#00D4FF',
-    'FA':  '#FF6B35', 'FA#': '#FF6B35',
-    'SOL': '#00FF88', 'SOL#':'#00FF88',
-    'LA':  '#B266FF', 'LA#': '#B266FF',
-    'SI':  '#FF8CC8'
-  };
+  readonly pianoKeys = PIANO_KEYS;
+  readonly whiteNotesList = WHITE_NOTES_LIST;
+  readonly noteColors = NOTE_COLORS;
+  readonly starPowerStars = Array.from({ length: 10 }, (_, i) => i);
+  readonly hearts = HEARTS;
+  readonly melodyParticles = MELODY_PARTICLES;
 
   /* ═══════════════════════════════════════════════════════
-     ÉTAT DU JEU
+     ÉTAT — SIGNALS
      ═══════════════════════════════════════════════════════ */
+
   readonly soundEnabled = signal(true);
   readonly score = signal(0);
   readonly combo = signal(0);
@@ -210,43 +130,46 @@ export class PianoComponent implements OnInit, OnDestroy {
 
   readonly activeKeyIndexes = signal<Set<number>>(new Set());
 
-  /* ─── Melody progressions ─── */
+  /* ═══════════════════════════════════════════════════════
+     MÉLODIES
+     ═══════════════════════════════════════════════════════ */
+
   readonly melodyProgressions: readonly MelodyChord[][] = [
     [
       { name: 'Am', frenchName: 'La mineur',  color: '#B266FF', notes: ['A3','C4','E4'], bassNote: 'A2' },
       { name: 'Dm', frenchName: 'Ré mineur',  color: '#00D4FF', notes: ['D4','F4','A4'], bassNote: 'D3' },
       { name: 'F',  frenchName: 'Fa majeur',  color: '#FFD700', notes: ['F4','A4','C5'], bassNote: 'F3' },
-      { name: 'G',  frenchName: 'Sol majeur', color: '#00FF88', notes: ['G4','B4','D5'], bassNote: 'G3' }
+      { name: 'G',  frenchName: 'Sol majeur', color: '#00FF88', notes: ['G4','B4','D5'], bassNote: 'G3' },
     ],
     [
       { name: 'C',  frenchName: 'Do majeur',  color: '#FF3366', notes: ['C4','E4','G4'], bassNote: 'C3' },
       { name: 'G',  frenchName: 'Sol majeur', color: '#00FF88', notes: ['G4','B4','D5'], bassNote: 'G3' },
       { name: 'Am', frenchName: 'La mineur',  color: '#B266FF', notes: ['A3','C4','E4'], bassNote: 'A2' },
-      { name: 'F',  frenchName: 'Fa majeur',  color: '#FFD700', notes: ['F4','A4','C5'], bassNote: 'F3' }
+      { name: 'F',  frenchName: 'Fa majeur',  color: '#FFD700', notes: ['F4','A4','C5'], bassNote: 'F3' },
     ],
     [
       { name: 'F',  frenchName: 'Fa majeur',  color: '#FFD700', notes: ['F4','A4','C5'], bassNote: 'F3' },
       { name: 'C',  frenchName: 'Do majeur',  color: '#FF3366', notes: ['C4','E4','G4'], bassNote: 'C3' },
       { name: 'G',  frenchName: 'Sol majeur', color: '#00FF88', notes: ['G4','B4','D5'], bassNote: 'G3' },
-      { name: 'Am', frenchName: 'La mineur',  color: '#B266FF', notes: ['A3','C4','E4'], bassNote: 'A2' }
+      { name: 'Am', frenchName: 'La mineur',  color: '#B266FF', notes: ['A3','C4','E4'], bassNote: 'A2' },
     ],
     [
       { name: 'Dm', frenchName: 'Ré mineur',  color: '#00D4FF', notes: ['D4','F4','A4'], bassNote: 'D3' },
       { name: 'G',  frenchName: 'Sol majeur', color: '#00FF88', notes: ['G4','B4','D5'], bassNote: 'G3' },
       { name: 'C',  frenchName: 'Do majeur',  color: '#FF3366', notes: ['C4','E4','G4'], bassNote: 'C3' },
-      { name: 'Am', frenchName: 'La mineur',  color: '#B266FF', notes: ['A3','C4','E4'], bassNote: 'A2' }
-    ]
+      { name: 'Am', frenchName: 'La mineur',  color: '#B266FF', notes: ['A3','C4','E4'], bassNote: 'A2' },
+    ],
   ];
 
   readonly melodyTitles = [
     '✨ ORIGINES ✨',
     '⭐ ÉTOILES ⭐',
     '⚔️ HÉROS ⚔️',
-    '🌙 RÊVE 🌙'
+    '🌙 RÊVE 🌙',
   ] as const;
 
   readonly melodyInstruments: readonly InstrumentType[] = [
-    'strings', 'bells', 'trumpet', 'flute'
+    'strings', 'bells', 'trumpet', 'flute',
   ];
 
   private melodyProgressionIndex = 0;
@@ -276,8 +199,9 @@ export class PianoComponent implements OnInit, OnDestroy {
 
   readonly currentMelodyProgression = computed<MelodyChord[]>(() => {
     if (!this.melodyPlaying()) return [];
-    const idx = (this.melodyProgressionIndex - 1 + this.melodyProgressions.length)
-      % this.melodyProgressions.length;
+    const idx =
+      (this.melodyProgressionIndex - 1 + this.melodyProgressions.length) %
+      this.melodyProgressions.length;
     return [...this.melodyProgressions[idx]];
   });
 
@@ -289,15 +213,15 @@ export class PianoComponent implements OnInit, OnDestroy {
     return map;
   });
 
-  readonly whiteKeys = computed(() => this.pianoKeys.filter(k => !k.isBlack));
-  readonly blackKeys = computed(() => this.pianoKeys.filter(k => k.isBlack));
+  readonly whiteKeys = computed(() => this.pianoKeys.filter((k) => !k.isBlack));
+  readonly blackKeys = computed(() => this.pianoKeys.filter((k) => k.isBlack));
 
   readonly targetKeyIndex = computed<number>(() => {
     const note = this.targetNote();
     const oct = this.targetOctave();
     if (!note) return -1;
-    const key = this.pianoKeys.find(k =>
-      !k.isBlack && k.frenchNote === note && k.octave === oct
+    const key = this.pianoKeys.find(
+      (k) => !k.isBlack && k.frenchNote === note && k.octave === oct
     );
     return key?.index ?? -1;
   });
@@ -307,25 +231,16 @@ export class PianoComponent implements OnInit, OnDestroy {
     const oct = this.targetOctave();
     if (!note) return '';
     const sub = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
-    const octStr = String(oct).split('').map(d => sub[+d]).join('');
+    const octStr = String(oct).split('').map((d) => sub[+d]).join('');
     return `${note}${octStr}`;
   });
 
-  readonly shouldHighlightTarget = computed(() =>
-    this.isPlaying() && !this.melodyPlaying()
+  readonly shouldHighlightTarget = computed(
+    () => this.isPlaying() && !this.melodyPlaying()
   );
 
-  /**
-   * ✅ Computed pour le pourcentage du timer.
-   * (Avant : méthode appelée dans le template → non réactive.)
-   */
-  readonly timerPercent = computed(() =>
-    (this.timeLeft() / MAX_TIME) * 100
-  );
+  readonly timerPercent = computed(() => (this.timeLeft() / MAX_TIME) * 100);
 
-  /**
-   * ✅ Computed pour la couleur du timer.
-   */
   readonly timerColor = computed(() => {
     const pct = this.timerPercent();
     if (pct < 20) return 'linear-gradient(90deg, #ef4444, #f59e0b)';
@@ -335,14 +250,12 @@ export class PianoComponent implements OnInit, OnDestroy {
 
   readonly isTimerCritical = computed(() => this.timerPercent() < 20);
 
-  /**
-   * ✅ Indices des étoiles Star Power (constante calculée une fois).
-   */
-  readonly starPowerStars = Array.from({ length: 10 }, (_, i) => i);
+  readonly shouldShowNoteLabel = computed(() => this.difficulty() !== 'hardcore');
 
   /* ═══════════════════════════════════════════════════════
      RESSOURCES INTERNES
      ═══════════════════════════════════════════════════════ */
+
   private readonly timeouts = new Set<ReturnType<typeof setTimeout>>();
   private readonly melodyTimeouts = new Set<ReturnType<typeof setTimeout>>();
   private timerInterval?: ReturnType<typeof setInterval>;
@@ -355,15 +268,19 @@ export class PianoComponent implements OnInit, OnDestroy {
   /* ═══════════════════════════════════════════════════════
      POINTER
      ═══════════════════════════════════════════════════════ */
-  private readonly activePointer = new Map<number, {
-    keyIndex: number;
-    startX: number;
-    startY: number;
-    moved: boolean;
-  }>();
+
+  private readonly activePointer = new Map<
+    number,
+    {
+      keyIndex: number;
+      startX: number;
+      startY: number;
+      moved: boolean;
+    }
+  >();
 
   /* ═══════════════════════════════════════════════════════
-     CYCLE DE VIE
+     CONSTRUCTEUR
      ═══════════════════════════════════════════════════════ */
 
   constructor() {
@@ -371,23 +288,27 @@ export class PianoComponent implements OnInit, OnDestroy {
       const c = this.combo();
       untracked(() => {
         if (c > 0 && c % 4 === 0) {
-          this.comboFlashKey.update(k => k + 1);
+          this.comboFlashKey.update((k) => k + 1);
         }
       });
     });
+
+    afterNextRender(() => {
+      void this.audio.init();
+      this.loadHighScore();
+      this.loadSoundPreference();
+    });
+
+    this.destroyRef.onDestroy(() => {
+      this.clearAllTimers();
+      this.stopMelody();
+      this.audio.allNotesOff();
+    });
   }
 
-  ngOnInit(): void {
-    void this.audio.init();
-    this.loadHighScore();
-    this.loadSoundPreference();
-  }
-
-  ngOnDestroy(): void {
-    this.clearAllTimers();
-    this.stopMelody();
-    this.audio.allNotesOff();
-  }
+  /* ═══════════════════════════════════════════════════════
+     TIMERS
+     ═══════════════════════════════════════════════════════ */
 
   private schedule(fn: () => void, delayMs: number): void {
     const id = setTimeout(() => {
@@ -403,10 +324,10 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.timerInterval = undefined;
     this.starPowerInterval = undefined;
 
-    this.timeouts.forEach(id => clearTimeout(id));
+    this.timeouts.forEach((id) => clearTimeout(id));
     this.timeouts.clear();
 
-    this.melodyTimeouts.forEach(id => clearTimeout(id));
+    this.melodyTimeouts.forEach((id) => clearTimeout(id));
     this.melodyTimeouts.clear();
   }
 
@@ -485,7 +406,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   /* ═══════════════════════════════════════════════════════
-     POINTER / TACTILE (glissando)
+     POINTER / TACTILE
      ═══════════════════════════════════════════════════════ */
 
   onPointerDown(key: PianoKey, event: PointerEvent): void {
@@ -496,10 +417,10 @@ export class PianoComponent implements OnInit, OnDestroy {
       keyIndex: key.index,
       startX: event.clientX,
       startY: event.clientY,
-      moved: false
+      moved: false,
     });
 
-    this.activeKeyIndexes.update(set => {
+    this.activeKeyIndexes.update((set) => {
       const next = new Set(set);
       next.add(key.index);
       return next;
@@ -513,10 +434,10 @@ export class PianoComponent implements OnInit, OnDestroy {
     const info = this.activePointer.get(event.pointerId)!;
     if (info.keyIndex === key.index) return;
 
-    const prevKey = this.pianoKeys.find(k => k.index === info.keyIndex);
+    const prevKey = this.pianoKeys.find((k) => k.index === info.keyIndex);
     if (prevKey) this.audio.noteOff(prevKey.note);
 
-    this.activeKeyIndexes.update(set => {
+    this.activeKeyIndexes.update((set) => {
       const next = new Set(set);
       next.delete(info.keyIndex);
       next.add(key.index);
@@ -543,7 +464,7 @@ export class PianoComponent implements OnInit, OnDestroy {
     const info = this.activePointer.get(event.pointerId);
     this.activePointer.delete(event.pointerId);
 
-    this.activeKeyIndexes.update(set => {
+    this.activeKeyIndexes.update((set) => {
       const next = new Set(set);
       next.delete(key.index);
       return next;
@@ -568,7 +489,7 @@ export class PianoComponent implements OnInit, OnDestroy {
 
   onPointerCancel(key: PianoKey, event: PointerEvent): void {
     this.activePointer.delete(event.pointerId);
-    this.activeKeyIndexes.update(set => {
+    this.activeKeyIndexes.update((set) => {
       const next = new Set(set);
       next.delete(key.index);
       return next;
@@ -586,11 +507,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   isHit(keyIndex: number): boolean {
-    return this.hitEffects().some(e => e.keyIndex === keyIndex);
-  }
-
-  shouldShowNoteLabel(): boolean {
-    return this.difficulty() !== 'hardcore';
+    return this.hitEffects().some((e) => e.keyIndex === keyIndex);
   }
 
   isStarFilled(i: number): boolean {
@@ -632,7 +549,7 @@ export class PianoComponent implements OnInit, OnDestroy {
 
     this.timerInterval = setInterval(() => {
       if (!this.isPlaying()) return;
-      this.timeLeft.update(t => t - this.getTimeMultiplier());
+      this.timeLeft.update((t) => t - this.getTimeMultiplier());
       if (this.timeLeft() <= 0) this.handleMiss(true);
     }, 100);
   }
@@ -640,8 +557,8 @@ export class PianoComponent implements OnInit, OnDestroy {
   private nextRound(): void {
     const pool = this.getNotePool();
 
-    const filtered = pool.filter(p =>
-      `${p.frenchNote}-${p.octave}` !== this.lastTargetKey
+    const filtered = pool.filter(
+      (p) => `${p.frenchNote}-${p.octave}` !== this.lastTargetKey
     );
     const candidates = filtered.length > 0 ? filtered : pool;
 
@@ -657,18 +574,20 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   private handleSuccess(keyIndex: number): void {
-    this.combo.update(c => c + 1);
-    this.streak.update(s => s + 1);
-    this.notesHit.update(n => n + 1);
+    this.combo.update((c) => c + 1);
+    this.streak.update((s) => s + 1);
+    this.notesHit.update((n) => n + 1);
     if (this.combo() > this.maxCombo()) this.maxCombo.set(this.combo());
 
     const starPowerBonus = this.isStarPowerActive() ? 2 : 1;
     const perfectBonus = this.timeLeft() > MAX_TIME * 0.7 ? 1.5 : 1;
-    const basePoints = Math.round(100 * this.multiplier() * starPowerBonus * perfectBonus);
-    this.score.update(s => s + basePoints);
+    const basePoints = Math.round(
+      100 * this.multiplier() * starPowerBonus * perfectBonus
+    );
+    this.score.update((s) => s + basePoints);
 
     if (!this.isStarPowerActive()) {
-      this.starPowerGauge.update(g =>
+      this.starPowerGauge.update((g) =>
         Math.min(STAR_POWER_GAIN_MAX, g + STAR_POWER_GAIN_PER_HIT)
       );
     }
@@ -678,7 +597,8 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.triggerHitEffect(keyIndex);
 
     const isPerfect = this.timeLeft() > MAX_TIME * 0.75;
-    const comboText = this.effectiveMultiplier() > 1 ? ` x${this.effectiveMultiplier()}` : '';
+    const comboText =
+      this.effectiveMultiplier() > 1 ? ` x${this.effectiveMultiplier()}` : '';
     if (isPerfect) {
       this.showFeedback(`PARFAIT ! +${basePoints}${comboText}`, 'perfect');
       this.uiAudio.play('perfect');
@@ -698,8 +618,8 @@ export class PianoComponent implements OnInit, OnDestroy {
 
   private handleMiss(isTimeout: boolean): void {
     this.streak.set(0);
-    this.notesMissed.update(n => n + 1);
-    this.lives.update(l => l - 1);
+    this.notesMissed.update((n) => n + 1);
+    this.lives.update((l) => l - 1);
     this.uiAudio.play('error');
     this.triggerScreenShake();
 
@@ -721,10 +641,9 @@ export class PianoComponent implements OnInit, OnDestroy {
     this.showFeedback('⚡ STAR POWER ACTIVÉ ! ⚡', 'perfect');
     this.triggerScreenShake();
 
-    /* Fanfare de trompette */
     this.audio.setInstrument('trumpet');
     this.schedule(() => {
-      ['C4', 'E4', 'G4', 'C5'].forEach(n => {
+      ['C4', 'E4', 'G4', 'C5'].forEach((n) => {
         this.audio.playNoteFor(n, 0.8, 0.7);
       });
     }, 0);
@@ -734,7 +653,7 @@ export class PianoComponent implements OnInit, OnDestroy {
     if (this.starPowerInterval) clearInterval(this.starPowerInterval);
 
     this.starPowerInterval = setInterval(() => {
-      this.starPowerTimeLeft.update(t => t - 0.1);
+      this.starPowerTimeLeft.update((t) => t - 0.1);
 
       if (this.starPowerTimeLeft() <= 0) {
         if (this.starPowerInterval) clearInterval(this.starPowerInterval);
@@ -753,7 +672,8 @@ export class PianoComponent implements OnInit, OnDestroy {
     if (this.isMelodyPlaying) return;
     await this.audio.unlock();
 
-    const progression = this.melodyProgressions[this.melodyProgressionIndex];
+    const progression =
+      this.melodyProgressions[this.melodyProgressionIndex];
     const title = this.melodyTitles[this.melodyProgressionIndex];
     const instrument = this.melodyInstruments[this.melodyProgressionIndex];
 
@@ -802,7 +722,7 @@ export class PianoComponent implements OnInit, OnDestroy {
   }
 
   private stopMelody(): void {
-    this.melodyTimeouts.forEach(id => clearTimeout(id));
+    this.melodyTimeouts.forEach((id) => clearTimeout(id));
     this.melodyTimeouts.clear();
     this.isMelodyPlaying = false;
     this.melodyPlaying.set(false);
@@ -817,15 +737,15 @@ export class PianoComponent implements OnInit, OnDestroy {
     const diff = this.difficulty();
 
     if (diff === 'facile') {
-      return this.whiteNotesList.map(n => ({ frenchNote: n, octave: 4 }));
+      return this.whiteNotesList.map((n) => ({ frenchNote: n, octave: 4 }));
     }
 
     const octaves = [3, 4, 5];
     const pool: { frenchNote: string; octave: number }[] = [];
     for (const oct of octaves) {
       for (const note of this.whiteNotesList) {
-        const exists = this.pianoKeys.some(k =>
-          !k.isBlack && k.frenchNote === note && k.octave === oct
+        const exists = this.pianoKeys.some(
+          (k) => !k.isBlack && k.frenchNote === note && k.octave === oct
         );
         if (exists) pool.push({ frenchNote: note, octave: oct });
       }
@@ -841,17 +761,19 @@ export class PianoComponent implements OnInit, OnDestroy {
       const idx = this.targetKeyIndex();
       if (!scroll || idx < 0) return;
 
-      const el = scroll.querySelector<HTMLElement>(`[data-key-index="${idx}"]`);
+      const el = scroll.querySelector<HTMLElement>(
+        `[data-key-index="${idx}"]`
+      );
       if (!el) return;
 
       const elLeft = el.offsetLeft;
       const elWidth = el.offsetWidth;
       const scrollWidth = scroll.clientWidth;
-      const targetScrollLeft = elLeft - (scrollWidth / 2) + (elWidth / 2);
+      const targetScrollLeft = elLeft - scrollWidth / 2 + elWidth / 2;
 
       scroll.scrollTo({
         left: Math.max(0, targetScrollLeft),
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
     }, 50);
   }
@@ -868,7 +790,9 @@ export class PianoComponent implements OnInit, OnDestroy {
     const scroll = this.keyboardScrollRef()?.nativeElement;
     if (!scroll) return { x: 0, y: key.isBlack ? 30 : 60 };
 
-    const el = scroll.querySelector<HTMLElement>(`[data-key-index="${key.index}"]`);
+    const el = scroll.querySelector<HTMLElement>(
+      `[data-key-index="${key.index}"]`
+    );
     if (!el) return { x: 0, y: key.isBlack ? 30 : 60 };
 
     const keyRect = el.getBoundingClientRect();
@@ -876,12 +800,12 @@ export class PianoComponent implements OnInit, OnDestroy {
 
     return {
       x: keyRect.left - scrollRect.left + scroll.scrollLeft + keyRect.width / 2,
-      y: key.isBlack ? 30 : 60
+      y: key.isBlack ? 30 : 60,
     };
   }
 
   private triggerParticles(keyIndex: number): void {
-    const key = this.pianoKeys.find(k => k.index === keyIndex);
+    const key = this.pianoKeys.find((k) => k.index === keyIndex);
     if (!key) return;
 
     const { x, y } = this.getKeyCenter(key);
@@ -892,21 +816,21 @@ export class PianoComponent implements OnInit, OnDestroy {
       y,
       color: this.getKeyColor(key),
       size: randomFloat(4, 12),
-      rotation: randomFloat(0, 360)
+      rotation: randomFloat(0, 360),
     }));
 
-    const ids = new Set(newParticles.map(p => p.id));
-    this.particles.update(p => [...p, ...newParticles]);
+    const ids = new Set(newParticles.map((p) => p.id));
+    this.particles.update((p) => [...p, ...newParticles]);
     this.schedule(() => {
-      this.particles.update(p => p.filter(x => !ids.has(x.id)));
+      this.particles.update((p) => p.filter((x) => !ids.has(x.id)));
     }, 1200);
   }
 
   private triggerHitEffect(keyIndex: number): void {
     const id = this.effectId++;
-    this.hitEffects.update(e => [...e, { id, keyIndex }]);
+    this.hitEffects.update((e) => [...e, { id, keyIndex }]);
     this.schedule(() => {
-      this.hitEffects.update(e => e.filter(x => x.id !== id));
+      this.hitEffects.update((e) => e.filter((x) => x.id !== id));
     }, 700);
   }
 
@@ -920,7 +844,7 @@ export class PianoComponent implements OnInit, OnDestroy {
      ═══════════════════════════════════════════════════════ */
 
   showFeedback(msg: string, type: FeedbackType): void {
-    this.feedbackKey.update(k => k + 1);
+    this.feedbackKey.update((k) => k + 1);
     this.feedbackMessage.set(msg);
     this.feedbackType.set(type);
     this.schedule(() => this.feedbackMessage.set(null), 900);

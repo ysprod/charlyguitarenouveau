@@ -1,25 +1,51 @@
-import { Component, OnInit } from '@angular/core';
+// src/app/legal/mentions/mentions.component.ts
+
+import {
+  ChangeDetectionStrategy,
+  Component,
+  afterNextRender,
+} from '@angular/core';
+
+import {
+  CONTACT_EMAIL,
+  HOST_ADDRESS,
+  HOST_NAME,
+  HOST_WEBSITE,
+  OWNER_NAME,
+  SITE_NAME,
+  SITE_URL,
+} from '../constants/mentions.constants';
 
 @Component({
   selector: 'app-mentions',
-  standalone: true,
   imports: [],
   templateUrl: './mentions.component.html',
-  styleUrls: ['./mentions.component.scss'] // ⚠️ renommé de .css en .scss
+  styleUrls: ['./mentions.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MentionsComponent implements OnInit {
+export class MentionsComponent {
 
-  readonly siteName = 'Charly Guitare';
-  readonly siteUrl = 'https://charlyguitare.com';
-  readonly ownerName = 'Charly Guitare'; // Ou le nom de votre société / entreprise
-  readonly contactEmail = 'yayasidibeproduction@gmail.com';
+  /* ═══════════════════════════════════════════════════════
+     DONNÉES EXPOSÉES AU TEMPLATE
+     ═══════════════════════════════════════════════════════ */
 
-  // Hébergeur
-  readonly hostName = 'Google Cloud Platform / Firebase Hosting';
-  readonly hostAddress = 'Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA';
-  readonly hostWebsite = 'https://firebase.google.com';
+  readonly siteName = SITE_NAME;
+  readonly siteUrl = SITE_URL;
+  readonly ownerName = OWNER_NAME;
+  readonly contactEmail = CONTACT_EMAIL;
 
-  ngOnInit(): void {
-    window.scrollTo(0, 0);
+  readonly hostName = HOST_NAME;
+  readonly hostAddress = HOST_ADDRESS;
+  readonly hostWebsite = HOST_WEBSITE;
+
+  /* ═══════════════════════════════════════════════════════
+     CONSTRUCTEUR
+     ═══════════════════════════════════════════════════════ */
+
+  constructor() {
+    afterNextRender(() => {
+      if (typeof window === 'undefined') return;
+      window.scrollTo(0, 0);
+    });
   }
 }

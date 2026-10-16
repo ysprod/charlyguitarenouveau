@@ -1,9 +1,10 @@
 /* ═════════════════════════════════════════════════════════════════════
    L'ESSENTIEL — Mölkky Charly Guitare
    Design « Bois Sacré » : ambre, or, cuivre
+   ═════════════════════════════════════════════════════════════════════
+   ⚠️ L'import Google Fonts (Cinzel, Poppins) doit être placé
+   dans styles.scss global (pas dans un composant encapsulé).
    ═════════════════════════════════════════════════════════════════════ */
-
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Poppins:wght@400;600;800;900&display=swap');
 
 /* ─── Variables ─── */
 :host {
@@ -53,7 +54,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   HEADER — Bouton retour + Titre sur la même ligne
+   HEADER
    ═════════════════════════════════════════════════════════════════════ */
 .game-header {
   margin-bottom: 1.5rem;
@@ -69,7 +70,6 @@
   margin-bottom: 0.75rem;
 }
 
-/* ─── Bouton retour ─── */
 .btn-floating-back {
   display: inline-flex;
   align-items: center;
@@ -111,7 +111,6 @@
   }
 }
 
-/* ─── Titre principal ─── */
 .header-title {
   margin: 0;
   font-family: var(--font-display);
@@ -132,7 +131,6 @@
   color: var(--text-muted);
 }
 
-/* ─── Objectif ─── */
 .target-objective {
   display: inline-flex;
   align-items: center;
@@ -295,29 +293,14 @@
 }
 
 @keyframes targetPulse {
-  from {
-    transform: scale(1);
-  }
-
-  to {
-    transform: scale(1.05);
-  }
+  from { transform: scale(1); }
+  to   { transform: scale(1.05); }
 }
 
 @keyframes strikeShake {
-
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  25% {
-    transform: translateX(-3px);
-  }
-
-  75% {
-    transform: translateX(3px);
-  }
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  75%      { transform: translateX(3px); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -345,13 +328,8 @@
 }
 
 @keyframes timerWarning {
-  from {
-    filter: brightness(1);
-  }
-
-  to {
-    filter: brightness(1.5);
-  }
+  from { filter: brightness(1); }
+  to   { filter: brightness(1.5); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -373,13 +351,8 @@
 }
 
 @keyframes comboPulse {
-  from {
-    transform: scale(1);
-  }
-
-  to {
-    transform: scale(1.05);
-  }
+  from { transform: scale(1); }
+  to   { transform: scale(1.05); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -407,7 +380,6 @@
   opacity: 0;
   animation: pinAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 
-  /* Stagger delays */
   @for $i from 1 through 12 {
     &:nth-child(#{$i}) {
       animation-delay: #{$i * 0.05}s;
@@ -536,7 +508,6 @@
     opacity: 0;
     transform: translateY(30px) scale(0.8);
   }
-
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -544,37 +515,16 @@
 }
 
 @keyframes targetGlow {
-  from {
-    box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
-  }
-
-  to {
-    box-shadow: 0 0 45px rgba(16, 185, 129, 0.9);
-  }
+  from { box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); }
+  to   { box-shadow: 0 0 45px rgba(16, 185, 129, 0.9); }
 }
 
 @keyframes shake {
-
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  20% {
-    transform: translateX(-10px) rotate(-3deg);
-  }
-
-  40% {
-    transform: translateX(10px) rotate(3deg);
-  }
-
-  60% {
-    transform: translateX(-8px) rotate(-2deg);
-  }
-
-  80% {
-    transform: translateX(8px) rotate(2deg);
-  }
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-10px) rotate(-3deg); }
+  40%      { transform: translateX(10px) rotate(3deg); }
+  60%      { transform: translateX(-8px) rotate(-2deg); }
+  80%      { transform: translateX(8px) rotate(2deg); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -594,13 +544,8 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .card-modal {
@@ -623,8 +568,7 @@
     animation: iconFloat 2s ease-in-out infinite alternate;
   }
 
-  h1,
-  h2 {
+  h1, h2 {
     margin: 0 0 1rem;
     font-family: var(--font-display);
     letter-spacing: 3px;
@@ -658,7 +602,6 @@
     opacity: 0;
     transform: scale(0.7) translateY(50px);
   }
-
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -666,17 +609,12 @@
 }
 
 @keyframes iconFloat {
-  from {
-    transform: translateY(0) rotate(-5deg);
-  }
-
-  to {
-    transform: translateY(-10px) rotate(5deg);
-  }
+  from { transform: translateY(0) rotate(-5deg); }
+  to   { transform: translateY(-10px) rotate(5deg); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   DIFFICULTY SELECTOR (dans la modale)
+   DIFFICULTY SELECTOR
    ═════════════════════════════════════════════════════════════════════ */
 .difficulty-selector {
   margin: 1.5rem 0;
@@ -905,12 +843,10 @@
     opacity: 0;
     transform: scale(0.3) rotate(-10deg);
   }
-
   50% {
     opacity: 1;
     transform: scale(1.2) rotate(5deg);
   }
-
   100% {
     opacity: 1;
     transform: scale(1) rotate(0deg);
@@ -943,7 +879,6 @@
     opacity: 1;
     transform: translate(0, 0) scale(1);
   }
-
   100% {
     opacity: 0;
     transform: translate(0, -350px) scale(0);
@@ -1043,10 +978,7 @@
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

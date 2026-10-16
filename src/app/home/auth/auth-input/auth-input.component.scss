@@ -1,6 +1,12 @@
+/* src/app/auth/auth-input/auth-input.component.scss */
+
 :host {
   display: block;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   GROUPE DE CHAMP
+   ═════════════════════════════════════════════════════════════════════ */
 
 .form-group {
   margin-bottom: 1.1rem;
@@ -8,11 +14,15 @@
 
 .form-group label {
   display: block;
-  margin-bottom: .5rem;
-  font-size: .85rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-body, #334155);
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   WRAPPER
+   ═════════════════════════════════════════════════════════════════════ */
 
 .input-wrapper {
   position: relative;
@@ -27,23 +37,27 @@
   height: 18px;
   color: var(--text-dim, #94a3b8);
   pointer-events: none;
-  transition: color .2s ease;
+  transition: color 0.2s ease;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   INPUT
+   ═════════════════════════════════════════════════════════════════════ */
 
 .input-wrapper input {
   width: 100%;
-  padding: .85rem 1rem .85rem 2.75rem;
+  padding: 0.85rem 1rem 0.85rem 2.75rem;
   border-radius: var(--radius-md, 12px);
-  border: 1px solid var(--border-medium, rgba(15, 23, 42, .14));
+  border: 1px solid var(--border-medium, rgba(15, 23, 42, 0.14));
   background: #ffffff;
   color: var(--text-dark, #0f172a);
-  font-size: .95rem;
+  font-size: 0.95rem;
   font-family: inherit;
   outline: none;
   transition:
-    border-color .2s ease,
-    background .2s ease,
-    box-shadow .2s ease;
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .input-wrapper input::placeholder {
@@ -52,16 +66,45 @@
 
 .input-wrapper input:focus {
   border-color: var(--gold-primary, #b8860b);
-  box-shadow: 0 0 0 4px var(--gold-soft, rgba(184, 134, 11, .08));
+  box-shadow: 0 0 0 4px var(--gold-soft, rgba(184, 134, 11, 0.08));
 }
 
 .input-wrapper:focus-within .input-icon {
   color: var(--gold-primary, #b8860b);
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   ÉTAT ERREUR
+   ═════════════════════════════════════════════════════════════════════ */
+
+.input-wrapper.has-error input {
+  border-color: var(--danger, #dc2626);
+}
+
+.input-wrapper.has-error input:focus {
+  border-color: var(--danger, #dc2626);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+}
+
+.input-wrapper.has-error .input-icon {
+  color: var(--danger, #dc2626);
+}
+
+.error-message {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--danger, #dc2626);
+  line-height: 1.4;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   BOUTON ŒIL
+   ═════════════════════════════════════════════════════════════════════ */
+
 .toggle-pwd {
   position: absolute;
-  right: .75rem;
+  right: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,7 +115,7 @@
   color: var(--text-dim, #94a3b8);
   cursor: pointer;
   border-radius: var(--radius-sm, 8px);
-  transition: color .2s ease, background-color .2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .toggle-pwd:hover {
@@ -80,7 +123,24 @@
   background: var(--bg-soft, #f8fafc);
 }
 
+.toggle-pwd:focus-visible {
+  outline: 2px solid var(--gold-primary, #b8860b);
+  outline-offset: 2px;
+}
+
 .toggle-pwd svg {
   width: 18px;
   height: 18px;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .input-wrapper input,
+  .input-icon,
+  .toggle-pwd {
+    transition: none;
+  }
 }

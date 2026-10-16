@@ -1,31 +1,39 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
- 
+// src/app/home/again/again.component.ts
+
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+
 import { MembreEquipe } from 'src/app/home/models/membre.model';
 import { MEMBRES_EQUIPE } from '../data/equipe.data';
+import { animationDelay } from '../utils/animations.util';
 
 @Component({
   selector: 'app-again',
-  standalone: true,
   imports: [],
   templateUrl: './again.component.html',
   styleUrls: ['./again.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AgainComponent {
 
-  /** Liste complète des membres */
-  readonly membres: MembreEquipe[] = MEMBRES_EQUIPE;
+  /* ═══════════════════════════════════════════════════════
+     DONNÉES
+     ═══════════════════════════════════════════════════════ */
 
-  /** Membres mis en avant (section "Piliers") */
-  readonly membresFeatured: MembreEquipe[] =
-    this.membres.filter(m => m.isFeatured);
+  /** Liste complète des membres. */
+  readonly membres: readonly MembreEquipe[] = MEMBRES_EQUIPE;
 
-  /** Membres standards (section "Gardiens") */
-  readonly membresStandard: MembreEquipe[] =
-    this.membres.filter(m => !m.isFeatured);
+  /** Membres mis en avant (section « Piliers »). */
+  readonly membresFeatured: readonly MembreEquipe[] =
+    this.membres.filter((m) => m.isFeatured);
 
-  /** Helper pour éviter l'appel répété à (i * delay) dans le template */
-  animationDelay(index: number, step: number): string {
-    return `${index * step}s`;
-  }
+  /** Membres standards (section « Gardiens »). */
+  readonly membresStandard: readonly MembreEquipe[] =
+    this.membres.filter((m) => !m.isFeatured);
+
+  /* ═══════════════════════════════════════════════════════
+     HELPERS (exposés au template)
+     ═══════════════════════════════════════════════════════ */
+
+  /** Fonction pure pour le délai d'animation. */
+  readonly animationDelay = animationDelay;
 }

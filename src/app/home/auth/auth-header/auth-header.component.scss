@@ -1,42 +1,51 @@
+/* src/app/auth/auth-header/auth-header.component.scss */
+
 :host {
   display: block;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   CARTE D'EN-TÊTE
+   ═════════════════════════════════════════════════════════════════════ */
 
 .card-header {
   text-align: center;
   margin-bottom: 1.75rem;
 }
 
-h2 {
-  margin: 0 0 .5rem;
+.card-header h2 {
+  margin: 0 0 0.5rem;
   font-size: 1.75rem;
   font-weight: 800;
   color: var(--text-dark, #0f172a);
-  letter-spacing: -.02em;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  margin: 0;
-  font-size: .9rem;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
   color: var(--text-muted, #64748b);
   line-height: 1.5;
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   LIEN DE BASCULE
+   ═════════════════════════════════════════════════════════════════════ */
+
 .toggle-mode {
-  margin-top: 1rem;
-  text-align: center;
-  font-size: .88rem;
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
   color: var(--text-muted, #64748b);
 }
 
 .toggle-mode a {
   position: relative;
+  margin-left: 0.35rem;
   color: var(--gold-primary, #b8860b);
   font-weight: 600;
-  cursor: pointer;
-  margin-left: .35rem;
   text-decoration: none;
-  transition: color .2s ease;
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
 
 .toggle-mode a::after {
@@ -49,7 +58,7 @@ h2 {
   background: currentColor;
   transform: scaleX(0);
   transform-origin: right;
-  transition: transform .3s ease;
+  transition: transform 0.3s ease;
 }
 
 .toggle-mode a:hover {
@@ -61,8 +70,33 @@ h2 {
   transform-origin: left;
 }
 
-@media (max-width: 480px) {
-  h2 {
+.toggle-mode a:focus-visible {
+  outline: 2px solid var(--gold-primary, #b8860b);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .card-header h2 {
     font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle-mode a,
+  .toggle-mode a::after {
+    transition: none;
   }
 }

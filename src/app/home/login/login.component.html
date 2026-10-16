@@ -1,3 +1,5 @@
+<!-- src/app/auth/login/login.component.html -->
+
 <app-auth-layout>
   <app-auth-header
     title="Bienvenue"
@@ -5,20 +7,20 @@
     promptText="Pas encore de compte ?"
     linkLabel="Créer un compte"
     linkRoute="/register"
-    [returnUrl]="returnUrl"
+    [returnUrl]="returnUrl()"
   />
 
-  @if (errorMessage) {
-    <app-auth-alert type="error" [message]="errorMessage" />
+  @if (errorMessage()) {
+    <app-auth-alert type="error" [message]="errorMessage()" />
   }
 
-  @if (successMessage) {
-    <app-auth-alert type="success" [message]="successMessage" />
+  @if (successMessage()) {
+    <app-auth-alert type="success" [message]="successMessage()" />
   }
 
   <app-google-button
     label="Continuer avec Google"
-    [disabled]="loading"
+    [disabled]="loading()"
     (clicked)="loginWithGoogle()"
   />
 
@@ -28,9 +30,8 @@
 
   <form
     (ngSubmit)="handleSubmit()"
-    #loginForm="ngForm"
     novalidate
-    [attr.aria-busy]="loading"
+    [attr.aria-busy]="loading()"
   >
     <app-auth-input
       inputId="email"
@@ -39,7 +40,7 @@
       type="email"
       autocomplete="email"
       icon="email"
-      [disabled]="loading"
+      [disabled]="loading()"
       [(value)]="email"
     />
 
@@ -50,7 +51,7 @@
       type="password"
       autocomplete="current-password"
       icon="lock"
-      [disabled]="loading"
+      [disabled]="loading()"
       [withPasswordToggle]="true"
       [(value)]="password"
       [(showPassword)]="showPassword"
@@ -61,7 +62,7 @@
         type="button"
         class="btn-link"
         (click)="onForgotPassword()"
-        [disabled]="loading"
+        [disabled]="loading()"
       >
         Mot de passe oublié ?
       </button>
@@ -70,14 +71,20 @@
     <button
       type="submit"
       class="btn-submit"
-      [disabled]="loading"
-      [attr.aria-busy]="loading"
+      [disabled]="loading()"
+      [attr.aria-busy]="loading()"
     >
-      @if (!loading) {
+      @if (!loading()) {
         <span class="btn-content">
           Se connecter
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M5 12h14M12 5l7 7-7 7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </span>
       } @else {
