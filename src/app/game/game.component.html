@@ -1,0 +1,33 @@
+<div class="game-shell">
+  <nav class="game-toolbar">
+    <!-- Retour -->
+    <button type="button" class="toolbar-btn" [disabled]="!isChildRoute()" (click)="goBack()" aria-label="Retour"
+      title="Retour">
+      ← Retour
+    </button>
+
+    <!-- Son -->
+    <button type="button" class="toolbar-btn" (click)="toggleSound()" [attr.aria-pressed]="soundOn()"
+      [attr.aria-label]="soundAriaLabel()" [title]="soundAriaLabel()">
+      {{ soundIcon() }}
+    </button>
+
+    <!-- Aide -->
+    <button type="button" class="toolbar-btn" (click)="toggleHelp()" aria-label="Aide" title="Aide">
+      ❓
+    </button>
+  </nav>
+
+  <!-- Panneau d'aide -->
+  @if (helpOpen()) {
+  <aside class="game-help">
+    <button type="button" class="game-help-close" (click)="toggleHelp()" aria-label="Fermer l'aide">✕</button>
+    <ng-content select="[help]"></ng-content>
+    <p>Utilise les boutons ci-dessus pour revenir, couper le son ou afficher cette aide.</p>
+  </aside>
+  }
+
+  <main class="game-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

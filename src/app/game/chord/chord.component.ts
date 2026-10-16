@@ -1,17 +1,16 @@
 // src/app/game/chord/chord.component.ts
 
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
-  afterNextRender,
   computed,
+  DestroyRef,
   inject,
   signal,
 } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { DEFAULT_INPUT, NOTES_SHARP, STORAGE_KEY } from 'src/app/game/constants/chord.constants';
 import { Preset, PRESETS } from 'src/app/game/data/chord.presets';
 
@@ -21,7 +20,7 @@ import {
   SavedGrid,
 } from 'src/app/game/models/chord-decoder.model';
 import { buildMidiFile, chordToMidiNotes } from 'src/app/game/utils/chord-midi.utils';
- import { createIntervalScheduler, createTimeoutScheduler } from 'src/app/game/utils/schedulers.util';
+import { createIntervalScheduler, createTimeoutScheduler } from 'src/app/game/utils/schedulers.util';
 import { analyzeChord, transposeGrid } from '../utils/chord.utils';
  
 
@@ -46,7 +45,6 @@ type PlayMode = 'normal' | 'learning';
 export class ChordComponent {
 
   /* ─── Dépendances ─── */
-  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   /* ─── Schedulers auto-nettoyés ─── */
@@ -135,17 +133,6 @@ export class ChordComponent {
       }
     });
   }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     NAVIGATION
-     ═══════════════════════════════════════════════════════════════════ */
-
-  goToPlay(): void {
-    this.stopPlayback();
-    this.stopLearningMode();
-    void this.router.navigate(['/play']);
-  }
-
   /* ═══════════════════════════════════════════════════════════════════
      DÉCODAGE
      ═══════════════════════════════════════════════════════════════════ */

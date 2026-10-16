@@ -1,68 +1,41 @@
-<!-- src/app/game/lykomode/lykomode.component.html -->
-
 <div class="lyko-page">
+  <main class="lyko-shell" aria-labelledby="lyko-main-title">
 
-  <!-- ═══════════════════════════════════════════════════════
-       BOÎTE DE DIALOGUE
-       ═══════════════════════════════════════════════════════ -->
-  <div
-    class="dialog-overlay"
-    [class.show]="showDialog()"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="lyko-title"
-    (keydown.escape)="backToMenu()"
-  >
-
-    <div class="dialog-card">
-
-      <!-- Ornement haut -->
-      <div class="dialog-ornament top" aria-hidden="true"></div>
-
-      <!-- Avatar Lykö -->
-      <div class="lyko-avatar" aria-hidden="true">
-        <div class="avatar-ring ring-1"></div>
-        <div class="avatar-ring ring-2"></div>
-        <div class="avatar-icon">🐵</div>
-        <div class="avatar-sparkle s1">✨</div>
-        <div class="avatar-sparkle s2">⚡</div>
+    <section class="hero" aria-labelledby="lyko-main-title">
+      <div class="hero-figure">
+        <img src="assets/lyko.jpg" alt="Lyko le Sage, gardien des savoirs oubliés d'OFFOLAND" class="hero-image"
+          loading="eager" fetchpriority="high" />
+        <span class="hero-badge" aria-hidden="true">OXO</span>
       </div>
 
-      <!-- Titre -->
-      <h1 id="lyko-title" class="lyko-title">
-        <span class="title-small">Gardien des Guitares Sacrées</span>
-        <span class="title-big">LYKÖ LE SAGE</span>
-        <span class="title-underline" aria-hidden="true"></span>
-      </h1>
+      <div class="hero-text">
+        <h1 id="lyko-main-title" class="hero-title">LYKO LE SAGE</h1>
+        <p class="hero-intro">
+          Essaie de me défier ou joue avec un ami !
+        </p>
+      </div>
+    </section>
 
-      <!-- Boutons d'action -->
+    <section class="play-actions" aria-labelledby="play-actions-title">
+      <h2 id="play-actions-title" class="section-title">
+        Choisis ton mode de jeu
+      </h2>
+
       <div class="actions">
-
-        <!-- 🟠 Défier OFFOWA (action principale) -->
-        <button
-          #primaryBtn
-          type="button"
-          class="btn-action btn-primary"
-          (click)="playAgainstAI()"
-          aria-label="Défier OFFOWA, l'intelligence artificielle"
-        >
-          <span class="btn-glow" aria-hidden="true"></span>
+        <!-- 🟠 Défier OFFOWA -->
+        <button #primaryBtn type="button" class="btn-action btn-primary" (click)="playAgainstAI()"
+          aria-label="Défier LYKO, l'intelligence artificielle">
           <span class="btn-icon" aria-hidden="true">🤖</span>
           <span class="btn-content">
-            <span class="btn-text">DÉFIER OFFOWA</span>
-            <span class="btn-sub">Affronte la sagesse du Gardien</span>
+            <span class="btn-text">DÉFIER LYKO</span>
+            <span class="btn-sub">Affronte la haute sagesse du Gardien</span>
           </span>
           <span class="btn-arrow" aria-hidden="true">→</span>
         </button>
 
-        <!-- 🔵 Jouer avec un ami (action alternative) -->
-        <button
-          type="button"
-          class="btn-action btn-secondary"
-          (click)="playWithFriend()"
-          aria-label="Jouer avec un ami en local"
-        >
-          <span class="btn-glow" aria-hidden="true"></span>
+        <!-- 🔵 Jouer avec un ami -->
+        <button type="button" class="btn-action btn-secondary" (click)="playWithFriend()"
+          aria-label="Jouer avec un ami en duel local à deux joueurs">
           <span class="btn-icon" aria-hidden="true">👥</span>
           <span class="btn-content">
             <span class="btn-text">JOUER AVEC UN AMI</span>
@@ -71,28 +44,50 @@
           <span class="btn-arrow" aria-hidden="true">→</span>
         </button>
 
-        <!-- ⚪ Retour au menu (action secondaire) -->
-        <button
-          type="button"
-          class="btn-action btn-neutral"
-          (click)="backToMenu()"
-          aria-label="Retourner au menu des jeux"
-        >
-          <span class="btn-glow" aria-hidden="true"></span>
-          <span class="btn-icon" aria-hidden="true">↩</span>
-          <span class="btn-content">
-            <span class="btn-text">MENU DES JEUX</span>
-            <span class="btn-sub">Revenir à l'arène principale</span>
-          </span>
-          <span class="btn-arrow" aria-hidden="true">←</span>
-        </button>
-
       </div>
+    </section>
 
-      <!-- Ornement bas -->
-      <div class="dialog-ornament bottom" aria-hidden="true"></div>
+    <!-- ═══════════════════════════════════════════════════════
+         TUTORIEL
+         ═══════════════════════════════════════════════════════ -->
+    <section class="tutorial-panel" aria-labelledby="tutorial-title">
+      <h2 id="tutorial-title" class="section-title">Besoin d'un coup de main ?</h2>
 
-    </div>
-  </div>
+      <button type="button" class="tutorial" (click)="showTutorial()"
+        aria-label="Ouvrir le tutoriel vidéo de Lyko le Sage sur YouTube (nouvel onglet)">
+        <span class="tutorial-monkey" aria-hidden="true">🐵</span>
+        <span class="tutorial-content">
+          <strong>TUTORIEL</strong>
+          <small>Découvre le jeu en vidéo</small>
+        </span>
+        <span class="play-icon" aria-hidden="true">▶</span>
+      </button>
+    </section>
 
+    <section class="info-grid" aria-labelledby="about-title">
+      <article class="panel about">
+        <h2 id="about-title">
+          <span aria-hidden="true">🌟</span>
+          À propos
+        </h2>
+        <p>
+          Lyko invoque la puissance d'offowa pour l'aider à gagner ses adversaires et gagner son respect.
+        </p>
+        <p class="wisdom">Farce ou Sagesse ??</p>
+        <span class="paw" aria-hidden="true">🐾</span>
+      </article>
+    </section>
+
+    <section class="back-section" aria-label="Navigation">
+      <button type="button" class="btn-action btn-neutral" (click)="backToMenu()"
+        aria-label="Retourner au menu des jeux">
+        <span class="btn-icon" aria-hidden="true">↩</span>
+        <span class="btn-content">
+          <span class="btn-text">MENU DES JEUX</span>
+          <span class="btn-sub">Revenir à l'arène principale</span>
+        </span>
+        <span class="btn-arrow" aria-hidden="true">←</span>
+      </button>
+    </section>
+  </main>
 </div>

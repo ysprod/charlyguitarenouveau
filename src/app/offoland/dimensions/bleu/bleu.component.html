@@ -1,8 +1,10 @@
+<!-- src/app/offoland/dimensions/bleu/bleu.component.html -->
+
 <div class="bleu-container">
 
   <!-- Nuages flottants en fond -->
-  <div class="clouds-bg">
-    @for (c of [1,2,3,4,5,6,7,8]; track c) {
+  <div class="clouds-bg" aria-hidden="true">
+    @for (c of clouds; track c) {
       <div class="cloud"
         [style.animation-delay]="(c * 1.2) + 's'"
         [style.top.%]="(c * 12) % 80"
@@ -13,8 +15,8 @@
   </div>
 
   <!-- Particules bleues -->
-  <div class="particles-bg">
-    @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track p) {
+  <div class="particles-bg" aria-hidden="true">
+    @for (p of blueParticles; track p) {
       <span
         class="particle"
         [style.left.%]="(p * 4) % 100"
@@ -24,14 +26,13 @@
   </div>
 
   <!-- Soleil bleu -->
-  <div class="blue-sun"></div>
+  <div class="blue-sun" aria-hidden="true"></div>
 
   <!-- HEADER ÉPIQUE -->
   <header class="bleu-header">
+    <h1 class="title-glow-bleu">LA DIMENSION BLEUE</h1>
 
-    <h1 class="title-glow-bleu"><br>LA DIMENSION BLEUE</h1>
-
-    <div class="header-divider">
+    <div class="header-divider" aria-hidden="true">
       <span class="line"></span>
       <span class="icon">☁️</span>
       <span class="line"></span>
@@ -39,31 +40,30 @@
   </header>
 
   <!-- SECTION VIDÉO -->
-  <section class="video-section">
+  <section class="video-section" aria-labelledby="video-title">
     <div class="video-header">
-      <span class="material-icons">play_circle</span>
-      <h3>PLONGEZ DANS LE RÊVE</h3>
+      <span class="material-icons" aria-hidden="true">play_circle</span>
+      <h2 id="video-title">PLONGEZ DANS LE RÊVE</h2>
     </div>
     <div class="video-wrapper">
       <div class="video-frame">
         <iframe
           src="https://www.youtube.com/embed/Bp2ysJ4Jgp0?autoplay=1&mute=1"
           title="Dimension Bleue - Charly Guitare"
-          frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen>
         </iframe>
       </div>
-      <div class="video-glow"></div>
+      <div class="video-glow" aria-hidden="true"></div>
     </div>
   </section>
 
   <!-- SECTION INTRO -->
-  <section class="intro-section">
+  <section class="intro-section" aria-labelledby="intro-title">
     <div class="intro-card">
-      <div class="intro-icon">💭</div>
+      <div class="intro-icon" aria-hidden="true">💭</div>
       <div class="intro-content">
-        <h3>UN MONDE SANS SOL</h3>
+        <h2 id="intro-title">UN MONDE SANS SOL</h2>
         <p>
           La Dimension Bleue n'a pas de sol. Tout est en nuage — même les choses de la vraie réalité
           sont constituées de nuages, avec un sol en nuage et un soleil bleu qui ne se couche jamais.
@@ -73,21 +73,21 @@
   </section>
 
   <!-- SECTION CRÉATURES -->
-  <section class="creatures-section">
+  <section class="creatures-section" aria-labelledby="creatures-title">
     <div class="section-title">
-      <span class="material-icons">pets</span>
-      <h2>LES CRÉATURES DE LA NUIT</h2>
-      <span class="material-icons">pets</span>
+      <span class="material-icons" aria-hidden="true">pets</span>
+      <h2 id="creatures-title">LES CRÉATURES DE LA NUIT</h2>
+      <span class="material-icons" aria-hidden="true">pets</span>
     </div>
 
     <div class="creatures-grid">
-      @for (c of creatures; track c; let i = $index) {
-        <div
+      @for (c of creatures; track c.nom; let i = $index) {
+        <article
           class="creature-card"
           [style.--accent]="c.couleur"
           [style.animation-delay]="(i * 0.1) + 's'">
-          <div class="card-glow"></div>
-          <div class="creature-icon-wrapper">
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="creature-icon-wrapper" aria-hidden="true">
             <div class="creature-icon">{{ c.icone }}</div>
             <div class="icon-ring"></div>
           </div>
@@ -95,43 +95,43 @@
             <h3 class="creature-nom">{{ c.nom }}</h3>
             <p class="creature-description">{{ c.description }}</p>
             <div class="creature-danger">
-              <span class="material-icons">dangerous</span>
+              <span class="material-icons" aria-hidden="true">dangerous</span>
               <span>{{ c.danger }}</span>
             </div>
           </div>
-          <div class="corner top-left"></div>
-          <div class="corner top-right"></div>
-          <div class="corner bottom-left"></div>
-          <div class="corner bottom-right"></div>
-        </div>
+          <div class="corner top-left" aria-hidden="true"></div>
+          <div class="corner top-right" aria-hidden="true"></div>
+          <div class="corner bottom-left" aria-hidden="true"></div>
+          <div class="corner bottom-right" aria-hidden="true"></div>
+        </article>
       }
     </div>
 
     <!-- Faiblesse des créatures -->
     <div class="faiblesse-card">
-      <div class="faiblesse-icon">🎸</div>
+      <div class="faiblesse-icon" aria-hidden="true">🎸</div>
       <div class="faiblesse-content">
-        <h4>{{ faiblesseCreatures.titre }}</h4>
+        <h3>{{ faiblesseCreatures.titre }}</h3>
         <p>{{ faiblesseCreatures.description }}</p>
       </div>
     </div>
   </section>
 
   <!-- SECTION PIÈGES DU LABYRINTHE -->
-  <section class="pieges-section">
+  <section class="pieges-section" aria-labelledby="pieges-title">
     <div class="section-title">
-      <span class="material-icons">warning</span>
-      <h2>LES PIÈGES DU LABYRINTHE</h2>
-      <span class="material-icons">warning</span>
+      <span class="material-icons" aria-hidden="true">warning</span>
+      <h2 id="pieges-title">LES PIÈGES DU LABYRINTHE</h2>
+      <span class="material-icons" aria-hidden="true">warning</span>
     </div>
 
     <div class="pieges-grid">
-      @for (p of pieges; track p; let i = $index) {
+      @for (p of pieges; track p.nom; let i = $index) {
         <div
           class="piege-card"
           [style.animation-delay]="(i * 0.08) + 's'">
-          <div class="piege-icon">{{ p.icone }}</div>
-          <h4>{{ p.nom }}</h4>
+          <div class="piege-icon" aria-hidden="true">{{ p.icone }}</div>
+          <h3>{{ p.nom }}</h3>
           <p>{{ p.description }}</p>
         </div>
       }
@@ -139,19 +139,19 @@
   </section>
 
   <!-- SECTION CLIMATS -->
-  <section class="climats-section">
+  <section class="climats-section" aria-labelledby="climats-title">
     <div class="section-title">
-      <span class="material-icons">cloud_queue</span>
-      <h2>LES CLIMATS DU MONDE BLEU</h2>
-      <span class="material-icons">cloud_queue</span>
+      <span class="material-icons" aria-hidden="true">cloud_queue</span>
+      <h2 id="climats-title">LES CLIMATS DU MONDE BLEU</h2>
+      <span class="material-icons" aria-hidden="true">cloud_queue</span>
     </div>
 
     <div class="climats-grid">
-      @for (c of climats; track c; let i = $index) {
+      @for (c of climats; track c.nom; let i = $index) {
         <div
           class="climat-card"
           [style.animation-delay]="(i * 0.1) + 's'">
-          <div class="climat-icon">{{ c.icone }}</div>
+          <div class="climat-icon" aria-hidden="true">{{ c.icone }}</div>
           <span class="climat-nom">{{ c.nom }}</span>
         </div>
       }
@@ -159,18 +159,18 @@
   </section>
 
   <!-- SECTION CHARLY BLEU -->
-  <section class="charly-section">
+  <section class="charly-section" aria-labelledby="charly-title">
     <div class="section-title">
-      <span class="material-icons">person</span>
-      <h2>LE CHARLY GUITARE BLEU</h2>
-      <span class="material-icons">person</span>
+      <span class="material-icons" aria-hidden="true">person</span>
+      <h2 id="charly-title">LE CHARLY GUITARE BLEU</h2>
+      <span class="material-icons" aria-hidden="true">person</span>
     </div>
 
     <div class="charly-card">
       <div class="charly-portrait">
-        <div class="portrait-glow"></div>
-        <div class="portrait-icon">😴</div>
-        <div class="portrait-clouds">
+        <div class="portrait-glow" aria-hidden="true"></div>
+        <div class="portrait-icon" aria-hidden="true">😴</div>
+        <div class="portrait-clouds" aria-hidden="true">
           <span>☁️</span><span>💤</span><span>☁️</span>
         </div>
       </div>
@@ -183,9 +183,9 @@
 
         <!-- Modes de réveil -->
         <div class="reveil-grid">
-          @for (r of charlyBleu.reveil; track r) {
+          @for (r of charlyBleu.reveil; track r.type) {
             <div class="reveil-card">
-              <div class="reveil-icon">{{ r.icone }}</div>
+              <div class="reveil-icon" aria-hidden="true">{{ r.icone }}</div>
               <h4>{{ r.type }}</h4>
               <div class="reveil-valeur">{{ r.valeur }}</div>
             </div>
@@ -194,7 +194,7 @@
 
         <!-- Note mystique -->
         <div class="note-mystique">
-          <span class="material-icons">auto_awesome</span>
+          <span class="material-icons" aria-hidden="true">auto_awesome</span>
           <p>Le Bleu ne meurt pas, mais dort trop. Chaque réveil est un miracle arraché au temps lui-même.</p>
         </div>
       </div>
@@ -202,15 +202,15 @@
   </section>
 
   <!-- SECTION CORRESPONDANCES -->
-  <section class="correspondances-section">
+  <section class="correspondances-section" aria-labelledby="corresp-title">
     <div class="section-title">
-      <span class="material-icons">swap_horiz</span>
-      <h2>LES CORRESPONDANCES ENTRE LES MONDES</h2>
-      <span class="material-icons">swap_horiz</span>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
+      <h2 id="corresp-title">LES CORRESPONDANCES ENTRE LES MONDES</h2>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
     </div>
 
     <div class="correspondances-grid">
-      @for (c of correspondances; track c) {
+      @for (c of correspondances; track c.monde) {
         <div
           class="correspondance-card"
           [style.--accent]="c.couleur">
@@ -218,7 +218,7 @@
             [style.color]="c.monde === 'BLANC' ? '#000' : '#fff'">
             {{ c.monde }}
           </span>
-          <span class="arrow">→</span>
+          <span class="arrow" aria-hidden="true">→</span>
           <span class="repere">{{ c.repere }}</span>
         </div>
       }
@@ -226,22 +226,22 @@
   </section>
 
   <!-- SECTION RÈGLE -->
-  <section class="regle-section">
+  <section class="regle-section" aria-labelledby="regle-title">
     <div class="regle-card">
-      <div class="regle-icon">⚖️</div>
+      <div class="regle-icon" aria-hidden="true">⚖️</div>
       <div class="regle-content">
-        <h3>{{ reglePoints.titre }}</h3>
+        <h3 id="regle-title">{{ reglePoints.titre }}</h3>
         <p>{{ reglePoints.description }}</p>
       </div>
     </div>
   </section>
 
   <!-- SECTION CONTEXTE HISTOIRE -->
-  <section class="contexte-section">
+  <section class="contexte-section" aria-labelledby="contexte-title">
     <div class="contexte-card">
-      <div class="contexte-icon">⚔️</div>
+      <div class="contexte-icon" aria-hidden="true">⚔️</div>
       <div class="contexte-content">
-        <h3>{{ contexteHistoire.titre }}</h3>
+        <h3 id="contexte-title">{{ contexteHistoire.titre }}</h3>
         <p>{{ contexteHistoire.description }}</p>
       </div>
     </div>
@@ -250,16 +250,16 @@
   <!-- FOOTER ÉPIQUE -->
   <footer class="bleu-footer">
     <div class="footer-quote">
-      <span class="quote-mark">«</span>
+      <span class="quote-mark" aria-hidden="true">«</span>
       <p>Dans la Dimension Bleue, mourir est impossible — mais se réveiller est un miracle qui coûte un siècle ou mille points.</p>
-      <span class="quote-mark">»</span>
+      <span class="quote-mark" aria-hidden="true">»</span>
     </div>
     <p class="footer-signature">— Les Chroniques d'Offoland, Livre XI</p>
 
     <div class="footer-badge">
-      <span class="icon">☁️</span>
+      <span class="icon" aria-hidden="true">☁️</span>
       <span>DIMENSION BLEUE</span>
-      <span class="dot">•</span>
+      <span class="dot" aria-hidden="true">•</span>
       <span>CHARLY GUITARE 5D</span>
     </div>
   </footer>

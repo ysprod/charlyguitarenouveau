@@ -24,7 +24,4 @@ export const DOCUMENTS_DB_PATHS = {
   CREDIT: 'credit'
 } as const;
 
-/* ═══════════════════════════════════════════════════════
-   UI
-   ═══════════════════════════════════════════════════════ */
 export const TOAST_DURATION_MS = 4000;

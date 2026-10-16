@@ -1,17 +1,21 @@
+<!-- src/app/offoland/dimensions/rouge/rouge.component.html -->
+
 <div class="rouge-container">
 
   <!-- Cœurs pulsants en fond -->
-  <div class="hearts-bg">
-    @for (h of [1,2,3,4,5,6,7,8]; track h) {
-      <div class="heart" [style.animation-delay]="(h * 0.8) + 's'" [style.left.%]="(h * 12) % 100">
+  <div class="hearts-bg" aria-hidden="true">
+    @for (h of hearts; track h) {
+      <div class="heart"
+           [style.animation-delay]="(h * 0.8) + 's'"
+           [style.left.%]="(h * 12) % 100">
         ❤️
       </div>
     }
   </div>
 
   <!-- Particules rouges -->
-  <div class="particles-bg">
-    @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track p) {
+  <div class="particles-bg" aria-hidden="true">
+    @for (p of redParticles; track p) {
       <span
         class="particle"
         [style.left.%]="(p * 4) % 100"
@@ -22,11 +26,9 @@
 
   <!-- HEADER ÉPIQUE -->
   <header class="rouge-header">
+    <h1 class="title-glow-rouge">LA DIMENSION ROUGE</h1>
 
-    <h1 class="title-glow-rouge"><br>LA DIMENSION ROUGE</h1>
-
-
-    <div class="header-divider">
+    <div class="header-divider" aria-hidden="true">
       <span class="line"></span>
       <span class="icon">❤️‍🔥</span>
       <span class="line"></span>
@@ -34,28 +36,27 @@
   </header>
 
   <!-- SECTION VIDÉO -->
-  <section class="video-section">
-
+  <section class="video-section" aria-labelledby="video-title">
+    <h2 id="video-title" class="visually-hidden">Vidéo de la Dimension Rouge</h2>
     <div class="video-wrapper">
       <div class="video-frame">
         <iframe
           src="https://www.youtube.com/embed/zIUIrSKYoD8?autoplay=1&mute=1"
           title="Dimension Rouge - Charly Guitare"
-          frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen>
         </iframe>
       </div>
-      <div class="video-glow"></div>
+      <div class="video-glow" aria-hidden="true"></div>
     </div>
   </section>
 
   <!-- SECTION INTRO -->
-  <section class="intro-section">
+  <section class="intro-section" aria-labelledby="intro-title">
     <div class="intro-card">
-      <div class="intro-icon">💗</div>
+      <div class="intro-icon" aria-hidden="true">💗</div>
       <div class="intro-content">
-        <h3>UN UNIVERS DOMINÉ PAR LE MANQUE DE SENTIMENTS</h3>
+        <h2 id="intro-title">UN UNIVERS DOMINÉ PAR LE MANQUE DE SENTIMENTS</h2>
         <p>
           Dans la Dimension Rouge, chaque sentiment a un peuple vivant ensemble sur une même parcelle de terre.
           Les jaloux vivent avec les jaloux, les colériques avec les colériques, les amoureux avec les amoureux.
@@ -66,21 +67,21 @@
   </section>
 
   <!-- SECTION CLANS -->
-  <section class="clans-section">
+  <section class="clans-section" aria-labelledby="clans-title">
     <div class="section-title">
-      <span class="material-icons">groups</span>
-      <h2>LES CLANS ÉMOTIONNELS</h2>
-      <span class="material-icons">groups</span>
+      <span class="material-icons" aria-hidden="true">groups</span>
+      <h2 id="clans-title">LES CLANS ÉMOTIONNELS</h2>
+      <span class="material-icons" aria-hidden="true">groups</span>
     </div>
 
     <div class="clans-grid">
-      @for (clan of clans; track clan; let i = $index) {
-        <div
+      @for (clan of clans; track clan.nom; let i = $index) {
+        <article
           class="clan-card"
           [style.--accent]="clan.couleur"
           [style.animation-delay]="(i * 0.1) + 's'">
-          <div class="card-glow"></div>
-          <div class="clan-icon-wrapper">
+          <div class="card-glow" aria-hidden="true"></div>
+          <div class="clan-icon-wrapper" aria-hidden="true">
             <div class="clan-icon">{{ clan.symbole }}</div>
             <div class="icon-ring"></div>
           </div>
@@ -89,28 +90,28 @@
             <p class="clan-sentiment">{{ clan.sentiment }}</p>
             <p class="clan-description">{{ clan.description }}</p>
           </div>
-          <div class="corner top-left"></div>
-          <div class="corner top-right"></div>
-          <div class="corner bottom-left"></div>
-          <div class="corner bottom-right"></div>
-        </div>
+          <div class="corner top-left" aria-hidden="true"></div>
+          <div class="corner top-right" aria-hidden="true"></div>
+          <div class="corner bottom-left" aria-hidden="true"></div>
+          <div class="corner bottom-right" aria-hidden="true"></div>
+        </article>
       }
     </div>
   </section>
 
   <!-- SECTION CHARLY ROUGE -->
-  <section class="charly-section">
+  <section class="charly-section" aria-labelledby="charly-title">
     <div class="section-title">
-      <span class="material-icons">person</span>
-      <h2>LE CHARLY GUITARE ROUGE</h2>
-      <span class="material-icons">person</span>
+      <span class="material-icons" aria-hidden="true">person</span>
+      <h2 id="charly-title">LE CHARLY GUITARE ROUGE</h2>
+      <span class="material-icons" aria-hidden="true">person</span>
     </div>
 
     <div class="charly-card">
       <div class="charly-portrait">
-        <div class="portrait-glow"></div>
-        <div class="portrait-icon">🎸</div>
-        <div class="portrait-hearts">
+        <div class="portrait-glow" aria-hidden="true"></div>
+        <div class="portrait-icon" aria-hidden="true">🎸</div>
+        <div class="portrait-hearts" aria-hidden="true">
           <span>❤️</span><span>💕</span><span>💖</span>
         </div>
       </div>
@@ -124,13 +125,13 @@
 
         <!-- Pouvoirs -->
         <div class="pouvoirs-grid">
-          @for (p of pouvoirs; track p) {
+          @for (p of pouvoirs; track p.nom) {
             <div class="pouvoir-card">
-              <div class="pouvoir-icon">{{ p.icone }}</div>
+              <div class="pouvoir-icon" aria-hidden="true">{{ p.icone }}</div>
               <h4>{{ p.nom }}</h4>
               <p>{{ p.description }}</p>
               <div class="pouvoir-cout">
-                <span class="material-icons">warning</span>
+                <span class="material-icons" aria-hidden="true">warning</span>
                 <span>Coût : {{ p.cout }}</span>
               </div>
             </div>
@@ -140,7 +141,7 @@
         <!-- Faiblesse -->
         <div class="faiblesse-card">
           <div class="faiblesse-header">
-            <span class="material-icons">heart_broken</span>
+            <span class="material-icons" aria-hidden="true">heart_broken</span>
             <h4>{{ faiblesse.titre }}</h4>
           </div>
           <p>{{ faiblesse.description }}</p>
@@ -150,15 +151,15 @@
   </section>
 
   <!-- SECTION CORRESPONDANCES -->
-  <section class="correspondances-section">
+  <section class="correspondances-section" aria-labelledby="corresp-title">
     <div class="section-title">
-      <span class="material-icons">swap_horiz</span>
-      <h2>LES CORRESPONDANCES ENTRE LES MONDES</h2>
-      <span class="material-icons">swap_horiz</span>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
+      <h2 id="corresp-title">LES CORRESPONDANCES ENTRE LES MONDES</h2>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
     </div>
 
     <div class="correspondances-grid">
-      @for (c of correspondances; track c) {
+      @for (c of correspondances; track c.monde) {
         <div
           class="correspondance-card"
           [style.--accent]="c.couleur">
@@ -166,7 +167,7 @@
             [style.color]="c.monde === 'BLANC' ? '#000' : '#fff'">
             {{ c.monde }}
           </span>
-          <span class="arrow">→</span>
+          <span class="arrow" aria-hidden="true">→</span>
           <span class="repere">{{ c.repere }}</span>
         </div>
       }
@@ -174,11 +175,11 @@
   </section>
 
   <!-- SECTION RÈGLE -->
-  <section class="regle-section">
+  <section class="regle-section" aria-labelledby="regle-title">
     <div class="regle-card">
-      <div class="regle-icon">⚖️</div>
+      <div class="regle-icon" aria-hidden="true">⚖️</div>
       <div class="regle-content">
-        <h3>RÈGLE DES DIMENSIONS</h3>
+        <h3 id="regle-title">RÈGLE DES DIMENSIONS</h3>
         <p>
           Pour pouvoir utiliser une guitare d'une autre couleur dans un monde X,
           il faut <strong>sacrifier 500 points</strong>.
@@ -190,16 +191,16 @@
   <!-- FOOTER ÉPIQUE -->
   <footer class="rouge-footer">
     <div class="footer-quote">
-      <span class="quote-mark">«</span>
+      <span class="quote-mark" aria-hidden="true">«</span>
       <p>Dans la Dimension Rouge, aimer c'est risquer de perdre ce qui donne le pouvoir de guérir.</p>
-      <span class="quote-mark">»</span>
+      <span class="quote-mark" aria-hidden="true">»</span>
     </div>
     <p class="footer-signature">— Les Chroniques d'Offoland, Livre XI</p>
 
     <div class="footer-badge">
-      <span class="icon">❤️</span>
+      <span class="icon" aria-hidden="true">❤️</span>
       <span>DIMENSION ROUGE</span>
-      <span class="dot">•</span>
+      <span class="dot" aria-hidden="true">•</span>
       <span>CHARLY GUITARE 5D</span>
     </div>
   </footer>

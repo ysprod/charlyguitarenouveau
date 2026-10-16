@@ -12,7 +12,6 @@ import {
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 
 import { fromEvent } from 'rxjs';
 
@@ -57,7 +56,6 @@ import { MetronomeAudioService } from '../services/metronome-audio.service';
 export class MetronomeComponent {
 
   /* ─── Injection ─── */
-  private readonly router = inject(Router);
   private readonly audio = inject(MetronomeAudioService);
   private readonly storage = inject(StorageService);
   private readonly destroyRef = inject(DestroyRef);
@@ -235,16 +233,7 @@ export class MetronomeComponent {
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     NAVIGATION
-     ═══════════════════════════════════════════════════════ */
-
-  goToPlay(): void {
-    this.stopAllTimers();
-    void this.router.navigate(['/play']);
-  }
-
-  /* ═══════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
      CLAVIER
      ═══════════════════════════════════════════════════════ */
 

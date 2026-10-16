@@ -1,198 +1,33 @@
-import { Injectable, signal, OnDestroy, inject, NgZone } from '@angular/core';
+// src/app/game/services/piano-audio.service.ts
 
-export type InstrumentType =
-  | 'piano' | 'organ' | 'strings' | 'harpsichord' | 'synth'
-  | 'trumpet' | 'eguitar' | 'bells' | 'flute' | 'sax';
+import { Injectable, OnDestroy, inject, NgZone, signal } from '@angular/core';
 
-interface ADSR {
-  attack: number;
-  decay: number;
-  sustain: number; // 0 à 1
-  release: number;
-}
-
-interface FilterEnv {
-  type: BiquadFilterType;
-  baseFreq: number;
-  envAmount: number; // Excursion en Hz impulsée par l'attaque
-  Q: number;
-}
-
-interface HarmonicSpec {
-  mult: number;      // Multiplicateur de fréquence (1 = fondamentale, 2 = 1ère harmonique, etc.)
-  type: OscillatorType;
-  gain: number;      // Amplitude relative
-  detune?: number;   // Désharmonie en cents
-}
-
-interface InstrumentPreset {
-  label: string;
-  gain: number;
-  adsr: ADSR;
-  harmonics: HarmonicSpec[];
-  filter?: FilterEnv;
-  vibratoHz?: number;
-  vibratoCents?: number;
-  tremoloHz?: number;
-  tremoloDepth?: number;
-  distortion?: number;
-  reverbMix?: number;
-}
+import {
+  INSTRUMENTS,
+  InstrumentPreset,
+  InstrumentType,
+} from './piano-audio.presets';
+export type { InstrumentType } from './piano-audio.presets';
+/* ═══════════════════════════════════════════════════════════
+   TYPES INTERNES
+   ═══════════════════════════════════════════════════════════ */
 
 interface AudioVoice {
-  gainNode: GainNode;
-  sources: OscillatorNode[];
-  lfos: OscillatorNode[];
-  stop: (stopTime: number, release: number) => void;
+  readonly gainNode: GainNode;
+  readonly sources: readonly OscillatorNode[];
+  readonly lfos: readonly OscillatorNode[];
+  readonly noiseSource?: AudioBufferSourceNode;
+  readonly release: number;
+  readonly stop: (stopTime: number) => void;
 }
 
-const INSTRUMENTS: Record<InstrumentType, InstrumentPreset> = {
-  piano: {
-    label: 'Piano Synthétique',
-    gain: 0.9,
-    adsr: { attack: 0.003, decay: 1.2, sustain: 0.05, release: 0.3 },
-    harmonics: [
-      { mult: 1, type: 'sine', gain: 1.0 },
-      { mult: 2, type: 'sine', gain: 0.5, detune: 2 },
-      { mult: 3, type: 'triangle', gain: 0.25, detune: -2 },
-      { mult: 4, type: 'sine', gain: 0.1 },
-    ],
-    filter: { type: 'lowpass', baseFreq: 1200, envAmount: 4000, Q: 1.2 },
-    reverbMix: 0.2,
-  },
-  harpsichord: {
-    label: 'Clavecin',
-    gain: 0.85,
-    adsr: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.1 },
-    harmonics: [
-      { mult: 1, type: 'sawtooth', gain: 0.8 },
-      { mult: 2, type: 'square', gain: 0.6 },
-      { mult: 3, type: 'sawtooth', gain: 0.4 },
-    ],
-    filter: { type: 'highpass', baseFreq: 300, envAmount: 0, Q: 0.7 },
-    reverbMix: 0.1,
-  },
-  organ: {
-    label: 'Orgue (Hammond)',
-    gain: 0.7,
-    adsr: { attack: 0.02, decay: 0.05, sustain: 0.95, release: 0.08 },
-    harmonics: [
-      { mult: 0.5, type: 'sine', gain: 0.8 }, // Sub-octave (Tiré 16')
-      { mult: 1, type: 'sine', gain: 1.0 },   // Fondamentale (Tiré 8')
-      { mult: 1.5, type: 'sine', gain: 0.6 }, // Quinte (Tiré 5 1/3')
-      { mult: 2, type: 'sine', gain: 0.7 },   // Octave (Tiré 4')
-      { mult: 3, type: 'sine', gain: 0.4 },   // Douzième (Tiré 2 2/3')
-    ],
-    vibratoHz: 6,
-    vibratoCents: 8,
-    reverbMix: 0.3,
-  },
-  strings: {
-    label: 'Ensemble de Cordes',
-    gain: 0.6,
-    adsr: { attack: 0.25, decay: 0.4, sustain: 0.85, release: 0.6 },
-    harmonics: [
-      { mult: 1, type: 'sawtooth', gain: 0.7, detune: -7 },
-      { mult: 1, type: 'sawtooth', gain: 0.7, detune: 7 },
-      { mult: 2, type: 'sawtooth', gain: 0.4, detune: -4 },
-      { mult: 2, type: 'sawtooth', gain: 0.4, detune: 4 },
-    ],
-    filter: { type: 'lowpass', baseFreq: 1800, envAmount: 1200, Q: 1.0 },
-    vibratoHz: 5,
-    vibratoCents: 12,
-    reverbMix: 0.5,
-  },
-  synth: {
-    label: 'Synthé Analogique',
-    gain: 0.6,
-    adsr: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.3 },
-    harmonics: [
-      { mult: 1, type: 'sawtooth', gain: 1.0, detune: -10 },
-      { mult: 1, type: 'square', gain: 0.8, detune: 10 },
-      { mult: 0.5, type: 'square', gain: 0.5 }, // Sub-oscillator
-    ],
-    filter: { type: 'lowpass', baseFreq: 800, envAmount: 3500, Q: 4.5 },
-    vibratoHz: 5.5,
-    vibratoCents: 15,
-    reverbMix: 0.25,
-  },
-  trumpet: {
-    label: 'Trompette',
-    gain: 0.65,
-    adsr: { attack: 0.04, decay: 0.1, sustain: 0.85, release: 0.12 },
-    harmonics: [
-      { mult: 1, type: 'sawtooth', gain: 1.0 },
-      { mult: 2, type: 'sawtooth', gain: 0.6 },
-      { mult: 3, type: 'square', gain: 0.3 },
-    ],
-    filter: { type: 'lowpass', baseFreq: 1200, envAmount: 3000, Q: 2.0 },
-    vibratoHz: 5.5,
-    vibratoCents: 12,
-    reverbMix: 0.2,
-  },
-  eguitar: {
-    label: 'Guitare Électrique (Lead)',
-    gain: 0.5,
-    adsr: { attack: 0.008, decay: 0.3, sustain: 0.7, release: 0.25 },
-    harmonics: [
-      { mult: 1, type: 'sawtooth', gain: 1.0 },
-      { mult: 2, type: 'square', gain: 0.5, detune: 3 },
-    ],
-    distortion: 0.35,
-    filter: { type: 'lowpass', baseFreq: 2500, envAmount: 1500, Q: 1.8 },
-    vibratoHz: 5.0,
-    vibratoCents: 10,
-    reverbMix: 0.3,
-  },
-  bells: {
-    label: 'Cloches Méditatives',
-    gain: 0.7,
-    adsr: { attack: 0.001, decay: 1.8, sustain: 0.0, release: 1.0 },
-    harmonics: [
-      { mult: 1.0, type: 'sine', gain: 1.0 },
-      { mult: 2.756, type: 'sine', gain: 0.6 },  // Ratio inharmonique
-      { mult: 5.404, type: 'sine', gain: 0.35 }, // Ratio inharmonique
-      { mult: 8.932, type: 'sine', gain: 0.2 },  // Ratio inharmonique
-    ],
-    filter: { type: 'lowpass', baseFreq: 6000, envAmount: 0, Q: 0.7 },
-    reverbMix: 0.6,
-  },
-  flute: {
-    label: 'Flûte traversière',
-    gain: 0.75,
-    adsr: { attack: 0.08, decay: 0.15, sustain: 0.8, release: 0.15 },
-    harmonics: [
-      { mult: 1, type: 'sine', gain: 1.0 },
-      { mult: 2, type: 'sine', gain: 0.2 },
-      { mult: 3, type: 'triangle', gain: 0.08 },
-    ],
-    filter: { type: 'lowpass', baseFreq: 2000, envAmount: 800, Q: 1.0 },
-    vibratoHz: 5.2,
-    vibratoCents: 20,
-    tremoloHz: 5.2,
-    tremoloDepth: 0.15,
-    reverbMix: 0.35,
-  },
-  sax: {
-    label: 'Saxophone Alto',
-    gain: 0.6,
-    adsr: { attack: 0.05, decay: 0.15, sustain: 0.8, release: 0.18 },
-    harmonics: [
-      { mult: 1, type: 'square', gain: 0.8 },
-      { mult: 1, type: 'sawtooth', gain: 0.5 },
-      { mult: 2, type: 'sawtooth', gain: 0.4 },
-      { mult: 3, type: 'square', gain: 0.2 },
-    ],
-    filter: { type: 'lowpass', baseFreq: 1400, envAmount: 2200, Q: 3.0 },
-    vibratoHz: 5.5,
-    vibratoCents: 16,
-    reverbMix: 0.25,
-  },
-};
+/* ═══════════════════════════════════════════════════════════
+   NOTES → MIDI / FRÉQUENCE
+   ═══════════════════════════════════════════════════════════ */
 
-const NOTE_OFFSETS: Record<string, number> = {
+const NOTE_OFFSETS: Readonly<Record<string, number>> = {
   'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5,
-  'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
+  'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11,
 };
 
 const NOTE_REGEX = /^([A-G]#?)(-?\d+)$/;
@@ -221,11 +56,27 @@ function midiToFreq(midi: number): number {
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTES
+   ═══════════════════════════════════════════════════════════ */
+
+/** Temps d'avance pour la programmation (évite les glitchs). */
+const LOOK_AHEAD_S = 0.015;
+
+/** Durée de la réverbe synthétique. */
+const REVERB_DURATION_S = 2.4;
+const REVERB_DECAY = 2.8;
+
+/* ═══════════════════════════════════════════════════════════
+   SERVICE
+   ═══════════════════════════════════════════════════════════ */
+
 @Injectable({ providedIn: 'root' })
 export class PianoAudioService implements OnDestroy {
+
   private readonly ngZone = inject(NgZone);
 
-  // ── ÉTAT EXPOSÉ ─────────────────────────────────────────
+  /* ─── État exposé ─── */
   private readonly _isReady = signal(true);
   readonly isReady = this._isReady.asReadonly();
 
@@ -237,18 +88,25 @@ export class PianoAudioService implements OnDestroy {
   private readonly _instrument = signal<InstrumentType>('piano');
   readonly instrument = this._instrument.asReadonly();
 
-  // ── INTERNES ────────────────────────────────────────────
+  /* ─── Interne ─── */
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
+  private highShelf: BiquadFilterNode | null = null;
   private reverbNode: ConvolverNode | null = null;
   private reverbGain: GainNode | null = null;
+  private reverbSend: GainNode | null = null;
 
   private readonly activeVoices = new Map<string, AudioVoice>();
+  private readonly sustainedNotes = new Set<string>();
   private initPromise: Promise<void> | null = null;
 
-  // ═══════════════════════════════════════════════════════
-  // INITIALISATION
-  // ═══════════════════════════════════════════════════════
+  /* ─── Buffer de bruit blanc (réutilisé) ─── */
+  private whiteNoiseBuffer: AudioBuffer | null = null;
+
+  /* ═══════════════════════════════════════════════════════
+     INITIALISATION
+     ═══════════════════════════════════════════════════════ */
+
   init(): Promise<void> {
     if (this.initPromise) return this.initPromise;
     this.initPromise = this.doInit();
@@ -256,38 +114,97 @@ export class PianoAudioService implements OnDestroy {
   }
 
   private async doInit(): Promise<void> {
-    const Ctor = window.AudioContext
-      ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (typeof window === 'undefined') return;
+
+    const Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
 
     if (!Ctor) return;
 
     this.ctx = new Ctor({ latencyHint: 'interactive' });
+
+    /* ─── Master gain ─── */
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.value = 0.9;
-    this.masterGain.connect(this.ctx.destination);
 
-    // Réverbe à réponse impulsionnelle synthétique
+    /* ─── High-shelf pour compenser la perte d'aigus de la réverbe ─── */
+    this.highShelf = this.ctx.createBiquadFilter();
+    this.highShelf.type = 'highshelf';
+    this.highShelf.frequency.value = 4000;
+    this.highShelf.gain.value = 1.5;
+
+    this.masterGain.connect(this.highShelf);
+    this.highShelf.connect(this.ctx.destination);
+
+    /* ─── Réverbe : convolver + send ─── */
     this.reverbNode = this.ctx.createConvolver();
-    this.reverbNode.buffer = this.createReverbImpulse(2.0, 2.5);
+    this.reverbNode.buffer = this.createReverbImpulse(
+      REVERB_DURATION_S,
+      REVERB_DECAY
+    );
+
     this.reverbGain = this.ctx.createGain();
     this.reverbGain.gain.value = 0.15;
 
-    this.masterGain.connect(this.reverbNode);
+    /* Send dédié (les voix y envoient une copie, pas le signal entier) */
+    this.reverbSend = this.ctx.createGain();
+    this.reverbSend.gain.value = 0.15;
+    this.reverbSend.connect(this.reverbNode);
     this.reverbNode.connect(this.reverbGain);
-    this.reverbGain.connect(this.ctx.destination);
+    this.reverbGain.connect(this.highShelf);
+
+    /* ─── Buffer de bruit blanc (réutilisé pour toutes les attaques) ─── */
+    this.whiteNoiseBuffer = this.createWhiteNoiseBuffer(1.0);
   }
 
+  /**
+   * Réverbe à réponse impulsionnelle synthétique **réaliste** :
+   * exponentielle décroissante + early reflections.
+   */
   private createReverbImpulse(durationSec: number, decay: number): AudioBuffer {
     const rate = this.ctx!.sampleRate;
-    const length = rate * durationSec;
+    const length = Math.floor(rate * durationSec);
     const impulse = this.ctx!.createBuffer(2, length, rate);
+
+    /* Early reflections (positions en secondes) */
+    const earlyReflections = [0.008, 0.017, 0.029, 0.041, 0.055];
+
     for (let channel = 0; channel < 2; channel++) {
       const data = impulse.getChannelData(channel);
       for (let i = 0; i < length; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+        const t = i / rate;
+        const env = Math.pow(1 - i / length, decay);
+
+        /* Diffusion principale */
+        let sample = (Math.random() * 2 - 1) * env * 0.5;
+
+        /* Early reflections */
+        for (const rt of earlyReflections) {
+          const delaySamples = Math.floor(rt * rate);
+          if (i >= delaySamples && i < delaySamples + Math.floor(rate * 0.003)) {
+            sample += (Math.random() * 2 - 1) * env * 0.15;
+          }
+        }
+
+        data[i] = sample;
       }
     }
+
     return impulse;
+  }
+
+  /** Buffer de bruit blanc réutilisable. */
+  private createWhiteNoiseBuffer(durationSec: number): AudioBuffer {
+    const rate = this.ctx!.sampleRate;
+    const length = Math.floor(rate * durationSec);
+    const buffer = this.ctx!.createBuffer(1, length, rate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
   }
 
   async unlock(): Promise<void> {
@@ -296,25 +213,32 @@ export class PianoAudioService implements OnDestroy {
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  // CHOIX DE L'INSTRUMENT
-  // ═══════════════════════════════════════════════════════
+  ensureReady(): Promise<boolean> {
+    return this.init().then(() => this._isReady());
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     CHOIX DE L'INSTRUMENT
+     ═══════════════════════════════════════════════════════ */
+
   setInstrument(type: InstrumentType): void {
     this.allNotesOff();
     this._instrument.set(type);
+
     const preset = INSTRUMENTS[type];
-    if (this.reverbGain && this.ctx) {
-      this.reverbGain.gain.setTargetAtTime(
-        (preset.reverbMix ?? 0.2) * 0.4,
+    if (this.reverbSend && this.ctx) {
+      this.reverbSend.gain.setTargetAtTime(
+        (preset.reverbMix ?? 0.2) * 0.5,
         this.ctx.currentTime,
         0.05
       );
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  // JEU / MOTEUR DE SYNTHÈSE
-  // ═══════════════════════════════════════════════════════
+  /* ═══════════════════════════════════════════════════════
+     JEU / MOTEUR DE SYNTHÈSE
+     ═══════════════════════════════════════════════════════ */
+
   noteOn(note: string, velocity = 0.85): void {
     if (!this.ctx || !this.masterGain || this._isMuted()) return;
 
@@ -323,54 +247,77 @@ export class PianoAudioService implements OnDestroy {
 
     this.ngZone.runOutsideAngular(() => {
       const existing = this.activeVoices.get(note);
-      if (existing) this.stopVoice(existing, 0.02);
+      if (existing) this.stopVoice(existing);
 
       const voice = this.createSynthVoice(midi, velocity, preset);
       this.activeVoices.set(note, voice);
     });
   }
 
-  private createSynthVoice(midi: number, velocity: number, preset: InstrumentPreset): AudioVoice {
-    const now = this.ctx!.currentTime;
+  private createSynthVoice(
+    midi: number,
+    velocity: number,
+    preset: InstrumentPreset
+  ): AudioVoice {
+    const ctx = this.ctx!;
+    const now = ctx.currentTime + LOOK_AHEAD_S;
     const baseFreq = midiToFreq(midi);
     const sources: OscillatorNode[] = [];
     const lfos: OscillatorNode[] = [];
 
-    const voiceGain = this.ctx!.createGain();
+    /* ─── 0. Voice gain + pan stéréo ─── */
+    const voiceGain = ctx.createGain();
+    const panner = ctx.createStereoPanner();
 
-    // 1. LFO Vibrato (Modulation de fréquence)
+    /* Pan spread léger (décorrélé selon la note) */
+    const panSpread = preset.panSpread ?? 0;
+    panner.pan.value = (Math.random() * 2 - 1) * panSpread;
+
+    voiceGain.connect(panner);
+    panner.connect(this.masterGain!);
+
+    /* Send réverbe (copie du signal, pas le signal entier) */
+    if (this.reverbSend) {
+      const send = ctx.createGain();
+      send.gain.value = 1.0;
+      panner.connect(send);
+      send.connect(this.reverbSend);
+    }
+
+    /* ─── 1. LFO Vibrato ─── */
     let vibratoGain: GainNode | null = null;
     if (preset.vibratoHz && preset.vibratoCents) {
-      const vibratoLfo = this.ctx!.createOscillator();
+      const vibratoLfo = ctx.createOscillator();
       vibratoLfo.frequency.value = preset.vibratoHz;
 
-      vibratoGain = this.ctx!.createGain();
-      vibratoGain.gain.value = baseFreq * (Math.pow(2, preset.vibratoCents / 1200) - 1);
+      vibratoGain = ctx.createGain();
+      vibratoGain.gain.value =
+        baseFreq * (Math.pow(2, preset.vibratoCents / 1200) - 1);
 
       vibratoLfo.connect(vibratoGain);
       vibratoLfo.start(now);
       lfos.push(vibratoLfo);
     }
 
-    // 2. Génération des harmoniques
-    const totalHarmonicGain = preset.harmonics.reduce((acc, h) => acc + h.gain, 0) || 1;
+    /* ─── 2. Génération des harmoniques ─── */
+    const totalHarmonicGain =
+      preset.harmonics.reduce((acc, h) => acc + h.gain, 0) || 1;
+
+    const inharmonicity = preset.inharmonicity ?? 0;
 
     preset.harmonics.forEach((h) => {
-      const osc = this.ctx!.createOscillator();
+      const osc = ctx.createOscillator();
       osc.type = h.type;
 
-      const targetFreq = baseFreq * h.mult;
+      /* Inharmonicité du piano : les harmoniques sont légèrement désaccordés */
+      const harmonicMult = h.mult * (1 + inharmonicity * h.mult * h.mult);
+      const targetFreq = baseFreq * harmonicMult;
       osc.frequency.setValueAtTime(targetFreq, now);
 
-      if (h.detune) {
-        osc.detune.setValueAtTime(h.detune, now);
-      }
+      if (h.detune) osc.detune.setValueAtTime(h.detune, now);
+      if (vibratoGain) vibratoGain.connect(osc.frequency);
 
-      if (vibratoGain) {
-        vibratoGain.connect(osc.frequency);
-      }
-
-      const hGain = this.ctx!.createGain();
+      const hGain = ctx.createGain();
       hGain.gain.value = h.gain / totalHarmonicGain;
 
       osc.connect(hGain);
@@ -380,12 +327,12 @@ export class PianoAudioService implements OnDestroy {
       sources.push(osc);
     });
 
-    // 3. LFO Tremolo (Modulation d'amplitude)
+    /* ─── 3. LFO Tremolo ─── */
     if (preset.tremoloHz && preset.tremoloDepth) {
-      const tremoloLfo = this.ctx!.createOscillator();
+      const tremoloLfo = ctx.createOscillator();
       tremoloLfo.frequency.value = preset.tremoloHz;
 
-      const tremoloGain = this.ctx!.createGain();
+      const tremoloGain = ctx.createGain();
       tremoloGain.gain.value = preset.tremoloDepth;
 
       tremoloLfo.connect(tremoloGain);
@@ -395,31 +342,44 @@ export class PianoAudioService implements OnDestroy {
       lfos.push(tremoloLfo);
     }
 
-    // 4. Enveloppe ADSR d'amplitude
-    const peakGain = Math.min(1, Math.max(0.05, velocity)) * preset.gain;
+    /* ─── 4. Enveloppe ADSR d'amplitude ─── */
+    const clampedVel = Math.min(1, Math.max(0.05, velocity));
+    const peakGain = clampedVel * preset.gain;
     const adsr = preset.adsr;
     const sustainLevel = Math.max(0.0001, peakGain * adsr.sustain);
 
     voiceGain.gain.setValueAtTime(0.0001, now);
     voiceGain.gain.linearRampToValueAtTime(peakGain, now + adsr.attack);
-    voiceGain.gain.exponentialRampToValueAtTime(sustainLevel, now + adsr.attack + adsr.decay);
+    voiceGain.gain.exponentialRampToValueAtTime(
+      sustainLevel,
+      now + adsr.attack + adsr.decay
+    );
 
     let chainOut: AudioNode = voiceGain;
 
-    // 5. Filtre Dynamique (Enveloppe de filtre)
+    /* ─── 5. Filtre Dynamique (velocity-tracked) ─── */
     if (preset.filter) {
-      const filter = this.ctx!.createBiquadFilter();
+      const filter = ctx.createBiquadFilter();
       filter.type = preset.filter.type;
-      filter.Q.value = preset.filter.Q;
 
       const baseF = preset.filter.baseFreq;
       const envAmt = preset.filter.envAmount;
 
-      filter.frequency.setValueAtTime(baseF, now);
+      /* Modulation par la vélocité (plus fort → plus brillant) */
+      const velBoost = preset.filter.velocityTracked ? (clampedVel - 0.5) * 0.6 : 0;
+      const trackedBase = baseF * (1 + velBoost);
+      const trackedQ = preset.filter.Q * (1 + velBoost);
+
+      filter.Q.value = trackedQ;
+      filter.frequency.setValueAtTime(trackedBase, now);
+
       if (envAmt > 0) {
-        filter.frequency.linearRampToValueAtTime(baseF + envAmt, now + adsr.attack);
+        filter.frequency.linearRampToValueAtTime(
+          trackedBase + envAmt,
+          now + adsr.attack
+        );
         filter.frequency.exponentialRampToValueAtTime(
-          Math.max(10, baseF + envAmt * adsr.sustain),
+          Math.max(10, trackedBase + envAmt * adsr.sustain),
           now + adsr.attack + adsr.decay
         );
       }
@@ -428,9 +388,9 @@ export class PianoAudioService implements OnDestroy {
       chainOut = filter;
     }
 
-    // 6. Saturation / Distorsion
+    /* ─── 6. Saturation / Distorsion ─── */
     if (preset.distortion && preset.distortion > 0) {
-      const shaper = this.ctx!.createWaveShaper();
+      const shaper = ctx.createWaveShaper();
       shaper.curve = this.makeDistortionCurve(preset.distortion * 50);
       shaper.oversample = '2x';
 
@@ -438,19 +398,59 @@ export class PianoAudioService implements OnDestroy {
       chainOut = shaper;
     }
 
-    chainOut.connect(this.masterGain!);
+    /* ─── 7. Bruit d'attaque (hammer / breath / bell) ─── */
+    let noiseSource: AudioBufferSourceNode | undefined;
+    if (preset.noise && this.whiteNoiseBuffer) {
+      noiseSource = ctx.createBufferSource();
+      noiseSource.buffer = this.whiteNoiseBuffer;
+      noiseSource.loop = true;
+
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = preset.noise.filterType;
+      noiseFilter.frequency.value = preset.noise.filterFreq;
+      noiseFilter.Q.value = preset.noise.filterQ ?? 1.0;
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.0001, now);
+      noiseGain.gain.linearRampToValueAtTime(
+        preset.noise.gain * clampedVel,
+        now + 0.002
+      );
+      noiseGain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        now + preset.noise.duration
+      );
+
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(chainOut);
+
+      noiseSource.start(now);
+      noiseSource.stop(now + preset.noise.duration + 0.05);
+    }
+
+    /* ─── 8. Connexion finale au master ─── */
+    chainOut.connect(voiceGain);
+
+    /* ─── Release par voix (stockée pour être indépendante du preset courant) ─── */
+    const release = adsr.release;
 
     return {
       gainNode: voiceGain,
       sources,
       lfos,
-      stop: (stopTime, release) => {
-        voiceGain.gain.cancelScheduledValues(stopTime);
-        voiceGain.gain.setValueAtTime(Math.max(0.0001, voiceGain.gain.value), stopTime);
-        voiceGain.gain.exponentialRampToValueAtTime(0.0001, stopTime + release);
+      noiseSource,
+      release,
+      stop: (stopTime: number) => {
+        const g = voiceGain.gain;
+        g.cancelScheduledValues(stopTime);
+        g.setValueAtTime(Math.max(0.0001, g.value), stopTime);
+        g.exponentialRampToValueAtTime(0.0001, stopTime + release);
 
-        sources.forEach((s) => s.stop(stopTime + release + 0.02));
-        lfos.forEach((l) => l.stop(stopTime + release + 0.02));
+        const end = stopTime + release + 0.05;
+        sources.forEach((s) => { try { s.stop(end); } catch { /* déjà stoppé */ } });
+        lfos.forEach((l) => { try { l.stop(end); } catch { /* déjà stoppé */ } });
+        noiseSource?.stop(end);
       },
     };
   }
@@ -468,13 +468,11 @@ export class PianoAudioService implements OnDestroy {
     return curve;
   }
 
-  private stopVoice(voice: AudioVoice, overrideRelease?: number): void {
+  private stopVoice(voice: AudioVoice): void {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
-    const preset = INSTRUMENTS[this._instrument()];
-    const release = overrideRelease ?? preset.adsr.release;
     try {
-      voice.stop(now, release);
+      voice.stop(now);
     } catch { /* ignoré */ }
   }
 
@@ -487,10 +485,9 @@ export class PianoAudioService implements OnDestroy {
 
   allNotesOff(): void {
     this.ngZone.runOutsideAngular(() => {
-      for (const [, voice] of this.activeVoices) {
-        this.stopVoice(voice, 0.05);
-      }
+      for (const [, voice] of this.activeVoices) this.stopVoice(voice);
       this.activeVoices.clear();
+      this.sustainedNotes.clear();
     });
   }
 
@@ -513,12 +510,53 @@ export class PianoAudioService implements OnDestroy {
     return this.ctx?.currentTime ?? 0;
   }
 
+  /**
+   * Joue une note pendant une durée donnée, **basée sur l'horloge audio**
+   * (au lieu de `setTimeout` → plus précis, pas de dérive).
+   */
   playNoteFor(note: string, durationSec: number, velocity = 0.85): void {
     this.noteOn(note, velocity);
+
+    const ctx = this.ctx;
+    if (!ctx) return;
+
+    const stopTime = ctx.currentTime + durationSec;
     this.ngZone.runOutsideAngular(() => {
-      setTimeout(() => this.noteOff(note), durationSec * 1000);
+      /* On programme un stop à l'instant audio exact */
+      const voice = this.activeVoices.get(note);
+      if (!voice) return;
+
+      /* On utilise un microtask pour ne pas bloquer la boucle audio */
+      const check = () => {
+        if (!this.ctx) return;
+        if (this.ctx.currentTime >= stopTime) {
+          this.noteOff(note);
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      requestAnimationFrame(check);
     });
   }
+
+  /* ═══════════════════════════════════════════════════════
+     SUSTAIN / PÉDALE
+     ═══════════════════════════════════════════════════════ */
+
+  /** Active la pédale de sustain (les notes ne sont plus relâchées). */
+  sustainOn(): void {
+    this.sustainedNotes.clear();
+  }
+
+  /** Désactive la pédale de sustain (relâche toutes les notes tenues). */
+  sustainOff(): void {
+    for (const note of this.sustainedNotes) this.noteOff(note);
+    this.sustainedNotes.clear();
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     NETTOYAGE
+     ═══════════════════════════════════════════════════════ */
 
   ngOnDestroy(): void {
     this.allNotesOff();

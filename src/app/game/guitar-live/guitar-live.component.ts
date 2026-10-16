@@ -1,5 +1,3 @@
-// src/app/game/guitar-live/guitar-live.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -7,8 +5,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-
-import { Router } from '@angular/router';
 
 import {
   FRETS,
@@ -30,12 +26,9 @@ import { getStringColor } from '../utils/string.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GuitarLiveComponent {
-
   /* ═══════════════════════════════════════════════════════
      INJECTION
      ═══════════════════════════════════════════════════════ */
-
-  private readonly router = inject(Router);
   private readonly guitarAudio = inject(GuitarAudioService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -164,11 +157,4 @@ export class GuitarLiveComponent {
     }, 1500);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     NAVIGATION
-     ═══════════════════════════════════════════════════════ */
-
-  goBack(): void {
-    void this.router.navigate(['/play']);
-  }
 }

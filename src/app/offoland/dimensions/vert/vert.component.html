@@ -1,19 +1,21 @@
+<!-- src/app/offoland/dimensions/vert/vert.component.html -->
+
 <div class="vert-container">
 
   <!-- Feuilles flottantes en fond -->
-  <div class="leaves-bg">
-    @for (l of [1,2,3,4,5,6,7,8,9,10]; track l) {
+  <div class="leaves-bg" aria-hidden="true">
+    @for (l of leaves; track l) {
       <div class="leaf"
-        [style.animation-delay]="(l * 0.7) + 's'"
-        [style.left.%]="(l * 10) % 100">
+           [style.animation-delay]="(l * 0.7) + 's'"
+           [style.left.%]="(l * 10) % 100">
         🍃
       </div>
     }
   </div>
 
   <!-- Particules vertes -->
-  <div class="particles-bg">
-    @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track p) {
+  <div class="particles-bg" aria-hidden="true">
+    @for (p of greenParticles; track p) {
       <span
         class="particle"
         [style.left.%]="(p * 4) % 100"
@@ -24,10 +26,9 @@
 
   <!-- HEADER ÉPIQUE -->
   <header class="vert-header">
+    <h1 class="title-glow-vert">LA DIMENSION VERTE</h1>
 
-    <h1 class="title-glow-vert"><br>LA DIMENSION VERTE</h1>
-
-    <div class="header-divider">
+    <div class="header-divider" aria-hidden="true">
       <span class="line"></span>
       <span class="icon">🌿</span>
       <span class="line"></span>
@@ -35,27 +36,27 @@
   </header>
 
   <!-- SECTION VIDÉO -->
-  <section class="video-section">
+  <section class="video-section" aria-labelledby="video-title">
+    <h2 id="video-title" class="visually-hidden">Vidéo de la Dimension Verte</h2>
     <div class="video-wrapper">
       <div class="video-frame">
         <iframe
           src="https://www.youtube.com/embed/hCWFGuh8jaA?autoplay=1&mute=1"
           title="Dimension Verte - Charly Guitare"
-          frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen>
         </iframe>
       </div>
-      <div class="video-glow"></div>
+      <div class="video-glow" aria-hidden="true"></div>
     </div>
   </section>
 
   <!-- SECTION INTRO -->
-  <section class="intro-section">
+  <section class="intro-section" aria-labelledby="intro-title">
     <div class="intro-card">
-      <div class="intro-icon">🌳</div>
+      <div class="intro-icon" aria-hidden="true">🌳</div>
       <div class="intro-content">
-        <h3>UNE NATURE INDOMTABLE</h3>
+        <h2 id="intro-title">UNE NATURE INDOMTABLE</h2>
         <p>
           Le monde de la nature regroupe tous les reliefs et climats naturels. Sa particularité :
           il provoque exprès des tremblements de terre pour rétablir l'équilibre de sa réalité virtuelle.
@@ -66,97 +67,105 @@
   </section>
 
   <!-- SECTION PHÉNOMÈNES NATURELS -->
-  <section class="phenomenes-section">
+  <section class="phenomenes-section" aria-labelledby="phenomenes-title">
     <div class="section-title">
-      <span class="material-icons">storm</span>
-      <h2>LES PHÉNOMÈNES NATURELS</h2>
-      <span class="material-icons">storm</span>
+      <span class="material-icons" aria-hidden="true">storm</span>
+      <h2 id="phenomenes-title">LES PHÉNOMÈNES NATURELS</h2>
+      <span class="material-icons" aria-hidden="true">storm</span>
     </div>
 
     <div class="phenomenes-grid">
-      @for (p of phenomenes; track p; let i = $index) {
-        <div
+      @for (p of phenomenes; track p.nom; let i = $index) {
+        <article
           class="phenomene-card"
           [style.animation-delay]="(i * 0.15) + 's'">
-          <div class="phenomene-icon">{{ p.icone }}</div>
+          <div class="phenomene-icon" aria-hidden="true">{{ p.icone }}</div>
           <h3>{{ p.nom }}</h3>
           <p>{{ p.description }}</p>
-        </div>
+        </article>
       }
     </div>
   </section>
 
   <!-- SECTION SIRÈNES DU LAC WATA -->
-  <section class="sirenes-section">
+  <section class="sirenes-section" aria-labelledby="sirenes-title">
     <div class="section-title sirene-title">
-      <span class="material-icons">water</span>
-      <h2>LES 3 SIRÈNES DU LAC WATA</h2>
-      <span class="material-icons">water</span>
+      <span class="material-icons" aria-hidden="true">water</span>
+      <h2 id="sirenes-title">LES 3 SIRÈNES DU LAC WATA</h2>
+      <span class="material-icons" aria-hidden="true">water</span>
     </div>
+
     <p class="sirene-intro">
       Dans l'univers vert, trois sirènes vivent dans un lac appelé <strong>Wata</strong>.
       Leur mission : empêcher quiconque pénètre dans l'univers vert d'en sortir.
     </p>
 
     <div class="sirenes-grid">
-      @for (s of sirenes; track s; let i = $index) {
-        <div
+      @for (s of sirenes; track s.nom; let i = $index) {
+        <article
           class="sirene-card"
           [style.--accent]="s.couleur"
           [style.animation-delay]="(i * 0.2) + 's'">
-          <div class="card-glow"></div>
+          <div class="card-glow" aria-hidden="true"></div>
+
           <!-- Numéro de la sirène -->
           <div class="sirene-numero">
             <span class="numero-value">{{ s.numero }}</span>
           </div>
+
           <!-- Icône -->
-          <div class="sirene-icon-wrapper">
+          <div class="sirene-icon-wrapper" aria-hidden="true">
             <div class="sirene-icon">{{ s.icone }}</div>
             <div class="icon-ring"></div>
           </div>
+
           <div class="sirene-info">
             <h3 class="sirene-nom">{{ s.nom }}</h3>
+
             <div class="sirene-pouvoir">
-              <span class="material-icons">auto_awesome</span>
+              <span class="material-icons" aria-hidden="true">auto_awesome</span>
               <span>{{ s.pouvoir }}</span>
             </div>
+
             <p class="sirene-description">{{ s.description }}</p>
+
             <div class="sirene-danger">
-              <span class="material-icons">dangerous</span>
+              <span class="material-icons" aria-hidden="true">dangerous</span>
               <span>{{ s.danger }}</span>
             </div>
           </div>
-          <div class="corner top-left"></div>
-          <div class="corner top-right"></div>
-          <div class="corner bottom-left"></div>
-          <div class="corner bottom-right"></div>
-        </div>
+
+          <div class="corner top-left" aria-hidden="true"></div>
+          <div class="corner top-right" aria-hidden="true"></div>
+          <div class="corner bottom-left" aria-hidden="true"></div>
+          <div class="corner bottom-right" aria-hidden="true"></div>
+        </article>
       }
     </div>
 
     <!-- Faiblesse des sirènes -->
     <div class="faiblesse-sirene-card">
-      <div class="faiblesse-icon">🎸</div>
+      <div class="faiblesse-icon" aria-hidden="true">🎸</div>
       <div class="faiblesse-content">
-        <h4>{{ faiblesseSirenes.titre }}</h4>
+        <h3>{{ faiblesseSirenes.titre }}</h3>
         <p>{{ faiblesseSirenes.description }}</p>
       </div>
     </div>
   </section>
 
   <!-- SECTION CHARLY VERT -->
-  <section class="charly-section">
+  <section class="charly-section" aria-labelledby="charly-title">
     <div class="section-title">
-      <span class="material-icons">person</span>
-      <h2>LE CHARLY GUITARE VERT</h2>
-      <span class="material-icons">person</span>
+      <span class="material-icons" aria-hidden="true">person</span>
+      <h2 id="charly-title">LE CHARLY GUITARE VERT</h2>
+      <span class="material-icons" aria-hidden="true">person</span>
     </div>
 
     <div class="charly-card">
       <div class="charly-portrait">
-        <div class="portrait-glow"></div>
-        <div class="portrait-icon">🌿</div>
-        <div class="portrait-leaves">
+        <div class="portrait-glow" aria-hidden="true"></div>
+        <div class="portrait-icon" aria-hidden="true">🌿</div>
+        <div class="portrait-leaves" aria-hidden="true">
           <span>🍃</span><span>🌿</span><span>🍃</span>
         </div>
       </div>
@@ -170,13 +179,13 @@
 
         <!-- Pouvoirs -->
         <div class="pouvoirs-grid">
-          @for (p of pouvoirsCharlyVert; track p) {
+          @for (p of pouvoirsCharlyVert; track p.nom) {
             <div class="pouvoir-card">
-              <div class="pouvoir-icon">{{ p.icone }}</div>
+              <div class="pouvoir-icon" aria-hidden="true">{{ p.icone }}</div>
               <h4>{{ p.nom }}</h4>
               <p>{{ p.description }}</p>
               <div class="pouvoir-limite">
-                <span class="material-icons">warning</span>
+                <span class="material-icons" aria-hidden="true">warning</span>
                 <span>{{ p.limite }}</span>
               </div>
             </div>
@@ -186,7 +195,7 @@
         <!-- Mission spéciale -->
         <div class="mission-card">
           <div class="mission-header">
-            <span class="material-icons">schedule</span>
+            <span class="material-icons" aria-hidden="true">schedule</span>
             <h4>L'ORDRE ULTIME</h4>
           </div>
           <p>
@@ -199,15 +208,15 @@
   </section>
 
   <!-- SECTION CORRESPONDANCES -->
-  <section class="correspondances-section">
+  <section class="correspondances-section" aria-labelledby="corresp-title">
     <div class="section-title">
-      <span class="material-icons">swap_horiz</span>
-      <h2>LES CORRESPONDANCES ENTRE LES MONDES</h2>
-      <span class="material-icons">swap_horiz</span>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
+      <h2 id="corresp-title">LES CORRESPONDANCES ENTRE LES MONDES</h2>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
     </div>
 
     <div class="correspondances-grid">
-      @for (c of correspondances; track c) {
+      @for (c of correspondances; track c.monde) {
         <div
           class="correspondance-card"
           [style.--accent]="c.couleur">
@@ -215,7 +224,7 @@
             [style.color]="c.monde === 'BLANC' ? '#000' : '#fff'">
             {{ c.monde }}
           </span>
-          <span class="arrow">→</span>
+          <span class="arrow" aria-hidden="true">→</span>
           <span class="repere">{{ c.repere }}</span>
         </div>
       }
@@ -225,7 +234,7 @@
   <!-- SECTION RÈGLE + NB -->
   <section class="regle-section">
     <div class="regle-card">
-      <div class="regle-icon">⚖️</div>
+      <div class="regle-icon" aria-hidden="true">⚖️</div>
       <div class="regle-content">
         <h3>RÈGLE DES DIMENSIONS</h3>
         <p>
@@ -236,7 +245,7 @@
     </div>
 
     <div class="regle-card nb-card">
-      <div class="regle-icon">🎸</div>
+      <div class="regle-icon" aria-hidden="true">🎸</div>
       <div class="regle-content">
         <h3>NOTE IMPORTANTE</h3>
         <p>
@@ -249,7 +258,7 @@
   <!-- SECTION AVERTISSEMENT FINAL -->
   <section class="avertissement-section">
     <div class="avertissement-card">
-      <div class="avertissement-icon">⚠️</div>
+      <div class="avertissement-icon" aria-hidden="true">⚠️</div>
       <div class="avertissement-content">
         <h3>{{ avertissementFinal.titre }}</h3>
         <p>{{ avertissementFinal.description }}</p>
@@ -260,16 +269,16 @@
   <!-- FOOTER ÉPIQUE -->
   <footer class="vert-footer">
     <div class="footer-quote">
-      <span class="quote-mark">«</span>
+      <span class="quote-mark" aria-hidden="true">«</span>
       <p>Dans la Dimension Verte, la nature ne demande pas la permission — elle décide, et le monde s'incline.</p>
-      <span class="quote-mark">»</span>
+      <span class="quote-mark" aria-hidden="true">»</span>
     </div>
     <p class="footer-signature">— Les Chroniques d'Offoland, Livre XI</p>
 
     <div class="footer-badge">
-      <span class="icon">🌿</span>
+      <span class="icon" aria-hidden="true">🌿</span>
       <span>DIMENSION VERTE</span>
-      <span class="dot">•</span>
+      <span class="dot" aria-hidden="true">•</span>
       <span>CHARLY GUITARE 5D</span>
     </div>
   </footer>

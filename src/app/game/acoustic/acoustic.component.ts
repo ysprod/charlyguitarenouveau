@@ -1,28 +1,15 @@
-// src/app/game/acoustic/acoustic.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject,
-  signal,
+  signal
 } from '@angular/core';
-
-import { Router } from '@angular/router';
-
 import {
-  Difficulty,
   DifficultyFilter,
-  QuizQuestion,
+  QuizQuestion
 } from '../models/acoustic-quiz.model';
-
 import { ACOUSTIC_QUESTIONS } from 'src/app/game/data/acoustic-questions';
-
-import {
-  DIFFICULTIES,
-  LETTERS,
-} from '../constants/acoustic.constants';
-
+import { DIFFICULTIES, LETTERS, } from '../constants/acoustic.constants';
 import { getDifficultyClass } from '../utils/difficulty.util';
 
 /* ═══════════════════════════════════════════════════════════
@@ -37,12 +24,6 @@ import { getDifficultyClass } from '../utils/difficulty.util';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AcousticComponent {
-
-  /* ═══════════════════════════════════════════════════════
-     INJECTION
-     ═══════════════════════════════════════════════════════ */
-
-  private readonly router = inject(Router);
 
   /* ═══════════════════════════════════════════════════════
      DONNÉES
@@ -198,11 +179,4 @@ export class AcousticComponent {
     this.bestStreak.set(0);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     NAVIGATION
-     ═══════════════════════════════════════════════════════ */
-
-  goToPlay(): void {
-    void this.router.navigate(['/play']);
-  }
 }

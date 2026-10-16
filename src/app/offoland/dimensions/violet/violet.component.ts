@@ -1,42 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+// src/app/offoland/dimensions/violet/violet.component.ts
 
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+
+import { DIMENSION_VIOLET } from '../../constants/violet.constants';
 
 @Component({
   selector: 'app-violet',
-  standalone: true,
   imports: [],
   templateUrl: './violet.component.html',
-  styleUrls: ['./violet.component.scss']
+  styleUrls: ['./violet.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VioletComponent implements OnInit {
+export class VioletComponent {
 
   /* ═══════════════════════════════════════════════════════
-     DIMENSION VIOLETTE — 7ème Dimension
-     Couleur : Violet | Note : Si | Sage : Offosi
-     Temple : Accomplissement | Totem : Dragon Violet | Esprit : L'Hologramme Organique
+     DONNÉES EXPOSÉES AU TEMPLATE
      ═══════════════════════════════════════════════════════ */
-  readonly dimension = {
-    numero: 7,
-    nom: 'JAUNE',
-    couleur: '#7c3aed',
-    couleurSecondaire: '#a78bfa',
-    note: 'Si',
-    sage: 'Offosi',
-    sageTitre: 'Gardien de la Destinée',
-    temple: 'Temple de l\'Accomplissement',
-    totem: 'Dragon Jaune',
-    totemEmoji: '🐉',
-    instrument: 'Harpe sacrée',
-    instrumentEmoji: '🎻',
-    esprit: 'L\'Hologramme Organique',
-    espritEmoji: '💠',
-    don: 'L\'accomplissement',
-    epreuve: 'Es-tu prêt à accepter ta destinée ?',
-    question: 'Embrasser pleinement son don',
-    citation: '« On n\'y entre ni par la force, ni par le savoir. On y entre lorsque toutes les dimensions vibrent enfin en harmonie. »'
-  };
 
-  constructor() { }
-
-  ngOnInit(): void { }
+  readonly dimension = DIMENSION_VIOLET;
 }

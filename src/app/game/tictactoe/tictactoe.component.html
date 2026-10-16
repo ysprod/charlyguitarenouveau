@@ -1,96 +1,51 @@
-<!-- src/app/game/tictactoe/tictactoe.component.html -->
-
-<!-- ═══════════════════════════════════════════════════════
-     CONFETTI
-     ═══════════════════════════════════════════════════════ -->
 @if (showConfetti()) {
-  <div class="confetti-wrapper" aria-hidden="true">
-    @for (p of confettiView(); track $index) {
-      <div
-        class="confetti-piece"
-        [style.left.%]="p.left"
-        [style.animation-delay]="p.delay"
-        [style.background]="p.color"
-      ></div>
-    }
+<div class="confetti-wrapper" aria-hidden="true">
+  @for (p of confettiView(); track $index) {
+  <div class="confetti-piece" [style.left.%]="p.left" [style.animation-delay]="p.delay" [style.background]="p.color">
   </div>
+  }
+</div>
 }
 
 <!-- ═══════════════════════════════════════════════════════
      DIALOGUE DE FIN
      ═══════════════════════════════════════════════════════ -->
 @if (showEndDialog() && endSummary(); as summary) {
-  <app-end-game-dialog
-    [summary]="summary"
-    (replay)="onDialogReplay()"
-    (nextLevel)="onDialogNextLevel()"
-    (previousLevel)="onDialogPreviousLevel()"
-    (backToMenu)="onDialogBackToMenu()"
-  />
+<app-end-game-dialog [summary]="summary" (replay)="onDialogReplay()" (nextLevel)="onDialogNextLevel()"
+  (previousLevel)="onDialogPreviousLevel()" (backToMenu)="onDialogBackToMenu()" />
 }
 
 <div class="temple-container py-4">
-
-  <!-- ═══════════ HEADER (bouton son) ═══════════ -->
-  <div class="header-row">
-    <button
-      class="btn-sound"
-      (click)="toggleSound()"
-      type="button"
-      [attr.aria-pressed]="soundEnabled()"
-      [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
-    >
-      <span aria-hidden="true">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
-      <span class="sound-label">{{ soundEnabled() ? 'Son activé' : 'Son coupé' }}</span>
-    </button>
-  </div>
-
   <div class="row g-4 align-items-start">
 
     <!-- ═══════════ GRILLE ═══════════ -->
     <div class="col-12 col-lg-7">
       <div class="board-wrapper">
-        <div
-          class="dynamic-grid"
-          [style.--grid-size]="gs.gridSize()"
-          role="grid"
-          aria-label="Grille de jeu Tic-Tac-Toe"
-        >
+        <div class="dynamic-grid" [style.--grid-size]="gs.gridSize()" role="grid"
+          aria-label="Grille de jeu Tic-Tac-Toe">
           @for (block of gs.blocks(); track block.index; let i = $index) {
-            <div
-              (click)="playerClick(i)"
-              (keydown.enter)="playerClick(i)"
-              (keydown.space)="playerClick(i); $event.preventDefault()"
-              [class.disabled]="!block.free || lock() || gs.turn() !== 0"
-              [class.winning-cell]="block.isWinningCell"
-              [class.new-cell]="block.isNew"
-              class="grid-cell"
-              role="gridcell"
-              tabindex="0"
-              [attr.aria-label]="'Case ' + (i + 1) + (block.free ? ', libre' : ', occupée')"
-            >
-              <div class="cell-content">
-                @if (block.value) {
-                  <img
-                    [src]="gs.getAssetForSymbol(block.symbol)"
-                    alt="Symbole"
-                    class="cell-icon pop-in"
-                  />
-                }
-                @if (block.free && !lock() && gs.turn() === 0) {
-                  <span class="hover-hint" aria-hidden="true">+</span>
-                }
-              </div>
-
-              @if (block.isNew) {
-                <div class="cell-particles" aria-hidden="true">
-                  @for (p of cellParticles; track p) {
-                    <span [style.--x.px]="(p % 2 === 0 ? 1 : -1) * 40"
-                          [style.--y.px]="(p < 2 ? -1 : 1) * 40"></span>
-                  }
-                </div>
+          <div (click)="playerClick(i)" (keydown.enter)="playerClick(i)"
+            (keydown.space)="playerClick(i); $event.preventDefault()"
+            [class.disabled]="!block.free || lock() || gs.turn() !== 0" [class.winning-cell]="block.isWinningCell"
+            [class.new-cell]="block.isNew" class="grid-cell" role="gridcell" tabindex="0"
+            [attr.aria-label]="'Case ' + (i + 1) + (block.free ? ', libre' : ', occupée')">
+            <div class="cell-content">
+              @if (block.value) {
+              <img [src]="gs.getAssetForSymbol(block.symbol)" alt="Symbole" class="cell-icon pop-in" />
+              }
+              @if (block.free && !lock() && gs.turn() === 0) {
+              <span class="hover-hint" aria-hidden="true">+</span>
               }
             </div>
+
+            @if (block.isNew) {
+            <div class="cell-particles" aria-hidden="true">
+              @for (p of cellParticles; track p) {
+              <span [style.--x.px]="(p % 2 === 0 ? 1 : -1) * 40" [style.--y.px]="(p < 2 ? -1 : 1) * 40"></span>
+              }
+            </div>
+            }
+          </div>
           }
         </div>
       </div>
@@ -99,6 +54,8 @@
     <!-- ═══════════ PANNEAU LATÉRAL ═══════════ -->
     <div class="col-12 col-lg-5">
       <div class="stats-panel mb-4">
+
+
         <div class="actions-grid">
 
           <div>
@@ -112,9 +69,9 @@
                 <span class="avatar" aria-hidden="true">🐵</span>
                 <span class="name">LYKÖ</span>
                 @if (gs.isBotThinking()) {
-                  <span class="thinking-dots" aria-hidden="true">
-                    <span></span><span></span><span></span>
-                  </span>
+                <span class="thinking-dots" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </span>
                 }
               </div>
             </div>
@@ -128,9 +85,9 @@
           </div>
 
           @if (rejouer()) {
-            <button class="btn-secondary" (click)="resetjeu()" type="button">
-              🔄 Rejouer sur cette grille
-            </button>
+          <button class="btn-secondary" (click)="resetjeu()" type="button">
+            🔄 Rejouer sur cette grille
+          </button>
           }
 
           <button class="btn-primary" (click)="prochainNiveau()" type="button">
@@ -138,16 +95,19 @@
           </button>
 
           @if (canGoPrevious()) {
-            <button class="btn-success" (click)="precedentNiveau()" type="button">
-              ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize() - 1 }}×{{ gs.gridSize() - 1 }})
-            </button>
-          }
-
-          <button class="btn-neutral" (click)="onrecommencer()" type="button">
-            ⚔️ Retour au menu des jeux
+          <button class="btn-success" (click)="precedentNiveau()" type="button">
+            ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize() - 1 }}×{{ gs.gridSize() - 1 }})
+          </button>
+          } 
+        </div><br>
+        <!-- ═══════════ HEADER (bouton son) ═══════════ -->
+        <div class="header-row">
+          <button class="btn-sound" (click)="toggleSound()" type="button" [attr.aria-pressed]="soundEnabled()"
+            [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'">
+            <span aria-hidden="true">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
+            <span class="sound-label">{{ soundEnabled() ? 'Son activé' : 'Son coupé' }}</span>
           </button>
         </div>
-
         <div class="panel-header">
           <span>📊 STATISTIQUES D'AFFRONTEMENT</span>
         </div>
@@ -185,6 +145,8 @@
         <h1 class="title-glow">LYKÖ LE SAGE</h1>
         <p class="lyko-message" aria-live="polite">{{ messageLyko() }}</p>
       </div>
+
+    </div>
 
       <!-- COMMENT JOUER -->
       <div class="how-to-play">
@@ -231,6 +193,7 @@
           </div>
         </div>
       </div>
-    </div>
+
+
   </div>
 </div>

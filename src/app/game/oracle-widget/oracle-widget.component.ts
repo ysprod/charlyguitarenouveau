@@ -181,10 +181,7 @@ export class OracleWidgetComponent {
      NAVIGATION & ACTIONS
      ═══════════════════════════════════════════════════════ */
 
-  goBackToMenu(): void {
-    this.game.playClick();
-    void this.router.navigate(['/play']);
-  }
+ 
 
   onMicClick(): void {
     if (this.game.canUseMicrophone() || this.game.microphonePermission() === 'prompt') {

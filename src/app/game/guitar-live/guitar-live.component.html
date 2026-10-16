@@ -12,11 +12,6 @@
 
   <!-- ═══════════ TOP BAR ═══════════ -->
   <header class="game-top-bar">
-    <button class="btn-back" (click)="goBack()">
-      <span class="material-icons">arrow_back</span>
-      <span>RETOUR</span>
-    </button>
-
     <div class="logo-zone">
       <span class="icon">🎸</span>
       <h1>GUITARE LIVE</h1>
@@ -25,9 +20,9 @@
     <!-- Affichage note jouée -->
     <div class="note-display" [class.active]="lastPlayedNote()">
       @if (lastPlayedNote()) {
-        <span class="note-name">{{ lastPlayedNote() }}</span>
+      <span class="note-name">{{ lastPlayedNote() }}</span>
       } @else {
-        <span class="note-placeholder">Joue...</span>
+      <span class="note-placeholder">Joue...</span>
       }
     </div>
   </header>
@@ -48,10 +43,10 @@
       <div class="headstock-wood">
         <div class="tuning-pegs">
           @for (str of strings; track str.index) {
-            <div class="peg" [class.left]="str.index % 2 === 0">
-              <div class="peg-post"></div>
-              <div class="peg-button"></div>
-            </div>
+          <div class="peg" [class.left]="str.index % 2 === 0">
+            <div class="peg-post"></div>
+            <div class="peg-button"></div>
+          </div>
           }
         </div>
       </div>
@@ -61,7 +56,7 @@
     <div class="guitar-nut">
       <div class="nut-grooves">
         @for (str of strings; track str.index) {
-          <div class="nut-groove" [style.--gauge]="str.gaugeMm"></div>
+        <div class="nut-groove" [style.--gauge]="str.gaugeMm"></div>
         }
       </div>
     </div>
@@ -88,24 +83,22 @@
           <!-- Frettes métalliques (lignes visuelles) -->
           <div class="fret-wires">
             @for (fret of frets; track fret) {
-              @if (fret > 0) {
-                <div class="fret-wire" [style.--fret-pos]="fret"></div>
-              }
+            @if (fret > 0) {
+            <div class="fret-wire" [style.--fret-pos]="fret"></div>
+            }
             }
           </div>
 
           <!-- Cordes -->
           <div class="strings-layer">
             @for (str of strings; track str.index) {
-              <div class="string-track">
-                <div class="string"
-                     [class.vibrating]="activeVibratingString() === str.index"
-                     [style.--gauge]="str.gaugeMm"
-                     [style.--color]="getStringColor(str.index)">
-                  <div class="string-body"></div>
-                  <div class="string-highlight"></div>
-                </div>
+            <div class="string-track">
+              <div class="string" [class.vibrating]="activeVibratingString() === str.index"
+                [style.--gauge]="str.gaugeMm" [style.--color]="getStringColor(str.index)">
+                <div class="string-body"></div>
+                <div class="string-highlight"></div>
               </div>
+            </div>
             }
           </div>
 
@@ -113,15 +106,13 @@
           <!-- 12 cases (1 à 12), chaque cellule est centrée entre 2 frettes -->
           <div class="play-zones">
             @for (str of strings; track str.index) {
-              <div class="play-row">
-                @for (caseNum of cases; track caseNum) {
-                  <div class="play-cell"
-                       [style.--case-pos]="caseNum"
-                       (mousedown)="onFretPress(str.index, caseNum, $event)"
-                       (touchstart)="onFretPress(str.index, caseNum, $event)">
-                  </div>
-                }
+            <div class="play-row">
+              @for (caseNum of cases; track caseNum) {
+              <div class="play-cell" [style.--case-pos]="caseNum" (mousedown)="onFretPress(str.index, caseNum, $event)"
+                (touchstart)="onFretPress(str.index, caseNum, $event)">
               </div>
+              }
+            </div>
             }
           </div>
         </div>
@@ -129,9 +120,9 @@
         <!-- Numéros de cases (centrés dans les cases) -->
         <div class="fret-numbers">
           @for (caseNum of cases; track caseNum) {
-            <div class="fret-num" [style.--case-pos]="caseNum">
-              {{ caseNum }}
-            </div>
+          <div class="fret-num" [style.--case-pos]="caseNum">
+            {{ caseNum }}
+          </div>
           }
         </div>
       </div>

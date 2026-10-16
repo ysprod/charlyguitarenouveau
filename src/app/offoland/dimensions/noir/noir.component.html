@@ -1,14 +1,17 @@
+<!-- src/app/offoland/dimensions/noir/noir.component.html -->
+
 <div class="noir-container">
+
   <!-- Fond d'éclairs animés -->
-  <div class="lightning-bg">
+  <div class="lightning-bg" aria-hidden="true">
     <div class="lightning-flash"></div>
     <div class="lightning-flash delay-1"></div>
     <div class="lightning-flash delay-2"></div>
   </div>
 
   <!-- Particules sombres -->
-  <div class="particles-bg">
-    @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]; track p) {
+  <div class="particles-bg" aria-hidden="true">
+    @for (p of darkParticles; track p) {
       <span
         class="particle"
         [style.left.%]="(p * 4) % 100"
@@ -19,8 +22,8 @@
 
   <!-- HEADER ÉPIQUE -->
   <header class="noir-header">
-    <h1 class="title-glow-dark"><br>LA DIMENSION NOIRE</h1>
-    <div class="header-divider">
+    <h1 class="title-glow-dark">LA DIMENSION NOIRE</h1>
+    <div class="header-divider" aria-hidden="true">
       <span class="line"></span>
       <span class="icon">⚡</span>
       <span class="line"></span>
@@ -28,73 +31,83 @@
   </header>
 
   <!-- SECTION VIDÉO -->
-  <section class="video-section">
+  <section class="video-section" aria-labelledby="video-title">
+    <h2 id="video-title" class="visually-hidden">Vidéo de la Dimension Noire</h2>
     <div class="video-wrapper">
       <div class="video-frame">
         <iframe
           src="https://www.youtube.com/embed/2E0VLP9kGlw?autoplay=1&mute=1"
           title="Dimension Noire - Charly Guitare"
-          frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen>
         </iframe>
       </div>
-      <div class="video-glow"></div>
+      <div class="video-glow" aria-hidden="true"></div>
     </div>
   </section>
 
-
   <!-- SECTION DIVINITÉS -->
-  <section class="divinites-section">
+  <section class="divinites-section" aria-labelledby="divinites-title">
+    <div class="section-title">
+      <span class="material-icons" aria-hidden="true">auto_awesome</span>
+      <h2 id="divinites-title">LES DIVINITÉS DU MONDE NOIR</h2>
+      <span class="material-icons" aria-hidden="true">auto_awesome</span>
+    </div>
 
     <div class="divinites-grid">
-      @for (div of divinites; track div; let i = $index) {
-        <div
+      @for (div of divinites; track div.nom; let i = $index) {
+        <article
           class="divinite-card"
           [style.--accent]="div.couleur"
           [style.animation-delay]="(i * 0.15) + 's'">
-          <div class="card-glow"></div>
+          <div class="card-glow" aria-hidden="true"></div>
+
           <!-- Icône du Dieu -->
-          <div class="divinite-icon-wrapper">
+          <div class="divinite-icon-wrapper" aria-hidden="true">
             <div class="divinite-icon">{{ div.symbole }}</div>
             <div class="icon-ring"></div>
           </div>
+
           <!-- Informations -->
           <div class="divinite-info">
             <h3 class="divinite-nom">{{ div.nom }}</h3>
             <p class="divinite-titre">{{ div.titre }}</p>
+
             <div class="divinite-territoire">
-              <span class="material-icons">place</span>
+              <span class="material-icons" aria-hidden="true">place</span>
               <span>{{ div.territoire }}</span>
             </div>
+
             <p class="divinite-description">{{ div.description }}</p>
+
             @if (div.gardien) {
               <div class="divinite-gardien">
-                <span class="material-icons">lock</span>
+                <span class="material-icons" aria-hidden="true">lock</span>
                 <span>{{ div.gardien }}</span>
               </div>
             }
           </div>
+
           <!-- Coins décoratifs -->
-          <div class="corner top-left"></div>
-          <div class="corner top-right"></div>
-          <div class="corner bottom-left"></div>
-          <div class="corner bottom-right"></div>
-        </div>
+          <div class="corner top-left" aria-hidden="true"></div>
+          <div class="corner top-right" aria-hidden="true"></div>
+          <div class="corner bottom-left" aria-hidden="true"></div>
+          <div class="corner bottom-right" aria-hidden="true"></div>
+        </article>
       }
     </div>
   </section>
 
   <!-- SECTION PASSAGES DIMENSIONNELS -->
-  <section class="passages-section">
+  <section class="passages-section" aria-labelledby="passages-title">
     <div class="section-title">
-      <span class="material-icons">swap_horiz</span>
-      <h2>LES PASSAGES INTRA-DIMENSIONNELS</h2>
-      <span class="material-icons">swap_horiz</span>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
+      <h2 id="passages-title">LES PASSAGES INTRA-DIMENSIONNELS</h2>
+      <span class="material-icons" aria-hidden="true">swap_horiz</span>
     </div>
 
     <div class="passages-grid">
-      @for (p of passages; track p; let i = $index) {
+      @for (p of passages; track p.vers; let i = $index) {
         <div
           class="passage-card"
           [style.--accent]="p.couleur"
@@ -102,16 +115,18 @@
           <div class="passage-de">
             <span class="dimension-badge noir">NOIR</span>
           </div>
-          <div class="passage-link">
+          <div class="passage-link" aria-hidden="true">
             <div class="link-line"></div>
             <div class="link-icon">🔗</div>
             <div class="link-line"></div>
           </div>
           <div class="passage-vers">
-            <span class="dimension-badge" [style.background]="p.couleur">{{ p.vers | uppercase }}</span>
+            <span class="dimension-badge" [style.background]="p.couleur">
+              {{ p.vers | uppercase }}
+            </span>
           </div>
           <div class="passage-gardien">
-            <span class="material-icons">shield</span>
+            <span class="material-icons" aria-hidden="true">shield</span>
             <span>Gardien : <strong>{{ p.gardien }}</strong></span>
           </div>
         </div>
@@ -120,31 +135,31 @@
   </section>
 
   <!-- SECTION LORE (Correspondances) -->
-  <section class="lore-section">
+  <section class="lore-section" aria-labelledby="lore-title">
     <div class="lore-card">
       <div class="lore-header">
-        <span class="material-icons">menu_book</span>
-        <h3>LES CORRESPONDANCES ENTRE LES DIMENSIONS</h3>
+        <span class="material-icons" aria-hidden="true">menu_book</span>
+        <h3 id="lore-title">LES CORRESPONDANCES ENTRE LES DIMENSIONS</h3>
       </div>
       <div class="lore-content">
         <div class="lore-item">
           <span class="lore-badge" style="background: #3b82f6">BLEU</span>
-          <span class="lore-arrow">→</span>
+          <span class="lore-arrow" aria-hidden="true">→</span>
           <span class="lore-text">a son repère dans le monde de <strong>Zeus</strong></span>
         </div>
         <div class="lore-item">
           <span class="lore-badge" style="background: #dc2626">ROUGE</span>
-          <span class="lore-arrow">→</span>
+          <span class="lore-arrow" aria-hidden="true">→</span>
           <span class="lore-text">a pour repère l'univers de <strong>Bafum</strong></span>
         </div>
         <div class="lore-item">
           <span class="lore-badge" style="background: #22c55e">VERT</span>
-          <span class="lore-arrow">→</span>
+          <span class="lore-arrow" aria-hidden="true">→</span>
           <span class="lore-text">a pour repère l'univers de <strong>Poséidon</strong></span>
         </div>
         <div class="lore-item">
           <span class="lore-badge" style="background: #f8fafc; color: #000">BLANC</span>
-          <span class="lore-arrow">→</span>
+          <span class="lore-arrow" aria-hidden="true">→</span>
           <span class="lore-text">a pour repère l'univers du <strong>Léviathan</strong></span>
         </div>
       </div>
@@ -154,16 +169,16 @@
   <!-- FOOTER ÉPIQUE -->
   <footer class="noir-footer">
     <div class="footer-quote">
-      <span class="quote-mark">«</span>
+      <span class="quote-mark" aria-hidden="true">«</span>
       <p>Dans la Dimension Noire, même les dieux ont besoin d'éclairs pour se souvenir qu'ils existent.</p>
-      <span class="quote-mark">»</span>
+      <span class="quote-mark" aria-hidden="true">»</span>
     </div>
     <p class="footer-signature">— Les Chroniques d'Offoland, Livre XI</p>
 
     <div class="footer-badge">
-      <span class="icon">🌑</span>
+      <span class="icon" aria-hidden="true">🌑</span>
       <span>DIMENSION NOIRE</span>
-      <span class="dot">•</span>
+      <span class="dot" aria-hidden="true">•</span>
       <span>CHARLY GUITARE 5D</span>
     </div>
   </footer>

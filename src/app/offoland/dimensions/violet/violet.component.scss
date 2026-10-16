@@ -1,3 +1,7 @@
+/* ═════════════════════════════════════════════════════════════════════
+   DIMENSION VIOLETTE — Styles optimisés (Angular 21)
+   ═════════════════════════════════════════════════════════════════════ */
+
 :host {
   display: block;
   min-height: 100vh;
@@ -11,6 +15,10 @@
   margin: 0 auto;
   padding: 4rem 1.5rem;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   HEADER
+   ═════════════════════════════════════════════════════════════════════ */
 
 .dimension-header {
   text-align: center;
@@ -50,6 +58,10 @@
   line-height: 1.6;
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   INFOS
+   ═════════════════════════════════════════════════════════════════════ */
+
 .dimension-infos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -73,6 +85,10 @@
 .info-value { font-size: 1rem; font-weight: 800; color: #fff; }
 .info-sub { font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); font-style: italic; }
 
+/* ═════════════════════════════════════════════════════════════════════
+   NOTE SACRÉE
+   ═════════════════════════════════════════════════════════════════════ */
+
 .dimension-note-section {
   text-align: center;
   margin-bottom: 3rem;
@@ -91,6 +107,10 @@
 
 .note-label { font-size: 0.75rem; letter-spacing: 0.2em; color: var(--accent-light); text-transform: uppercase; }
 .note-value { font-size: 3.5rem; font-weight: 900; color: var(--accent-light); text-shadow: 0 0 20px var(--accent); }
+
+/* ═════════════════════════════════════════════════════════════════════
+   ÉPREUVE
+   ═════════════════════════════════════════════════════════════════════ */
 
 .dimension-trial {
   text-align: center;
@@ -119,5 +139,19 @@
     color: rgba(255, 255, 255, 0.6);
     font-style: italic;
     margin: 0;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -33,6 +33,18 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       isLink: false,
       action: () => navigate('/lykomode?etape=1')
     },
+     {
+      id: 'boubouni',
+      category: 'enfants',
+      title: 'BOUBOUNI',
+      subtitle: 'Jeu de cartes endiablé',
+      tag: 'CARTES',
+      tagClass: 'tag-card',
+      icon: '🃏',
+      btnClass: 'btn-boubouni',
+      isLink: false,
+      action: () => navigate('/cards?etape=2')
+    },
     {
       id: 'oracle',
       category: 'quiz',
@@ -117,18 +129,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       isLink: false,
       action: () => navigate('/metronome')
     },
-    {
-      id: 'boubouni',
-      category: 'enfants',
-      title: 'BOUBOUNI',
-      subtitle: 'Jeu de cartes endiablé',
-      tag: 'CARTES',
-      tagClass: 'tag-card',
-      icon: '🃏',
-      btnClass: 'btn-boubouni',
-      isLink: false,
-      action: () => navigate('/cards?etape=2')
-    },
+   
     {
       id: 'kronos',
       category: 'multi',

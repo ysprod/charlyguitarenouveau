@@ -1,107 +1,38 @@
-<!-- src/app/game/tictacduo/tictacduo.component.html -->
-
-<!-- ═══════════════════════════════════════════════════════
-     DIALOGUE DE FIN
-     ═══════════════════════════════════════════════════════ -->
 @if (showEndDialog() && endSummary(); as summary) {
-  <app-duo-end-game-dialog
-    [summary]="summary"
-    (replay)="onDialogReplay()"
-    (nextLevel)="onDialogNextLevel()"
-    (previousLevel)="onDialogPreviousLevel()"
-    (backToMenu)="onDialogBackToMenu()"
-  />
+<app-duo-end-game-dialog [summary]="summary" (replay)="onDialogReplay()" (nextLevel)="onDialogNextLevel()"
+  (previousLevel)="onDialogPreviousLevel()" (backToMenu)="onDialogBackToMenu()" />
 }
 
 <div class="temple-container">
-
-  <!-- ═══════════════════════════════════════════════════════
-       HEADER
-       ═══════════════════════════════════════════════════════ -->
-  <header class="game-header">
-    <div class="header-top-row">
-
-      <button
-        class="btn btn-neutral"
-        (click)="onrecommencer()"
-        type="button"
-        aria-label="Retour au menu des jeux"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <line x1="19" y1="12" x2="5" y2="12" />
-          <polyline points="12 19 5 12 12 5" />
-        </svg>
-        <span>Retour</span>
-      </button>
-
-      <h1 class="header-title">
-        <span class="header-icon" aria-hidden="true">⚔️</span>
-        <span class="title-text">LYKO DUEL</span>
-      </h1>
-
-      <button
-        class="btn btn-neutral btn-sound"
-        (click)="toggleSound()"
-        type="button"
-        [class.muted]="!soundEnabled()"
-        [attr.aria-pressed]="soundEnabled()"
-        [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'"
-      >
-        <span class="sound-icon" aria-hidden="true">
-          {{ soundEnabled() ? '🔊' : '🔇' }}
-        </span>
-        <span class="sound-label">
-          {{ soundEnabled() ? 'Son activé' : 'Son coupé' }}
-        </span>
-      </button>
-    </div>
-  </header>
-
   <div class="game-layout">
 
     <!-- ═══════════ GRILLE ═══════════ -->
     <section class="board-section" aria-label="Plateau de jeu">
       <div class="board-wrapper">
-        <div
-          class="dynamic-grid"
-          [style.--grid-size]="gs.gridSize()"
-          role="grid"
-          aria-label="Grille de jeu Lyko Duel"
-        >
+        <div class="dynamic-grid" [style.--grid-size]="gs.gridSize()" role="grid" aria-label="Grille de jeu Lyko Duel">
           @for (block of gs.blocks(); track block.index; let i = $index) {
-            <div
-              (click)="playerClick(i)"
-              (keydown.enter)="playerClick(i)"
-              (keydown.space)="playerClick(i); $event.preventDefault()"
-              [class.disabled]="!block.free || lock()"
-              [class.winning-cell]="block.isWinningCell"
-              [class.new-cell]="block.isNew"
-              class="grid-cell"
-              role="gridcell"
-              [attr.tabindex]="block.free && !lock() ? 0 : -1"
-              [attr.aria-label]="'Case ' + (i + 1) + (block.free ? ', libre' : ', occupée')"
-            >
-              <div class="cell-content">
-                @if (block.value) {
-                  <img
-                    [src]="gs.getAssetForSymbol(block.symbol)"
-                    alt=""
-                    class="cell-icon pop-in"
-                  />
-                }
-                @if (block.free && !lock()) {
-                  <span class="hover-hint" aria-hidden="true">+</span>
-                }
-              </div>
-
-              @if (block.isNew) {
-                <div class="cell-particles" aria-hidden="true">
-                  @for (p of [1, 2, 3, 4]; track p) {
-                    <span></span>
-                  }
-                </div>
+          <div (click)="playerClick(i)" (keydown.enter)="playerClick(i)"
+            (keydown.space)="playerClick(i); $event.preventDefault()" [class.disabled]="!block.free || lock()"
+            [class.winning-cell]="block.isWinningCell" [class.new-cell]="block.isNew" class="grid-cell" role="gridcell"
+            [attr.tabindex]="block.free && !lock() ? 0 : -1"
+            [attr.aria-label]="'Case ' + (i + 1) + (block.free ? ', libre' : ', occupée')">
+            <div class="cell-content">
+              @if (block.value) {
+              <img [src]="gs.getAssetForSymbol(block.symbol)" alt="" class="cell-icon pop-in" />
+              }
+              @if (block.free && !lock()) {
+              <span class="hover-hint" aria-hidden="true">+</span>
               }
             </div>
+
+            @if (block.isNew) {
+            <div class="cell-particles" aria-hidden="true">
+              @for (p of [1, 2, 3, 4]; track p) {
+              <span></span>
+              }
+            </div>
+            }
+          </div>
           }
         </div>
       </div>
@@ -136,9 +67,9 @@
         <div class="actions-grid">
 
           @if (rejouer() || gs.isGameOver()) {
-            <button class="btn btn-success" (click)="resetjeu()" type="button">
-              🔄 Rejouer la grille
-            </button>
+          <button class="btn btn-success" (click)="resetjeu()" type="button">
+            🔄 Rejouer la grille
+          </button>
           }
 
           <button class="btn btn-primary" (click)="prochainNiveau()" type="button">
@@ -146,9 +77,9 @@
           </button>
 
           @if (canGoPrevious()) {
-            <button class="btn btn-warning" (click)="precedentNiveau()" type="button">
-              ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize() - 1 }}×{{ gs.gridSize() - 1 }})
-            </button>
+          <button class="btn btn-warning" (click)="precedentNiveau()" type="button">
+            ⏪ NIVEAU PRÉCÉDENT ({{ gs.gridSize() - 1 }}×{{ gs.gridSize() - 1 }})
+          </button>
           }
 
           <button class="btn btn-neutral" (click)="onrecommencer()" type="button">
@@ -184,7 +115,26 @@
           </div>
         </div>
       </div>
+      <header class="game-header">
+        <div class="header-top-row">
 
+          <h1 class="header-title">
+            <span class="header-icon" aria-hidden="true">⚔️</span>
+            <span class="title-text">LYKO DUEL</span>
+          </h1>
+
+          <button class="btn btn-neutral btn-sound" (click)="toggleSound()" type="button"
+            [class.muted]="!soundEnabled()" [attr.aria-pressed]="soundEnabled()"
+            [attr.aria-label]="soundEnabled() ? 'Couper le son' : 'Activer le son'">
+            <span class="sound-icon" aria-hidden="true">
+              {{ soundEnabled() ? '🔊' : '🔇' }}
+            </span>
+            <span class="sound-label">
+              {{ soundEnabled() ? 'Son activé' : 'Son coupé' }}
+            </span>
+          </button>
+        </div>
+      </header>
       <!-- Comment jouer -->
       <div class="how-to-play">
         <h2 class="howto-title">
