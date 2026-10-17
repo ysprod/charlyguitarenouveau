@@ -40,14 +40,7 @@
           <span class="p2">{{ summary().player2Alignments }}</span>
         </span>
       </div>
-      <div class="stat-row">
-        <span class="stat-label">💎 PV gagnés (J1 / J2)</span>
-        <span class="stat-value">
-          <span class="p1">+{{ summary().player1GainedPv }}</span>
-          /
-          <span class="p2">+{{ summary().player2GainedPv }}</span>
-        </span>
-      </div>
+       
       <div class="stat-row">
         <span class="stat-label">📐 Niveau / Grille</span>
         <span class="stat-value">
@@ -83,15 +76,7 @@
         >
           🚀 Niveau suivant
         </button>
-      }
-
-      <button
-        type="button"
-        class="btn-neutral"
-        (click)="backToMenu.emit()"
-      >
-        ⚔️ Retour au menu
-      </button>
+      } 
     </div>
   </div>
 </div>

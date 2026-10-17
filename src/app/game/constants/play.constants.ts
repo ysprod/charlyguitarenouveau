@@ -25,7 +25,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       id: 'lyko',
       category: 'enfants',
       title: 'LYKO LE SAGE',
-      subtitle: 'Jouez avec vos amis ou contre OFFOWA',
+      subtitle: 'Jouez avec vos amis ou contre LYKO !',
       tag: 'DUEL',
       tagClass: 'tag-new',
       icon: '🐵',

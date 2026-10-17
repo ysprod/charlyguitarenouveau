@@ -1,9 +1,6 @@
 /* ═════════════════════════════════════════════════════════════════════
    L'ESSENTIEL — Mölkky Charly Guitare
    Design « Bois Sacré » : ambre, or, cuivre
-   ═════════════════════════════════════════════════════════════════════
-   ⚠️ L'import Google Fonts (Cinzel, Poppins) doit être placé
-   dans styles.scss global (pas dans un composant encapsulé).
    ═════════════════════════════════════════════════════════════════════ */
 
 /* ─── Variables ─── */
@@ -538,7 +535,8 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.9);
+  /* ✅ Fond solide pour éviter toute transparence fantôme */
+  background: rgba(5, 2, 1, 0.95);
   backdrop-filter: blur(15px);
   animation: fadeIn 0.3s;
 }

@@ -167,17 +167,14 @@ export class FretboardComponent {
     return 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)';
   });
 
-  /** Formate le temps restant de Star Power (1 décimale). */
   readonly starPowerTimeLeftFormatted = computed(() =>
     this.starPowerTimeLeft().toFixed(1)
   );
 
-  /** Formate la jauge Star Power (sans décimale). */
   readonly starPowerGaugeFormatted = computed(() =>
     Math.round(this.starPowerGauge()).toString()
   );
 
-  /** Indique si le label de note doit être affiché. */
   readonly shouldShowNoteLabel = computed(
     () => this.difficulty() !== 'hardcore'
   );
@@ -572,14 +569,6 @@ export class FretboardComponent {
     this.isGameOver.set(false);
     this.uiAudio.play('click');
   }
-
-  goToPlay(): void {
-    void this.router.navigate(['/play']);
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     THÉORIE MUSICALE
-     ═══════════════════════════════════════════════════════ */
 
   getNoteAt(stringIndex: number, fret: number): string {
     return this.guitarAudio.getDisplayNote(stringIndex, fret);

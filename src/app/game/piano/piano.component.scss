@@ -120,7 +120,7 @@ $c-violet:    #a855f7;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   HEADER — Bouton retour + Titre + Bouton son
+   HEADER
    ═════════════════════════════════════════════════════════════════════ */
 .game-header {
   position: relative;
@@ -138,7 +138,6 @@ $c-violet:    #a855f7;
   margin-bottom: 0.5rem;
 }
 
-/* ─── Bouton retour ─── */
 .btn-floating-back {
   display: inline-flex;
   align-items: center;
@@ -178,7 +177,6 @@ $c-violet:    #a855f7;
   }
 }
 
-/* ─── Titre ─── */
 .header-title {
   display: inline-flex;
   align-items: center;
@@ -202,7 +200,6 @@ $c-violet:    #a855f7;
   }
 }
 
-/* ─── Bouton son ─── */
 .btn-sound {
   display: inline-flex;
   align-items: center;
@@ -240,7 +237,6 @@ $c-violet:    #a855f7;
   }
 }
 
-/* ─── Badge record ─── */
 .high-score-badge {
   display: inline-flex;
   align-items: center;
@@ -378,6 +374,11 @@ $c-violet:    #a855f7;
       .target-rings .ring {
         border-color: rgba(168, 85, 247, 0.3);
       }
+    }
+
+    /* ✅ Nouvelle classe CSS pure pour remplacer [@starPowerPulse] */
+    &.star-power-pulse {
+      animation: starPowerPulse 400ms ease-in-out infinite alternate;
     }
   }
 }
@@ -626,7 +627,6 @@ $c-violet:    #a855f7;
   padding: 2rem 0 1.5rem;
   overflow: hidden;
 
-  /* ─── Flèches de scroll cliquables ─── */
   .scroll-arrow {
     position: absolute;
     top: 50%;
@@ -696,7 +696,6 @@ $c-violet:    #a855f7;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 -3px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* ─── Touches blanches ─── */
 .white-keys {
   display: inline-flex;
   gap: 2px;
@@ -797,7 +796,6 @@ $c-violet:    #a855f7;
   }
 }
 
-/* ─── Touches noires ─── */
 .black-keys {
   position: absolute;
   top: 6px;
@@ -900,7 +898,6 @@ $c-violet:    #a855f7;
   }
 }
 
-/* ─── Particules ─── */
 .particle {
   position: absolute;
   z-index: 20;
@@ -981,7 +978,6 @@ $c-violet:    #a855f7;
       strong { color: #fff; }
     }
 
-    /* Sélecteur de difficulté */
     .difficulty-selector {
       margin-bottom: 2rem;
 
@@ -1026,7 +1022,6 @@ $c-violet:    #a855f7;
       }
     }
 
-    /* Actions modales */
     .modal-actions,
     .modal-actions-horizontal {
       display: flex;
@@ -1063,7 +1058,6 @@ $c-violet:    #a855f7;
       }
     }
 
-    /* ─── Actions étendues (fin de partie) ─── */
     .modal-actions-extended {
       display: flex;
       flex-direction: column;
@@ -1119,7 +1113,6 @@ $c-violet:    #a855f7;
       }
     }
 
-    /* Stats finales */
     .final-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1378,19 +1371,6 @@ $c-violet:    #a855f7;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   ACCESSIBILITÉ
-   ═════════════════════════════════════════════════════════════════════ */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* ═════════════════════════════════════════════════════════════════════
    TRANSITIONS CSS PURES (remplacent @angular/animations)
    ═════════════════════════════════════════════════════════════════════ */
 
@@ -1463,7 +1443,18 @@ $c-violet:    #a855f7;
   100% { transform: scale(1);   color: inherit; }
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .feedback-enter,
   .modal-enter,
   .melody-enter,

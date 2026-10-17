@@ -118,7 +118,6 @@ export class MemoryComponent {
     () => this.difficulty() !== 'difficile'
   );
 
-  /** Particules pré-calculées (position, délai, couleur). */
   readonly particlesView = computed<readonly ParticleView[]>(() =>
     this.particles().map((p) => ({
       left: (p * 5) % 100,
@@ -133,6 +132,7 @@ export class MemoryComponent {
 
   private readonly timeouts = new Set<ReturnType<typeof setTimeout>>();
   private timerInterval?: ReturnType<typeof setInterval>;
+  private feedbackTimeout?: ReturnType<typeof setTimeout>;
 
   /* ═══════════════════════════════════════════════════════
      CONSTRUCTEUR
@@ -161,8 +161,14 @@ export class MemoryComponent {
   private clearAllTimers(): void {
     this.timeouts.forEach((id) => clearTimeout(id));
     this.timeouts.clear();
+
     clearInterval(this.timerInterval);
     this.timerInterval = undefined;
+
+    if (this.feedbackTimeout) {
+      clearTimeout(this.feedbackTimeout);
+      this.feedbackTimeout = undefined;
+    }
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -192,6 +198,11 @@ export class MemoryComponent {
   async startGame(): Promise<void> {
     await this.audio.ensureReady();
     this.audio.play('click');
+
+    /* ✅ Nettoie tout état résiduel avant de commencer */
+    this.clearAllTimers();
+    this.feedbackMessage.set(null);
+    this.particles.set([]);
 
     const config = this.currentDifficulty();
     const diff = this.difficulty();
@@ -223,8 +234,6 @@ export class MemoryComponent {
     this.timeLeft.set(MOLKKY_RULES.MAX_TIME);
     this.roundNumber.set(0);
     this.perfectRounds.set(0);
-    this.feedbackMessage.set(null);
-    this.particles.set([]);
 
     this.nextRound();
     this.startTimer();
@@ -388,6 +397,12 @@ export class MemoryComponent {
 
   private endGame(isVictory: boolean): void {
     this.clearAllTimers();
+
+    /* ✅ CRUCIAL : annule le feedback en cours AVANT d'afficher la modale.
+       Sans ça, un badge "RATÉ !" pouvait rester affiché par-dessus la modale
+       de fin de partie, donnant l'impression de deux overlays superposés. */
+    this.clearFeedback();
+
     this.isPlaying.set(false);
     this.isGameOver.set(!isVictory);
     this.isVictory.set(isVictory);
@@ -401,9 +416,27 @@ export class MemoryComponent {
      ═══════════════════════════════════════════════════════ */
 
   private showFeedback(msg: string, type: FeedbackType): void {
+    /* ✅ Annule tout timer de feedback en cours pour éviter les doublons */
+    if (this.feedbackTimeout) {
+      clearTimeout(this.feedbackTimeout);
+      this.feedbackTimeout = undefined;
+    }
+
     this.feedbackMessage.set(msg);
     this.feedbackType.set(type);
-    this.setManagedTimeout(() => this.feedbackMessage.set(null), 1000);
+
+    this.feedbackTimeout = setTimeout(() => {
+      this.feedbackMessage.set(null);
+      this.feedbackTimeout = undefined;
+    }, 1000);
+  }
+
+  private clearFeedback(): void {
+    if (this.feedbackTimeout) {
+      clearTimeout(this.feedbackTimeout);
+      this.feedbackTimeout = undefined;
+    }
+    this.feedbackMessage.set(null);
   }
 
   private triggerParticles(): void {

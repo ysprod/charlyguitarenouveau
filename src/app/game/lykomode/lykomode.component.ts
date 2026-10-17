@@ -9,9 +9,8 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
-  ROUTE_BACK_TO_MENU,
   ROUTE_LOCAL_DUO,
-  ROUTE_VS_AI,
+  ROUTE_VS_AI
 } from '../constants/lykomode.constants';
 
 const TUTORIAL_URL = 'https://www.youtube.com/shorts/vzPQl0VVNvw';
@@ -44,10 +43,6 @@ export class LykomodeComponent {
 
   playWithFriend(): void {
     void this.router.navigate([ROUTE_LOCAL_DUO]);
-  }
-
-  backToMenu(): void {
-    void this.router.navigate([ROUTE_BACK_TO_MENU]);
   }
 
   showTutorial(): void {

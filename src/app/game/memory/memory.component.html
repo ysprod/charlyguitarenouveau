@@ -3,11 +3,10 @@
 <div class="molkky-container">
 
   <!-- ═══════════════════════════════════════════════════════
-       HEADER : Bouton retour + Titre sur la même ligne
+       HEADER
        ═══════════════════════════════════════════════════════ -->
   <header class="game-header">
     <div class="header-top-row">
-
       <h1 class="header-title">🪵 L'ESSENTIEL</h1>
     </div>
 
@@ -77,9 +76,9 @@
   }
 
   <!-- ═══════════════════════════════════════════════════════
-       FEEDBACK
+       FEEDBACK — affiché UNIQUEMENT pendant la partie
        ═══════════════════════════════════════════════════════ -->
-  @if (feedbackMessage()) {
+  @if (isPlaying() && feedbackMessage()) {
     <div class="feedback-overlay" role="status" aria-live="polite">
       <span class="feedback-badge"
             [class.success]="feedbackType() === 'success'"
@@ -90,9 +89,9 @@
   }
 
   <!-- ═══════════════════════════════════════════════════════
-       PARTICULES
+       PARTICULES — affichées UNIQUEMENT pendant la partie
        ═══════════════════════════════════════════════════════ -->
-  @if (particlesView().length > 0) {
+  @if (isPlaying() && particlesView().length > 0) {
     <div class="particles-overlay" aria-hidden="true">
       @for (p of particlesView(); track $index) {
         <span class="particle"
@@ -146,7 +145,7 @@
   }
 
   <!-- ═══════════════════════════════════════════════════════
-       MODALES
+       MODALES — affichées UNIQUEMENT hors partie
        ═══════════════════════════════════════════════════════ -->
   @if (!isPlaying()) {
     <div class="overlay-screen">

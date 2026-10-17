@@ -1,20 +1,11 @@
-import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
-import { environment } from './environments/environment';
 
-if (environment.production) {
-  enableProdMode();
-}
-
-bootstrapApplication(
-  AppComponent,
-  appConfig
-).catch((error: unknown) => {
+bootstrapApplication(AppComponent, appConfig).catch((error: unknown) => {
   console.error(
     'Erreur lors du démarrage de l’application Angular :',
-    error
+    error,
   );
-}); 
+});

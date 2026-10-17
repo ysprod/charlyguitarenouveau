@@ -47,7 +47,7 @@ import {
   STAR_POWER_GAIN_PER_HIT,
   STORAGE_KEYS,
   TAP_THRESHOLD_PX,
-  WHITE_NOTES_LIST,  
+  WHITE_NOTES_LIST,
 } from '../constants/piano.constants';
 
 /* ═══════════════════════════════════════════════════════════
@@ -383,10 +383,7 @@ export class PianoComponent {
   /* ═══════════════════════════════════════════════════════
      NAVIGATION
      ═══════════════════════════════════════════════════════ */
-
-  goToPlay(): void {
-    void this.router.navigate(['/play']);
-  }
+ 
 
   backToDifficultySelect(): void {
     this.clearAllTimers();

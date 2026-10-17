@@ -80,7 +80,8 @@
 
     <div class="hud-box combo-box"
          [class.multiplier-active]="multiplier() > 1"
-         [class.combo-flash]="comboFlashKey() > 0">
+         [class.combo-flash]="comboFlashKey() > 0"
+         [attr.data-flash-key]="comboFlashKey()">
       <span class="label">COMBO</span>
       <span class="value">x{{ effectiveMultiplier() }}</span>
     </div>
@@ -367,8 +368,7 @@
           </div>
 
           <div class="modal-actions-horizontal">
-            <button class="btn-secondary" (click)="goToPlay()" type="button">RETOUR</button>
-            <button class="btn-start" (click)="startGame()" type="button">LANCER LE DÉFI</button>
+             <button class="btn-start" (click)="startGame()" type="button">LANCER LE DÉFI</button>
           </div>
         </div>
       }
@@ -406,8 +406,7 @@
           <div class="modal-actions">
             <button class="btn-start" (click)="startGame()" type="button">RÉESSAYER</button>
             <button class="btn-secondary" (click)="backToMenu()" type="button">MENU PRINCIPAL</button>
-            <button class="btn-tertiary" (click)="goToPlay()" type="button">QUITTER</button>
-          </div>
+           </div>
         </div>
       }
     </div>

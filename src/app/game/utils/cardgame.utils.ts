@@ -24,23 +24,14 @@ export function pickRandom<T>(items: readonly T[]): T {
    ═════════════════════════════════════════════════════════════════════ */
 
 export const MATCH_PHRASES: readonly string[] = [
-  'Bien joué !',
-  'Super !',
-  'Trop fort !',
-  'Youpi !',
-  'Encore une !',
-  'Génial !',
+  'Bien joué !',  
   'Bravo !',
   'Wow, quelle mémoire !',
 ];
 
 export const WRONG_PHRASES: readonly string[] = [
   'Oups, raté !',
-  'Presque !',
-  'Essaie encore !',
-  'Pas grave, retente !',
   'Hop, essaie encore !',
-  'Tu vas y arriver !',
 ];
 
 export function pickMatchPhrase(): string {

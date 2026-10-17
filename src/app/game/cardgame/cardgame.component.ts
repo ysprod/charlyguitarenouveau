@@ -1,35 +1,19 @@
-// src/app/game/cardgame/cardgame.component.ts
-
 import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  afterNextRender,
-  computed,
-  inject,
+  ChangeDetectionStrategy,  Component,
+  DestroyRef,  afterNextRender,  computed,  inject,
   signal,
 } from '@angular/core';
-
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe, Location } from '@angular/common';
-
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-
 import { CardData } from './CardData';
 import { RdialogComponent, RdialogResult } from './rdialog/rdialog.component';
 import { GamecardComponent } from './gamecard/gamecard.component';
-
 import { VoiceService, SpeakOptions } from '../services/voice.service';
 import { shuffleArray, pickMatchPhrase, pickWrongPhrase } from 'src/app/game/utils/cardgame.utils';
 import { createIntervalScheduler } from 'src/app/game/utils/schedulers.util';
 import { createTimeoutScheduler } from 'src/app/game/utils/timeout.util';
-
- 
-
-/* ═════════════════════════════════════════════════════════════════════
-   TYPES & CONSTANTES
-   ═════════════════════════════════════════════════════════════════════ */
 
 type SoundType = 'flip' | 'match' | 'wrong' | 'victory' | 'defeat';
 
@@ -54,10 +38,6 @@ const PV_MAX = 10_000_000;
 const FLIP_DELAY_MS = 800;
 const LAST_MATCH_HIDE_MS = 3000;
 const INTRO_DELAY_MS = 600;
-
-/* ═════════════════════════════════════════════════════════════════════
-   COMPOSANT
-   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-cardgame',
@@ -84,15 +64,11 @@ export class CardgameComponent {
   readonly lavie = signal(0);
   readonly lebonus = signal(0);
   readonly pointdevies = signal(0);
-
   readonly matchedCount = signal(0);
   readonly moves = signal(0);
-
   readonly elapsedSeconds = signal(0);
   readonly lastMatchSeconds = signal(0);
-
   readonly soundEnabled = signal(true);
-
   readonly cards = signal<CardData[]>([]);
 
   /* ─── État interne — signals ─── */
@@ -217,12 +193,9 @@ export class CardgameComponent {
     this.hasAnnouncedIntro = true;
 
     const intro =
-      `Coucou ! Bienvenue dans Boubouni ! ` +
+      `Bienvenue dans Boubouni ! ` +
       `Retrouve toutes les paires cachées pour gagner le trésor ! ` +
-      `Chaque coup te coûte cent points de vie, ` +
-      `mais une paire trouvée t'en rapporte cinq mille ! ` +
-      `Tu as ${this.pointdevies()} points. ` +
-      `Le chrono tourne ! Allez, c'est parti !`;
+      `Allez, c'est parti !`;
 
     this.scheduleTimeout(() => {
       void this.speakAsChild(intro, { rate: 1.05 });
@@ -481,8 +454,6 @@ export class CardgameComponent {
 
     void this.speakAsChild(
       `Youpi ! Tu as trouvé toutes les paires ! ` +
-      `Tu gagnes cinq mille points bonus ! ` +
-      `Ton trésor est maintenant de ${this.pointdevies()} points ! ` +
       `Temps total : ${this.formatTime(this.elapsedSeconds())} !`,
       { pitch: 1.85, rate: 1.15 }
     ).then(() => {
