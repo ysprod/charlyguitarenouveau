@@ -4,43 +4,47 @@
   class="promo-modal-backdrop"
   role="dialog"
   aria-modal="true"
-  aria-labelledby="promo-modal-title"
-  aria-describedby="promo-modal-desc"
+  [attr.aria-labelledby]="titleId"
+  [attr.aria-describedby]="descId"
   (click)="close()"
 >
-  <div class="promo-modal-card" (click)="$event.stopPropagation()">
+  <div #cardRef class="promo-modal-card" (click)="$event.stopPropagation()">
 
     <div class="promo-modal-icon" aria-hidden="true">🎁</div>
 
-    <h2 id="promo-modal-title" class="promo-modal-title">
+    <h2 [id]="titleId" class="promo-modal-title">
       {{ title() }}
     </h2>
 
-    <p id="promo-modal-desc" class="promo-modal-message">
+    <p [id]="descId" class="promo-modal-message">
       {{ message() }}
     </p>
 
     <div class="promo-modal-field">
-      <label for="promoCodeInput">Votre code promo</label>
+      <label [for]="inputId">Votre code promo</label>
       <input
         #codeInput
         type="text"
-        id="promoCodeInput"
+        [id]="inputId"
         name="promoCodeInput"
         [ngModel]="codeValue()"
-        (ngModelChange)="codeValue.set($event)"
+        (ngModelChange)="onCodeChange($event)"
         (keydown.enter)="submit(); $event.preventDefault()"
         autocomplete="off"
         maxlength="50"
         [disabled]="isSaving()"
+        placeholder="Ex : GUITARE2026"
+        aria-required="true"
       />
       <small class="promo-modal-hint">
-        Ce code est obligatoire.
+        Ce code est obligatoire pour finaliser l'achat.
       </small>
     </div>
 
     @if (errorMessage()) {
-      <p class="promo-modal-error" role="alert">{{ errorMessage() }}</p>
+      <p class="promo-modal-error" role="alert" aria-live="assertive">
+        {{ errorMessage() }}
+      </p>
     }
 
     <div class="promo-modal-actions">
@@ -57,7 +61,7 @@
         type="button"
         class="promo-btn promo-btn-primary"
         (click)="submit()"
-        [disabled]="isSaving()"
+        [disabled]="isSaving() || !canSubmit()"
         [attr.aria-busy]="isSaving()"
       >
         @if (!isSaving()) {

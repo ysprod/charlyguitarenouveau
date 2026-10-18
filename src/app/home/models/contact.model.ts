@@ -1,24 +1,46 @@
+// src/app/home/models/contact.model.ts
+
 import { FormControl } from '@angular/forms';
 
-/* ═════════════════════════════════════════════════════════════════════
-   CONTACT — MODÈLES
-   ═════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   FORMULAIRE
+   ═══════════════════════════════════════════════════════ */
 
-/** Structure typée du formulaire de contact. */
 export interface ContactForm {
   subject: FormControl<string>;
   message: FormControl<string>;
 }
 
-/** Données envoyées dans Firebase Realtime Database. */
+/* ═══════════════════════════════════════════════════════
+   MESSAGE
+   ═══════════════════════════════════════════════════════ */
+
+/**
+ * Structure d'un message stocké dans Firebase.
+ *
+ * ⚠️ Le DESTINATAIRE n'est PAS dans l'objet : il est dans le chemin
+ *    /messages/{uid_destinataire}/{messageId}
+ *
+ * Direction :
+ *   - Reçu  → /messages/{mon-uid}/{msgId}       (read: false)
+ *   - Envoyé → /messages/{mon-uid}/sent/{msgId}  (read: true)
+ */
 export interface MessageData {
-  userId: string;
-  userEmail: string;
-  userName: string;
-  userPhoto: string;
+  /** UID de l'expéditeur */
+  from: string;
+  fromEmail: string;
+  fromName: string;
+  fromPhoto?: string;
+
   subject: string;
-  message: string;
-  createdAt: string;
-  status: 'unread';
-  to: '4gKIsx61Ief3iIvNgWgIy8PKVpm2'  // ← ✅ UID du support
+  body: string;
+
+  /** Timestamp en millisecondes */
+  createdAt: number;
+
+  /** Lu par le destinataire ? */
+  read: boolean;
+
+  /** Catégorie optionnelle */
+  category?: 'academie' | 'abonnement' | 'contenu' | 'evenement' | 'systeme' | 'autre';
 }

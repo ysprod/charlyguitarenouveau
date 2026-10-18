@@ -31,7 +31,7 @@ interface BeforeInstallPromptEvent extends Event {
    CONSTANTES
    ═══════════════════════════════════════════════════════════ */
 
-const DISMISS_KEY = 'mymuisic_install_dismissed_until';
+const DISMISS_KEY = 'charlyguitare_install_dismissed_until';
 
 /** 7 jours en millisecondes. */
 const DISMISS_DURATION_MS = 7 * 24 * 60 * 60 * 1000;

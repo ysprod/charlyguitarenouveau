@@ -1,21 +1,18 @@
 // src/app/homeconnect/homeconnect.model.ts
 
-export type QuickActionColor =
-  | 'primary'
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | 'gold'
-  | 'violet';
+/* ═════════════════════════════════════════════════════════════════════
+   HOMECONNECT — MODÈLES PARTAGÉS
+   ═════════════════════════════════════════════════════════════════════ */
 
- 
-
- 
+/* ═══════════════════════════════════════════════════════
+   MESSAGERIE
+   ═══════════════════════════════════════════════════════ */
 
 export type InboxFilter =
   | 'all'
   | 'unread'
   | 'starred'
+  | 'sent'
   | 'academie'
   | 'abonnement';
 
@@ -29,6 +26,9 @@ export type InboxCategory =
 
 export type SenderRole = 'admin' | 'support' | 'student' | 'system';
 
+/** Direction du message : reçu ou envoyé. */
+export type MessageDirection = 'in' | 'out';
+
 export interface InboxMessage {
   readonly id: string;
   readonly from: string;
@@ -37,15 +37,29 @@ export interface InboxMessage {
   readonly subject: string;
   readonly preview: string;
   readonly body: string;
-  readonly receivedAt: string;
+
+  /** Timestamp en millisecondes (cohérent avec Firebase). */
+  readonly receivedAt: number;
+
   readonly isUnread: boolean;
   readonly isStarred: boolean;
   readonly category: InboxCategory;
+
+  /** ✅ 'in' = message reçu, 'out' = message envoyé. */
+  readonly direction: MessageDirection;
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   HOMECONNECT — MODÈLES PARTAGÉS
-   ═════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   UI — ACTIONS RAPIDES
+   ═══════════════════════════════════════════════════════ */
+
+export type QuickActionColor =
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'gold'
+  | 'violet';
 
 /** Action rapide présentée dans la bannière de bienvenue. */
 export interface QuickAction {
@@ -53,8 +67,12 @@ export interface QuickAction {
   label: string;
   description: string;
   route: string;
-  color: 'primary' | 'success' | 'warning' | 'danger' | 'gold' | 'violet';
+  color: QuickActionColor;
 }
+
+/* ═══════════════════════════════════════════════════════
+   UI — UNIVERS DE COULEUR
+   ═══════════════════════════════════════════════════════ */
 
 /** Univers de couleur (7 Dimensions d'Offoland). */
 export interface ColorUniverse {
@@ -65,12 +83,20 @@ export interface ColorUniverse {
   color: string;
 }
 
+/* ═══════════════════════════════════════════════════════
+   UI — POURQUOI NOUS
+   ═══════════════════════════════════════════════════════ */
+
 /** Pilier « Pourquoi nous ». */
 export interface WhyPillar {
   icon: string;
   title: string;
   description: string;
 }
+
+/* ═══════════════════════════════════════════════════════
+   UI — TÉMOIGNAGES
+   ═══════════════════════════════════════════════════════ */
 
 /** Témoignage d'élève. */
 export interface Testimonial {

@@ -5,12 +5,10 @@ import {
   Component,
   computed,
   inject,
-  linkedSignal,
   signal,
 } from '@angular/core';
 
 import { toSignal } from '@angular/core/rxjs-interop';
-
 import { Router, RouterLink } from '@angular/router';
 
 import {
@@ -24,10 +22,8 @@ import type {
   InboxMessage,
 } from 'src/app/home/models/homeconnect.model';
 
- 
-
 import { filterMessages } from 'src/app/home/utils/homeconnect.utils';
- 
+
 import { InboxService } from '../../services/inbox.service';
 import { RelativeDatePipe } from '../../pipes/relative-date.pipe';
 import { CategoryIconPipe } from '../../pipes/status.pipe';
@@ -59,7 +55,7 @@ export class InboxPanelComponent {
   private readonly router = inject(Router);
 
   /* ═══════════════════════════════════════════════════════
-     CONSTANTES UI
+     CONSTANTES
      ═══════════════════════════════════════════════════════ */
 
   readonly inboxFilters = INBOX_FILTERS;
@@ -67,48 +63,40 @@ export class InboxPanelComponent {
   readonly previewMaxLength = INBOX_PREVIEW_MAX_LENGTH;
 
   /* ═══════════════════════════════════════════════════════
-     ÉTAT UI
+     ÉTAT
      ═══════════════════════════════════════════════════════ */
 
   readonly activeFilter = signal<InboxFilter>('all');
   readonly currentPage = signal(1);
 
   /* ═══════════════════════════════════════════════════════
-     FLUX FIREBASE
+     FLUX
      ═══════════════════════════════════════════════════════ */
 
-  private readonly firebaseMessages = toSignal(this.inboxService.messages$, {
+  private readonly messages = toSignal(this.inboxService.messages$, {
     initialValue: [] as InboxMessage[],
   });
 
   /* ═══════════════════════════════════════════════════════
-     SIGNAL LOCAL (linkedSignal) — synchronisé avec Firebase
-     ═══════════════════════════════════════════════════════ */
-
-  private readonly localMessages = linkedSignal<InboxMessage[]>(() =>
-    this.firebaseMessages()
-  );
-
-  /* ═══════════════════════════════════════════════════════
-     SIGNAUX DÉRIVÉS
+     COMPUTED
      ═══════════════════════════════════════════════════════ */
 
   readonly filteredMessages = computed(() =>
-    filterMessages(this.localMessages(), this.activeFilter())
+    filterMessages(this.messages(), this.activeFilter()),
   );
 
   readonly unreadCount = computed(
-    () => this.localMessages().filter((m) => m.isUnread).length
+    () => this.messages().filter((m) => m.isUnread).length,
   );
 
-  readonly totalCount = computed(() => this.localMessages().length);
-
-  readonly starredCount = computed(
-    () => this.localMessages().filter((m) => m.isStarred).length
+  readonly sentCount = computed(
+    () => this.messages().filter((m) => m.direction === 'out').length,
   );
+
+  readonly totalCount = computed(() => this.messages().length);
 
   readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filteredMessages().length / this.pageSize))
+    Math.max(1, Math.ceil(this.filteredMessages().length / this.pageSize)),
   );
 
   readonly paginatedMessages = computed(() => {
@@ -119,11 +107,11 @@ export class InboxPanelComponent {
   });
 
   readonly pagesArray = computed(() =>
-    Array.from({ length: this.totalPages() }, (_, i) => i + 1)
+    Array.from({ length: this.totalPages() }, (_, i) => i + 1),
   );
 
   /* ═══════════════════════════════════════════════════════
-     ACTIONS UI
+     ACTIONS
      ═══════════════════════════════════════════════════════ */
 
   setFilter(filter: InboxFilter): void {
@@ -131,35 +119,13 @@ export class InboxPanelComponent {
     this.currentPage.set(1);
   }
 
-  /**
-   * Ouvre la conversation dans la page `/inbox`.
-   * Utilise `msg.id` comme identifiant d'URL.
-   */
   openMessage(message: InboxMessage): void {
-    const key = message.id;
-    if (!key) return;
-
-    void this.router.navigate(['/inbox', key]);
-  }
-
-  toggleStar(message: InboxMessage, event: Event): void {
-    event.stopPropagation();
-
-    this.localMessages.update((list) =>
-      list.map((m) =>
-        m.id === message.id ? { ...m, isStarred: !m.isStarred } : m
-      )
-    );
+    if (!message.id) return;
+    void this.router.navigate(['/inbox', message.id]);
   }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-  }
-
-  markAllAsRead(): void {
-    this.localMessages.update((list) =>
-      list.map((m) => ({ ...m, isUnread: false }))
-    );
   }
 }

@@ -16,21 +16,10 @@ import {
 
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import {
-  Auth,
-  User,
-  authState,
-} from '@angular/fire/auth';
-
-import {
-  Database,
-  push,
-  ref,
-} from '@angular/fire/database';
+import { Auth, User, authState } from '@angular/fire/auth';
 
 import {
   ContactForm,
-  MessageData,
 } from 'src/app/home/models/contact.model';
 
 import {
@@ -38,13 +27,12 @@ import {
   MESSAGE_MIN_LENGTH,
   SUBJECT_MAX_LENGTH,
   SUBJECT_MIN_LENGTH,
-  SUPPORT_UID,                  // ← ✅ AJOUT
-} from 'src/app/home/constants/contact.constants';
-
-/* ═════════════════════════════════════════════════════════════════════
-   COMPOSANT
-   ═════════════════════════════════════════════════════════════════════ */
-
+  SUPPORT_UID,
+  SUPPORT_NAME,
+} from '../constants/contact.constants';
+import { MessagerieService } from '../services/messagerie.service';
+ 
+ 
 @Component({
   selector: 'app-contact',
   imports: [ReactiveFormsModule],
@@ -54,12 +42,10 @@ import {
 })
 export class ContactComponent {
 
-  /* ─── Injection ─── */
   private readonly formBuilder = inject(FormBuilder);
-  private readonly database = inject(Database);
   private readonly auth = inject(Auth);
+  private readonly messagerie = inject(MessagerieService);
 
-  /* ─── Formulaire ─── */
   readonly contactForm: FormGroup<ContactForm> = this.formBuilder.group<ContactForm>({
     subject: this.formBuilder.nonNullable.control(
       '',
@@ -67,7 +53,7 @@ export class ContactComponent {
         Validators.required,
         Validators.minLength(SUBJECT_MIN_LENGTH),
         Validators.maxLength(SUBJECT_MAX_LENGTH),
-      ]
+      ],
     ),
     message: this.formBuilder.nonNullable.control(
       '',
@@ -75,31 +61,23 @@ export class ContactComponent {
         Validators.required,
         Validators.minLength(MESSAGE_MIN_LENGTH),
         Validators.maxLength(MESSAGE_MAX_LENGTH),
-      ]
+      ],
     ),
   });
 
-  /* ─── Constantes exposées au template ─── */
   readonly messageMaxLength = MESSAGE_MAX_LENGTH;
   readonly subjectMaxLength = SUBJECT_MAX_LENGTH;
 
-  /* ─── États UI ─── */
   readonly isSubmitting = signal(false);
   readonly submitSuccess = signal(false);
   readonly submitError = signal(false);
   readonly errorMessage = signal('');
 
-  /* ─── Utilisateur courant ─── */
   readonly currentUser = toSignal(authState(this.auth), {
     initialValue: null as User | null,
   });
 
-  /* ═══════════════════════════════════════════════════════════════════
-     SOUMISSION
-     ═══════════════════════════════════════════════════════════════════ */
-
   async onSubmit(): Promise<void> {
-
     this.submitSuccess.set(false);
     this.submitError.set(false);
     this.errorMessage.set('');
@@ -107,9 +85,7 @@ export class ContactComponent {
     const user = this.currentUser();
     if (!user) {
       this.submitError.set(true);
-      this.errorMessage.set(
-        'Vous devez être connecté pour envoyer un message.'
-      );
+      this.errorMessage.set('Vous devez être connecté pour envoyer un message.');
       return;
     }
 
@@ -120,54 +96,33 @@ export class ContactComponent {
 
     this.isSubmitting.set(true);
 
-    const messageData: MessageData = {
-      userId: user.uid,
-      userEmail: user.email ?? '',
-      userName: user.displayName ?? 'Utilisateur',
-      userPhoto: user.photoURL ?? '',
-      subject: this.contactForm.controls.subject.value.trim(),
-      message: this.contactForm.controls.message.value.trim(),
-      createdAt: new Date().toISOString(),
-      status: 'unread',
-      to: SUPPORT_UID,             // ← ✅ UID du support
-    };
-
     try {
-      const messagesRef = ref(this.database, 'messages');
-      await push(messagesRef, messageData);
-
-      this.submitSuccess.set(true);
-
-      this.contactForm.reset({
-        subject: '',
-        message: '',
-      });
-
-    } catch (error: unknown) {
-
-      this.submitError.set(true);
-      this.errorMessage.set(
-        'Une erreur est survenue lors de l’envoi. Veuillez réessayer.'
+      await this.messagerie.sendMessage(
+        SUPPORT_UID,
+        SUPPORT_NAME,
+        {
+          subject: this.contactForm.controls.subject.value.trim(),
+          body: this.contactForm.controls.message.value.trim(),
+        },
       );
 
-      console.error('Erreur Realtime Database :', error);
+      this.submitSuccess.set(true);
+      this.contactForm.reset({ subject: '', message: '' });
 
+    } catch (error: unknown) {
+      this.submitError.set(true);
+      this.errorMessage.set(
+        'Une erreur est survenue lors de l’envoi. Veuillez réessayer.',
+      );
+      console.error('Erreur Realtime Database :', error);
     } finally {
       this.isSubmitting.set(false);
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
-     ACCÈS RAPIDE AUX CONTRÔLES
-     ═══════════════════════════════════════════════════════════════════ */
-
   get f(): FormGroup<ContactForm>['controls'] {
     return this.contactForm.controls;
   }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     HELPERS TEMPLATE — compteur de caractères
-     ═══════════════════════════════════════════════════════════════════ */
 
   get messageLength(): number {
     return this.contactForm.controls.message.value.length;

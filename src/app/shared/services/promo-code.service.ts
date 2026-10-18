@@ -1,11 +1,21 @@
-import { Injectable, inject } from '@angular/core';
+// src/app/home/services/promo-code.service.ts
+
+import {
+  EnvironmentInjector,
+  Injectable,
+  inject,
+  runInInjectionContext,
+} from '@angular/core';
+
 import { Auth, User } from '@angular/fire/auth';
+
 import {
   Database,
   get,
   ref,
+  runTransaction,
   set,
-  update
+  update,
 } from '@angular/fire/database';
 
 import {
@@ -14,72 +24,60 @@ import {
   ParrainEntry,
   PromotionMetadata,
   PromotionUserEntry,
-  PromoValidationResult
+  PromoValidationResult,
 } from '../../home/models/promo.model';
 
 import {
   PROMO_CACHE_PREFIX,
   PROMO_CACHE_TTL_MS,
-  PROMO_MESSAGES
+  PROMO_MESSAGES,
 } from '../../home/constants/promo.constants';
 
 import { StorageService } from './storage.service';
 
-/**
- * Service partagé de gestion des codes promo.
- *
- * Utilisé par :
- *  - `PlayComponent` (accès aux jeux)
- *  - `DocumentsComponent` (achat de documents)
- *  - Tout autre composant nécessitant la validation d'un code promo
- *
- * Responsabilités :
- *  - Vérifier si l'utilisateur a un code promo validé (cache + Firebase)
- *  - Valider un nouveau code promo (avec enregistrements secondaires)
- *  - Mettre à jour le cache localStorage
- */
+/* ═════════════════════════════════════════════════════════════════════
+   SERVICE — Gestion des codes promo
+
+   Responsabilités :
+   - Vérifier si l'utilisateur possède un code promo validé
+   - Valider un nouveau code (avec atomique + idempotent)
+   - Gérer le cache localStorage
+   ═════════════════════════════════════════════════════════════════════ */
+
 @Injectable({ providedIn: 'root' })
 export class PromoCodeService {
 
   private readonly db = inject(Database);
   private readonly auth = inject(Auth);
   private readonly storage = inject(StorageService);
+  private readonly environmentInjector = inject(EnvironmentInjector);
+
+  /** ✅ Verrou anti-double validation (par utilisateur) */
+  private readonly pending = new Set<string>();
 
   /* ═══════════════════════════════════════════════════════
      VÉRIFICATION
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Vérifie si l'utilisateur connecté possède un code promo validé.
-   *
-   * Stratégie :
-   *  1. Vérifie le cache localStorage (rapide)
-   *  2. Sinon, lit `users/{uid}/codepromo` dans Firebase
-   *  3. Met à jour le cache si Firebase trouve un code
-   */
   async checkPromoCode(): Promise<PromoValidationResult> {
     const user = this.auth.currentUser;
+    if (!user) return { status: 'missing' };
 
-    if (!user) {
-      return { status: 'missing' };
-    }
-
-    /* ─── ÉTAPE 1 : Cache localStorage ─── */
+    /* ─── 1. Cache localStorage ─── */
     const cached = this.readCachedPromo(user.uid);
     if (cached) {
       return { status: 'valid', code: cached.code, fromCache: true };
     }
 
-    /* ─── ÉTAPE 2 : Firebase ─── */
+    /* ─── 2. Firebase ─── */
     try {
-      const snapshot = await get(ref(this.db, `users/${user.uid}`));
-      if (!snapshot.exists()) {
-        return { status: 'missing' };
-      }
+      const snapshot = await this.runInContext(() =>
+        get(ref(this.db, `users/${user.uid}/codepromo`)),
+      );
 
-      const data = snapshot.val() as { codepromo?: unknown };
-      const promo = data?.codepromo;
+      if (!snapshot.exists()) return { status: 'missing' };
 
+      const promo = snapshot.val() as unknown;
       if (typeof promo === 'string' && promo.trim().length > 0) {
         const code = promo.trim();
         this.writeCachedPromo(user.uid, code);
@@ -90,66 +88,58 @@ export class PromoCodeService {
 
     } catch (error) {
       console.warn('[Promo] Lecture Firebase échouée :', error);
-      return {
-        status: 'error',
-        message: PROMO_MESSAGES.NETWORK_ERROR
-      };
+      return { status: 'error', message: PROMO_MESSAGES.NETWORK_ERROR };
     }
   }
 
   /* ═══════════════════════════════════════════════════════
-     VALIDATION D'UN NOUVEAU CODE
+     VALIDATION
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Valide un nouveau code promo pour l'utilisateur connecté.
-   * Retourne le code normalisé si succès, sinon une erreur.
-   */
   async validatePromoCode(rawCode: string): Promise<
     { ok: true; code: string } | { ok: false; message: string }
   > {
     const user = this.auth.currentUser;
-
-    if (!user) {
-      return { ok: false, message: PROMO_MESSAGES.NOT_AUTHENTICATED };
-    }
+    if (!user) return { ok: false, message: PROMO_MESSAGES.NOT_AUTHENTICATED };
 
     const normalized = rawCode.replace(/\s+/g, '').toUpperCase();
-
     if (!normalized) {
       return { ok: false, message: PROMO_MESSAGES.INPUT_EMPTY };
     }
 
-    try {
-      /* ─── ÉTAPE 1 : Vérifie que le code existe ─── */
-      const parrainSnapshot = await get(ref(this.db, `parrain/${normalized}`));
+    /* ✅ Anti-double-clic */
+    if (this.pending.has(user.uid)) {
+      return { ok: false, message: 'Validation déjà en cours...' };
+    }
+    this.pending.add(user.uid);
 
-      if (!parrainSnapshot.exists()) {
+    try {
+      /* ─── 1. Vérifie que le code parrain existe ─── */
+      const parrainSnap = await this.runInContext(() =>
+        get(ref(this.db, `parrain/${normalized}`)),
+      );
+
+      if (!parrainSnap.exists()) {
         return { ok: false, message: PROMO_MESSAGES.CODE_INVALID(normalized) };
       }
 
-      const parrainData = parrainSnapshot.val() as ParrainEntry;
+      const parrainData = parrainSnap.val() as ParrainEntry;
 
-      /* ─── ÉTAPE 2 : Met à jour users/{uid}/codepromo ─── */
-      await update(ref(this.db, `users/${user.uid}`), {
-        codepromo: normalized,
-        updatedAt: Date.now()
-      });
+      /* ─── 2. Met à jour users/{uid}/codepromo ─── */
+      await this.runInContext(() =>
+        update(ref(this.db, `users/${user.uid}`), {
+          codepromo: normalized,
+          updatedAt: Date.now(),
+        }),
+      );
 
-      /* ─── ÉTAPE 3 : Enregistrements secondaires (non bloquants) ─── */
-      try {
-        await this.registerFilleul(user, normalized, parrainData);
-      } catch (error) {
-        console.warn('[Promo] registerFilleul échoué (non bloquant) :', error);
-      }
+      /* ─── 3. Enregistrements secondaires (atomiques + idempotents) ─── */
+      await Promise.allSettled([
+        this.registerFilleul(user, normalized),
+        this.registerUserInPromotion(user, normalized),
+      ]);
 
-      try {
-        await this.registerUserInPromotion(user, normalized);
-      } catch (error) {
-        console.warn('[Promo] registerUserInPromotion échoué (non bloquant) :', error);
-      }
-
-      /* ─── ÉTAPE 4 : Cache localStorage ─── */
+      /* ─── 4. Cache local ─── */
       this.writeCachedPromo(user.uid, normalized);
 
       return { ok: true, code: normalized };
@@ -157,11 +147,14 @@ export class PromoCodeService {
     } catch (error) {
       console.error('[Promo] Erreur critique :', error);
       return { ok: false, message: this.getErrorMessage(error) };
+
+    } finally {
+      this.pending.delete(user.uid);
     }
   }
 
   /* ═══════════════════════════════════════════════════════
-     CACHE LOCALSTORAGE
+     CACHE
      ═══════════════════════════════════════════════════════ */
 
   private readCachedPromo(uid: string): CachedPromoValidation | null {
@@ -188,14 +181,12 @@ export class PromoCodeService {
 
   private writeCachedPromo(uid: string, code: string): void {
     const key = `${PROMO_CACHE_PREFIX}${uid}`;
-    const data: CachedPromoValidation = {
+    this.storage.setJSON<CachedPromoValidation>(key, {
       code,
-      validatedAt: Date.now()
-    };
-    this.storage.setJSON(key, data);
+      validatedAt: Date.now(),
+    });
   }
 
-  /** Supprime le cache promo d'un utilisateur (déconnexion, admin…). */
   clearCachedPromo(uid: string): void {
     this.storage.remove(`${PROMO_CACHE_PREFIX}${uid}`);
   }
@@ -204,78 +195,88 @@ export class PromoCodeService {
      ENREGISTREMENTS SECONDAIRES
      ═══════════════════════════════════════════════════════ */
 
+  /**
+   * Ajoute l'utilisateur dans `/parrain/{code}/filleuls/{uid}` (idempotent)
+   * et incrémente `filleulsCount` atomiquement.
+   */
   private async registerFilleul(
     user: User,
     code: string,
-    parrainData: ParrainEntry
   ): Promise<void> {
     const now = new Date().toISOString();
+    const filleulRef = ref(this.db, `parrain/${code}/filleuls/${user.uid}`);
 
-    const filleulEntry: FilleulEntry = {
+    /* ─── Idempotence : skip si déjà enregistré ─── */
+    const existing = await this.runInContext(() => get(filleulRef));
+    if (existing.exists()) return;
+
+    const entry: FilleulEntry = {
       uid: user.uid,
       codepromo: code,
       displayName: user.displayName ?? user.email?.split('@')[0] ?? 'Utilisateur',
       email: user.email ?? '',
       photoURL: user.photoURL ?? undefined,
-      usedAt: now
+      usedAt: now,
     };
 
-    await set(
-      ref(this.db, `parrain/${code}/filleuls/${user.uid}`),
-      filleulEntry
-    );
+    await this.runInContext(() => set(filleulRef, entry));
 
-    /* Incrémente le compteur de filleuls du parrain (best-effort) */
-    if (parrainData.filleulsCount !== undefined) {
-      const nextCount = (parrainData.filleulsCount ?? 0) + 1;
-      await update(ref(this.db, `parrain/${code}`), {
-        filleulsCount: nextCount,
-        updatedAt: Date.now()
-      });
-    }
+    /* ─── Incrément atomique du compteur (évite les race conditions) ─── */
+    const countRef = ref(this.db, `parrain/${code}/filleulsCount`);
+    await this.runInContext(() =>
+      runTransaction(countRef, (current: number | null) => {
+        return (current ?? 0) + 1;
+      }),
+    );
   }
 
+  /**
+   * Ajoute l'utilisateur dans `/promotion/{code}/{uid}` (idempotent)
+   * et incrémente `metadata.userCount` atomiquement.
+   */
   private async registerUserInPromotion(
     user: User,
-    promoCode: string
+    promoCode: string,
   ): Promise<void> {
     const now = new Date().toISOString();
+    const userRef = ref(this.db, `promotion/${promoCode}/${user.uid}`);
+
+    /* ─── Idempotence ─── */
+    const existing = await this.runInContext(() => get(userRef));
+    if (existing.exists()) return;
 
     const userInfo: PromotionUserEntry = {
       uid: user.uid,
       codepromo: promoCode,
       displayName: user.displayName ?? user.email?.split('@')[0] ?? 'Utilisateur',
       email: user.email ?? '',
-      registeredAt: now
+      registeredAt: now,
     };
 
-    await set(
-      ref(this.db, `promotion/${promoCode}/${user.uid}`),
-      userInfo
-    );
+    await this.runInContext(() => set(userRef, userInfo));
 
+    /* ─── Crée la metadata si absente (idempotent) ─── */
     const metadataRef = ref(this.db, `promotion/${promoCode}/metadata`);
-    const metadataSnapshot = await get(metadataRef);
-
-    if (!metadataSnapshot.exists()) {
-      const metadata: PromotionMetadata = {
-        createdAt: now,
-        userCount: 1,
-        isActive: true
-      };
-      await set(metadataRef, metadata);
-      return;
-    }
-
-    const existing = metadataSnapshot.val() as Partial<PromotionMetadata>;
-    const currentCount = existing.userCount ?? 0;
-
-    await update(metadataRef, { userCount: currentCount + 1 });
+    await this.runInContext(() =>
+      runTransaction(metadataRef, (current: PromotionMetadata | null) => {
+        if (current === null) {
+          return { createdAt: now, userCount: 1, isActive: true };
+        }
+        return {
+          ...current,
+          userCount: (current.userCount ?? 0) + 1,
+        };
+      }),
+    );
   }
 
   /* ═══════════════════════════════════════════════════════
      HELPERS
      ═══════════════════════════════════════════════════════ */
+
+  private runInContext<T>(fn: () => T): T {
+    return runInInjectionContext(this.environmentInjector, fn);
+  }
 
   private getErrorMessage(error: unknown): string {
     if (typeof error === 'object' && error !== null && 'code' in error) {

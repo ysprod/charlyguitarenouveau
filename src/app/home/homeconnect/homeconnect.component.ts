@@ -4,15 +4,21 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  EnvironmentInjector,
   afterNextRender,
   computed,
   inject,
+  runInInjectionContext,
   signal,
 } from '@angular/core';
+
 import { toSignal } from '@angular/core/rxjs-interop';
+
 import { Auth, authState } from '@angular/fire/auth';
 import { Database, objectVal, ref } from '@angular/fire/database';
+
 import { RouterLink } from '@angular/router';
+
 import { of, switchMap } from 'rxjs';
 
 import { UserProfile } from 'src/app/home/models/user.model';
@@ -57,6 +63,9 @@ export class HomeconnectComponent {
   private readonly db = inject(Database);
   private readonly destroyRef = inject(DestroyRef);
 
+  /** ✅ Injecté pour exécuter les appels Firebase DANS le contexte d'injection */
+  private readonly environmentInjector = inject(EnvironmentInjector);
+
   /* ═══════════════════════════════════════════════════════
      UTILISATEUR CONNECTÉ & PROFIL
      ═══════════════════════════════════════════════════════ */
@@ -69,10 +78,14 @@ export class HomeconnectComponent {
     authState(this.auth).pipe(
       switchMap((u) => {
         if (!u?.uid) return of(null);
-        return objectVal<UserProfile>(ref(this.db, `users/${u.uid}`));
-      })
+
+        // ✅ runInInjectionContext : exécute ref() dans le contexte d'injection
+        return runInInjectionContext(this.environmentInjector, () =>
+          objectVal<UserProfile>(ref(this.db, `users/${u.uid}`)),
+        );
+      }),
     ),
-    { initialValue: null }
+    { initialValue: null },
   );
 
   readonly userName = computed(() => {
@@ -97,12 +110,12 @@ export class HomeconnectComponent {
         this.currentUser()?.displayName ??
         'OFFOLANDAIS',
       this.currentUser()?.email,
-      'M'
-    )
+      'M',
+    ),
   );
 
   readonly userPhoto = computed(
-    () => this.userProfile()?.photoURL ?? this.currentUser()?.photoURL ?? null
+    () => this.userProfile()?.photoURL ?? this.currentUser()?.photoURL ?? null,
   );
 
   readonly hasPhoto = computed(() => !!this.userPhoto());
@@ -111,7 +124,6 @@ export class HomeconnectComponent {
      MESSAGE DE BIENVENUE DYNAMIQUE
      ═══════════════════════════════════════════════════════ */
 
-  /** Signal interne, mis à jour toutes les minutes. */
   private readonly now = signal(Date.now());
 
   readonly greeting = computed(() => {

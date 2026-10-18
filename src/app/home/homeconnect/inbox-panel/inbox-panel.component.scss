@@ -3,18 +3,15 @@
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
-  /* Fonds */
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
   --bg-card: #ffffff;
 
-  /* Identité dorée */
   --gold-primary: #b8860b;
   --gold-hover: #d4a017;
   --gold-glow: rgba(184, 134, 11, .18);
   --gold-soft: rgba(184, 134, 11, .08);
 
-  /* Palette fonctionnelle */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --success: #16a34a;
@@ -23,22 +20,18 @@
   --danger-hover: #b91c1c;
   --violet: #7c3aed;
 
-  /* 🟠 Orange — actions importantes / CTA */
   --orange: #f97316;
   --orange-hover: #ea580c;
 
-  /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
   --border-gold: rgba(184, 134, 11, .3);
 
-  /* Rayons + transitions */
   --radius-lg: 20px;
   --radius-md: 14px;
   --radius-sm: 10px;
@@ -51,7 +44,7 @@
 * { box-sizing: border-box; }
 
 /* ═════════════════════════════════════════════════════════════════════
-   BOÎTE DE RÉCEPTION — GMAIL-LIKE
+   CONTAINER
    ═════════════════════════════════════════════════════════════════════ */
 
 .inbox-section {
@@ -72,6 +65,7 @@
 }
 
 /* ─── En-tête ─── */
+
 .inbox-header {
   display: flex;
   flex-wrap: wrap;
@@ -127,7 +121,8 @@
   }
 }
 
-/* ─── Boutons génériques ─── */
+/* ─── Boutons ─── */
+
 .inbox-btn {
   display: inline-flex;
   align-items: center;
@@ -151,7 +146,6 @@
     outline-offset: 2px;
   }
 
-  /* 🔵 Bleu — action principale */
   &.inbox-btn-blue {
     background: var(--primary);
     color: #fff;
@@ -163,7 +157,6 @@
     }
   }
 
-  /* 🟠 Orange — action importante / CTA */
   &.inbox-btn-orange {
     background: var(--orange);
     color: #fff;
@@ -174,21 +167,10 @@
       box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
     }
   }
-
-  /* ⚪ Gris — action secondaire */
-  &.inbox-btn-grey {
-    background: var(--bg-soft);
-    color: var(--text-body);
-    border: 1px solid var(--border-medium);
-
-    &:hover {
-      background: #eef2f7;
-      color: var(--text-dark);
-    }
-  }
 }
 
 /* ─── Filtres ─── */
+
 .inbox-filters {
   display: flex;
   flex-wrap: wrap;
@@ -242,6 +224,7 @@
 }
 
 /* ─── Liste ─── */
+
 .inbox-list {
   display: flex;
   flex-direction: column;
@@ -257,7 +240,8 @@
   }
 }
 
-/* ─── Item message ─── */
+/* ─── Item ─── */
+
 .inbox-item {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -289,25 +273,21 @@
     }
   }
 
+  &.sent {
+    background: rgba(37, 99, 235, 0.02);
+    border-left: 3px solid rgba(37, 99, 235, 0.3);
+    padding-left: calc(1.25rem - 3px);
+
+    .inbox-from {
+      color: var(--primary);
+      font-weight: 700;
+    }
+  }
+
   .inbox-item-left {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     padding-top: 0.1rem;
-  }
-
-  .inbox-star {
-    background: transparent;
-    border: none;
-    font-size: 1.1rem;
-    line-height: 1;
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: transform var(--t-fast), color var(--t-fast);
-    padding: 0;
-
-    &:hover { transform: scale(1.2); color: var(--gold-primary); }
-    &.is-starred { color: var(--gold-primary); }
   }
 
   .inbox-avatar {
@@ -409,7 +389,25 @@
   50%      { opacity: 0.6; transform: scale(1.15); }
 }
 
+/* ─── Badge Envoyé ─── */
+
+.inbox-sent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  margin-right: 4px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 /* ─── État vide ─── */
+
 .inbox-empty {
   display: flex;
   flex-direction: column;
@@ -441,6 +439,7 @@
 }
 
 /* ─── Pagination ─── */
+
 .inbox-pagination {
   display: flex;
   flex-wrap: wrap;
@@ -486,6 +485,7 @@
 }
 
 /* ─── Responsive ─── */
+
 @media (max-width: 768px) {
   .inbox-header {
     padding: 1.25rem 1.25rem 0.75rem;
@@ -526,6 +526,7 @@
 }
 
 /* ─── Accessibilité ─── */
+
 @media (prefers-reduced-motion: reduce) {
   .inbox-section,
   .inbox-dot {

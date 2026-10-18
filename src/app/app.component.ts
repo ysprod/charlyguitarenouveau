@@ -4,9 +4,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  EnvironmentInjector,
   afterNextRender,
   effect,
   inject,
+  runInInjectionContext,
   signal,
 } from '@angular/core';
 
@@ -14,10 +16,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 import {
   Database,
-  equalTo,
   listVal,
-  orderByChild,
-  query,
   ref,
 } from '@angular/fire/database';
 
@@ -33,21 +32,25 @@ import {
   RouterOutlet,
 } from '@angular/router';
 
-import { Observable, of } from 'rxjs';
-import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { Observable, combineLatest, of } from 'rxjs';
+import {
+  catchError,
+  distinctUntilChanged,
+  map,
+  switchMap,
+} from 'rxjs/operators';
 
 import { InstallPromptComponent } from './home/install-prompt/install-prompt.component';
 
-import { UserMessage } from './home/models/user-message.model';
+import type {
+  Message,
+  MessagerieMessage,
+} from './home/models/message.model';
 
 import { AuthService } from './home/services/auth.service';
 import { VoiceService } from './game/services/voice.service';
 
 import { getInitials } from './home/utils/string.utils';
-
-/* ═════════════════════════════════════════════════════════════════════
-   APP COMPONENT — Racine de l'application
-   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-root',
@@ -67,70 +70,39 @@ import { getInitials } from './home/utils/string.utils';
 })
 export class AppComponent {
 
-  /* ═══════════════════════════════════════════════════════
-     INJECTION
-     ═══════════════════════════════════════════════════════ */
-
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly database = inject(Database);
   private readonly voice = inject(VoiceService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly environmentInjector = inject(EnvironmentInjector);
 
-  /** Service d'auth public (utilisé par le template). */
   readonly auth = inject(AuthService);
-
-  /* ═══════════════════════════════════════════════════════
-     CONSTANTES
-     ═══════════════════════════════════════════════════════ */
 
   readonly title = 'CHARLY GUITARE';
   readonly currentYear = new Date().getFullYear();
 
-  /* ═══════════════════════════════════════════════════════
-     UTILISATEUR CONNECTÉ — SIGNAL
-     ═══════════════════════════════════════════════════════ */
-
   readonly user = toSignal(this.auth.user$, { initialValue: null });
-
-  /* ═══════════════════════════════════════════════════════
-     ÉTAT UI — SIGNALS
-     ═══════════════════════════════════════════════════════ */
 
   readonly isMobileMenuOpen = signal(false);
   readonly isScrolled = signal(false);
 
-  /* ═══════════════════════════════════════════════════════
-     MESSAGES — COMPTEUR RÉACTIF
-     ═══════════════════════════════════════════════════════ */
-
-  /** Nombre de messages au statut `replied`. */
   readonly unreadCount = toSignal(this.watchUnreadMessages(), {
     initialValue: 0,
   });
 
-  /** Dernier compteur connu (pour ne pas re-parler à chaque émission). */
   private readonly lastUnreadCount = signal(0);
-
-  /** Évite d'annoncer la valeur initiale du flux (rechargement de page). */
   private readonly hasSeenFirstValue = signal(false);
-
-  /** Timeout actif pour l'annonce vocale (nettoyage à la destruction). */
   private voiceTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  /* ═══════════════════════════════════════════════════════
-     CONSTRUCTEUR
-     ═══════════════════════════════════════════════════════ */
-
   constructor() {
-    /* Détection du scroll — SSR-safe, uniquement côté navigateur */
+    this.setupVoicePrime();
+
     afterNextRender(() => {
       const scrolled$ = new Observable<boolean>((subscriber) => {
         const onScroll = () => subscriber.next(window.scrollY > 20);
-
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
-
         return () => window.removeEventListener('scroll', onScroll);
       }).pipe(distinctUntilChanged());
 
@@ -139,10 +111,8 @@ export class AppComponent {
         .subscribe((value) => this.isScrolled.set(value));
     });
 
-    /* Surveillance des nouveaux messages */
     this.watchNewMessages();
 
-    /* Nettoyage du timeout vocal */
     this.destroyRef.onDestroy(() => {
       if (this.voiceTimeoutId !== null) {
         clearTimeout(this.voiceTimeoutId);
@@ -151,53 +121,72 @@ export class AppComponent {
     });
   }
 
-  /* ═══════════════════════════════════════════════════════
-     FLUX : compteur de messages "replied"
-     ═══════════════════════════════════════════════════════ */
+  private setupVoicePrime(): void {
+    const primeVoice = () => {
+      this.voice.prime();
+      document.removeEventListener('click', primeVoice);
+      document.removeEventListener('keydown', primeVoice);
+      document.removeEventListener('touchstart', primeVoice);
+    };
+
+    document.addEventListener('click', primeVoice, { once: true });
+    document.addEventListener('keydown', primeVoice, { once: true });
+    document.addEventListener('touchstart', primeVoice, { once: true });
+
+    this.destroyRef.onDestroy(() => {
+      document.removeEventListener('click', primeVoice);
+      document.removeEventListener('keydown', primeVoice);
+      document.removeEventListener('touchstart', primeVoice);
+    });
+  }
 
   private watchUnreadMessages(): Observable<number> {
     return this.auth.user$.pipe(
       takeUntilDestroyed(this.destroyRef),
 
       switchMap((user) => {
-        if (!user) {
+        if (!user?.uid) {
           this.lastUnreadCount.set(0);
           this.hasSeenFirstValue.set(false);
           return of(0);
         }
 
-        const messagesQuery = query(
-          ref(this.database, 'messages'),
-          orderByChild('userId'),
-          equalTo(user.uid)
-        );
+        return runInInjectionContext(this.environmentInjector, () => {
+          const inboxRef = ref(this.database, `messages/${user.uid}/inbox`);
 
-        return listVal<UserMessage>(messagesQuery).pipe(
-          map(
-            (messages) =>
-              messages.filter((m) => m.status === 'replied').length
-          )
-        );
-      })
+          return listVal<Message>(inboxRef, { keyField: 'key' }).pipe(
+            map((messages) =>
+              messages.filter((m) => m.read === false).length,
+            ),
+            catchError((err) => {
+              console.warn(
+                '[AppComponent] Lecture messages refusée pour uid',
+                user.uid,
+                err?.message ?? err,
+              );
+              return of(0);
+            }),
+          );
+        });
+      }),
+
+      catchError((err) => {
+        console.warn('[AppComponent] watchUnreadMessages error:', err);
+        return of(0);
+      }),
     );
   }
-
-  /* ═══════════════════════════════════════════════════════
-     ANNONCE VOCALE DES NOUVEAUX MESSAGES
-     ═══════════════════════════════════════════════════════ */
 
   private watchNewMessages(): void {
     effect(() => {
       const count = this.unreadCount();
 
-      /* Première valeur : on la mémorise sans parler */
       if (!this.hasSeenFirstValue()) {
         this.hasSeenFirstValue.set(true);
         this.lastUnreadCount.set(count);
         return;
       }
 
-      /* Nouveau(x) message(s) */
       const previous = this.lastUnreadCount();
       if (count > previous) {
         const diff = count - previous;
@@ -222,22 +211,21 @@ export class AppComponent {
 
     this.voiceTimeoutId = setTimeout(async () => {
       this.voiceTimeoutId = null;
-
       if (this.destroyRef.destroyed) return;
 
       try {
         await voice.waitForSpeechEnd();
         if (this.destroyRef.destroyed) return;
-        await voice.speak(message, { pitch: 1.05, rate: 0.95 });
+        await voice.speak(message, {
+          pitch: 1.05,
+          rate: 0.95,
+          lang: 'fr-FR',
+        });
       } catch {
-        /* silencieux : l'annonce vocale est optionnelle */
+        /* silencieux */
       }
     }, 300);
   }
-
-  /* ═══════════════════════════════════════════════════════
-     MENU MOBILE
-     ═══════════════════════════════════════════════════════ */
 
   toggleMobileMenu(): void {
     this.isMobileMenuOpen.update((v) => !v);
@@ -249,27 +237,13 @@ export class AppComponent {
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     AUTH
-     ═══════════════════════════════════════════════════════ */
-
   onLogout(): void {
     this.closeMobileMenu();
     void this.auth.logout();
-
     this.snackBar.open('Déconnexion réussie', 'Fermer', { duration: 3000 });
-
     void this.router.navigate(['/']);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     HELPERS TEMPLATE
-     ═══════════════════════════════════════════════════════ */
-
-  /**
-   * Initiales (2 caractères max) — délégué à `utils/string.utils.ts`.
-   * Retourne `'U'` par défaut si aucun nom n'est fourni.
-   */
   getInitials = (name: string | null | undefined): string =>
     getInitials(name, '', 'O');
 }

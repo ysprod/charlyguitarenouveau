@@ -1,19 +1,23 @@
-import { UserProfile } from './user.model';
+ // src/app/auth/models/auth.model.ts
 
 /* ═════════════════════════════════════════════════════════════════════
-   TYPES PARTAGÉS AUTH
+   AUTH — Modèles
    ═════════════════════════════════════════════════════════════════════ */
 
-/** Origine d'inscription — traçabilité utilisateur. */
-export type UserOrigin = 'google' | 'email';
+export type UserRole = 'admin' | 'user' | 'subscriber';
 
-/** Profil Realtime Database (étend UserProfile). */
-export interface RealtimeUserProfile extends UserProfile {
+export type UserOrigin = 'email' | 'google';
+
+export interface RealtimeUserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+  role: UserRole;
+  createdAt: string;
   lastLogin: string;
   disabled: boolean;
   origine: UserOrigin;
-  codepromo?: string;
-  updatedAt?: string;
 }
 
 /** Erreur Firebase Auth (typage minimal). */

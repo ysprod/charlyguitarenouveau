@@ -71,21 +71,17 @@ export class RegisterComponent {
      ÉTAT — SIGNALS
      ═══════════════════════════════════════════════════════ */
 
-  /** Formulaire */
   readonly email = signal('');
   readonly password = signal('');
   readonly confirmPassword = signal('');
   readonly showPassword = signal(false);
 
-  /** États UI */
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly loading = signal(false);
 
-  /** URL de retour après inscription. */
   readonly returnUrl = signal(DEFAULT_RETURN_URL_REGISTER);
 
-  /* ─── Timer interne ─── */
   private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   /* ═══════════════════════════════════════════════════════
@@ -165,7 +161,8 @@ export class RegisterComponent {
 
       try {
         await this.saveUserDataInRealtimeDB(user, 'email');
-      } catch {
+      } catch (err) {
+        console.error('[Register] Erreur sauvegarde profil :', err);
         this.showToast(
           "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.",
           'error'
@@ -174,7 +171,7 @@ export class RegisterComponent {
 
       void this.authContext.runInContext(() =>
         sendEmailVerification(user).catch(() => {
-          /* Envoi email vérification échoué — silencieux */
+          /* silencieux */
         })
       );
 
@@ -186,9 +183,7 @@ export class RegisterComponent {
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     INSCRIPTION GOOGLE
-     ═══════════════════════════════════════════════════════ */
+ 
 
   async signUpWithGoogle(): Promise<void> {
     this.clearMessages();
@@ -211,7 +206,8 @@ export class RegisterComponent {
 
       try {
         await this.saveUserDataInRealtimeDB(user, 'google');
-      } catch {
+      } catch (err) {
+        console.error('[Register] Erreur sauvegarde profil Google :', err);
         this.showToast(
           "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.",
           'error'
@@ -261,6 +257,7 @@ export class RegisterComponent {
       return;
     }
 
+    /* ✅ Profil initial (sans credit) */
     const newUser: RealtimeUserProfile = {
       uid: user.uid,
       email,

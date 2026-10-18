@@ -70,20 +70,16 @@ export class LoginComponent {
      ÉTAT — SIGNALS
      ═══════════════════════════════════════════════════════ */
 
-  /** Formulaire */
   readonly email = signal('');
   readonly password = signal('');
   readonly showPassword = signal(false);
 
-  /** États UI */
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly loading = signal(false);
 
-  /** URL de retour après connexion. */
   readonly returnUrl = signal(DEFAULT_RETURN_URL_LOGIN);
 
-  /* ─── Timer interne ─── */
   private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   /* ═══════════════════════════════════════════════════════
@@ -240,6 +236,7 @@ export class LoginComponent {
         return;
       }
 
+      /* ✅ Profil initial (sans credit) */
       const newUser: RealtimeUserProfile = {
         uid: user.uid,
         email,
@@ -255,8 +252,8 @@ export class LoginComponent {
       await this.authContext.runInContext(() =>
         set(userReference, newUser)
       );
-    } catch {
-      /* Mise à jour en arrière-plan échouée — silencieux */
+    } catch (err) {
+      console.error('[Login] Erreur sauvegarde profil :', err);
     }
   }
 

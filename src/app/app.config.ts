@@ -1,6 +1,9 @@
+// src/app/app.config.ts
+
 import {
   ApplicationConfig,
   isDevMode,
+  provideZoneChangeDetection,
 } from '@angular/core';
 
 import {
@@ -10,13 +13,15 @@ import {
   withViewTransitions,
 } from '@angular/router';
 
-import {
-  provideAnimationsAsync,
-} from '@angular/platform-browser/animations/async';
+/**
+ * ⚠️ `provideAnimationsAsync()` est déprécié depuis Angular 20.2.
+ * Migration complète vers `animate.enter` / `animate.leave` prévue v23.
+ * En attendant : garder `provideAnimationsAsync()` pour compatibilité
+ * avec Angular Material (qui en dépend encore).
+ */
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
-import {
-  provideServiceWorker,
-} from '@angular/service-worker';
+import { provideServiceWorker } from '@angular/service-worker';
 
 import {
   initializeApp,
@@ -26,9 +31,6 @@ import {
 import {
   getAuth,
   provideAuth,
-  indexedDBLocalPersistence,
-  browserLocalPersistence,
-  setPersistence,
 } from '@angular/fire/auth';
 
 import {
@@ -41,21 +43,8 @@ import {
   provideStorage,
 } from '@angular/fire/storage';
 
-/* ✅ AJOUT — Analytics */
-import {
-  getAnalytics,
-  provideAnalytics,
-  ScreenTrackingService,
-  UserTrackingService,
-} from '@angular/fire/analytics';
-
-import {
-  routes,
-} from './app.routes';
-
-import {
-  environment,
-} from '../environments/environment';
+import { routes } from './app.routes';
+import { environment } from '../environments/environment';
 
 /* ═══════════════════════════════════════════════════════════
    APP CONFIG
@@ -64,11 +53,13 @@ import {
 export const appConfig: ApplicationConfig = {
   providers: [
 
-   
+    /* ─── Zone.js optimisé ─── */
+    provideZoneChangeDetection({
+      eventCoalescing: true,
+      runCoalescing: true,
+    }),
 
-    /* ═══════════════════════════════════════════════════════
-       2. ROUTER
-       ═══════════════════════════════════════════════════════ */
+    /* ─── Router ─── */
     provideRouter(
       routes,
       withInMemoryScrolling({
@@ -84,60 +75,25 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
 
-    /* ═══════════════════════════════════════════════════════
-       3. ANIMATIONS — Chargement async (performance)
-       ═══════════════════════════════════════════════════════ */
+    /* ─── Animations (Angular Material compatible) ─── */
     provideAnimationsAsync(),
 
     /* ═══════════════════════════════════════════════════════
-       4. FIREBASE — Core
+       FIREBASE
        ═══════════════════════════════════════════════════════ */
-    provideFirebaseApp(() =>
-      initializeApp(environment.firebase)
-    ),
 
-    /* ═══════════════════════════════════════════════════════
-       5. AUTH — Persistance offline (IndexedDB)
-       ═══════════════════════════════════════════════════════ */
-    provideAuth(() => {
-      const auth = getAuth();
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
 
-      void setPersistence(auth, indexedDBLocalPersistence)
-        .catch(() => {
-          return setPersistence(auth, browserLocalPersistence);
-        });
+    provideAuth(() => getAuth()),
 
-      return auth;
-    }),
-
-    /* ═══════════════════════════════════════════════════════
-       6. REALTIME DATABASE — offline-first natif
-       ═══════════════════════════════════════════════════════ */
     provideDatabase(() => getDatabase()),
 
-    /* ═══════════════════════════════════════════════════════
-       7. STORAGE
-       ═══════════════════════════════════════════════════════ */
     provideStorage(() => getStorage()),
 
-    /* ═══════════════════════════════════════════════════════
-       8. ✅ ANALYTICS — Google Analytics via Firebase
-       ═══════════════════════════════════════════════════════ */
-    provideAnalytics(() => getAnalytics()),
-
-    /* Suivi automatique des écrans (screen_view à chaque route). */
-    ScreenTrackingService,
-
-    /* Suivi automatique de l'utilisateur connecté (user_id). */
-    UserTrackingService,
-
-    /* ═══════════════════════════════════════════════════════
-       9. SERVICE WORKER — PWA
-       ═══════════════════════════════════════════════════════ */
+    /* ─── PWA ─── */
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
-
   ],
 };

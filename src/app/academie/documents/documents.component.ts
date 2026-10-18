@@ -4,9 +4,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  EnvironmentInjector,
   afterNextRender,
   computed,
+  effect,
   inject,
+  runInInjectionContext,
   signal,
 } from '@angular/core';
 
@@ -19,7 +22,7 @@ import {
   listVal,
   objectVal,
   ref,
-  update,
+  runTransaction,
 } from '@angular/fire/database';
 
 import { catchError, map, of, switchMap } from 'rxjs';
@@ -36,14 +39,16 @@ import {
   FILTER_ALL_LABEL,
 } from '../constants/documents-ui.constants';
 
- import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
+import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
 import { ToastService } from 'src/app/academie/services/toast.service';
 import { FormatPricePipe } from 'src/app/academie/pipes/format-price.pipe';
 import { ToastComponent } from 'src/app/academie/toast/toast.component';
-import { matchesCategory, sortDocuments, formatPrice } from 'src/app/academie/utils/documents.utils';
+import {
+  matchesCategory,
+  sortDocuments,
+  formatPrice,
+} from 'src/app/academie/utils/documents.utils';
 import { PromoCodeService } from 'src/app/shared/services/promo-code.service';
-
- 
 
 /* ═════════════════════════════════════════════════════════════════════
    DOCUMENTS — Boutique numérique
@@ -69,6 +74,7 @@ export class DocumentsComponent {
   private readonly promoService = inject(PromoCodeService);
   private readonly toastService = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly environmentInjector = inject(EnvironmentInjector);
 
   /* ═══════════════════════════════════════════════════════
      UTILISATEUR CONNECTÉ
@@ -84,12 +90,18 @@ export class DocumentsComponent {
     user(this.auth).pipe(
       switchMap((u) => {
         if (!u) return of(null);
-        return objectVal<number>(
-          ref(this.db, `${DOCUMENTS_DB_PATHS.USERS}/${u.uid}/${DOCUMENTS_DB_PATHS.CREDIT}`)
+
+        return runInInjectionContext(this.environmentInjector, () =>
+          objectVal<number>(
+            ref(
+              this.db,
+              `${DOCUMENTS_DB_PATHS.USERS}/${u.uid}/${DOCUMENTS_DB_PATHS.CREDIT}`,
+            ),
+          ),
         );
-      })
+      }),
     ),
-    { initialValue: null as number | null }
+    { initialValue: null as number | null },
   );
 
   readonly userCredit = computed(() => this.creditFromDb() ?? 0);
@@ -109,6 +121,7 @@ export class DocumentsComponent {
 
   readonly selectedDocForPurchase = signal<DocumentItem | null>(null);
   readonly showRechargeInModal = signal(false);
+  readonly isProcessing = signal(false);
 
   /* ═══════════════════════════════════════════════════════
      MODALE CODE PROMO
@@ -120,29 +133,27 @@ export class DocumentsComponent {
   private readonly pendingPurchase = signal<PendingPurchase | null>(null);
 
   /* ═══════════════════════════════════════════════════════
-     DOCUMENTS (Firebase → signal)
+     DOCUMENTS
      ═══════════════════════════════════════════════════════ */
 
   private readonly documentsStream$ = listVal<DocumentItem>(
     ref(this.db, DOCUMENTS_DB_PATHS.DOCUMENTS),
-    { keyField: 'key' }
+    { keyField: 'key' },
   ).pipe(
     catchError((err) => {
       console.error('Erreur Firebase (documents) :', err);
       return of([] as DocumentItem[]);
-    })
+    }),
   );
 
   readonly allDocs = toSignal(this.documentsStream$, {
     initialValue: [] as DocumentItem[],
   });
 
-  /* ✅ État de chargement (tant que le flux n'a pas émis la 1ʳᵉ valeur) */
   readonly isLoading = signal(true);
 
-  /* ✅ État dérivé : chargement vs vide */
   readonly isEmpty = computed(
-    () => !this.isLoading() && this.allDocs().length === 0
+    () => !this.isLoading() && this.allDocs().length === 0,
   );
 
   /* ═══════════════════════════════════════════════════════
@@ -163,7 +174,7 @@ export class DocumentsComponent {
         (d) =>
           d.title?.toLowerCase().includes(term) ||
           d.description?.toLowerCase().includes(term) ||
-          d.format?.toLowerCase().includes(term)
+          d.format?.toLowerCase().includes(term),
       );
     }
 
@@ -175,17 +186,27 @@ export class DocumentsComponent {
      ═══════════════════════════════════════════════════════ */
 
   constructor() {
-    /* Scroll top SSR-safe */
     afterNextRender(() => {
       window.scrollTo({ top: 0, behavior: 'auto' });
     });
 
-    /* Marque le chargement terminé dès la 1ʳᵉ émission */
-    const sub = this.documentsStream$.subscribe(() => {
-      this.isLoading.set(false);
+    /* ✅ isLoading passe à false dès que des docs arrivent */
+    effect(() => {
+      if (this.allDocs().length > 0) {
+        this.isLoading.set(false);
+      }
     });
 
-    this.destroyRef.onDestroy(() => sub.unsubscribe());
+    /* ✅ Filet de sécurité : jamais plus de 3s de skeleton */
+    const safetyTimeout = setTimeout(() => {
+      if (this.isLoading()) {
+        this.isLoading.set(false);
+      }
+    }, 3000);
+
+    this.destroyRef.onDestroy(() => {
+      clearTimeout(safetyTimeout);
+    });
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -211,7 +232,7 @@ export class DocumentsComponent {
   }
 
   /* ═══════════════════════════════════════════════════════
-     ACHAT — Vérification code promo en amont
+     ACHAT — Vérification code promo
      ═══════════════════════════════════════════════════════ */
 
   async initiatePurchase(doc: DocumentItem, event?: Event): Promise<void> {
@@ -251,6 +272,7 @@ export class DocumentsComponent {
   cancelPurchase(): void {
     this.selectedDocForPurchase.set(null);
     this.showRechargeInModal.set(false);
+    this.isProcessing.set(false);
   }
 
   toggleRechargeView(show: boolean): void {
@@ -276,7 +298,9 @@ export class DocumentsComponent {
       }
 
       this.showPromoModal.set(false);
-      this.toastService.success(`Code « ${result.code} » validé ! Bon achat 🎸`);
+      this.toastService.success(
+        `Code « ${result.code} » validé ! Bon achat 🎸`,
+      );
 
       const pending = this.pendingPurchase();
       this.pendingPurchase.set(null);
@@ -295,31 +319,54 @@ export class DocumentsComponent {
   }
 
   /* ═══════════════════════════════════════════════════════
-     RECHARGE
+     RECHARGE — transaction atomique
      ═══════════════════════════════════════════════════════ */
 
   async processQuickRecharge(amount: number): Promise<void> {
     const uid = this.currentUserId();
     if (!uid) {
-      this.toastService.error('Veuillez vous connecter pour recharger votre compte.');
+      this.toastService.error('Veuillez vous connecter pour recharger.');
       return;
     }
+    if (this.isProcessing()) return;
+
+    this.isProcessing.set(true);
 
     try {
-      const newBalance = this.userCredit() + amount;
-      await update(ref(this.db, `${DOCUMENTS_DB_PATHS.USERS}/${uid}`), {
-        [DOCUMENTS_DB_PATHS.CREDIT]: newBalance,
+      await runInInjectionContext(this.environmentInjector, async () => {
+        const creditRef = ref(
+          this.db,
+          `${DOCUMENTS_DB_PATHS.USERS}/${uid}/${DOCUMENTS_DB_PATHS.CREDIT}`,
+        );
+
+        const result = await runTransaction(
+          creditRef,
+          (currentValue: number | null) => {
+            return (currentValue ?? 0) + amount;
+          },
+        );
+
+        if (!result.committed) {
+          throw new Error('Transaction refusée');
+        }
       });
-      this.toastService.success(`Compte rechargé de ${formatPrice(amount)} !`);
+
+      this.toastService.success(
+        `Compte rechargé de ${formatPrice(amount)} !`,
+      );
       this.showRechargeInModal.set(false);
     } catch (error) {
       console.error('Erreur rechargement:', error);
-      this.toastService.error('Échec du rechargement. Veuillez réessayer.');
+      this.toastService.error(
+        'Échec du rechargement. Vérifiez vos permissions ou contactez le support.',
+      );
+    } finally {
+      this.isProcessing.set(false);
     }
   }
 
   /* ═══════════════════════════════════════════════════════
-     CONFIRMATION D'ACHAT
+     CONFIRMATION D'ACHAT — transaction atomique
      ═══════════════════════════════════════════════════════ */
 
   async confirmPurchase(): Promise<void> {
@@ -328,30 +375,53 @@ export class DocumentsComponent {
 
     if (!doc) return;
     if (!uid) {
-      this.toastService.error('Veuillez vous connecter pour effectuer un achat.');
+      this.toastService.error('Veuillez vous connecter pour acheter.');
       return;
     }
+    if (this.isProcessing()) return;
 
-    const currentBalance = this.userCredit();
     const docPrice = doc.price || 0;
-
-    if (currentBalance < docPrice) {
-      this.toastService.error('Crédit insuffisant ! Veuillez recharger votre compte.');
-      return;
-    }
+    this.isProcessing.set(true);
 
     try {
-      const newBalance = currentBalance - docPrice;
-      await update(ref(this.db, `${DOCUMENTS_DB_PATHS.USERS}/${uid}`), {
-        [DOCUMENTS_DB_PATHS.CREDIT]: newBalance,
+      await runInInjectionContext(this.environmentInjector, async () => {
+        const creditRef = ref(
+          this.db,
+          `${DOCUMENTS_DB_PATHS.USERS}/${uid}/${DOCUMENTS_DB_PATHS.CREDIT}`,
+        );
+
+        const result = await runTransaction(
+          creditRef,
+          (currentValue: number | null) => {
+            const balance = currentValue ?? 0;
+            if (balance < docPrice) {
+              return undefined as any;
+            }
+            return balance - docPrice;
+          },
+        );
+
+        if (!result.committed) {
+          throw new Error('INSUFFICIENT_FUNDS');
+        }
       });
 
       this.selectedDocForPurchase.set(null);
-      this.toastService.success(`Achat réussi ! Téléchargement de "${doc.title}"...`);
+      this.toastService.success(
+        `Achat réussi ! Téléchargement de "${doc.title}"...`,
+      );
       window.open(doc.downloadUrl, '_blank');
+
     } catch (error) {
+      const msg =
+        error instanceof Error && error.message === 'INSUFFICIENT_FUNDS'
+          ? 'Crédit insuffisant. Veuillez recharger votre compte.'
+          : 'Une erreur est survenue lors du paiement.';
+
       console.error('Erreur transaction:', error);
-      this.toastService.error('Une erreur est survenue lors du paiement.');
+      this.toastService.error(msg);
+    } finally {
+      this.isProcessing.set(false);
     }
   }
 }

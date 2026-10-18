@@ -1,0 +1,114 @@
+<!-- src/app/notifications/notifications.component.html -->
+
+<div class="notifications-container">
+
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════ -->
+  <header class="notifications-header">
+    <div class="header-left">
+      <h1>
+        <span class="icon" aria-hidden="true">🔔</span>
+        Notifications
+      </h1>
+      @if (unreadCount() > 0) {
+        <span class="unread-badge">{{ unreadCount() }}</span>
+      }
+    </div>
+
+    <div class="header-actions">
+      @if (unreadCount() > 0) {
+        <button type="button"
+                class="btn btn-secondary"
+                (click)="markAllAsRead()">
+          <span aria-hidden="true">✓✓</span>
+          Tout marquer comme lu
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FILTRES
+       ═══════════════════════════════════════════════════════ -->
+  <nav class="filters" role="tablist" aria-label="Filtrer les notifications">
+    @for (filter of filters; track filter.value) {
+      <button type="button"
+              role="tab"
+              class="filter-btn"
+              [class.active]="activeFilter() === filter.value"
+              [attr.aria-selected]="activeFilter() === filter.value"
+              (click)="setFilter(filter.value)">
+        <span class="filter-icon" aria-hidden="true">{{ filter.icon }}</span>
+        <span>{{ filter.label }}</span>
+        @if (filter.value === 'unread' && unreadCount() > 0) {
+          <span class="filter-count">{{ unreadCount() }}</span>
+        }
+      </button>
+    }
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LISTE
+       ═══════════════════════════════════════════════════════ -->
+  <section class="notifications-list" aria-live="polite">
+
+    @if (isEmpty()) {
+      <div class="empty-state">
+        <div class="empty-icon" aria-hidden="true">📭</div>
+        <h2>Aucune notification</h2>
+        <p>Vous êtes à jour ! Les nouvelles notifications apparaîtront ici.</p>
+      </div>
+    } @else if (hasFilteredNoResults()) {
+      <div class="empty-state">
+        <div class="empty-icon" aria-hidden="true">🔍</div>
+        <h2>Aucun résultat</h2>
+        <p>Aucune notification ne correspond à ce filtre.</p>
+      </div>
+    } @else {
+      @for (notif of filteredNotifications(); track trackById($index, notif)) {
+        <article class="notif-item"
+                 [class.unread]="!notif.read"
+                 [class.clickable]="!!notif.link"
+                 (click)="onNotificationClick(notif)"
+                 role="button"
+                 tabindex="0"
+                 (keydown.enter)="onNotificationClick(notif)"
+                 [attr.aria-label]="notif.title">
+
+          <div class="notif-icon" [attr.data-type]="notif.type" aria-hidden="true">
+            {{ iconOf(notif) }}
+          </div>
+
+          <div class="notif-content">
+            <div class="notif-top">
+              <h3 class="notif-title">{{ notif.title }}</h3>
+              <span class="notif-type">{{ typeLabelOf(notif) }}</span>
+            </div>
+            <p class="notif-body">{{ notif.body }}</p>
+            <div class="notif-footer">
+              <time class="notif-date">
+                {{ notif.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+              </time>
+              @if (!notif.read) {
+                <button type="button"
+                        class="btn-mark-read"
+                        (click)="markAsRead(notif); $event.stopPropagation()"
+                        aria-label="Marquer comme lue">
+                  ● Marquer comme lue
+                </button>
+              }
+            </div>
+          </div>
+
+          <button type="button"
+                  class="btn-delete"
+                  (click)="deleteNotification(notif, $event)"
+                  aria-label="Supprimer la notification">
+            ✕
+          </button>
+        </article>
+      }
+    }
+  </section>
+</div>

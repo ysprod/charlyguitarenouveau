@@ -26,7 +26,10 @@ export function filterMessages(
       return messages.filter((m) => m.isUnread);
     case 'starred':
       return messages.filter((m) => m.isStarred);
+          case 'sent':
+      return messages.filter((m) => m.direction === 'out');
     case 'academie':
+      
       return messages.filter((m) => m.category === 'academie');
     case 'abonnement':
       return messages.filter((m) => m.category === 'abonnement');

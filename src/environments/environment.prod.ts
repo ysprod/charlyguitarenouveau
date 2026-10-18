@@ -1,3 +1,10 @@
+// src/environments/environment.prod.ts
+
+/**
+ * Configuration pour la PRODUCTION.
+ * Utilisé par `ng build --configuration production`.
+ */
+
 export const environment = {
   production: true,
   firebase: {

@@ -1,3 +1,5 @@
+// src/app/home/guards/auth/auth.guard.ts
+
 import { inject } from '@angular/core';
 import {
   CanActivateFn,
@@ -5,10 +7,15 @@ import {
   UrlTree,
 } from '@angular/router';
 
-import { Auth, authState } from '@angular/fire/auth';
+import { Auth, user } from '@angular/fire/auth';
 
 import { Observable, of } from 'rxjs';
-import { catchError, map, take } from 'rxjs/operators';
+import {
+  catchError,
+  filter,
+  map,
+  take,
+} from 'rxjs/operators';
 
 import { getSafeReturnUrl } from 'src/app/home/utils/url.utils';
 import {
@@ -19,20 +26,23 @@ import {
 /**
  * Guard d'authentification.
  *
- * - Utilise `authState(auth)` (au lieu de `user(auth)`) pour attendre
- *   la restauration de la session Firebase avant d'émettre.
- * - Redirige vers `/login?returnUrl=...` si l'utilisateur n'est pas connecté.
- * - Le `returnUrl` est **validé** pour empêcher les redirections externes.
- * - En cas d'erreur Firebase, redirige également vers `/login`.
+ * Comportement :
+ * - Attend que Firebase ait **fini de restaurer la session** avant de décider.
+ * - `user(auth)` émet `undefined` tant que la session n'est pas restaurée,
+ *   puis `User | null` une fois la réponse Firebase obtenue.
+ * - On filtre `undefined` pour éviter les faux négatifs au refresh.
+ * - Redirige vers `/login?returnUrl=...` si non connecté.
+ * - Le `returnUrl` est validé contre les redirections externes.
+ * - En cas d'erreur Firebase, redirige vers `/login` et log le code.
  */
 export const AuthGuard: CanActivateFn = (
   _route,
-  state
+  state,
 ): Observable<boolean | UrlTree> => {
   const auth = inject(Auth);
   const router = inject(Router);
 
-  /* Factorisation : évite la duplication de la logique de redirection. */
+  /* Factorisation de la redirection login */
   const redirectToLogin = (): UrlTree => {
     const safeReturnUrl = getSafeReturnUrl(state.url);
 
@@ -41,16 +51,24 @@ export const AuthGuard: CanActivateFn = (
     });
   };
 
-  return authState(auth).pipe(
+  return user(auth).pipe(
+    /* ⚠️ Crucial : ignore l'état "session pas encore restaurée" */
+    filter((u) => u !== undefined),
+
+    /* On ne garde que la première réponse ferme (User ou null) */
     take(1),
 
-    /* Utilisateur connecté → autorise, sinon → redirige. */
+    /* Connecté → autorise, sinon → redirige */
     map((currentUser) => (currentUser ? true : redirectToLogin())),
 
-    /* En cas d'erreur Firebase → redirige vers /login. */
+    /* En cas d'erreur Firebase → redirige + log le code */
     catchError((error) => {
-      console.warn('[AuthGuard] Erreur authState :', error);
+      console.warn(
+        '[AuthGuard] Erreur Firebase:',
+        error?.code ?? error,
+        error?.message ?? '',
+      );
       return of(redirectToLogin());
-    })
+    }),
   );
 };

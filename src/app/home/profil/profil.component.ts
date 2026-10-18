@@ -34,7 +34,12 @@ import {
   updateProfile,
 } from '@angular/fire/auth';
 
-import { Database, objectVal, ref, set } from '@angular/fire/database';
+import {
+  Database,
+  objectVal,
+  ref,
+  update,
+} from '@angular/fire/database';
 
 import {
   Storage,
@@ -64,7 +69,11 @@ import {
 
 import { ImageCropService } from '../services/image-crop.service';
 
-import { ProfileFormControls, UserProfile, UserRole } from '../models/profile.model';
+import {
+  ProfileFormControls,
+  UserProfile,
+  UserRole,
+} from '../models/profile.model';
 
 import {
   AUTH_GRACE_PERIOD_MS,
@@ -105,15 +114,11 @@ export class ProfilComponent {
   private readonly cropService = inject(ImageCropService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /* ═══════════════════════════════════════════════════════
-     RÉFÉRENCES DOM
-     ═══════════════════════════════════════════════════════ */
-
   private readonly avatarInput =
     viewChild<ElementRef<HTMLInputElement>>('avatarInput');
 
   /* ═══════════════════════════════════════════════════════
-     UTILISATEUR COURANT (signal)
+     UTILISATEUR COURANT
      ═══════════════════════════════════════════════════════ */
 
   readonly currentUser = toSignal(authState(this.auth), {
@@ -152,9 +157,8 @@ export class ProfilComponent {
      COMPUTED
      ═══════════════════════════════════════════════════════ */
 
-  /** Rôle formaté pour l'affichage. */
   readonly roleLabel = computed(
-    () => ROLE_LABELS[this.userRole] ?? 'Utilisateur'
+    () => ROLE_LABELS[this.userRole] ?? 'Utilisateur',
   );
 
   /* ═══════════════════════════════════════════════════════
@@ -176,7 +180,7 @@ export class ProfilComponent {
       .pipe(
         switchMap(() => authState(this.auth).pipe(take(1))),
         filter((u) => !u),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
         void this.router.navigate(['/login'], {
@@ -210,7 +214,7 @@ export class ProfilComponent {
         ]),
         confirmPassword: this.formBuilder.nonNullable.control(''),
       },
-      { validators: this.passwordMatchValidator }
+      { validators: this.passwordMatchValidator },
     );
 
     this.profileForm.controls.newPassword.valueChanges
@@ -218,14 +222,14 @@ export class ProfilComponent {
       .subscribe((newPassword) => {
         const control = this.profileForm.controls.currentPassword;
         control.setValidators(
-          newPassword.trim().length > 0 ? [Validators.required] : []
+          newPassword.trim().length > 0 ? [Validators.required] : [],
         );
         control.updateValueAndValidity({ emitEvent: false });
       });
   }
 
   private passwordMatchValidator(
-    group: AbstractControl
+    group: AbstractControl,
   ): ValidationErrors | null {
     const newPassword = group.get('newPassword')?.value as string | undefined;
     const confirmPassword = group.get('confirmPassword')?.value as
@@ -257,14 +261,14 @@ export class ProfilComponent {
 
             const profileReference = ref(
               this.database,
-              `users/${currentUser.uid}`
+              `users/${currentUser.uid}`,
             );
 
             return runInInjectionContext(this.environmentInjector, () =>
-              objectVal<UserProfile>(profileReference)
+              objectVal<UserProfile>(profileReference),
             ).pipe(map((profileData) => ({ currentUser, profileData })));
           }),
-          takeUntilDestroyed(this.destroyRef)
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe({
           next: (result) => {
@@ -302,7 +306,10 @@ export class ProfilComponent {
             }
           },
           error: () => {
-            this.showToast('✕ Impossible de charger votre profil.', 'error');
+            this.showToast(
+              '✕ Impossible de charger votre profil.',
+              'error',
+            );
           },
         });
     });
@@ -397,7 +404,10 @@ export class ProfilComponent {
     }
 
     if (file.size > MAX_SOURCE_FILE_SIZE) {
-      this.showToast("✕ L'image source ne doit pas dépasser 10 Mo.", 'error');
+      this.showToast(
+        "✕ L'image source ne doit pas dépasser 10 Mo.",
+        'error',
+      );
       return;
     }
 
@@ -413,7 +423,7 @@ export class ProfilComponent {
 
     this.showToast(
       "✓ Photo recadrée. N'oubliez pas d'enregistrer.",
-      'success'
+      'success',
     );
   }
 
@@ -429,7 +439,10 @@ export class ProfilComponent {
     this.selectedFile = null;
     this.croppedResult = null;
     this.avatarPreview = null;
-    this.showToast("✓ Photo retirée. N'oubliez pas d'enregistrer.", 'success');
+    this.showToast(
+      "✓ Photo retirée. N'oubliez pas d'enregistrer.",
+      'success',
+    );
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -441,7 +454,7 @@ export class ProfilComponent {
       this.profileForm.markAllAsTouched();
       this.showToast(
         '✕ Veuillez corriger les erreurs du formulaire.',
-        'error'
+        'error',
       );
       return;
     }
@@ -467,7 +480,10 @@ export class ProfilComponent {
 
       if (emailChanged || passwordChanged) {
         if (!currentPassword.trim()) {
-          this.showToast('✕ Votre mot de passe actuel est requis.', 'error');
+          this.showToast(
+            '✕ Votre mot de passe actuel est requis.',
+            'error',
+          );
           return;
         }
         if (!currentUser.email) {
@@ -476,11 +492,11 @@ export class ProfilComponent {
 
         const credential = EmailAuthProvider.credential(
           currentUser.email,
-          currentPassword
+          currentPassword,
         );
 
         await this.runInContext(() =>
-          reauthenticateWithCredential(currentUser, credential)
+          reauthenticateWithCredential(currentUser, credential),
         );
       }
 
@@ -488,29 +504,33 @@ export class ProfilComponent {
 
       if (this.selectedFile) {
         const avatarReference = this.runInContext(() =>
-          storageRef(this.storage, `avatars/${this.currentUid}`)
+          storageRef(this.storage, `avatars/${this.currentUid}`),
         );
 
         await this.runInContext(() =>
           uploadBytes(avatarReference, this.selectedFile as File, {
             contentType: 'image/jpeg',
             cacheControl: 'public, max-age=31536000',
-          })
+          }),
         );
 
         photoURL = await this.runInContext(() =>
-          getDownloadURL(avatarReference)
+          getDownloadURL(avatarReference),
         );
 
         this.croppedResult = null;
       }
 
       if (emailChanged) {
-        await this.runInContext(() => updateEmail(currentUser, normalizedEmail));
+        await this.runInContext(() =>
+          updateEmail(currentUser, normalizedEmail),
+        );
       }
 
       if (passwordChanged) {
-        await this.runInContext(() => updatePassword(currentUser, newPassword));
+        await this.runInContext(() =>
+          updatePassword(currentUser, newPassword),
+        );
       }
 
       const displayNameChanged =
@@ -522,12 +542,15 @@ export class ProfilComponent {
           updateProfile(currentUser, {
             displayName: normalizedFullName,
             photoURL: photoURL || null,
-          })
+          }),
         );
       }
 
-      const updatedProfile: UserProfile = {
-        ...this.cachedProfile,
+      /* ✅ CORRECTION CRITIQUE :
+         On n'envoie QUE les champs autorisés par les règles Firebase.
+         On utilise update() (patch) au lieu de set() (écrasement).
+         → Ne touche JAMAIS role, disabled, credit, codepromo, codeparrain. */
+      const profilePatch: Record<string, unknown> = {
         uid: this.currentUid,
         email: normalizedEmail,
         fullName: normalizedFullName,
@@ -537,9 +560,23 @@ export class ProfilComponent {
         updatedAt: Date.now(),
       };
 
+      // Si c'est le premier enregistrement, on ajoute createdAt
+      if (!this.cachedProfile.createdAt) {
+        profilePatch['createdAt'] = Date.now();
+      }
+
       await this.runInContext(() =>
-        set(ref(this.database, `users/${this.currentUid}`), updatedProfile)
+        update(
+          ref(this.database, `users/${this.currentUid}`),
+          profilePatch,
+        ),
       );
+
+      /* ✅ Mise à jour locale du cache (sans toucher aux champs admin) */
+      this.cachedProfile = {
+        ...this.cachedProfile,
+        ...profilePatch,
+      };
 
       this.profileForm.patchValue({
         currentPassword: '',
@@ -550,13 +587,12 @@ export class ProfilComponent {
       this.profileForm.markAsUntouched();
 
       this.selectedFile = null;
-      this.cachedProfile = updatedProfile;
-      this.userRole = updatedProfile.role ?? 'user';
-      this.userCreatedAt = updatedProfile.createdAt;
-      this.avatarPreview = updatedProfile.photoURL ?? null;
+      this.avatarPreview = (profilePatch['photoURL'] as string) ?? null;
 
       this.showToast('✓ Profil mis à jour avec succès !', 'success');
     } catch (error) {
+      console.error('[Profil] Erreur mise à jour :', error);
+
       const { code } = this.getFirebaseError(error);
       const errorMessage =
         (code && FIREBASE_ERROR_MESSAGES[code]) ??
@@ -650,7 +686,10 @@ export class ProfilComponent {
     return {};
   }
 
-  private showToast(message: string, type: 'success' | 'error'): void {
+  private showToast(
+    message: string,
+    type: 'success' | 'error',
+  ): void {
     this.snackBar.open(message, 'Fermer', {
       duration: 4000,
       panelClass: type === 'success' ? ['snack-success'] : ['snack-error'],

@@ -1,76 +1,94 @@
-// src/app/utils/homeconnect.adapters.ts
-
-import type {
-  MessageCategory,
-  UserMessage,
-} from 'src/app/home/models/user-message.model';
+// src/app/home/utils/homeconnect.adapters.ts
 
 import type {
   InboxCategory,
   InboxMessage,
   SenderRole,
-} from 'src/app/home/models/homeconnect.model';
+} from '../models/homeconnect.model';
 
-/* ═══════════════════════════════════════════════════════
+import type {
+  Message,
+  MessagerieMessage,
+  MessageCategory,
+} from 'src/app/home/models/message.model';
+
+/* ═════════════════════════════════════════════════════════════════════
    MAPPINGS
-   ═══════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 
 const CATEGORY_MAP: Readonly<Record<MessageCategory, InboxCategory>> = {
-  technique: 'systeme',
+  academie: 'academie',
   abonnement: 'abonnement',
   contenu: 'contenu',
+  evenement: 'evenement',
+  systeme: 'systeme',
   autre: 'autre',
 };
 
 const DEFAULT_SENDER_ROLE: SenderRole = 'support';
-const DEFAULT_AVATAR = '🛠️';
+const DEFAULT_AVATAR = '✉️';
 const DEFAULT_SUBJECT = '(Sans sujet)';
+const DEFAULT_FROM = 'Utilisateur';
 const PREVIEW_MAX_LENGTH = 140;
 
-/* ═══════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    ADAPTATEUR
-   ═══════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 
-/**
- * Convertit un UserMessage (modèle métier Firebase)
- * en InboxMessage (modèle d'affichage du widget d'accueil).
- *
- * ⚠️ Fonction PURE : aucun effet de bord, aucun appel réseau.
- */
-export function toInboxMessage(message: UserMessage): InboxMessage {
+export function toInboxMessage(
+  message: MessagerieMessage,
+): InboxMessage {
   const id = message.key ?? `msg-${message.createdAt}`;
+
   const subject = message.subject?.trim() || DEFAULT_SUBJECT;
+
+  const body = message.body ?? '';
+
+  const isUnread =
+    message._direction !== 'out' && message.read === false;
+
+  const from = message.fromName || message.fromEmail || DEFAULT_FROM;
+
+  const category: InboxCategory =
+    message.category && CATEGORY_MAP[message.category]
+      ? CATEGORY_MAP[message.category]
+      : 'autre';
+
+  const direction = message._direction ?? 'in';
+
+  const receivedAt =
+    typeof message.createdAt === 'number'
+      ? message.createdAt
+      : Date.now();
 
   return {
     id,
-    from: subject,
+    from,
     fromRole: DEFAULT_SENDER_ROLE,
     avatarEmoji: DEFAULT_AVATAR,
     subject,
-    preview: truncateForPreview(message.message, PREVIEW_MAX_LENGTH),
-    body: message.message,
-    receivedAt: message.createdAt,
-    isUnread: message.status === 'unread',
+    preview: truncateForPreview(body, PREVIEW_MAX_LENGTH),
+    body,
+    receivedAt,
+    isUnread,
     isStarred: false,
-    category: CATEGORY_MAP[message.category ?? 'autre'] ?? 'autre',
+    category,
+    direction,
   };
 }
 
-/**
- * Convertit un tableau de UserMessage en InboxMessage[].
- * Retourne un NOUVEAU tableau mutable.
- */
 export function toInboxMessages(
-  messages: readonly UserMessage[]
+  messages: readonly MessagerieMessage[],
 ): InboxMessage[] {
   return messages.map(toInboxMessage);
 }
 
-/* ═══════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    HELPERS
-   ═══════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 
 function truncateForPreview(text: string, maxLength: number): string {
+  if (!text) return '';
   const cleaned = text.replace(/\s+/g, ' ').trim();
   if (cleaned.length <= maxLength) return cleaned;
   return `${cleaned.slice(0, maxLength).replace(/\s+$/, '')}…`;

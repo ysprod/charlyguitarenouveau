@@ -1,37 +1,19 @@
-// src/app/features/messagerie/messagerie.model.ts
+// src/app/home/models/messagerie.model.ts
 
-/**
- * Types locaux au composant Messagerie.
- * Les modèles métier (UserMessage, MessageReply, etc.) restent
- * dans ../../models/user-message.model.ts.
- */
+/* ═════════════════════════════════════════════════════════════════════
+   MESSAGERIE — Modèles UI (tri, filtres, stats)
+   ═════════════════════════════════════════════════════════════════════ */
 
-export type FilterStatus = 'all' | 'unread' | 'read' | 'replied';
-
+/** Mode de tri des messages. */
 export type SortMode = 'recent' | 'oldest' | 'unread-first';
 
-export interface MessageFilters {
-  readonly search: string;
-  readonly status: FilterStatus;
-  readonly sort: SortMode;
-}
+/** Filtre de statut. */
+export type FilterStatus = 'all' | 'unread' | 'replied';
 
+/** Statistiques affichées dans le header. */
 export interface MessageStats {
-  readonly total: number;
-  readonly unread: number;
-  readonly replied: number;
-  readonly avgResponseTime: string;
+  total: number;
+  unread: number;
+  replied: number;
+  avgResponseTime: string;
 }
-
-export const INITIAL_FILTERS: MessageFilters = {
-  search: '',
-  status: 'all',
-  sort: 'recent',
-} as const;
-
-export const INITIAL_STATS: MessageStats = {
-  total: 0,
-  unread: 0,
-  replied: 0,
-  avgResponseTime: '—',
-} as const;

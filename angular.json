@@ -22,6 +22,9 @@
             },
             "index": "src/index.html",
             "tsConfig": "tsconfig.app.json",
+            "polyfills": [
+              "src/polyfills.ts"
+            ],
             "assets": [
               "src/favicon.ico",
               "src/assets",
@@ -35,7 +38,6 @@
               "node_modules/bootstrap/dist/css/bootstrap.min.css"
             ],
             "scripts": [],
-            "serviceWorker": "ngsw-config.json",
             "browser": "src/main.ts"
           },
           "configurations": {
@@ -59,6 +61,7 @@
                 }
               ],
               "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json",
               "optimization": {
                 "scripts": true,
                 "styles": {
