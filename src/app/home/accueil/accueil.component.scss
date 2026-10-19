@@ -1,38 +1,34 @@
 /* ═════════════════════════════════════════════════════════════════════
-   ACCUEIL — Thème « Académie Dorée » (wahou)
+   ACCUEIL — Thème « Académie Dorée » (sans animation continue)
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
-  /* Fonds */
   --bg-page: #ffffff;
   --bg-soft: #fafaf8;
   --bg-card: #ffffff;
 
-  /* Identité dorée renforcée */
   --gold-primary: #b8860b;
   --gold-hover: #d4a017;
   --gold-glow: rgba(184, 134, 11, .25);
   --gold-soft: rgba(184, 134, 11, .08);
   --gold-rich: linear-gradient(135deg, #d4a017 0%, #b8860b 50%, #78350f 100%);
 
-  /* Palette fonctionnelle */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --violet: #7c3aed;
   --danger: #dc2626;
+  --warning: #ea580c;
+  --warning-hover: #c2410c;
 
-  /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
   --border-gold: rgba(184, 134, 11, .35);
 
-  /* Rayons + transitions */
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 24px;
@@ -54,7 +50,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   HERO — Cinématographique
+   HERO
    ═════════════════════════════════════════════════════════════════════ */
 
 .artist-hero-header {
@@ -71,91 +67,6 @@
   border: 1px solid var(--border-gold);
   overflow: hidden;
   isolation: isolate;
-}
-
-/* ─── Auras ─── */
-.hero-auras {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.aura {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: .18;
-  animation: auraFloat 24s ease-in-out infinite;
-}
-
-.aura-1 {
-  width: 340px;
-  height: 340px;
-  background: var(--gold-primary);
-  top: -10%;
-  left: 20%;
-}
-
-.aura-2 {
-  width: 260px;
-  height: 260px;
-  background: var(--primary);
-  bottom: -8%;
-  right: 15%;
-  animation-delay: -8s;
-}
-
-.aura-3 {
-  width: 220px;
-  height: 220px;
-  background: var(--violet);
-  top: 30%;
-  right: 45%;
-  opacity: .12;
-  animation-delay: -16s;
-}
-
-@keyframes auraFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%      { transform: translate(30px, -30px) scale(1.15); }
-  66%      { transform: translate(-30px, 30px) scale(0.9); }
-}
-
-/* ─── Particules dorées ─── */
-.hero-particles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.particle {
-  position: absolute;
-  bottom: -10px;
-  width: 4px;
-  height: 4px;
-  background: var(--gold-primary);
-  border-radius: 50%;
-  box-shadow: 0 0 6px var(--gold-glow);
-  opacity: 0;
-  animation: particleRise linear infinite;
-}
-
-@keyframes particleRise {
-  0% {
-    transform: translateY(0) scale(0);
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-    transform: translateY(-20vh) scale(1);
-  }
-  100% {
-    transform: translateY(-110vh) scale(0.4);
-    opacity: 0;
-  }
 }
 
 /* ─── Grille décorative ─── */
@@ -178,36 +89,6 @@
   z-index: 2;
 }
 
-.hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  padding: .45rem 1.1rem;
-  background: var(--gold-soft);
-  border: 1px solid var(--border-gold);
-  border-radius: 999px;
-  font-size: .72rem;
-  font-weight: 800;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: var(--gold-primary);
-  margin-bottom: 1.5rem;
-
-  .dot {
-    width: 6px;
-    height: 6px;
-    background: var(--gold-primary);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--gold-glow);
-    animation: dotPulse 1.6s ease-in-out infinite;
-  }
-}
-
-@keyframes dotPulse {
-  0%, 100% { opacity: 1;   transform: scale(1);   }
-  50%      { opacity: .5;  transform: scale(1.4); }
-}
-
 .artist-title {
   margin: 0 0 1rem;
   font-size: clamp(2.5rem, 7vw, 5rem);
@@ -221,17 +102,10 @@
     var(--gold-hover) 70%,
     var(--text-dark) 100%
   );
-  background-size: 300% 300%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradientFlow 8s ease infinite;
   filter: drop-shadow(0 0 30px var(--gold-glow));
-}
-
-@keyframes gradientFlow {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
 }
 
 .artist-tagline {
@@ -258,13 +132,7 @@
   .icon {
     font-size: 1.6rem;
     filter: drop-shadow(0 0 10px var(--gold-glow));
-    animation: iconBreathe 3s ease-in-out infinite;
   }
-}
-
-@keyframes iconBreathe {
-  0%, 100% { transform: scale(1);    opacity: .9; }
-  50%      { transform: scale(1.15); opacity: 1;  }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -282,7 +150,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   CARTE GÉNÉRIQUE — Glass-morphism premium
+   CARTE GÉNÉRIQUE
    ═════════════════════════════════════════════════════════════════════ */
 
 .glass-morphism {
@@ -294,7 +162,7 @@
   box-shadow:
     0 4px 20px rgba(15, 23, 42, .05),
     0 20px 50px -20px rgba(15, 23, 42, .1);
-  transition: transform var(--t-base), border-color var(--t-base), box-shadow var(--t-base);
+  transition: border-color var(--t-base), box-shadow var(--t-base);
 
   &:hover {
     border-color: var(--border-gold);
@@ -342,13 +210,13 @@
     letter-spacing: .06em;
     border-radius: 6px;
 
+    /* ✅ Point statique */
     .live-dot {
       width: 6px;
       height: 6px;
       background: #fff;
       border-radius: 50%;
-      box-shadow: 0 0 8px #fff;
-      animation: dotPulse 1.4s ease-in-out infinite;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
     }
   }
 
@@ -366,7 +234,6 @@
       display: block;
     }
 
-    /* Effet shine au survol */
     .video-shine {
       position: absolute;
       top: 0;
@@ -398,7 +265,7 @@
       align-items: center;
       gap: .45rem;
       padding: .55rem 1.1rem;
-      background: var(--warning, #ea580c);
+      background: var(--warning);
       color: #fff;
       text-decoration: none;
       font-size: .82rem;
@@ -410,7 +277,7 @@
       .icon { font-size: .8rem; }
 
       &:hover {
-        background: var(--warning-hover, #c2410c);
+        background: var(--warning-hover);
         transform: translateY(-2px);
         box-shadow: 0 10px 25px -6px rgba(234, 88, 12, .45);
       }
@@ -630,7 +497,7 @@
     }
   }
 
-  /* ─── Festivals — Timeline horizontale ─── */
+  /* ─── Festivals — Timeline ─── */
   .scenic-desc {
     margin: 0 0 1.25rem;
     font-size: .95rem;
@@ -656,7 +523,6 @@
     gap: 1rem;
     padding-top: 1rem;
 
-    /* Ligne dorée horizontale */
     &::before {
       content: '';
       position: absolute;
@@ -683,9 +549,8 @@
       text-align: center;
       padding: 1.5rem .75rem .75rem;
       background: transparent;
-      animation: timelineItemIn .6s cubic-bezier(.22, 1, .36, 1) both;
+      /* ✅ animation timelineItemIn supprimée */
 
-      /* Badge circulaire doré */
       &::before {
         content: '';
         position: absolute;
@@ -726,11 +591,6 @@
       }
     }
   }
-}
-
-@keyframes timelineItemIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -814,20 +674,13 @@
    ═════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-
-  .particle,
-  .aura,
-  .artist-title,
-  .hero-eyebrow .dot,
-  .hero-divider .icon {
-    animation: none !important;
+  .glass-morphism,
+  .stat-card,
+  .corner-decor,
+  .yt-link-btn,
+  .skills-tags .tag,
+  .video-shine {
+    transition: none !important;
   }
 }
 

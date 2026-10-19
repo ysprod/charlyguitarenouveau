@@ -1,13 +1,8 @@
 /* ═════════════════════════════════════════════════════════════════════
-   APP COMPONENT — Styles unifiés
+   APP COMPONENT — Styles unifiés (sans animation continue)
    ═════════════════════════════════════════════════════════════════════ */
 
-/* ⚠️ L'import Google Fonts est déplacé dans styles.scss global
-   (un @import dans un composant encapsulé est un anti-pattern Angular). */
-
-/* ─── Variables ─── */
 :host {
-  /* Palette fonctionnelle — boutons */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-glow: rgba(37, 99, 235, .35);
@@ -17,31 +12,25 @@
 
   --danger: #dc2626;
 
-  /* Fonds — conformes consigne : blanc pour le contenu */
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
   --bg-nav: rgba(255, 255, 255, .85);
   --bg-nav-solid: rgba(255, 255, 255, .98);
 
-  /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
   --text-on-dark: #f8fafc;
 
-  /* Accent */
   --accent-color: #2563eb;
   --accent-glow: rgba(37, 99, 235, .35);
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
 
-  /* Layout */
   --navbar-height: 70px;
 
-  /* Transitions */
   --t-fast: .2s cubic-bezier(.4, 0, .2, 1);
   --t-base: .3s cubic-bezier(.4, 0, .2, 1);
 
@@ -150,21 +139,16 @@
   }
 }
 
+/* ✅ Point LIVE statique (plus de pulse infini) */
 .live-dot {
   display: inline-block;
   width: 8px;
   height: 8px;
   background-color: #ef4444;
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(239, 68, 68, .7);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, .2);
   margin-right: 4px;
   vertical-align: middle;
-  animation: livePulse 1.5s infinite;
-}
-
-@keyframes livePulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.4); opacity: .6; }
 }
 
 .nav-inbox-link {
@@ -218,6 +202,7 @@
   }
 }
 
+/* ✅ Badge statique (plus de pulse infini) */
 .bell-badge {
   position: absolute;
   top: -4px;
@@ -228,14 +213,7 @@
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 999px;
-  box-shadow: 0 0 10px rgba(239, 68, 68, .5);
-  animation: pulseBadge 2s infinite;
-}
-
-@keyframes pulseBadge {
-  0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, .7); }
-  70%  { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, .25);
 }
 
 .user-avatar-btn {
@@ -426,17 +404,18 @@
 
 /* ─── Accessibilité ─── */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-
-  .bell-badge,
-  .live-dot {
-    animation: none;
+  .navbar,
+  .logo-link,
+  .nav-links,
+  .notification-bell-btn,
+  .user-avatar-btn,
+  .avatar-ring,
+  .arrow-icon,
+  .btn-login-desktop,
+  .burger-btn,
+  .burger-btn span,
+  .btn-login-mobile {
+    transition: none !important;
   }
 }
 

@@ -1,11 +1,12 @@
+<!-- src/app/features/contact/contact.component.html -->
+
 <div class="contact-container">
 
   <!-- ═══════════════════════════════════════════════════════
        HEADER
        ═══════════════════════════════════════════════════════ -->
   <header class="contact-header">
-    <span class="badge">Restons en contact</span>
-    <h1>Contactez Charly Guitare</h1>
+    <h1>Contact</h1>
     <p class="subtitle">
       Une question sur les cours, un problème technique ou simplement envie d'échanger ?
       Envoyez-nous un message !
@@ -105,8 +106,8 @@
           ></textarea>
         </div>
 
-        <div class="char-counter" [class.warn]="messageLength > messageMaxLength * 0.85">
-          {{ messageLength }} / {{ messageMaxLength }}
+        <div class="char-counter" [class.warn]="isNearLimit()">
+          {{ messageLength() }} / {{ messageMaxLength }}
         </div>
 
         @if (f.message.touched && f.message.invalid) {
@@ -124,11 +125,11 @@
         }
       </div>
 
-      <!-- Soumission -->
+      <!-- Soumission — ✅ bouton actif sauf pendant l'envoi -->
       <button
         type="submit"
         class="btn-submit"
-        [disabled]="isSubmitting() || !currentUser()"
+        [disabled]="isDisabled()"
         [attr.aria-busy]="isSubmitting()"
       >
         @if (!isSubmitting()) {

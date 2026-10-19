@@ -1,5 +1,3 @@
-// src/app/home/homeconnect/inbox-panel/inbox-panel.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,

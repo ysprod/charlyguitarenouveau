@@ -1,7 +1,3 @@
-/* ============================================================
-   MODÈLE 
-   ============================================================ */
-
 export interface MembreEquipe {
   /** Nom complet ou pseudonyme affiché */
   nom: string;

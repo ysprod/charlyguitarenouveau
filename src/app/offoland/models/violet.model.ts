@@ -1,5 +1,3 @@
-// src/app/offoland/dimensions/violet/models/violet.model.ts
-
 /**
  * Représentation immuable d'une dimension d'Offoland.
  */

@@ -1,7 +1,9 @@
 @if (toast().show) {
   <div
     class="toast-notification"
-    [class]="toast().type"
+    [class.success]="toast().type === 'success'"
+    [class.error]="toast().type === 'error'"
+    [class.info]="toast().type === 'info'"
     role="status"
     aria-live="polite"
   >
@@ -12,6 +14,14 @@
         @default          { ℹ️ }
       }
     </span>
+
     <span class="toast-message">{{ toast().message }}</span>
+
+    <button
+      type="button"
+      class="toast-close"
+      (click)="dismiss()"
+      aria-label="Fermer la notification"
+    >✕</button>
   </div>
 }

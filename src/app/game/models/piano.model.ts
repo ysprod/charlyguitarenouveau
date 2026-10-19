@@ -1,5 +1,3 @@
-// src/app/features/piano/models/piano.model.ts
-
 export interface PianoKey {
   index: number;
   note: string;

@@ -1,5 +1,3 @@
-// src/app/shared/avatar-crop-dialog/avatar-crop-dialog.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,

@@ -1,10 +1,4 @@
-// src/app/academie/data/academie.data.ts
-
 import { Formation, LiveCard } from '../models/academie.model';
-
-/* ═════════════════════════════════════════════════════════════════════
-   FORMATIONS
-   ═════════════════════════════════════════════════════════════════════ */
 
 export const FORMATIONS: readonly Formation[] = [
   {
@@ -67,10 +61,6 @@ export const FORMATIONS: readonly Formation[] = [
     popular: false,
   },
 ];
-
-/* ═════════════════════════════════════════════════════════════════════
-   LIVE CARDS
-   ═════════════════════════════════════════════════════════════════════ */
 
 export const LIVE_CARDS: readonly LiveCard[] = [
   {

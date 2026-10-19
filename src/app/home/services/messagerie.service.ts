@@ -82,8 +82,13 @@ export class MessagerieService {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
+  /**
+   * ✅ `shareReplay` ajouté : `groupByThread` ne tourne qu'UNE fois
+   *    tant que le flux source est stable.
+   */
   readonly threads$: Observable<Thread[]> = this.messages$.pipe(
     map((messages) => this.groupByThread(messages)),
+    shareReplay({ bufferSize: 1, refCount: true }),
   );
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -109,7 +114,7 @@ export class MessagerieService {
       const now = Date.now();
       const inboxRef = push(ref(this.db, `messages/${toUid}/inbox`));
       const msgId = inboxRef.key;
-      if (!msgId) throw new Error("Impossible de générer l'ID");
+      if (!msgId) throw new Error('Impossible de générer l\'ID');
 
       const threadId = msgId;
 
@@ -129,17 +134,27 @@ export class MessagerieService {
         category: payload.category,
       };
 
-      // ✅ NETTOYAGE : retire les champs undefined
       const cleanMessage = cleanPayload(message);
 
-      // 1. Inbox du destinataire
+      /* ✅ 1. Inbox du destinataire */
       await set(inboxRef, cleanMessage);
 
-      // 2. Sent de l'expéditeur
-      await set(
-        ref(this.db, `messages/${user.uid}/sent/${msgId}`),
-        { ...cleanMessage, read: true },
-      );
+      /* ✅ 2. Sent de l'expéditeur — avec rollback si échec */
+      try {
+        await set(
+          ref(this.db, `messages/${user.uid}/sent/${msgId}`),
+          { ...cleanMessage, read: true },
+        );
+      } catch (err) {
+        /* Rollback : supprime l'inbox pour éviter un message orphelin */
+        try {
+          await set(inboxRef, null);
+        } catch {
+          /* silencieux */
+        }
+        console.error('[MessagerieService] Échec écriture sent, rollback effectué :', err);
+        throw err;
+      }
 
       return threadId;
     });
@@ -170,7 +185,7 @@ export class MessagerieService {
 
       const inboxRef = push(ref(this.db, `messages/${toUid}/inbox`));
       const msgId = inboxRef.key;
-      if (!msgId) throw new Error("Impossible de générer l'ID");
+      if (!msgId) throw new Error('Impossible de générer l\'ID');
 
       const message: MessageData = {
         from: user.uid,
@@ -188,14 +203,24 @@ export class MessagerieService {
         category: originalMessage.category,
       };
 
-      // ✅ NETTOYAGE
       const cleanMessage = cleanPayload(message);
 
       await set(inboxRef, cleanMessage);
-      await set(
-        ref(this.db, `messages/${user.uid}/sent/${msgId}`),
-        { ...cleanMessage, read: true },
-      );
+
+      try {
+        await set(
+          ref(this.db, `messages/${user.uid}/sent/${msgId}`),
+          { ...cleanMessage, read: true },
+        );
+      } catch (err) {
+        try {
+          await set(inboxRef, null);
+        } catch {
+          /* silencieux */
+        }
+        console.error('[MessagerieService] Échec écriture sent (reply), rollback :', err);
+        throw err;
+      }
 
       return msgId;
     });
@@ -220,6 +245,10 @@ export class MessagerieService {
     }
   }
 
+  /**
+   * ✅ Au lieu de N requêtes `markAsRead` en parallèle, on fait
+   *    UNE seule mise à jour multi-paths (beaucoup plus rapide).
+   */
   async markThreadAsRead(
     threadId: string,
     messages: MessagerieMessage[],
@@ -233,27 +262,48 @@ export class MessagerieService {
 
     if (unreadIds.length === 0) return;
 
-    await Promise.all(unreadIds.map((id) => this.markAsRead(id)));
+    /* ✅ Une seule requête Firebase pour tous les messages */
+    const updates: Record<string, boolean> = {};
+    for (const id of unreadIds) {
+      updates[`messages/${user.uid}/inbox/${id}/read`] = true;
+    }
+
+    try {
+      await runInInjectionContext(this.environmentInjector, () =>
+        update(ref(this.db, '/'), updates),
+      );
+    } catch (err) {
+      console.warn('[MessagerieService] markThreadAsRead a échoué :', err);
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════
      GROUPEMENT PAR THREAD
      ═══════════════════════════════════════════════════════════════════ */
 
+  /**
+   * ✅ Une seule passe au lieu de 4.
+   *    Tri par date, puis calcul des compteurs en un seul parcours.
+   */
   private groupByThread(messages: MessagerieMessage[]): Thread[] {
     if (messages.length === 0) return [];
 
+    /* ─── 1. Regrouper par threadId ─── */
     const map = new Map<string, MessagerieMessage[]>();
 
     for (const msg of messages) {
       const threadId = msg.threadId ?? msg.key ?? 'unknown';
-      const list = map.get(threadId) ?? [];
-      list.push(msg);
-      map.set(threadId, list);
+      const list = map.get(threadId);
+      if (list) {
+        list.push(msg);
+      } else {
+        map.set(threadId, [msg]);
+      }
     }
 
     const threads: Thread[] = [];
 
+    /* ─── 2. Pour chaque thread : tri + 1 passe pour les infos ─── */
     for (const [threadId, msgs] of map.entries()) {
       const sorted = [...msgs].sort(
         (a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0),
@@ -262,16 +312,19 @@ export class MessagerieService {
       const first = sorted[0];
       const last = sorted[sorted.length - 1];
 
-      const unreadCount = sorted.filter(
-        (m) => m._direction === 'in' && !m.read,
-      ).length;
+      let unreadCount = 0;
+      let lastIncoming: MessagerieMessage | undefined;
+      let lastOutgoing: MessagerieMessage | undefined;
 
-      const lastIncoming = [...sorted]
-        .reverse()
-        .find((m) => m._direction === 'in');
-      const lastOutgoing = [...sorted]
-        .reverse()
-        .find((m) => m._direction === 'out');
+      /* ✅ Une seule boucle pour tout calculer */
+      for (const m of sorted) {
+        if (m._direction === 'in') {
+          if (!m.read) unreadCount++;
+          lastIncoming = m;
+        } else {
+          lastOutgoing = m;
+        }
+      }
 
       const reference = lastIncoming ?? lastOutgoing ?? first;
       const interlocutor = lastIncoming
@@ -301,12 +354,25 @@ export class MessagerieService {
    Firebase n'accepte PAS les undefined (contrairement à null).
    ═════════════════════════════════════════════════════════════════════ */
 
+/**
+ * ✅ Gère aussi les objets imbriqués (récursif).
+ *    Ex: `{ meta: { a: 1, b: undefined } }` → `{ meta: { a: 1 } }`.
+ */
 function cleanPayload<T extends object>(obj: T): T {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
     if (value === undefined) continue;
-    result[key] = value;
+
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      !Array.isArray(value)
+    ) {
+      result[key] = cleanPayload(value as object);
+    } else {
+      result[key] = value;
+    }
   }
 
   return result as T;

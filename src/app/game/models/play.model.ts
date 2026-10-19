@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════
-   TYPES — Dashboard de jeux
-   ═══════════════════════════════════════════════════════ */
-
 export interface GameFilter {
   readonly id: string;
   readonly label: string;

@@ -2,7 +2,7 @@ export interface ChordShape {
   id: string;
   name: string;
   fullName: string;
-  frets: number[];       // -1 = étouffée, 0 = à vide, >0 = case
+  frets: number[];       
   baseFret: number;
   points: number;        // Valeur Mölkky (1 à 12)
   difficulty: 'facile' | 'normal' | 'difficile';

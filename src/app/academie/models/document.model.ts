@@ -1,6 +1,3 @@
-/* ═══════════════════════════════════════════════════════
-   DOCUMENT — Modèle partagé
-   ═══════════════════════════════════════════════════════ */
 
 export interface DocumentItem {
   /** Clé Firebase (optionnelle, injectée par `keyField`). */

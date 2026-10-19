@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   PROFIL — Paramètres utilisateur
+   PROFIL — Paramètres utilisateur (optimisé GPU)
    Fond blanc • Palette chaude (or/ambre)
    ═════════════════════════════════════════════════════════════════════ */
 
@@ -45,7 +45,12 @@
   display: block;
 }
 
-* { box-sizing: border-box; }
+/* ✅ Scoped : n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
 
 svg {
   width: 100%;
@@ -86,7 +91,6 @@ svg {
     height: 2px;
     background: linear-gradient(90deg, var(--gold-primary), var(--gold-hover), transparent);
     border-radius: 2px;
-    box-shadow: 0 0 14px var(--gold-glow);
   }
 }
 
@@ -106,14 +110,13 @@ svg {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 14px rgba(184, 134, 11, .1), inset 0 1px 0 rgba(255, 255, 255, .6);
+    box-shadow: 0 2px 8px rgba(184, 134, 11, .08);
 
     .icon-svg {
       width: 26px;
       height: 26px;
       color: var(--gold-primary);
-      filter: drop-shadow(0 2px 4px var(--gold-glow));
-      animation: iconFloat 3.5s ease-in-out infinite;
+      /* ✅ filter: drop-shadow supprimé + animation iconFloat supprimée */
     }
   }
 
@@ -139,11 +142,6 @@ svg {
   }
 }
 
-@keyframes iconFloat {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
-}
-
 /* ═════════════════════════════════════════════════════════════════════
    GRILLE PRINCIPALE
    ═════════════════════════════════════════════════════════════════════ */
@@ -165,7 +163,6 @@ svg {
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
-  transition: var(--t-base);
 
   &::before {
     content: '';
@@ -204,7 +201,6 @@ svg {
 
     .card-icon {
       font-size: 1.2rem;
-      filter: drop-shadow(0 2px 4px var(--gold-glow));
     }
 
     h3 {
@@ -229,7 +225,7 @@ svg {
     .avatar-ring {
       transform: scale(1.05);
       border-color: var(--gold-primary);
-      box-shadow: 0 0 32px var(--gold-glow);
+      box-shadow: 0 0 16px var(--gold-glow);
     }
 
     .avatar-overlay { opacity: 1; }
@@ -243,7 +239,7 @@ svg {
 
     .avatar-ring {
       border-color: var(--gold-primary);
-      box-shadow: 0 0 24px var(--gold-glow);
+      box-shadow: 0 0 12px var(--gold-glow);
     }
 
     .avatar { transform: scale(1.03); }
@@ -262,7 +258,6 @@ svg {
   border-radius: 50%;
   border: 2px solid var(--border-gold);
   transition: var(--t-base);
-  box-shadow: 0 0 18px rgba(184, 134, 11, .12);
 }
 
 .avatar {
@@ -279,9 +274,7 @@ svg {
   font-weight: 900;
   font-size: 3rem;
   letter-spacing: -.5px;
-  box-shadow:
-    0 8px 24px rgba(15, 23, 42, .15),
-    inset 0 1px 0 rgba(255, 255, 255, .25);
+  /* ✅ box-shadow lourde supprimée (était sur un élément 150×150) */
   transition: var(--t-base);
   z-index: 1;
 
@@ -340,7 +333,10 @@ svg {
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: var(--t-base);
+  transition:
+    background var(--t-base),
+    border-color var(--t-base),
+    transform var(--t-base);
 
   svg {
     width: 12px;
@@ -421,7 +417,6 @@ svg {
         background: var(--gold-soft);
         border-color: var(--border-gold);
         color: var(--gold-primary);
-        box-shadow: 0 0 12px var(--gold-glow);
       }
 
       &.subscriber {
@@ -481,7 +476,6 @@ svg {
       width: 18px;
       height: 18px;
       color: var(--gold-primary);
-      filter: drop-shadow(0 2px 4px var(--gold-glow));
     }
   }
 
@@ -556,7 +550,7 @@ svg {
     height: 16px;
     color: var(--text-dim);
     pointer-events: none;
-    transition: var(--t-base);
+    transition: color var(--t-fast);
     z-index: 1;
   }
 
@@ -570,7 +564,9 @@ svg {
     font-size: .88rem;
     font-family: inherit;
     outline: none;
-    transition: var(--t-base);
+    transition:
+      border-color var(--t-fast),
+      box-shadow var(--t-fast);
 
     &::placeholder { color: var(--text-dim); }
 
@@ -578,23 +574,20 @@ svg {
       border-color: var(--border-gold);
     }
 
+    /* ✅ Focus : bordure + shadow minimal (pas de triple shadow) */
     &:focus {
       border-color: var(--gold-primary);
-      box-shadow:
-        0 0 0 3px var(--gold-soft),
-        0 0 0 1px var(--gold-primary);
+      box-shadow: 0 0 0 2px var(--gold-soft);
     }
 
     &.invalid {
       border-color: var(--danger);
-      box-shadow: 0 0 0 3px rgba(220, 38, 38, .1);
+      box-shadow: 0 0 0 2px rgba(220, 38, 38, .08);
     }
   }
 
   &:focus-within .input-icon {
     color: var(--gold-primary);
-    transform: scale(1.1);
-    filter: drop-shadow(0 2px 4px var(--gold-glow));
   }
 }
 
@@ -605,18 +598,12 @@ svg {
   display: flex;
   align-items: center;
   gap: 5px;
-  animation: errorShake .4s ease;
+  /* ✅ animation errorShake supprimée */
 
   &::before {
     content: '⚠';
     font-size: .85rem;
   }
-}
-
-@keyframes errorShake {
-  0%, 100% { transform: translateX(0); }
-  25%      { transform: translateX(-4px); }
-  75%      { transform: translateX(4px); }
 }
 
 .field-hint {
@@ -657,7 +644,11 @@ svg {
   font-family: inherit;
   letter-spacing: .3px;
   cursor: pointer;
-  transition: var(--t-base);
+  transition:
+    transform var(--t-base),
+    background var(--t-base),
+    border-color var(--t-base),
+    box-shadow var(--t-base);
   white-space: nowrap;
   min-width: 160px;
   position: relative;
@@ -703,12 +694,13 @@ svg {
   to { transform: rotate(360deg); }
 }
 
-/* 🟢 Bouton principal — sauvegarder (validation) */
+/* 🟢 Bouton principal — sauvegarder */
 .btn-primary {
   background: var(--success);
   color: #fff;
-  box-shadow: 0 4px 16px rgba(22, 163, 74, .25);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, .2);
 
+  /* ✅ Shimmer conservé (au survol uniquement) */
   &::before {
     content: '';
     position: absolute;
@@ -722,7 +714,7 @@ svg {
 
   &:hover:not(:disabled) {
     background: #15803d;
-    box-shadow: 0 8px 24px rgba(22, 163, 74, .35);
+    box-shadow: 0 4px 14px rgba(22, 163, 74, .3);
 
     &::before { left: 100%; }
   }
@@ -871,11 +863,16 @@ svg {
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    transition-duration: .01ms !important;
+  .avatar-wrapper,
+  .avatar,
+  .avatar-ring,
+  .avatar-overlay,
+  .btn-remove-avatar,
+  .btn,
+  .btn svg,
+  .input-wrapper input,
+  .input-wrapper .input-icon {
+    transition: none !important;
   }
 }
 

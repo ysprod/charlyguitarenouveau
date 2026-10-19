@@ -1,5 +1,4 @@
-// src/app/profil/profil.component.ts
-
+ 
 import {
   ChangeDetectionStrategy,
   Component,
@@ -55,7 +54,7 @@ import {
 
 import { Router } from '@angular/router';
 
-import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 import { of, timer } from 'rxjs';
 import { filter, map, switchMap, take } from 'rxjs/operators';
@@ -78,9 +77,8 @@ import {
 import {
   AUTH_GRACE_PERIOD_MS,
   FIREBASE_ERROR_MESSAGES,
-  MAX_AVATAR_SIZE,
   PHONE_PATTERN,
-  ROLE_LABELS,
+  ROLE_LABELS
 } from '../constants/profile.constants';
 
 /* ═══════════════════════════════════════════════════════════

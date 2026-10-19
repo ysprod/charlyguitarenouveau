@@ -1,6 +1,4 @@
-// src/app/offoland/dimensions/pourpre/models/pourpre.model.ts
-
-/**
+ /**
  * Représentation immuable d'une dimension d'Offoland.
  */
 export interface Dimension {

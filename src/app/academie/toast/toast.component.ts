@@ -1,13 +1,10 @@
-// src/app/features/documents/shared/toast/toast.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,
   inject,
 } from '@angular/core';
-import { ToastService } from 'src/app/academie/services/toast.service';
 
- 
+import { ToastService } from 'src/app/academie/services/toast.service';
 
 /* ═════════════════════════════════════════════════════════════════════
    TOAST COMPONENT — Affichage global des notifications
@@ -22,5 +19,14 @@ import { ToastService } from 'src/app/academie/services/toast.service';
 })
 export class ToastComponent {
   private readonly toastService = inject(ToastService);
+
   readonly toast = this.toastService.toast;
+
+  /** ✅ Fermeture manuelle (délègue au service si disponible) */
+  dismiss(): void {
+    const service = this.toastService as { dismiss?: () => void };
+    if (typeof service.dismiss === 'function') {
+      service.dismiss();
+    }
+  }
 }

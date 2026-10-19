@@ -1,5 +1,3 @@
-// src/app/home/homeconnect/inbox-panel/pipes/truncate.pipe.ts
-
 import { Pipe, PipeTransform } from '@angular/core';
 
 import { truncate } from 'src/app/home/utils/homeconnect.utils';

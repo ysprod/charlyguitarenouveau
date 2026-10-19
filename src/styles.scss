@@ -851,3 +851,23 @@ app-footer {
   background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
   color: #fff !important;
 }
+
+.reveal-init {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+
+.reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ✅ Respect de la préférence utilisateur */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-init {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

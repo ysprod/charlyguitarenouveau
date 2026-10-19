@@ -1,5 +1,3 @@
-// src/app/offoland/dimensions/bleu/constants/bleu.constants.ts
-
 import {
   CharlyBleu,
   Climat,

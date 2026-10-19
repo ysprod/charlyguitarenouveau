@@ -1,28 +1,19 @@
+<!-- src/app/home/again/again.component.html -->
+
 <div class="equipe-container">
-
-  <header class="equipe-header">
-    <h1 class="title-glow">LA DREAM TEAM</h1>
-
-    <div class="header-divider" aria-hidden="true">
-      <span class="line"></span>
-      <span class="icon">⚔️</span>
-      <span class="line"></span>
-    </div>
-  </header>
 
   <!-- SECTION FEATURED (Les Piliers) -->
   <section class="featured-section" aria-labelledby="piliers-title">
     <h2 id="piliers-title" class="section-title">
       <span class="material-icons" aria-hidden="true">stars</span>
-      LES PILIERS DU PROJET
+      LA DREAM TEAM
     </h2>
 
     <div class="featured-grid">
-      @for (membre of membresFeatured; track membre.nom; let i = $index) {
+      @for (membre of membresFeatured; track membre.nom) {
         <article
           class="featured-card"
           [style.--accent]="membre.couleur"
-          [style.animation-delay]="animationDelay(i, 0.15)"
         >
           <div class="card-glow" aria-hidden="true"></div>
           <div class="card-icon" aria-hidden="true">{{ membre.icone }}</div>
@@ -36,20 +27,17 @@
     </div>
   </section>
 
+  <br><br>
+
   <!-- SECTION GRILLE -->
   <section class="team-section" aria-labelledby="gardiens-title">
-    <h2 id="gardiens-title" class="section-title">
-      <span class="material-icons" aria-hidden="true">shield</span>
-      LES GARDIENS DU PROJET
-    </h2>
 
     <div class="team-grid">
-      @for (membre of membresStandard; track membre.nom; let i = $index) {
+      @for (membre of membresStandard; track membre.nom) {
         <article
           class="member-card"
           [class.anonymous]="membre.anonyme"
           [style.--accent]="membre.couleur"
-          [style.animation-delay]="animationDelay(i, 0.1)"
         >
           <div class="member-icon-wrapper">
             <div class="member-icon" aria-hidden="true">{{ membre.icone }}</div>

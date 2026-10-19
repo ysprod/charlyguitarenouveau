@@ -1,5 +1,3 @@
-// src/app/shared/auth-alert/constants/auth-alert.constants.ts
-
 import { AuthAlertType } from '../models/auth-alert.model';
 
 /** Rôle ARIA associé à chaque type d'alerte. */

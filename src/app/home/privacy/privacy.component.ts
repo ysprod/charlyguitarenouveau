@@ -1,5 +1,4 @@
-// src/app/legal/privacy/privacy.component.ts
-
+ 
 import {
   ChangeDetectionStrategy,
   Component,

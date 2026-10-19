@@ -1,7 +1,3 @@
-/* ============================================================
-   TYPES & INTERFACES — Packs pédagogiques
-   ============================================================ */
-
 export type PackCategoryId = 'debutant' | 'intermediaire' | 'solo' | 'chansons';
 export type PackBadgeColor = 'blue' | 'green' | 'gold';
 

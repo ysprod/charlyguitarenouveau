@@ -1,5 +1,3 @@
-// src/app/game/models/duo-end-game-summary.model.ts
-
 /** Résultat d'une manche de Lyko Duel. */
 export type DuoEndGameResult = 'player1' | 'player2' | 'draw';
 

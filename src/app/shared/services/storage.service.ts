@@ -20,13 +20,26 @@ export class StorageService {
   }
 
   /* ═══════════════════════════════════════════════
+     UTILITAIRES
+     ═══════════════════════════════════════════════ */
+
+  /** Vrai si la clé existe réellement dans le storage. */
+  has(key: string): boolean {
+    return this.storage?.getItem(key) !== null;
+  }
+
+  /* ═══════════════════════════════════════════════
      BOOLÉENS
      ═══════════════════════════════════════════════ */
 
+  /**
+   * Accepte `"true"` / `"1"` comme `true`, tout le reste comme `false`.
+   * (Cohérent avec le comportement de `getNumber` qui accepte `"5"`.)
+   */
   getBoolean(key: string, fallback = false): boolean {
     const value = this.storage?.getItem(key);
     if (value === null || value === undefined) return fallback;
-    return value === 'true';
+    return value === 'true' || value === '1';
   }
 
   setBoolean(key: string, value: boolean): void {
@@ -45,7 +58,7 @@ export class StorageService {
     const value = this.storage?.getItem(key);
     if (value === null || value === undefined) return fallback;
     const parsed = Number(value);
-    return Number.isNaN(parsed) ? fallback : parsed;
+    return Number.isFinite(parsed) ? parsed : fallback;
   }
 
   setNumber(key: string, value: number): void {
@@ -93,28 +106,33 @@ export class StorageService {
     }
   }
 
-  /**
- * Lit et parse un objet JSON depuis localStorage.
- * Retourne `null` si absent, corrompu, ou si le storage est indisponible.
- */
-getJSON<T>(key: string): T | null {
-  const raw = this.storage?.getItem(key);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return null;
-  }
-}
+  /* ═══════════════════════════════════════════════
+     JSON
+     ═══════════════════════════════════════════════ */
 
-/**
- * Sérialise et stocke un objet en JSON dans localStorage.
- */
-setJSON<T>(key: string, value: T): void {
-  try {
-    this.storage?.setItem(key, JSON.stringify(value));
-  } catch {
-    // silencieux
+  /**
+   * Lit et parse un objet JSON depuis localStorage.
+   * Retourne `null` si absent, corrompu, ou si le storage est indisponible.
+   */
+  getJSON<T>(key: string): T | null {
+    const raw = this.storage?.getItem(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
   }
-}
+
+  /**
+   * Sérialise et stocke un objet en JSON dans localStorage.
+   * Échoue silencieusement si l'objet n'est pas sérialisable (cycle, BigInt…).
+   */
+  setJSON<T>(key: string, value: T): void {
+    try {
+      this.storage?.setItem(key, JSON.stringify(value));
+    } catch {
+      // silencieux
+    }
+  }
 }

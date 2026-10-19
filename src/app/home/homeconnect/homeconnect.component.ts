@@ -1,5 +1,3 @@
-// src/app/home/homeconnect/homeconnect.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,14 +9,10 @@ import {
   runInInjectionContext,
   signal,
 } from '@angular/core';
-
 import { toSignal } from '@angular/core/rxjs-interop';
-
 import { Auth, authState } from '@angular/fire/auth';
 import { Database, objectVal, ref } from '@angular/fire/database';
-
 import { RouterLink } from '@angular/router';
-
 import { of, switchMap } from 'rxjs';
 
 import { UserProfile } from 'src/app/home/models/user.model';
@@ -26,19 +20,13 @@ import { getInitials } from 'src/app/home/utils/string.utils';
 
 import {
   QUICK_ACTIONS,
-  COLOR_UNIVERSES,
   WHY_PILLARS,
-  TESTIMONIALS,
 } from 'src/app/home/constants/homeconnect.constants';
 
+import { DocumentsComponent } from 'src/app/academie/documents/documents.component';
 import { FooterComponent } from 'src/app/home/footer/footer.component';
 import { RevealDirective } from 'src/app/shared/reveal.directive';
 import { InboxPanelComponent } from './inbox-panel/inbox-panel.component';
-import { DocumentsComponent } from 'src/app/academie/documents/documents.component';
-
-/* ═════════════════════════════════════════════════════════════════════
-   COMPOSANT
-   ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-homeconnect',
@@ -62,8 +50,6 @@ export class HomeconnectComponent {
   private readonly auth = inject(Auth);
   private readonly db = inject(Database);
   private readonly destroyRef = inject(DestroyRef);
-
-  /** ✅ Injecté pour exécuter les appels Firebase DANS le contexte d'injection */
   private readonly environmentInjector = inject(EnvironmentInjector);
 
   /* ═══════════════════════════════════════════════════════
@@ -79,7 +65,6 @@ export class HomeconnectComponent {
       switchMap((u) => {
         if (!u?.uid) return of(null);
 
-        // ✅ runInInjectionContext : exécute ref() dans le contexte d'injection
         return runInInjectionContext(this.environmentInjector, () =>
           objectVal<UserProfile>(ref(this.db, `users/${u.uid}`)),
         );
@@ -95,7 +80,7 @@ export class HomeconnectComponent {
       p?.displayName ??
       u?.displayName ??
       u?.email?.split('@')[0] ??
-      'Musicien'
+      'Offolandais'
     );
   });
 
@@ -138,9 +123,7 @@ export class HomeconnectComponent {
      ═══════════════════════════════════════════════════════ */
 
   readonly quickActions = QUICK_ACTIONS;
-  readonly colorUniverses = COLOR_UNIVERSES;
   readonly whyPillars = WHY_PILLARS;
-  readonly testimonials = TESTIMONIALS;
 
   /* ═══════════════════════════════════════════════════════
      CYCLE DE VIE

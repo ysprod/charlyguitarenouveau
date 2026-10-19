@@ -1,5 +1,3 @@
-// src/app/offoland/dimensions/noir/constants/noir.constants.ts
-
 import { Divinite, Passage } from '../models/noir.model';
 
 /* ═══════════════════════════════════════════════════════════

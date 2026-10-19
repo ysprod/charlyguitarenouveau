@@ -1,16 +1,7 @@
-// src/app/shared/category-icons.constants.ts
-
 import { InboxCategory } from "../models/homeconnect.model";
-import { MessageCategory } from "../models/user-message.model";
 
- 
+export type MessageCategory = 'technique' | 'abonnement' | 'contenu' | 'autre';
 
- 
-
-/**
- * Union de TOUTES les catégories possibles dans l'application.
- * Permet d'indexer sans conflit de types.
- */
 export type AnyCategory = MessageCategory | InboxCategory;
 
 /**

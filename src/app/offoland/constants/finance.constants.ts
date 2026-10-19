@@ -1,5 +1,3 @@
-// src/app/offoland/finance/constants/finance.constants.ts
-
 import {
   ConversionStep,
   ExchangeRate,

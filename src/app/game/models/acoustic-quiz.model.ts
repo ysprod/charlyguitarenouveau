@@ -28,18 +28,8 @@ export interface QuizState {
   bestStreak: number;
 }
 
-// src/app/game/models/acoustic-quiz.model.ts
-
-/* ═══════════════════════════════════════════════════════════
-   DIFFICULTÉ
-   ═══════════════════════════════════════════════════════════ */
 
  
 
 /** Filtre de difficulté (inclut l'option « Toutes »). */
 export type DifficultyFilter = Difficulty | 'Toutes';
-
-/* ═══════════════════════════════════════════════════════════
-   QUESTION
-   ═══════════════════════════════════════════════════════════ */
- 

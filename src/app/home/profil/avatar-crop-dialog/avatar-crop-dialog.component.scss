@@ -1,3 +1,7 @@
+/* ═════════════════════════════════════════════════════════════════════
+   AVATAR CROP DIALOG — Optimisé GPU
+   ═════════════════════════════════════════════════════════════════════ */
+
 :host {
   --crop-bg: #ffffff;
   --crop-soft: #f8fafc;
@@ -8,13 +12,20 @@
   --crop-muted: #64748b;
   --crop-border: rgba(15, 23, 42, .1);
   --crop-radius: 16px;
+
+  display: contents;
 }
 
-* { box-sizing: border-box; }
+/* ✅ Scoped : n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    BACKDROP
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .crop-backdrop {
   position: fixed;
   inset: 0;
@@ -23,20 +34,14 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(15, 23, 42, .6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  animation: fadeIn .2s ease;
+  /* ✅ Fond opaque au lieu de backdrop-filter (coûteux en GPU) */
+  background: rgba(15, 23, 42, .7);
+  /* ✅ animation fadeIn supprimée */
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    CARTE
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .crop-card {
   position: relative;
   width: 100%;
@@ -47,18 +52,14 @@
   background: var(--crop-bg);
   border: 1px solid var(--crop-gold);
   border-radius: var(--crop-radius);
-  box-shadow: 0 25px 60px rgba(15, 23, 42, .3);
-  animation: slideUp .3s cubic-bezier(.22, 1, .36, 1);
+  /* ✅ Ombre simple (au lieu de 0 25px 60px) */
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .15);
+  /* ✅ animation slideUp supprimée */
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px) scale(.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    HEADER
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .crop-header {
   display: flex;
   align-items: center;
@@ -99,9 +100,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    VIEWPORT
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .crop-viewport {
   position: relative;
   display: flex;
@@ -135,6 +136,7 @@
   }
 }
 
+/* ✅ Spinner conservé (seul feedback de chargement) */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -165,9 +167,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    CONTRÔLES
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .crop-controls {
   display: flex;
   align-items: center;
@@ -199,9 +201,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    ERREUR
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .crop-error {
   margin: 0 0 1rem;
   padding: .6rem .9rem;
@@ -214,9 +216,9 @@
   text-align: left;
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    ACTIONS
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 .crop-actions {
   display: flex;
   justify-content: flex-end;
@@ -238,7 +240,9 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: transform .2s, background .2s, box-shadow .2s;
+  transition:
+    transform .2s,
+    background .2s;
 
   &:disabled {
     opacity: .55;
@@ -265,12 +269,12 @@
 .btn-success {
   background: var(--crop-success);
   color: #ffffff;
-  box-shadow: 0 6px 18px rgba(22, 163, 74, .3);
+  /* ✅ Plus de box-shadow au hover : juste un transform */
+  transition: transform .2s, background .2s;
 
   &:hover:not(:disabled) {
     background: #15803d;
     transform: translateY(-1px);
-    box-shadow: 0 10px 24px rgba(22, 163, 74, .4);
   }
 
   .spinner {
@@ -283,9 +287,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
-   ═══════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 480px) {
   .crop-card {
     padding: 1.25rem 1rem;
@@ -301,11 +305,14 @@
   }
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    transition-duration: .01ms !important;
+  .btn-close,
+  .btn,
+  .btn-secondary,
+  .btn-success {
+    transition: none !important;
   }
 }

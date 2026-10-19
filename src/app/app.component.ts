@@ -14,11 +14,7 @@ import {
 
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
-import {
-  Database,
-  listVal,
-  ref,
-} from '@angular/fire/database';
+import { Database, listVal, ref } from '@angular/fire/database';
 
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
@@ -32,7 +28,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 
-import { Observable, combineLatest, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import {
   catchError,
   distinctUntilChanged,
@@ -42,10 +38,7 @@ import {
 
 import { InstallPromptComponent } from './home/install-prompt/install-prompt.component';
 
-import type {
-  Message,
-  MessagerieMessage,
-} from './home/models/message.model';
+import type { Message } from './home/models/message.model';
 
 import { AuthService } from './home/services/auth.service';
 import { VoiceService } from './game/services/voice.service';

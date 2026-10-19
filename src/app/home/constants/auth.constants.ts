@@ -31,7 +31,6 @@ export const FIREBASE_ERRORS: Readonly<Record<string, string>> = {
   'auth/cancelled-popup-request': 'La connexion Google a été annulée.',
   'auth/account-exists-with-different-credential':
     'Un compte existe déjà avec une autre méthode de connexion.',
-
   /* ─── Inscription ─── */
   'auth/email-already-in-use':
     'Cette adresse e-mail est déjà utilisée par un autre compte.',
@@ -39,7 +38,6 @@ export const FIREBASE_ERRORS: Readonly<Record<string, string>> = {
     'Le mot de passe doit contenir au moins 6 caractères.',
   'auth/operation-not-allowed':
     "L'inscription par e-mail n'est pas activée. Contactez l'administrateur.",
-
   /* ─── Configuration ─── */
   'auth/configuration-not-found':
     'Configuration Firebase introuvable. Vérifiez environment.ts.',

@@ -1,49 +1,59 @@
-// src/app/homeconnect/homeconnect.utils.ts
+// src/app/home/utils/homeconnect.utils.ts
 
- import { InboxMessage, InboxFilter } from "../models/homeconnect.model";
+import type { InboxMessage, InboxFilter } from '../models/homeconnect.model';
 
- 
+/* ═════════════════════════════════════════════════════════════════════
+   TRI
+   ═════════════════════════════════════════════════════════════════════ */
 
-/* ─── Tri ─── */
-
+/**
+ * ✅ Tri récent → ancien.
+ *    Comparaison directe des `number` (pas de `new Date()` par message).
+ */
 export function sortByRecent(
-  messages: readonly InboxMessage[]
+  messages: readonly InboxMessage[],
 ): InboxMessage[] {
-  return [...messages].sort(
-    (a, b) =>
-      new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
-  );
+  return [...messages].sort((a, b) => b.receivedAt - a.receivedAt);
 }
 
-/* ─── Filtrage ─── */
+/* ═════════════════════════════════════════════════════════════════════
+   FILTRAGE
+   ═════════════════════════════════════════════════════════════════════ */
 
 export function filterMessages(
   messages: readonly InboxMessage[],
-  filter: InboxFilter
+  filter: InboxFilter,
 ): InboxMessage[] {
   switch (filter) {
     case 'unread':
       return messages.filter((m) => m.isUnread);
+
     case 'starred':
       return messages.filter((m) => m.isStarred);
-          case 'sent':
+
+    case 'sent':
       return messages.filter((m) => m.direction === 'out');
+
     case 'academie':
-      
       return messages.filter((m) => m.category === 'academie');
+
     case 'abonnement':
       return messages.filter((m) => m.category === 'abonnement');
+
     case 'all':
     default:
-      return [...messages];
+      /* ✅ Pas de copie inutile pour `all` */
+      return messages as InboxMessage[];
   }
 }
 
-/* ─── Formatage date relative ─── */
+/* ═════════════════════════════════════════════════════════════════════
+   FORMATAGE DATE RELATIVE
+   ═════════════════════════════════════════════════════════════════════ */
 
 export function formatRelativeDate(
-  iso: string,
-  now: Date = new Date()
+  iso: string | number,
+  now: Date = new Date(),
 ): string {
   const date = new Date(iso);
   const diffMs = now.getTime() - date.getTime();
@@ -62,11 +72,12 @@ export function formatRelativeDate(
   });
 }
 
-/* ─── Troncature (sans trimEnd, compatible ES2015) ─── */
+/* ═════════════════════════════════════════════════════════════════════
+   TRONCATURE
+   ═════════════════════════════════════════════════════════════════════ */
 
 export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   const sliced = text.slice(0, maxLength).replace(/\s+$/, '');
   return `${sliced}…`;
 }
- 

@@ -1,5 +1,4 @@
-// src/app/univers/charlyguitaregame/models/dimension.model.ts
-
+ 
 /* ═════════════════════════════════════════════════════════════════════
    DIMENSION — Modèle d'une Dimension d'Offoland
    ═════════════════════════════════════════════════════════════════════ */

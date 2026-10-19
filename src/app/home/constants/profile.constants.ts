@@ -1,5 +1,3 @@
-// src/app/profil/constants/profile.constants.ts
-
 import { UserRole } from '../models/profile.model';
 
 /* ═══════════════════════════════════════════════════════════
@@ -17,9 +15,7 @@ export const ROLE_LABELS: Readonly<Record<UserRole, string>> = {
    ═══════════════════════════════════════════════════════════ */
 
 export const PHONE_PATTERN = /^\+?[0-9\s\-()]{8,20}$/;
-
 export const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-
 export const AUTH_GRACE_PERIOD_MS = 800;
 
 /* ═══════════════════════════════════════════════════════════

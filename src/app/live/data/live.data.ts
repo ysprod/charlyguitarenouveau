@@ -1,5 +1,3 @@
-// src/app/live/data/live.data.ts
-
 import { LiveCard, LiveVideo } from '../models/live.model';
 
 /* ═════════════════════════════════════════════════════════════════════

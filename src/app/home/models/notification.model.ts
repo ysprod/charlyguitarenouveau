@@ -1,5 +1,3 @@
-// src/app/notifications/models/notification.model.ts
-
 export type NotificationType = 'system' | 'message' | 'promotion';
 
 export type NotificationFilter = 'all' | 'unread' | NotificationType;

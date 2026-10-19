@@ -61,7 +61,7 @@
         type="button"
         class="promo-btn promo-btn-primary"
         (click)="submit()"
-        [disabled]="isSaving() || !canSubmit()"
+        [disabled]="!canSubmit()"
         [attr.aria-busy]="isSaving()"
       >
         @if (!isSaving()) {

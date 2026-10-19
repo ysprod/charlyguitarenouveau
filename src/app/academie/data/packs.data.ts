@@ -1,12 +1,3 @@
- 
-
-/* ============================================================
-   DONNÉES — 4 catégories de packs pédagogiques
-   ═══════════════════════════════════════════════════════════
-   ⚠️ Couleurs d'accent assombries pour contraste AA sur fond blanc
-   (voir commentaires à côté de chaque accentColor)
-   ============================================================ */
-
 import { PackCategory } from "src/app/academie/models/pack.model";
 
 export const PACK_CATEGORIES: PackCategory[] = [
@@ -19,7 +10,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
         subtitle: 'Faire ses premiers pas sur la guitare',
         objective: 'Apprendre les bases, prendre confiance et jouer ses premières chansons.',
         icon: '🎯',
-        accentColor: '#053095', // 🔵 Cyan foncé — contraste AA sur fond blanc
+        accentColor: '#124cd2', // 🔵 Cyan foncé — contraste AA sur fond blanc
         image: 'assets/images/packs/debutant.jpg',
         packs: [
             {

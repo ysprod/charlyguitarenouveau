@@ -1,5 +1,3 @@
-// src/app/offoland/bco/utils/bco.util.ts
-
 import { NUMBER_FORMATTER } from '../constants/bco.constants';
 import {
   CentralBankVariant,

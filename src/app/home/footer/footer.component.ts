@@ -24,17 +24,12 @@ export class FooterComponent {
   readonly auth = inject(AuthService);
 
   /* ─── Constantes ─── */
-  /** Année courante pour le copyright. */
   readonly currentYear = new Date().getFullYear();
 
   /* ═══════════════════════════════════════════════════════
      SCROLL
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Retour en haut de page avec scroll fluide.
-   * Respecte `prefers-reduced-motion` et est SSR-safe.
-   */
   scrollToTop(): void {
     if (typeof window === 'undefined') return;
 

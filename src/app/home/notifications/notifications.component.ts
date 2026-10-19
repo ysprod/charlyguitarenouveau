@@ -1,5 +1,4 @@
-// src/app/notifications/notifications.component.ts
-
+ 
 import {
   ChangeDetectionStrategy,
   Component,

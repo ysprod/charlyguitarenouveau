@@ -1,5 +1,3 @@
-// src/app/offoland/dimensions/blanc/constants/blanc.constants.ts
-
 import {
   Caracteristique,
   Correspondance,

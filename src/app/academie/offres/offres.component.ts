@@ -4,12 +4,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
+  EnvironmentInjector,
   afterNextRender,
   computed,
   inject,
   signal,
   viewChild,
-  ElementRef,
 } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
@@ -20,33 +21,28 @@ import { PACK_CATEGORIES } from '../data/packs.data';
 import { FormatPricePipe } from '../pipes/format-price.pipe';
 
 /* ═════════════════════════════════════════════════════════════════════
-   OFFRES — Packs pédagogiques
+   OFFRES — Packs pédagogiques (optimisé)
    ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-offres',
-  imports: [
-    RouterLink,
-    FormatPricePipe,
-  ],
+  imports: [RouterLink, FormatPricePipe],
   templateUrl: './offres.component.html',
   styleUrls: ['./offres.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OffresComponent {
 
-  /* ─── Injection ─── */
   private readonly destroyRef = inject(DestroyRef);
 
-  /* ─── ViewChild (signal-based) ─── */
+  /* ─── ViewChild signal-based ─── */
   readonly packsSection = viewChild<ElementRef<HTMLElement>>('packsSection');
 
-  /* ─── Données ─── */
+  /* ─── Données (constantes) ─── */
   readonly categories: readonly PackCategory[] = PACK_CATEGORIES;
 
   /* ─── État UI ─── */
   readonly activeCategory = signal<PackCategoryId>('debutant');
-  readonly hoveredPack = signal<string | null>(null);
 
   /* ─── Computed ─── */
   readonly currentCategory = computed<PackCategory | null>(() => {
@@ -54,19 +50,23 @@ export class OffresComponent {
     return this.categories.find((c) => c.id === id) ?? this.categories[0] ?? null;
   });
 
-  /* ─── Timeout actif (nettoyé à la destruction) ─── */
-  private scrollTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  /** ✅ Couleur d'accent exposée via un computed (mise en cache) */
+  readonly currentAccent = computed(
+    () => this.currentCategory()?.accentColor ?? '#a87400',
+  );
+
+  /* ─── Flag "scroll demandé" (pour déclencher afterNextRender) ─── */
+  private pendingScroll = false;
 
   /* ═══════════════════════════════════════════════════════
      CONSTRUCTEUR — cleanup
      ═══════════════════════════════════════════════════════ */
 
   constructor() {
+    /* ✅ Cleanup : plus de setTimeout à nettoyer manuellement.
+       Le `pendingScroll` est un simple booléen. */
     this.destroyRef.onDestroy(() => {
-      if (this.scrollTimeoutId !== null) {
-        clearTimeout(this.scrollTimeoutId);
-        this.scrollTimeoutId = null;
-      }
+      this.pendingScroll = false;
     });
   }
 
@@ -75,27 +75,29 @@ export class OffresComponent {
      ═══════════════════════════════════════════════════════ */
 
   selectCategory(id: PackCategoryId): void {
+    if (this.activeCategory() === id) return;
+
     this.activeCategory.set(id);
     this.scheduleScrollToPacks();
   }
 
-  onPackHover(id: string | null): void {
-    this.hoveredPack.set(id);
-  }
-
   /* ═══════════════════════════════════════════════════════
-     SCROLL — planifié après le rendu
+     SCROLL — via afterNextRender (fiable, sans setTimeout)
      ═══════════════════════════════════════════════════════ */
 
   private scheduleScrollToPacks(): void {
-    if (this.scrollTimeoutId !== null) {
-      clearTimeout(this.scrollTimeoutId);
-    }
+    if (this.pendingScroll) return;
+    this.pendingScroll = true;
 
-    this.scrollTimeoutId = setTimeout(() => {
-      this.scrollTimeoutId = null;
-      this.scrollToPacks();
-    }, 50);
+    /* ✅ `afterNextRender` exécute la callback après le prochain rendu
+       du composant — donc après que le nouveau `<section>` soit dans le DOM. */
+    afterNextRender(
+      () => {
+        this.pendingScroll = false;
+        this.scrollToPacks();
+      },
+      { injector: inject(EnvironmentInjector) },
+    );
   }
 
   private scrollToPacks(): void {

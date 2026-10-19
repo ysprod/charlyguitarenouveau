@@ -1,5 +1,3 @@
-// src/app/legal/mentions/constants/mentions.constants.ts
-
 /* ═══════════════════════════════════════════════════════════
    INFORMATIONS ÉDITEUR
    ═══════════════════════════════════════════════════════════ */

@@ -1,5 +1,3 @@
-// src/app/live/live.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,

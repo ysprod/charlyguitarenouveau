@@ -1,7 +1,3 @@
-/* ═════════════════════════════════════════════════════════════════════
-   RÉCAPITULATIF DE FIN DE PARTIE
-   ═════════════════════════════════════════════════════════════════════ */
-
 export type EndGameResult = 'victory' | 'defeat' | 'draw';
 
 export interface EndGameSummary {

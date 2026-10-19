@@ -1,7 +1,5 @@
 import { ChordShape, Difficulty } from "./memory-chord.model";
 
- 
-
 export interface PinState {
   readonly chord: ChordShape;
   readonly isDown: boolean;

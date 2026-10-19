@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   INBOX PANEL — Boîte de réception (Gmail-like)
+   INBOX PANEL — Boîte de réception (optimisé GPU)
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
@@ -41,7 +41,12 @@
   display: block;
 }
 
-* { box-sizing: border-box; }
+/* ✅ Scoped : le box-sizing n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
 
 /* ═════════════════════════════════════════════════════════════════════
    CONTAINER
@@ -54,14 +59,10 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  /* ✅ Ombre simple + bordure pour la profondeur (plus de box-shadow large) */
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
   overflow: hidden;
-  animation: bannerEnter 0.7s ease both;
-}
-
-@keyframes bannerEnter {
-  from { opacity: 0; transform: translateY(-12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  /* ✅ animation bannerEnter supprimée */
 }
 
 /* ─── En-tête ─── */
@@ -99,6 +100,7 @@
     letter-spacing: -0.01em;
   }
 
+  /* ✅ Badge sans box-shadow (border suffit) */
   .inbox-unread-badge {
     display: inline-grid;
     place-items: center;
@@ -110,7 +112,7 @@
     font-size: 0.75rem;
     font-weight: 800;
     border-radius: 999px;
-    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+    border: 1px solid var(--orange-hover);
   }
 
   .inbox-header-actions {
@@ -134,7 +136,8 @@
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
-  transition: transform var(--t-fast), box-shadow var(--t-fast),
+  transition:
+    transform var(--t-fast),
     background var(--t-fast);
   white-space: nowrap;
 
@@ -146,26 +149,21 @@
     outline-offset: 2px;
   }
 
+  /* ✅ Plus de box-shadow sur les boutons : couleur unie + bordure */
   &.inbox-btn-blue {
     background: var(--primary);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    border: 1px solid var(--primary-hover);
 
-    &:hover {
-      background: var(--primary-hover);
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-    }
+    &:hover { background: var(--primary-hover); }
   }
 
   &.inbox-btn-orange {
     background: var(--orange);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+    border: 1px solid var(--orange-hover);
 
-    &:hover {
-      background: var(--orange-hover);
-      box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
-    }
+    &:hover { background: var(--orange-hover); }
   }
 }
 
@@ -191,18 +189,21 @@
   font-weight: 600;
   color: var(--text-body);
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition:
+    border-color var(--t-fast),
+    color var(--t-fast),
+    background var(--t-fast);
 
   &:hover {
     border-color: var(--primary);
     color: var(--primary);
   }
 
+  /* ✅ Plus de box-shadow sur le filtre actif */
   &.active {
     background: var(--primary);
     border-color: var(--primary);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
   }
 
   .inbox-filter-count {
@@ -230,14 +231,8 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  max-height: 520px;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-medium);
-    border-radius: 3px;
-  }
+  /* ✅ max-height + overflow-y retirés : crée un scroll layer GPU inutile.
+     Le scroll est géré par la page entière (plus économique). */
 }
 
 /* ─── Item ─── */
@@ -263,8 +258,11 @@
     border-bottom: none;
   }
 
+  /* ✅ Unread : bordure gauche colorée au lieu d'un background semi-transparent */
   &.unread {
-    background: rgba(37, 99, 235, 0.03);
+    background: #f8fbff;
+    border-left: 3px solid var(--primary);
+    padding-left: calc(1.25rem - 3px);
 
     .inbox-from,
     .inbox-subject {
@@ -273,8 +271,9 @@
     }
   }
 
+  /* ✅ Sent : bordure gauche plus légère */
   &.sent {
-    background: rgba(37, 99, 235, 0.02);
+    background: #fafcff;
     border-left: 3px solid rgba(37, 99, 235, 0.3);
     padding-left: calc(1.25rem - 3px);
 
@@ -290,13 +289,14 @@
     padding-top: 0.1rem;
   }
 
+  /* ✅ Avatar : couleur unie au lieu d'un gradient */
   .inbox-avatar {
     display: inline-grid;
     place-items: center;
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--gold-soft), rgba(37, 99, 235, 0.12));
+    background: var(--bg-soft);
     border: 1px solid var(--border-gold);
     font-size: 1rem;
   }
@@ -374,19 +374,14 @@
     white-space: nowrap;
   }
 
+  /* ✅ Point statique : plus de pulse infini */
   .inbox-dot {
     width: 8px;
     height: 8px;
     background: var(--primary);
     border-radius: 50%;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    animation: pulseDot 2s ease-in-out infinite;
   }
-}
-
-@keyframes pulseDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: 0.6; transform: scale(1.15); }
 }
 
 /* ─── Badge Envoyé ─── */
@@ -463,7 +458,10 @@
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition:
+    border-color var(--t-fast),
+    color var(--t-fast),
+    background var(--t-fast);
 
   &:hover:not(:disabled) {
     border-color: var(--primary);
@@ -471,11 +469,11 @@
     background: var(--bg-soft);
   }
 
+  /* ✅ Plus de box-shadow sur la page active */
   &.active {
     background: var(--primary);
     border-color: var(--primary);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
   }
 
   &:disabled {
@@ -519,21 +517,15 @@
   .inbox-item {
     padding: 0.85rem 1rem;
   }
-
-  .inbox-list {
-    max-height: none;
-  }
 }
 
 /* ─── Accessibilité ─── */
 
 @media (prefers-reduced-motion: reduce) {
-  .inbox-section,
-  .inbox-dot {
-    animation: none !important;
-  }
-
-  .inbox-btn {
-    transition: none;
+  .inbox-btn,
+  .inbox-filter,
+  .inbox-item,
+  .inbox-page-btn {
+    transition: none !important;
   }
 }

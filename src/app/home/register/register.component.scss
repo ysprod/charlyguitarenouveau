@@ -17,14 +17,14 @@
   font-size: .8rem;
   text-transform: uppercase;
   letter-spacing: .05em;
-}
 
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
+  }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -49,21 +49,26 @@
     transform .25s ease,
     box-shadow .25s ease,
     background .25s ease;
-}
 
-.btn-submit:hover:not(:disabled) {
-  background: var(--warning-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 15px 40px -10px rgba(234, 88, 12, .55);
-}
+  &:hover:not(:disabled) {
+    background: var(--warning-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px -10px rgba(234, 88, 12, .55);
+  }
 
-.btn-submit:active:not(:disabled) {
-  transform: translateY(0);
-}
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
 
-.btn-submit:disabled {
-  opacity: .65;
-  cursor: not-allowed;
+  &:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+  }
+
+  /* ✅ Flèche animée au hover */
+  &:hover:not(:disabled) .btn-content svg {
+    transform: translateX(4px);
+  }
 }
 
 .btn-content {
@@ -73,16 +78,12 @@
   align-items: center;
   justify-content: center;
   gap: .5rem;
-}
 
-.btn-content svg {
-  width: 18px;
-  height: 18px;
-  transition: transform var(--t-fast);
-}
-
-.btn-submit:hover:not(:disabled) .btn-content svg {
-  transform: translateX(4px);
+  svg {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--t-fast);
+  }
 }
 
 .spinner {

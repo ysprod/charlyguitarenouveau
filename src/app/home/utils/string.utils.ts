@@ -9,7 +9,7 @@
 export function getInitials(
   primary: string | null | undefined,
   fallback: string | null | undefined = '',
-  defaultInitials = 'U'
+  defaultInitials = 'O'
 ): string {
   const source = (primary?.trim() || fallback?.trim() || '').trim();
 

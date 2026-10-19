@@ -1,5 +1,3 @@
-// src/app/offoland/dimensions/rouge/constants/rouge.constants.ts
-
 import { Clan, Correspondance, Faiblesse, Pouvoir } from '../models/rouge.model';
 
 /* ═══════════════════════════════════════════════════════════

@@ -1,5 +1,3 @@
-// src/app/univers/charlyguitaregame/data/dimensions.data.ts
-
 import { Dimension } from "../models/dimension.model";
 
  

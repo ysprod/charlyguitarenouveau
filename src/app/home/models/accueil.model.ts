@@ -1,5 +1,3 @@
-// src/app/features/accueil/accueil.model.ts
-
 export interface ArtistInfo {
   readonly name: string;
   readonly realName: string;
@@ -15,30 +13,17 @@ export interface AwardInfo {
   readonly icon: string;
 }
 
-
-
 export interface CollaborationGroup {
   readonly label: string;
   readonly artists: string;
 }
-
-// export interface FestivalItem {
-//   readonly badge: string;
-//   readonly description: string;
-// }
-
-// src/app/home/accueil/models/accueil.model.ts
-
-/* ═════════════════════════════════════════════════════════════════════
-   ACCUEIL — MODÈLES
-   ═════════════════════════════════════════════════════════════════════ */
 
 /** Statistique affichée dans le hero. */
 export interface StatItem {
   readonly id: string;
   readonly number: string;
   readonly numericValue: number;
-  readonly suffix: string; 
+  readonly suffix: string;
   readonly label: string;
   readonly highlight: boolean;
 }

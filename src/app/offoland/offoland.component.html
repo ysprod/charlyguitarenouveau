@@ -1,5 +1,3 @@
-<!-- src/app/offoland/offoland.component.html -->
-
 <div class="offoland-app">
 
   <!-- ═══════════════════════════════════════════════════════
@@ -7,7 +5,7 @@
        ═══════════════════════════════════════════════════════ -->
   <section class="hero-section" aria-labelledby="offoland-title">
 
-    <!-- 🌌 Sept couleurs primordiales en auras tournantes -->
+    <!-- 🌌 Sept couleurs primordiales en auras -->
     <div class="hero-aura" aria-hidden="true">
       <div class="aura aura-do"></div>
       <div class="aura aura-re"></div>
@@ -32,9 +30,6 @@
       <h1 id="offoland-title" class="hero-title">
         <span class="hero-title-gold">OFFOLAND</span>
       </h1>
-
-      <!-- 📖 Baseline sacrée -->
-      <p class="hero-baseline">{{ baseline }}</p>
 
       <!-- 🎵 Mélodie des Origines -->
       <div class="melodie-origines" aria-label="Mélodie des Origines">
@@ -64,15 +59,11 @@
         <span class="line" aria-hidden="true"></span>
       </div>
 
-      <!-- 📌 Intro portails -->
-      <p class="portails-intro">{{ portailsIntro }}</p>
-
       <!-- 🏦 Portails -->
       <div class="portails-grid">
         @for (portail of portails; track portail.id) {
 
           @if (portail.route) {
-            <!-- Portail actif -->
             <a
               class="portail-btn"
               [class]="'portail-btn ' + portail.cssClass"
@@ -85,7 +76,6 @@
               <span class="portail-sub">{{ portail.sub }}</span>
             </a>
           } @else {
-            <!-- Portail verrouillé -->
             <div
               class="portail-btn portail-locked"
               aria-disabled="true"
@@ -101,44 +91,8 @@
         }
       </div>
 
-      <!-- 🌟 Citation sacrée -->
-      <blockquote class="hero-quote">
-        {{ quote.text }}
-        <cite>{{ quote.author }}</cite>
-      </blockquote>
-
-      <!-- 🔱 Les Trois Divinités -->
-      <div class="divinites-grid" role="list">
-        @for (divinite of divinites; track divinite.id) {
-          <article class="divinite-card" role="listitem">
-            <span class="divinite-icon" aria-hidden="true">{{ divinite.icon }}</span>
-            <h2 class="divinite-name">{{ divinite.name }}</h2>
-            <p class="divinite-role">{{ divinite.role }}</p>
-            <p class="divinite-quote">{{ divinite.quote }}</p>
-          </article>
-        }
-      </div>
-
     </div>
 
-  </section>
-
-  <!-- ═══════════════════════════════════════════════════════
-       LE CHEMIN — Enseignement d'Offoland
-       ═══════════════════════════════════════════════════════ -->
-  <section class="chemin-section" aria-labelledby="chemin-title">
-    <div class="chemin-content">
-      <h2 id="chemin-title" class="chemin-title">
-        <span class="chemin-icon" aria-hidden="true">{{ chemin.icon }}</span>
-        {{ chemin.title }}
-      </h2>
-
-      @for (paragraph of chemin.paragraphs; track $index) {
-        <p class="chemin-text" [class.chemin-text-muted]="$index === 1">
-          {{ paragraph }}
-        </p>
-      }
-    </div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════
@@ -151,12 +105,12 @@
       } @placeholder {
         <div class="defer-placeholder" aria-hidden="true">
           <span class="defer-spinner"></span>
-          <p>L’instrument s’accorde…</p>
+          <p>L'instrument s'accorde…</p>
         </div>
       } @loading (minimum 300ms) {
         <div class="defer-placeholder" aria-hidden="true">
           <span class="defer-spinner"></span>
-          <p>L’instrument s’accorde…</p>
+          <p>L'instrument s'accorde…</p>
         </div>
       }
     </section>

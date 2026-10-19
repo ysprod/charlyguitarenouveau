@@ -1,10 +1,3 @@
-// src/app/features/accueil/accueil.constants.ts
-
-/**
- * Constantes globales du composant Accueil.
- * Centralise les données statiques pour faciliter la maintenance.
- */
-
 export const ARTIST_INFO = {
   name: 'CHARLY GUITARE',
   realName: 'M. Kotchi Kacou Jean-Charles',
@@ -13,8 +6,6 @@ export const ARTIST_INFO = {
   youtubeWatchUrl: 'https://www.youtube.com/watch?v=6S8m0-hQ29k',
   youtubeEmbedUrl: 'https://www.youtube.com/embed/6S8m0-hQ29k?rel=0',
 } as const;
-
- 
 
 export const EXPERTISE_TAGS: readonly string[] = [
   'Guitare Solo & Rythmique',

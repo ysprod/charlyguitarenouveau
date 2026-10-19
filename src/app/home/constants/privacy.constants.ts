@@ -1,9 +1,3 @@
-// src/app/legal/privacy/constants/privacy.constants.ts
-
-/* ═══════════════════════════════════════════════════════════
-   INFORMATIONS SITE
-   ═══════════════════════════════════════════════════════════ */
-
 /** Nom du site. */
 export const SITE_NAME = 'Charly Guitare';
 

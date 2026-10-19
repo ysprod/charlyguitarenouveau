@@ -1,15 +1,3 @@
-// src/app/home/install/constants/install.constants.ts
-
-/* ═══════════════════════════════════════════════════════════
-   CLÉ DE MÉMORISATION
-   ═══════════════════════════════════════════════════════════ */
-
-/**
- * Clé `localStorage` mémorisant que l'utilisateur a installé l'app.
- *
- * ⚠️ Conservée telle quelle pour ne pas casser la détection
- *    des utilisateurs ayant déjà installé l'application.
- */
 export const INSTALLED_KEY = 'charlyguitare_app_installed';
 
 /* ═══════════════════════════════════════════════════════════

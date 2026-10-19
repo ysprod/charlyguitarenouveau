@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   OFFOLAND — Version claire immersive
+   OFFOLAND — Version claire immersive (sans animation continue)
    ═════════════════════════════════════════════════════════════════════ */
 
 @use 'sass:list';
@@ -84,18 +84,18 @@
   border-radius: 50%;
   filter: blur(140px);
   opacity: .08;
-  animation: auraDrift 24s ease-in-out infinite;
+  /* ✅ animation auraDrift supprimée */
 }
 
 /* Tailles / positions par dimension */
 $auras: (
-  do:  (420, -8%,  50%,  translateX(-50%), 18s, 0s,  var(--offo-texte-3)),
-  re:  (320, 25%,  5%,   null,             22s, 1s,  var(--offo-rouge)),
-  mi:  (300, 15%,  8%,   null,             20s, 2s,  var(--offo-vert)),
-  fa:  (280, null, 12%,  null,             24s, 3s,  var(--offo-bleu)),
-  sol: (260, null, 10%,  null,             26s, 4s,  var(--offo-texte-2)),
-  la:  (340, null, 40%,  null,             28s, 5s,  var(--offo-pourpre)),
-  si:  (220, 45%,  40%,  null,             30s, 6s,  var(--offo-violet))
+  do:  (420, -8%,  50%,  translateX(-50%), var(--offo-texte-3)),
+  re:  (320, 25%,  5%,   null,             var(--offo-rouge)),
+  mi:  (300, 15%,  8%,   null,             var(--offo-vert)),
+  fa:  (280, null, 12%,  null,             var(--offo-bleu)),
+  sol: (260, null, 10%,  null,             var(--offo-texte-2)),
+  la:  (340, null, 40%,  null,             var(--offo-pourpre)),
+  si:  (220, 45%,  40%,  null,             var(--offo-violet))
 );
 
 @each $name, $data in $auras {
@@ -103,16 +103,12 @@ $auras: (
   $top:       list.nth($data, 2);
   $side:      list.nth($data, 3);
   $transform: list.nth($data, 4);
-  $duration:  list.nth($data, 5);
-  $delay:     list.nth($data, 6);
-  $color:     list.nth($data, 7);
+  $color:     list.nth($data, 5);
 
   .aura-#{$name} {
     width: #{$size}px;
     height: #{$size}px;
     background: $color;
-    animation-duration: $duration;
-    animation-delay: $delay;
 
     @if $top { top: $top; }
 
@@ -127,13 +123,7 @@ $auras: (
   }
 }
 
-@keyframes auraDrift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%      { transform: translate(40px, -30px) scale(1.15); }
-  66%      { transform: translate(-30px, 40px) scale(0.9); }
-}
-
-/* ─── Premier Tambour : pulsation centrale (dorée) ─── */
+/* ─── Premier Tambour : rings statiques ─── */
 .premier-tambour {
   position: absolute;
   top: 50%;
@@ -150,15 +140,14 @@ $auras: (
   transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 1px solid var(--offo-or-glow);
-  animation: pulseExpand 4s ease-out infinite;
+  /* ✅ Tailles fixes (plus d'animation pulseExpand) */
+  width: 200px;
+  height: 200px;
+  opacity: .35;
 
-  &.ring-2 { animation-delay: 1.3s; }
-  &.ring-3 { animation-delay: 2.6s; }
-}
-
-@keyframes pulseExpand {
-  0%   { width: 100px; height: 100px; opacity: .8; border-color: var(--offo-or-glow); }
-  100% { width: 900px; height: 900px; opacity: 0;  border-color: transparent; }
+  &.ring-1 { width: 200px; height: 200px; opacity: .5; }
+  &.ring-2 { width: 400px; height: 400px; opacity: .3; }
+  &.ring-3 { width: 700px; height: 700px; opacity: .15; }
 }
 
 /* ─── Contenu sacré ─── */
@@ -167,12 +156,7 @@ $auras: (
   z-index: 3;
   max-width: 880px;
   text-align: center;
-  animation: heroEnter 1.4s cubic-bezier(.22, 1, .36, 1);
-}
-
-@keyframes heroEnter {
-  from { opacity: 0; transform: translateY(40px); }
-  to   { opacity: 1; transform: translateY(0); }
+  /* ✅ animation heroEnter supprimée */
 }
 
 /* ─── Titre ─── */
@@ -193,14 +177,8 @@ $auras: (
     var(--offo-bleu) 60%,
     var(--offo-violet) 100%
   ));
-  background-size: 300% 300%;
-  animation: gradientFlow 8s ease infinite;
+  /* ✅ gradientFlow supprimé : dégradé statique conservé */
   filter: drop-shadow(0 0 20px var(--offo-or-glow));
-}
-
-@keyframes gradientFlow {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
 }
 
 /* ─── Baseline sacrée ─── */
@@ -235,6 +213,7 @@ $auras: (
   color: var(--note-color);
   letter-spacing: .05em;
 
+  /* ✅ Point sous la note — statique (plus de noteBlink) */
   &::before {
     content: '';
     position: absolute;
@@ -245,18 +224,8 @@ $auras: (
     background: var(--note-color);
     border-radius: 50%;
     opacity: .6;
-    animation: noteBlink 1.5s ease-in-out infinite;
+    transform: translateX(-50%);
   }
-
-  &:nth-child(1)::before { animation-delay: 0s;   }
-  &:nth-child(3)::before { animation-delay: .3s;  }
-  &:nth-child(5)::before { animation-delay: .6s;  }
-  &:nth-child(7)::before { animation-delay: .9s;  }
-}
-
-@keyframes noteBlink {
-  0%, 100% { opacity: .3; transform: scale(1); }
-  50%      { opacity: 1;  transform: scale(1.6); }
 }
 
 .note-sep {
@@ -322,13 +291,8 @@ $auras: (
   .icon {
     font-size: 1.6rem;
     filter: drop-shadow(0 0 8px var(--offo-or-glow));
-    animation: iconBreathe 3s ease-in-out infinite;
+    /* ✅ animation iconBreathe supprimée */
   }
-}
-
-@keyframes iconBreathe {
-  0%, 100% { transform: scale(1);    opacity: .9; }
-  50%      { transform: scale(1.15); opacity: 1;  }
 }
 
 /* ─── Intro portails ─── */
@@ -365,7 +329,10 @@ $auras: (
   isolation: isolate;
   background: var(--offo-surface);
   box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
-  transition: all var(--offo-t-base);
+  transition:
+    transform var(--offo-t-base),
+    box-shadow var(--offo-t-base),
+    border-color var(--offo-t-base);
 
   &::before {
     content: '';
@@ -630,17 +597,13 @@ $auras: (
   font-style: italic;
 }
 
+/* ✅ Spinner statique (plus de rotation infinie) */
 .defer-spinner {
   width: 32px;
   height: 32px;
   border: 3px solid var(--offo-border);
   border-top-color: var(--offo-or);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -757,12 +720,13 @@ $auras: (
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+  .sept-note,
+  .portail-btn,
+  .portail-icon,
+  .portail-label,
+  .portail-glow,
+  .divinite-card {
+    transition: none !important;
   }
 }
 

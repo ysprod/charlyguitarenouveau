@@ -1,5 +1,3 @@
-<!-- src/app/academie/academie.component.html -->
-
 <div class="academie-container">
 
   <!-- ═══════════════════════════════════════════════════════
@@ -30,13 +28,19 @@
        DOCUMENTS (lazy)
        ═══════════════════════════════════════════════════════ -->
   @defer (on viewport) {
-    <app-documents></app-documents>
-  } @placeholder {
-    <div class="documents-placeholder" aria-hidden="true">
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-    </div>
+  <app-documents />
+  } @placeholder (minimum 300ms) {
+  <div class="documents-placeholder" style="min-height: 320px;" aria-hidden="true">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  </div>
+  } @loading (after 100ms; minimum 300ms) {
+  <div class="documents-placeholder" aria-hidden="true">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  </div>
   }
 
   <!-- ═══════════════════════════════════════════════════════
@@ -46,46 +50,43 @@
 
     <div class="cards-grid">
       @for (formation of formations; track formation.id) {
-        <article
-          class="academy-card"
-          [class.highlight-card]="formation.highlighted"
-        >
+      <article class="academy-card" [class.highlight-card]="formation.highlighted">
 
-          @if (formation.popular) {
-            <div class="popular-badge">
-              <span aria-hidden="true">⭐</span> POPULAIRE
-            </div>
-          }
+        @if (formation.popular) {
+        <div class="popular-badge">
+          <span aria-hidden="true">⭐</span> POPULAIRE
+        </div>
+        }
 
-          <div class="card-number" aria-hidden="true">{{ formation.number }}</div>
+        <div class="card-number" aria-hidden="true">{{ formation.number }}</div>
 
-          <div class="card-header">
+        <div class="card-header">
 
-            <div class="card-icon-wrap">
-              <span class="card-icon" aria-hidden="true">{{ formation.icon }}</span>
-            </div>
-
-            <div>
-              <span class="card-label">{{ formation.label }}</span>
-              <h3>{{ formation.title }}</h3>
-            </div>
-
+          <div class="card-icon-wrap">
+            <span class="card-icon" aria-hidden="true">{{ formation.icon }}</span>
           </div>
 
-          <p class="card-description">{{ formation.description }}</p>
+          <div>
+            <span class="card-label">{{ formation.label }}</span>
+            <h3>{{ formation.title }}</h3>
+          </div>
 
-          <ul class="subcategories-list">
-            @for (sub of formation.subcategories; track sub) {
-              <li>{{ sub }}</li>
-            }
-          </ul>
+        </div>
 
-          <a [routerLink]="formation.actionRoute" class="card-action">
-            <span>{{ formation.actionLabel }}</span>
-            <span class="arrow" aria-hidden="true">→</span>
-          </a>
+        <p class="card-description">{{ formation.description }}</p>
 
-        </article>
+        <ul class="subcategories-list">
+          @for (sub of formation.subcategories; track sub) {
+          <li>{{ sub }}</li>
+          }
+        </ul>
+
+        <a [routerLink]="formation.actionRoute" class="card-action">
+          <span>{{ formation.actionLabel }}</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+
+      </article>
       }
     </div>
   </section>
@@ -108,35 +109,35 @@
 
     <div class="live-grid">
       @for (live of liveCards; track live.id) {
-        <article class="live-card">
+      <article class="live-card">
 
-          <div class="live-background-icon" aria-hidden="true">
-            {{ live.backgroundIcon }}
+        <div class="live-background-icon" aria-hidden="true">
+          {{ live.backgroundIcon }}
+        </div>
+
+        <div class="live-card-content">
+
+          <div class="live-icon-wrap">
+            <span aria-hidden="true">{{ live.icon }}</span>
           </div>
 
-          <div class="live-card-content">
+          <span class="live-label">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            LIVE
+          </span>
 
-            <div class="live-icon-wrap">
-              <span aria-hidden="true">{{ live.icon }}</span>
-            </div>
+          <h3>{{ live.title }}</h3>
 
-            <span class="live-label">
-              <span class="pulse-dot" aria-hidden="true"></span>
-              LIVE
-            </span>
+          <p>{{ live.description }}</p>
 
-            <h3>{{ live.title }}</h3>
+        </div>
 
-            <p>{{ live.description }}</p>
+        <a [routerLink]="live.actionRoute" class="live-action">
+          {{ live.actionLabel }}
+          <span aria-hidden="true">→</span>
+        </a>
 
-          </div>
-
-          <a [routerLink]="live.actionRoute" class="live-action">
-            {{ live.actionLabel }}
-            <span aria-hidden="true">→</span>
-          </a>
-
-        </article>
+      </article>
       }
     </div>
 

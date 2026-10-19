@@ -1,6 +1,4 @@
-import { MembreEquipe } from "../models/membre.model";
-
- 
+import { MembreEquipe } from "../models/membre.model"; 
 
 /* ============================================================
    DONNÉES  Charly Guitare

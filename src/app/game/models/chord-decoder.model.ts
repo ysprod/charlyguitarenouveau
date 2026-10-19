@@ -11,7 +11,7 @@ export interface ChordDetail {
 export interface GridBar {
   barNumber: number;
   chords: ChordDetail[];
-  duration: number;      // en temps (4 par défaut)
+  duration: number;     
 }
 
 export interface SavedGrid {

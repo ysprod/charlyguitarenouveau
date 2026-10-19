@@ -1,5 +1,3 @@
-// src/app/game/play/play.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -67,7 +65,7 @@ export class PlayComponent {
      ═══════════════════════════════════════════════════════ */
 
   readonly games: readonly GameItem[] = buildGamesList((path) =>
-    void this.router.navigateByUrl(path)
+    void this.router.navigateByUrl(path),
   );
 
   readonly visibleGames = computed(() => {
@@ -86,7 +84,6 @@ export class PlayComponent {
   readonly isSavingPromo = signal(false);
   readonly promoError = signal('');
 
-  /** Jeu en attente de validation du code promo. */
   private readonly pendingGame = signal<GameItem | null>(null);
 
   /* ═══════════════════════════════════════════════════════
@@ -115,7 +112,13 @@ export class PlayComponent {
 
   constructor() {
     afterNextRender(() => {
+      /* ✅ Skip si l'utilisateur préfère réduire les animations */
       if (this.prefersReducedMotion) return;
+
+      /* ✅ Skip si l'appareil est tactile (pas de mousemove pertinent) */
+      const isTouch = window.matchMedia?.('(hover: none)').matches === true;
+      if (isTouch) return;
+
       this.ngZone.runOutsideAngular(() => this.initTiltEffect());
     });
 
@@ -141,7 +144,7 @@ export class PlayComponent {
 
   private initTiltEffect(): void {
     const cards = Array.from(
-      this.hostEl.nativeElement.querySelectorAll<HTMLElement>('.btn-game')
+      this.hostEl.nativeElement.querySelectorAll<HTMLElement>('.btn-game'),
     );
 
     cards.forEach((card) => {

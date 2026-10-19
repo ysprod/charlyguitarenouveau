@@ -30,7 +30,7 @@
   --offo-violet:    #6d28d9;
   --offo-rose:      #be185d;
 
-  /* ─── Ombres (plus douces et réalistes) ─── */
+  /* ─── Ombres ─── */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, .05);
   --shadow-sm: 0 2px 6px rgba(15, 23, 42, .06);
   --shadow-md: 0 8px 24px -6px rgba(15, 23, 42, .10);
@@ -43,7 +43,8 @@
   --r-xl: 28px;
 
   display: block;
-  background: var(--offo-fond);
+  /* ✅ Fond blanc conforme à la consigne globale */
+  background: #ffffff;
   color: var(--offo-texte);
   font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
@@ -76,9 +77,8 @@
     radial-gradient(ellipse at 50% -10%, var(--offo-or-soft) 0%, transparent 60%),
     radial-gradient(ellipse at 0% 100%, var(--offo-bleu-soft) 0%, transparent 55%),
     radial-gradient(ellipse at 100% 100%, var(--offo-or-soft) 0%, transparent 55%),
-    linear-gradient(180deg, var(--offo-fond) 0%, var(--offo-fond-2) 100%);
+    linear-gradient(180deg, #ffffff 0%, var(--offo-fond-2) 100%);
 
-  /* Ligne de séparation subtile en bas */
   &::after {
     content: '';
     position: absolute;
@@ -203,7 +203,6 @@
     font-weight: 800;
     position: relative;
 
-    /* Soulignement subtil doré */
     &::after {
       content: '';
       position: absolute;
@@ -283,7 +282,7 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  padding: 2rem 2rem;
+  padding: 2rem;
   background:
     linear-gradient(135deg,
       color-mix(in srgb, var(--accent) 5%, #fff) 0%,
@@ -296,7 +295,6 @@
   position: relative;
   overflow: hidden;
 
-  /* Bande latérale colorée (accent) */
   &::before {
     content: '';
     position: absolute;
@@ -376,14 +374,19 @@
   transition: border-color .2s ease, box-shadow .2s ease;
   isolation: isolate;
 
+  /* ✅ Hover unifié : glow + bordure accent */
   &:hover,
-  &.hovered {
+  &:focus-within {
     border-color: color-mix(in srgb, var(--accent) 45%, transparent);
     box-shadow:
       var(--shadow-lg),
       0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
 
     .pack-glow { opacity: 1; }
+  }
+
+  &:focus-within {
+    box-shadow: 0 0 0 3px var(--offo-or-glow);
   }
 
   &.highlight {
@@ -415,11 +418,6 @@
         transparent);
       opacity: .9;
     }
-  }
-
-  &:focus-within {
-    border-color: var(--offo-or);
-    box-shadow: 0 0 0 3px var(--offo-or-glow);
   }
 }
 
@@ -728,10 +726,6 @@
 
   .packs-grid { grid-template-columns: 1fr; }
 
-  .pack-card.highlight {
-    transform: none;
-  }
-
   .price-amount { font-size: 1.75rem; }
 
   .contact-info {
@@ -742,7 +736,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ACCESSIBILITÉ — plus aucune animation
+   ACCESSIBILITÉ
    ═══════════════════════════════════════════════════════════════ */
 
 a:focus-visible,

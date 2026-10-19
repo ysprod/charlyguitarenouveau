@@ -1,28 +1,17 @@
-/* ═════════════════════════════════════════════════════════════════════
-   CHARLY GUITARE GAME — Version claire
-   ═════════════════════════════════════════════════════════════════════
-   ⚠️ L'import Google Fonts (Cinzel, Cormorant Garamond) doit être
-   placé dans styles.scss global (pas dans un composant encapsulé).
-   ═════════════════════════════════════════════════════════════════════ */
-
 :host {
-  /* Fonds — conformes consigne : blanc pour le contenu */
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
   --bg-card: #ffffff;
 
-  /* Identité dorée — assombrie pour contraste AA sur fond blanc */
   --gold: #b8860b;
   --gold-hover: #d4a017;
   --gold-glow: rgba(184, 134, 11, .2);
 
-  /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
 
@@ -53,7 +42,6 @@
   text-align: center;
   padding: 40px 20px;
   margin-bottom: 40px;
-  animation: headerFadeIn .8s ease;
 
   .title-glow {
     font-family: 'Cinzel', Georgia, serif;
@@ -61,12 +49,16 @@
     font-weight: 900;
     margin: 0;
     letter-spacing: 6px;
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 50%, var(--gold) 100%);
-    background-size: 200% auto;
+    background: linear-gradient(
+      135deg,
+      var(--gold) 0%,
+      var(--gold-hover) 50%,
+      var(--gold) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shimmer 4s linear infinite;
+    /* ✅ animation shimmer supprimée */
   }
 
   .title-sub {
@@ -106,15 +98,6 @@
   }
 }
 
-@keyframes headerFadeIn {
-  from { opacity: 0; transform: translateY(-30px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes shimmer {
-  to { background-position: 200% center; }
-}
-
 /* ═════════════════════════════════════════════════════════════════════
    GRILLE DES DIMENSIONS
    ═════════════════════════════════════════════════════════════════════ */
@@ -128,12 +111,12 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   CARTE DIMENSION — version claire
+   CARTE DIMENSION
    ═════════════════════════════════════════════════════════════════════ */
 .dimension-card {
   position: relative;
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   border-radius: 20px;
   overflow: hidden;
   text-decoration: none;
@@ -141,9 +124,11 @@
   border: 2px solid var(--accent);
   background: var(--bg-card);
   box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
-  opacity: 0;
-  animation: cardAppear .8s cubic-bezier(.175, .885, .32, 1.275) forwards;
-  transition: all .5s cubic-bezier(.175, .885, .32, 1.275);
+  /* ✅ animation cardAppear supprimée */
+  transition:
+    transform .35s cubic-bezier(.175, .885, .32, 1.275),
+    box-shadow .35s ease,
+    border-color .35s ease;
   cursor: pointer;
 
   /* Halo coloré au survol */
@@ -152,7 +137,7 @@
     inset: -2px;
     background: radial-gradient(circle at 50% 50%, var(--accent) 0%, transparent 70%);
     opacity: 0;
-    transition: opacity .5s;
+    transition: opacity .35s ease;
     pointer-events: none;
     z-index: 1;
   }
@@ -179,7 +164,7 @@
     border-radius: 25px;
     align-self: flex-start;
     box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 20%, transparent);
-    transition: all .4s;
+    transition: transform .35s ease, box-shadow .35s ease;
 
     .badge-symbol { font-size: 1.2rem; }
 
@@ -252,11 +237,11 @@
     font-weight: 700;
     letter-spacing: 2px;
     color: var(--accent);
-    transition: all .4s;
+    transition: color .35s ease;
 
     .material-icons {
       font-size: 1.3rem;
-      transition: transform .4s;
+      transition: transform .35s ease;
     }
   }
 
@@ -268,7 +253,10 @@
     border: 2px solid var(--accent);
     z-index: 4;
     opacity: .5;
-    transition: all .4s;
+    transition:
+      opacity .35s ease,
+      width .35s ease,
+      height .35s ease;
 
     &.top-left     { top: 10px; left: 10px;     border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
     &.top-right    { top: 10px; right: 10px;    border-left: none;  border-bottom: none; border-radius: 0 8px 0 0; }
@@ -304,11 +292,6 @@
   }
 }
 
-@keyframes cardAppear {
-  from { opacity: 0; transform: translateY(50px) scale(.9); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
 /* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═════════════════════════════════════════════════════════════════════ */
@@ -335,11 +318,12 @@
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+  .dimension-card,
+  .dimension-badge,
+  .card-halo,
+  .card-action,
+  .card-action .material-icons,
+  .corner-decoration {
+    transition: none !important;
   }
 }

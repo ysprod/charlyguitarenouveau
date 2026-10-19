@@ -5,6 +5,7 @@ import {
   Component,
   DestroyRef,
   afterNextRender,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -41,6 +42,10 @@ import { AuthContextService } from '../services/auth-context.service';
 import { isValidEmail } from '../utils/validation.util';
 import { FormsModule } from '@angular/forms';
 
+/* ═════════════════════════════════════════════════════════════════════
+   REGISTER — Création de compte
+   ═════════════════════════════════════════════════════════════════════ */
+
 @Component({
   selector: 'app-register',
   imports: [
@@ -74,13 +79,25 @@ export class RegisterComponent {
   readonly email = signal('');
   readonly password = signal('');
   readonly confirmPassword = signal('');
+
+  /** ✅ Un toggle par champ : l'œil du mot de passe ne pilote plus celui de la confirmation */
   readonly showPassword = signal(false);
+  readonly showConfirmPassword = signal(false);
 
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly loading = signal(false);
 
   readonly returnUrl = signal(DEFAULT_RETURN_URL_REGISTER);
+
+  /** ✅ Computed : le bouton "Créer mon compte" est désactivé tant que les champs sont vides */
+  readonly canSubmit = computed(
+    () =>
+      !this.loading() &&
+      this.email().trim().length > 0 &&
+      this.password().length > 0 &&
+      this.confirmPassword().length > 0,
+  );
 
   private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -91,7 +108,7 @@ export class RegisterComponent {
   constructor() {
     afterNextRender(() => {
       this.returnUrl.set(
-        this.authContext.resolveReturnUrl(DEFAULT_RETURN_URL_REGISTER)
+        this.authContext.resolveReturnUrl(DEFAULT_RETURN_URL_REGISTER),
       );
     });
 
@@ -111,36 +128,42 @@ export class RegisterComponent {
     this.showPassword.update((v) => !v);
   }
 
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword.update((v) => !v);
+  }
+
   /* ═══════════════════════════════════════════════════════
      INSCRIPTION EMAIL / MOT DE PASSE
      ═══════════════════════════════════════════════════════ */
 
   async handleSubmit(): Promise<void> {
+    if (this.loading()) return;
+
     this.clearMessages();
 
     const email = this.email().trim();
     const password = this.password();
     const confirmPassword = this.confirmPassword();
 
+    /* ─── 1. Validation basique ─── */
     if (!email || !password || !confirmPassword) {
-      this.showToast('Veuillez remplir tous les champs.', 'error');
+      this.showError('Veuillez remplir tous les champs.');
       return;
     }
 
     if (!isValidEmail(email)) {
-      this.showToast('Adresse e-mail invalide.', 'error');
+      this.showError('Adresse e-mail invalide.');
       return;
     }
 
     if (password !== confirmPassword) {
-      this.showToast('Les mots de passe ne correspondent pas.', 'error');
+      this.showError('Les mots de passe ne correspondent pas.');
       return;
     }
 
     if (password.length < 6) {
-      this.showToast(
+      this.showError(
         'Le mot de passe doit contenir au moins 6 caractères.',
-        'error'
       );
       return;
     }
@@ -148,44 +171,47 @@ export class RegisterComponent {
     this.loading.set(true);
 
     try {
+      /* ─── 2. Création Firebase Auth ─── */
       const credential = await this.authContext.runInContext(() =>
-        createUserWithEmailAndPassword(this.auth, email, password)
+        createUserWithEmailAndPassword(this.auth, email, password),
       );
 
       const user = credential.user;
 
       if (!user) {
-        this.showToast('Création du compte échouée.', 'error');
+        this.showError('Création du compte échouée.');
         return;
       }
 
+      /* ─── 3. Persistance RTDB (non bloquante) ─── */
       try {
         await this.saveUserDataInRealtimeDB(user, 'email');
       } catch (err) {
         console.error('[Register] Erreur sauvegarde profil :', err);
-        this.showToast(
+        this.showError(
           "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.",
-          'error'
         );
       }
 
-      void this.authContext.runInContext(() =>
-        sendEmailVerification(user).catch(() => {
-          /* silencieux */
-        })
-      );
+      /* ─── 4. Email de vérification (fire & forget SAFE) ─── */
+      void this.sendVerificationSafely(user);
 
+      /* ─── 5. Redirection ─── */
       await this.router.navigateByUrl(this.returnUrl());
     } catch (error: unknown) {
-      this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
+      this.showError(this.authContext.getFrenchErrorMessage(error));
     } finally {
       this.loading.set(false);
     }
   }
 
- 
+  /* ═══════════════════════════════════════════════════════
+     INSCRIPTION GOOGLE
+     ═══════════════════════════════════════════════════════ */
 
   async signUpWithGoogle(): Promise<void> {
+    if (this.loading()) return;
+
     this.clearMessages();
     this.loading.set(true);
 
@@ -194,13 +220,13 @@ export class RegisterComponent {
       provider.setCustomParameters({ prompt: 'select_account' });
 
       const credential = await this.authContext.runInContext(() =>
-        signInWithPopup(this.auth, provider)
+        signInWithPopup(this.auth, provider),
       );
 
       const user = credential.user;
 
       if (!user) {
-        this.showToast('Création du compte Google échouée.', 'error');
+        this.showError('Création du compte Google échouée.');
         return;
       }
 
@@ -208,9 +234,8 @@ export class RegisterComponent {
         await this.saveUserDataInRealtimeDB(user, 'google');
       } catch (err) {
         console.error('[Register] Erreur sauvegarde profil Google :', err);
-        this.showToast(
-          "Compte créé, mais impossible d'enregistrer votre profil. Contactez le support.",
-          'error'
+        this.showError(
+          "Compte créé, mais impossible d'enregistrer votre profil. Contactez le service support.",
         );
       }
 
@@ -218,8 +243,9 @@ export class RegisterComponent {
     } catch (error: unknown) {
       const code = this.authContext.getFirebaseErrorCode(error);
 
+      /* ✅ Ignore les fermetures volontaires de popup */
       if (code !== 'auth/popup-closed-by-user') {
-        this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
+        this.showError(this.authContext.getFrenchErrorMessage(error));
       }
     } finally {
       this.loading.set(false);
@@ -232,19 +258,19 @@ export class RegisterComponent {
 
   private async saveUserDataInRealtimeDB(
     user: User,
-    origine: UserOrigin
+    origine: UserOrigin,
   ): Promise<void> {
     const userRef = ref(this.database, `users/${user.uid}`);
 
-    const snapshot = await this.authContext.runInContext(() =>
-      get(userRef)
-    );
+    const snapshot = await this.authContext.runInContext(() => get(userRef));
 
     const now = new Date().toISOString();
     const email = user.email ?? '';
-    const displayName = user.displayName ?? email.split('@')[0] ?? '';
+    const displayName =
+      user.displayName ?? email.split('@')[0] ?? 'Utilisateur';
     const photoURL = user.photoURL ?? '';
 
+    /* ─── Cas 1 : profil existant → mise à jour légère ─── */
     if (snapshot.exists()) {
       await this.authContext.runInContext(() =>
         update(userRef, {
@@ -252,12 +278,12 @@ export class RegisterComponent {
           email,
           displayName,
           photoURL,
-        })
+        }),
       );
       return;
     }
 
-    /* ✅ Profil initial (sans credit) */
+    /* ─── Cas 2 : nouveau profil → création ─── */
     const newUser: RealtimeUserProfile = {
       uid: user.uid,
       email,
@@ -270,13 +296,24 @@ export class RegisterComponent {
       origine,
     };
 
-    await this.authContext.runInContext(() =>
-      set(userRef, newUser)
-    );
+    await this.authContext.runInContext(() => set(userRef, newUser));
   }
 
   /* ═══════════════════════════════════════════════════════
-     HELPERS
+     EMAIL DE VÉRIFICATION — fire & forget sûr
+     ═══════════════════════════════════════════════════════ */
+
+  private async sendVerificationSafely(user: User): Promise<void> {
+    try {
+      await this.authContext.runInContext(() => sendEmailVerification(user));
+    } catch (err) {
+      /* ✅ Uniquement loggé — l'utilisateur peut re-demander plus tard */
+      console.warn('[Register] Envoi email vérification échoué :', err);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     HELPERS — MESSAGES
      ═══════════════════════════════════════════════════════ */
 
   private clearMessages(): void {
@@ -284,22 +321,20 @@ export class RegisterComponent {
     this.successMessage.set('');
   }
 
-  private showToast(message: string, type: 'success' | 'error'): void {
-    if (type === 'success') {
-      this.successMessage.set(message);
-      this.errorMessage.set('');
-    } else {
-      this.errorMessage.set(message);
-      this.successMessage.set('');
-    }
+  private showError(message: string): void {
+    this.errorMessage.set(message);
+    this.successMessage.set('');
+    this.scheduleMessageClear(message);
+  }
 
+  private scheduleMessageClear(message: string): void {
     if (this.toastTimeoutId !== null) {
       clearTimeout(this.toastTimeoutId);
     }
 
     this.toastTimeoutId = setTimeout(() => {
-      if (this.successMessage() === message) this.successMessage.set('');
       if (this.errorMessage() === message) this.errorMessage.set('');
+      if (this.successMessage() === message) this.successMessage.set('');
       this.toastTimeoutId = null;
     }, TOAST_DURATION_MS);
   }

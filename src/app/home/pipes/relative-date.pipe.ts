@@ -1,5 +1,3 @@
-// src/app/home/pipes/relative-date.pipe.ts
-
 import { Pipe, PipeTransform } from '@angular/core';
 
 /**

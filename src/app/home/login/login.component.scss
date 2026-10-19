@@ -17,14 +17,14 @@
   font-size: .8rem;
   text-transform: uppercase;
   letter-spacing: .05em;
-}
 
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
+  }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -44,10 +44,16 @@
   padding: 0;
   text-decoration: none;
   transition: color var(--t-fast);
-}
 
-.btn-link:hover {
-  color: var(--gold-primary);
+  &:hover {
+    color: var(--gold-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -67,26 +73,33 @@
   font-family: inherit;
   cursor: pointer;
   overflow: hidden;
-  box-shadow: 0 10px 30px -10px rgba(234, 88, 12, .4);
+  /* ✅ Ombre légère + bordure (au lieu d'une grosse ombre repaint) */
+  box-shadow: 0 2px 8px rgba(234, 88, 12, .25);
   transition:
     transform .25s ease,
-    box-shadow .25s ease,
     background .25s ease;
-}
 
-.btn-submit:hover:not(:disabled) {
-  background: var(--warning-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 15px 40px -10px rgba(234, 88, 12, .55);
-}
+  &:hover:not(:disabled) {
+    background: var(--warning-hover);
+    transform: translateY(-2px);
+    /* ✅ Hover : ombre plus marquée mais sur la même couche */
+    box-shadow: 0 4px 14px rgba(234, 88, 12, .35);
+  }
 
-.btn-submit:active:not(:disabled) {
-  transform: translateY(0);
-}
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
 
-.btn-submit:disabled {
-  opacity: .65;
-  cursor: not-allowed;
+  &:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 3px;
+  }
 }
 
 .btn-content {
@@ -96,18 +109,19 @@
   align-items: center;
   justify-content: center;
   gap: .5rem;
-}
 
-.btn-content svg {
-  width: 18px;
-  height: 18px;
-  transition: transform var(--t-fast);
+  svg {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--t-fast);
+  }
 }
 
 .btn-submit:hover:not(:disabled) .btn-content svg {
   transform: translateX(4px);
 }
 
+/* ✅ Spinner conservé : seul feedback visuel pendant le chargement */
 .spinner {
   width: 16px;
   height: 16px;

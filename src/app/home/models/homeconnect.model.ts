@@ -1,12 +1,4 @@
-// src/app/homeconnect/homeconnect.model.ts
-
-/* ═════════════════════════════════════════════════════════════════════
-   HOMECONNECT — MODÈLES PARTAGÉS
-   ═════════════════════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════
-   MESSAGERIE
-   ═══════════════════════════════════════════════════════ */
+ 
 
 export type InboxFilter =
   | 'all'
@@ -68,24 +60,7 @@ export interface QuickAction {
   description: string;
   route: string;
   color: QuickActionColor;
-}
-
-/* ═══════════════════════════════════════════════════════
-   UI — UNIVERS DE COULEUR
-   ═══════════════════════════════════════════════════════ */
-
-/** Univers de couleur (7 Dimensions d'Offoland). */
-export interface ColorUniverse {
-  emoji: string;
-  name: string;
-  description: string;
-  route: string;
-  color: string;
-}
-
-/* ═══════════════════════════════════════════════════════
-   UI — POURQUOI NOUS
-   ═══════════════════════════════════════════════════════ */
+} 
 
 /** Pilier « Pourquoi nous ». */
 export interface WhyPillar {
@@ -93,15 +68,4 @@ export interface WhyPillar {
   title: string;
   description: string;
 }
-
-/* ═══════════════════════════════════════════════════════
-   UI — TÉMOIGNAGES
-   ═══════════════════════════════════════════════════════ */
-
-/** Témoignage d'élève. */
-export interface Testimonial {
-  quote: string;
-  avatar: string;
-  author: string;
-  role: string;
-}
+ 

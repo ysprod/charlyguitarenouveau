@@ -5,10 +5,6 @@ import { SortOption } from 'src/app/academie/models/documents-ui.model';
    DOCUMENTS — Utilitaires purs
    ═════════════════════════════════════════════════════════════════════ */
 
-/**
- * Vérifie si un document appartient à une catégorie donnée.
- * Basé sur une correspondance souple de `doc.type`.
- */
 export function matchesCategory(doc: DocumentItem, category: string): boolean {
   const type = doc.type?.toLowerCase().trim() ?? '';
 

@@ -55,6 +55,12 @@ export class PromoCodeService {
   /** ✅ Verrou anti-double validation (par utilisateur) */
   private readonly pending = new Set<string>();
 
+  /** ✅ Déduplication des lectures Firebase en vol (par uid) */
+  private readonly inFlightChecks = new Map<
+    string,
+    Promise<PromoValidationResult>
+  >();
+
   /* ═══════════════════════════════════════════════════════
      VÉRIFICATION
      ═══════════════════════════════════════════════════════ */
@@ -63,16 +69,34 @@ export class PromoCodeService {
     const user = this.auth.currentUser;
     if (!user) return { status: 'missing' };
 
+    /* ─── 0. Déduplication : si une vérif est déjà en cours, on la réutilise ─── */
+    const existing = this.inFlightChecks.get(user.uid);
+    if (existing) return existing;
+
     /* ─── 1. Cache localStorage ─── */
     const cached = this.readCachedPromo(user.uid);
     if (cached) {
       return { status: 'valid', code: cached.code, fromCache: true };
     }
 
-    /* ─── 2. Firebase ─── */
+    /* ─── 2. Firebase (avec dédup) ─── */
+    const promise = this.fetchPromoFromFirebase(user.uid);
+    this.inFlightChecks.set(user.uid, promise);
+
+    try {
+      return await promise;
+    } finally {
+      this.inFlightChecks.delete(user.uid);
+    }
+  }
+
+  /** ✅ Extrait pour clarifier + pouvoir être appelé en parallèle sans doublon. */
+  private async fetchPromoFromFirebase(
+    uid: string,
+  ): Promise<PromoValidationResult> {
     try {
       const snapshot = await this.runInContext(() =>
-        get(ref(this.db, `users/${user.uid}/codepromo`)),
+        get(ref(this.db, `users/${uid}/codepromo`)),
       );
 
       if (!snapshot.exists()) return { status: 'missing' };
@@ -80,12 +104,11 @@ export class PromoCodeService {
       const promo = snapshot.val() as unknown;
       if (typeof promo === 'string' && promo.trim().length > 0) {
         const code = promo.trim();
-        this.writeCachedPromo(user.uid, code);
+        this.writeCachedPromo(uid, code);
         return { status: 'valid', code, fromCache: false };
       }
 
       return { status: 'missing' };
-
     } catch (error) {
       console.warn('[Promo] Lecture Firebase échouée :', error);
       return { status: 'error', message: PROMO_MESSAGES.NETWORK_ERROR };
@@ -124,12 +147,19 @@ export class PromoCodeService {
       }
 
       const parrainData = parrainSnap.val() as ParrainEntry;
+      // (conservé pour compatibilité si tu veux logguer plus tard)
+      void parrainData;
 
-      /* ─── 2. Met à jour users/{uid}/codepromo ─── */
+      /* ─── 2. Met à jour users/{uid}/codepromo (transaction pour atomicité) ─── */
+      const userRef = ref(this.db, `users/${user.uid}`);
       await this.runInContext(() =>
-        update(ref(this.db, `users/${user.uid}`), {
-          codepromo: normalized,
-          updatedAt: Date.now(),
+        runTransaction(userRef, (current: Record<string, unknown> | null) => {
+          const base = current ?? {};
+          return {
+            ...base,
+            codepromo: normalized,
+            updatedAt: Date.now(),
+          };
         }),
       );
 
@@ -141,6 +171,9 @@ export class PromoCodeService {
 
       /* ─── 4. Cache local ─── */
       this.writeCachedPromo(user.uid, normalized);
+
+      /* ─── 5. Invalide le cache de dédup s'il y en a un ─── */
+      this.inFlightChecks.delete(user.uid);
 
       return { ok: true, code: normalized };
 
@@ -192,82 +225,104 @@ export class PromoCodeService {
   }
 
   /* ═══════════════════════════════════════════════════════
-     ENREGISTREMENTS SECONDAIRES
+     ENREGISTREMENTS SECONDAIRES — 100% atomiques
      ═══════════════════════════════════════════════════════ */
 
   /**
    * Ajoute l'utilisateur dans `/parrain/{code}/filleuls/{uid}` (idempotent)
    * et incrémente `filleulsCount` atomiquement.
+   *
+   * ✅ Idempotence + atomicité via `runTransaction` (plus de `get()` puis `set()`).
    */
   private async registerFilleul(
     user: User,
     code: string,
   ): Promise<void> {
     const now = new Date().toISOString();
-    const filleulRef = ref(this.db, `parrain/${code}/filleuls/${user.uid}`);
 
-    /* ─── Idempotence : skip si déjà enregistré ─── */
-    const existing = await this.runInContext(() => get(filleulRef));
-    if (existing.exists()) return;
+    /* ✅ Idempotence atomique : la transaction crée l'entrée SEULEMENT
+       si elle n'existe pas déjà. Deux validations simultanées
+       ne créeront qu'une entrée. */
+    const filleulRef = ref(this.db, `parrain/${code}/filleuls/${user.uid}`);
 
     const entry: FilleulEntry = {
       uid: user.uid,
       codepromo: code,
-      displayName: user.displayName ?? user.email?.split('@')[0] ?? 'Utilisateur',
+      displayName:
+        user.displayName ?? user.email?.split('@')[0] ?? 'Utilisateur',
       email: user.email ?? '',
-      photoURL: user.photoURL ?? undefined,
+      // ⚠️ Ne PAS passer `undefined` à Firebase (rejet RTDB) → on omet la clé
+      ...(user.photoURL ? { photoURL: user.photoURL } : {}),
       usedAt: now,
     };
 
-    await this.runInContext(() => set(filleulRef, entry));
-
-    /* ─── Incrément atomique du compteur (évite les race conditions) ─── */
-    const countRef = ref(this.db, `parrain/${code}/filleulsCount`);
-    await this.runInContext(() =>
-      runTransaction(countRef, (current: number | null) => {
-        return (current ?? 0) + 1;
+    const result = await this.runInContext(() =>
+      runTransaction(filleulRef, (current) => {
+        // Si déjà présent → on ne touche à rien
+        if (current !== null) return current;
+        return entry;
       }),
     );
+
+    /* ─── Incrément atomique du compteur SEULEMENT si on a créé l'entrée ─── */
+    if (result.committed) {
+      const countRef = ref(this.db, `parrain/${code}/filleulsCount`);
+      await this.runInContext(() =>
+        runTransaction(countRef, (current: number | null) => {
+          return (current ?? 0) + 1;
+        }),
+      );
+    }
   }
 
   /**
    * Ajoute l'utilisateur dans `/promotion/{code}/{uid}` (idempotent)
    * et incrémente `metadata.userCount` atomiquement.
+   *
+   * ✅ Idempotence + atomicité via `runTransaction`.
    */
   private async registerUserInPromotion(
     user: User,
     promoCode: string,
   ): Promise<void> {
     const now = new Date().toISOString();
-    const userRef = ref(this.db, `promotion/${promoCode}/${user.uid}`);
 
-    /* ─── Idempotence ─── */
-    const existing = await this.runInContext(() => get(userRef));
-    if (existing.exists()) return;
+    const userRef = ref(this.db, `promotion/${promoCode}/${user.uid}`);
 
     const userInfo: PromotionUserEntry = {
       uid: user.uid,
       codepromo: promoCode,
-      displayName: user.displayName ?? user.email?.split('@')[0] ?? 'Utilisateur',
+      displayName:
+        user.displayName ?? user.email?.split('@')[0] ?? 'Utilisateur',
       email: user.email ?? '',
       registeredAt: now,
     };
 
-    await this.runInContext(() => set(userRef, userInfo));
-
-    /* ─── Crée la metadata si absente (idempotent) ─── */
-    const metadataRef = ref(this.db, `promotion/${promoCode}/metadata`);
-    await this.runInContext(() =>
-      runTransaction(metadataRef, (current: PromotionMetadata | null) => {
-        if (current === null) {
-          return { createdAt: now, userCount: 1, isActive: true };
-        }
-        return {
-          ...current,
-          userCount: (current.userCount ?? 0) + 1,
-        };
+    const result = await this.runInContext(() =>
+      runTransaction(userRef, (current) => {
+        if (current !== null) return current;
+        return userInfo;
       }),
     );
+
+    /* ─── Crée/met à jour la metadata SEULEMENT si on a créé l'entrée ─── */
+    if (result.committed) {
+      const metadataRef = ref(this.db, `promotion/${promoCode}/metadata`);
+      await this.runInContext(() =>
+        runTransaction(
+          metadataRef,
+          (current: PromotionMetadata | null) => {
+            if (current === null) {
+              return { createdAt: now, userCount: 1, isActive: true };
+            }
+            return {
+              ...current,
+              userCount: (current.userCount ?? 0) + 1,
+            };
+          },
+        ),
+      );
+    }
   }
 
   /* ═══════════════════════════════════════════════════════

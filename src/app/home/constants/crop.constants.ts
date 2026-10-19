@@ -1,12 +1,4 @@
-// src/app/shared/avatar-crop-dialog/constants/crop.constants.ts
-
-/* ═══════════════════════════════════════════════════════════
-   DIMENSIONS DU VIEWPORT
-   ═══════════════════════════════════════════════════════════ */
-
-/** Taille logique du canvas d'aperçu (carré). */
 export const VIEWPORT_SIZE = 340;
-
 /** Taille minimum du crop en px natifs (évite les micro-crops). */
 export const MIN_CROP_PX = 60;
 

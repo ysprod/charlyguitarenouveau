@@ -1,20 +1,17 @@
 /* ═════════════════════════════════════════════════════════════════════
-   GAME DASHBOARD — Version claire
+   GAME DASHBOARD — Version claire (sans animation continue)
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
-  /* Fonds — conformes consigne : blanc pour le contenu */
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
   --bg-card: #ffffff;
 
-  /* Identité dorée — assombrie pour contraste AA sur fond blanc */
   --gold-primary: #b8860b;
   --gold-hover: #d4a017;
   --gold-glow: rgba(184, 134, 11, .2);
   --gold-soft: rgba(184, 134, 11, .08);
 
-  /* Palette fonctionnelle */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --success: #16a34a;
@@ -24,13 +21,11 @@
   --pink: #db2777;
   --cyan: #0891b2;
 
-  /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
 
@@ -63,7 +58,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   LAYOUT PRINCIPAL
+   LAYOUT
    ═════════════════════════════════════════════════════════════════════ */
 .main-game-area {
   position: relative;
@@ -78,12 +73,6 @@
    ═════════════════════════════════════════════════════════════════════ */
 .hero-header {
   text-align: center;
-  animation: fadeSlideIn .9s ease both;
-}
-
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 .hero-badge {
@@ -100,30 +89,19 @@
   letter-spacing: 2px;
   color: var(--cyan);
   text-transform: uppercase;
-  animation: badgeFloat 3s ease-in-out infinite;
 }
 
+/* ✅ Point statique (plus de pulse infini) */
 .badge-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--cyan);
-  box-shadow: 0 0 12px rgba(8, 145, 178, .5);
-  animation: dotPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes dotPulse {
-  0%, 100% { transform: scale(1);   opacity: 1;   }
-  50%      { transform: scale(1.4); opacity: .6;  }
-}
-
-@keyframes badgeFloat {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
+  box-shadow: 0 0 0 4px rgba(8, 145, 178, .15);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   BARRE DE FILTRES
+   FILTRES
    ═════════════════════════════════════════════════════════════════════ */
 .filter-bar {
   display: flex;
@@ -131,7 +109,6 @@
   flex-wrap: wrap;
   gap: .65rem;
   margin-bottom: 2.5rem;
-  animation: fadeSlideIn .9s .15s ease both;
 }
 
 .filter-chip {
@@ -147,7 +124,12 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all .3s ease;
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    color .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
 
   .chip-icon { font-size: 1rem; }
 
@@ -172,13 +154,6 @@
   }
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   GRILLE DE JEUX
-   ═════════════════════════════════════════════════════════════════════ */
-.games-selector-section {
-  animation: fadeSlideIn .9s .25s ease both;
-}
-
 .game-buttons-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -186,7 +161,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   BOUTON DE JEU — Base commune
+   BOUTON DE JEU
    ═════════════════════════════════════════════════════════════════════ */
 .btn-game {
   position: relative;
@@ -204,7 +179,7 @@
   cursor: pointer;
   overflow: hidden;
   transform-style: preserve-3d;
-  will-change: transform;
+  /* ✅ `will-change` retiré : appliqué dynamiquement par le tilt 3D quand utile */
   box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
   transition:
     transform .25s ease,
@@ -217,15 +192,14 @@
       0 20px 40px rgba(15, 23, 42, .1),
       0 0 30px color-mix(in srgb, var(--btn-color, var(--primary)) 25%, transparent);
 
-    .btn-glow         { opacity: .15; }
-    .btn-border-anim  { opacity: 1; }
+    .btn-glow { opacity: .15; }
 
     .btn-icon {
       transform: rotate(-8deg) scale(1.15);
       box-shadow: 0 0 25px color-mix(in srgb, var(--btn-color, var(--primary)) 40%, transparent);
     }
 
-    .btn-text  {
+    .btn-text {
       text-shadow: 0 0 12px color-mix(in srgb, var(--btn-color, var(--primary)) 40%, transparent);
     }
 
@@ -247,7 +221,7 @@
   }
 }
 
-/* ─── Sous-éléments du bouton ─── */
+/* ─── Sous-éléments ─── */
 .btn-glow {
   position: absolute;
   inset: 0;
@@ -258,41 +232,7 @@
   transition: opacity .4s ease;
 }
 
-.btn-border-anim {
-  position: absolute;
-  inset: -1px;
-  border-radius: 21px;
-  padding: 1px;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    var(--btn-color, var(--primary)) 40deg,
-    transparent 90deg
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .3s ease;
-  animation: borderSpin 3s linear infinite;
-}
-
-@keyframes borderSpin {
-  to {
-    background: conic-gradient(
-      from 360deg,
-      transparent 0deg,
-      var(--btn-color, var(--primary)) 40deg,
-      transparent 90deg
-    );
-  }
-}
+/* ✅ .btn-border-anim supprimé (animation infinie) */
 
 .corner {
   position: absolute;
@@ -300,8 +240,12 @@
   height: 12px;
   border-color: var(--btn-color, var(--primary));
   opacity: 0;
-  transition: all .35s ease;
+  transition:
+    opacity .35s ease,
+    width .35s ease,
+    height .35s ease;
 }
+
 .corner-tl { top: 8px; left: 8px;     border-top: 2px solid;    border-left: 2px solid;   border-top-left-radius: 6px; }
 .corner-tr { top: 8px; right: 8px;    border-top: 2px solid;    border-right: 2px solid;  border-top-right-radius: 6px; }
 .corner-bl { bottom: 8px; left: 8px;  border-bottom: 2px solid; border-left: 2px solid;   border-bottom-left-radius: 6px; }
@@ -355,7 +299,7 @@
   transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
 }
 
-/* ─── Tags — palette fonctionnelle ─── */
+/* ─── Tags ─── */
 .btn-tag {
   display: inline-block;
   padding: 2px 8px;
@@ -368,40 +312,13 @@
   color: #fff;
 }
 
-.tag-new {
-  background: var(--success);
-  color: #fff;
-}
-
-.tag-quiz {
-  background: var(--primary);
-  color: #fff;
-}
-
-.tag-speed {
-  background: var(--warning);
-  color: #fff;
-}
-
-.tag-tool {
-  background: var(--cyan);
-  color: #fff;
-}
-
-.tag-metro {
-  background: var(--pink);
-  color: #fff;
-}
-
-.tag-card {
-  background: var(--danger);
-  color: #fff;
-}
-
-.tag-time {
-  background: var(--cyan);
-  color: #fff;
-}
+.tag-new   { background: var(--success); color: #fff; }
+.tag-quiz  { background: var(--primary); color: #fff; }
+.tag-speed { background: var(--warning); color: #fff; }
+.tag-tool  { background: var(--cyan);    color: #fff; }
+.tag-metro { background: var(--pink);    color: #fff; }
+.tag-card  { background: var(--danger);  color: #fff; }
+.tag-time  { background: var(--cyan);    color: #fff; }
 
 .tag-live {
   background: linear-gradient(135deg, var(--gold-primary), var(--gold-hover));
@@ -433,7 +350,7 @@
 .btn-guitarlive   { @include game-color(#b8860b); }
 .btn-oracle       { @include game-color(#7c3aed); }
 
-/* ─── Shimmer Lyko Duo (au survol uniquement) ─── */
+/* Shimmer Lyko Duo (au survol uniquement) */
 .btn-duo::before {
   content: '';
   position: absolute;
@@ -452,7 +369,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   CARTE GUITARE LIVE — PREMIUM OR/AMBRE
+   CARTE GUITARE LIVE — PREMIUM
    ═════════════════════════════════════════════════════════════════════ */
 .btn-guitarlive {
   background: linear-gradient(145deg, var(--gold-soft), var(--bg-card) 60%);
@@ -477,7 +394,7 @@
     box-shadow:
       0 4px 12px rgba(184, 134, 11, .15),
       inset 0 0 10px rgba(184, 134, 11, .08);
-    animation: guitarIconSwing 4s ease-in-out infinite;
+    /* ✅ animation guitarIconSwing supprimée */
   }
 
   &:hover {
@@ -498,14 +415,8 @@
   }
 }
 
-@keyframes guitarIconSwing {
-  0%, 100% { transform: rotate(0deg); }
-  25%      { transform: rotate(-6deg); }
-  75%      { transform: rotate(6deg); }
-}
-
 /* ═════════════════════════════════════════════════════════════════════
-   CARTE ORACLE — Mystique violet/indigo
+   CARTE ORACLE — Mystique
    ═════════════════════════════════════════════════════════════════════ */
 .btn-oracle {
   border-color: rgba(124, 58, 237, .35);
@@ -526,18 +437,7 @@
     background: radial-gradient(circle, rgba(124, 58, 237, .4) 0%, transparent 70%);
   }
 
-  .btn-border-anim {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      var(--violet),
-      #6366f1,
-      var(--violet),
-      transparent
-    );
-    background-size: 200% 100%;
-    animation: oracleBorderFlow 3s linear infinite;
-  }
+  /* ✅ .btn-border-anim supprimé (animation oracleBorderFlow retirée) */
 
   .btn-arrow {
     color: var(--violet);
@@ -555,11 +455,6 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-}
-
-@keyframes oracleBorderFlow {
-  0%   { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -584,7 +479,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   TOAST BANNER
+   TOAST
    ═════════════════════════════════════════════════════════════════════ */
 .toast-banner {
   max-width: 480px;
@@ -594,7 +489,6 @@
   font-size: .88rem;
   font-weight: 600;
   text-align: center;
-  animation: toastIn .35s cubic-bezier(.22, 1, .36, 1);
 }
 
 .toast-success {
@@ -607,11 +501,6 @@
   background: rgba(220, 38, 38, .06);
   border: 1px solid rgba(220, 38, 38, .3);
   color: var(--danger);
-}
-
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -646,11 +535,13 @@
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+  .btn-game,
+  .btn-icon,
+  .btn-text,
+  .btn-arrow,
+  .corner,
+  .btn-glow,
+  .filter-chip {
+    transition: none !important;
   }
 }

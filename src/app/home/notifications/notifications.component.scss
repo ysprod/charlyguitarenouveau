@@ -36,7 +36,12 @@
   display: block;
 }
 
-* { box-sizing: border-box; }
+/* ✅ Scoped : n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
 
 /* ═════════════════════════════════════════════════════════════════════
    CONTAINER
@@ -83,7 +88,7 @@
 
       .icon {
         font-size: 1.4em;
-        filter: drop-shadow(0 2px 8px var(--gold-glow));
+        /* ✅ filter: drop-shadow supprimé */
       }
     }
 
@@ -98,7 +103,8 @@
       font-size: 0.78rem;
       font-weight: 800;
       border-radius: 999px;
-      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+      /* ✅ Plus de box-shadow */
+      border: 1px solid #c2410c;
     }
   }
 
@@ -123,7 +129,8 @@
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: transform var(--t-fast), box-shadow var(--t-fast),
+  transition:
+    transform var(--t-fast),
     background var(--t-fast);
 
   &:hover {
@@ -170,7 +177,10 @@
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast),
+    color var(--t-fast);
 
   &:hover {
     border-color: var(--primary);
@@ -181,7 +191,7 @@
     background: var(--primary);
     border-color: var(--primary);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    /* ✅ Plus de box-shadow */
   }
 
   .filter-icon { font-size: 0.95em; }
@@ -224,11 +234,15 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  transition: all var(--t-fast);
-  animation: notifEnter 0.35s ease both;
+  /* ✅ Plus d'animation notifEnter */
+  transition:
+    transform var(--t-fast),
+    border-color var(--t-fast),
+    background var(--t-fast);
 
   &.unread {
-    background: rgba(37, 99, 235, 0.03);
+    /* ✅ Fond uni au lieu de rgba */
+    background: #f5f9ff;
     border-left: 3px solid var(--warning);
 
     .notif-title {
@@ -242,18 +256,13 @@
     &:hover {
       transform: translateY(-2px);
       border-color: var(--border-gold);
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      /* ✅ Plus de box-shadow au hover */
     }
   }
 
   &:not(.clickable):hover {
     border-color: var(--border-medium);
   }
-}
-
-@keyframes notifEnter {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0);    }
 }
 
 /* ─── Icône à gauche ─── */
@@ -360,7 +369,10 @@
     font-size: 0.72rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all var(--t-fast);
+    transition:
+      background var(--t-fast),
+      color var(--t-fast),
+      border-color var(--t-fast);
 
     &:hover {
       background: var(--primary);
@@ -384,7 +396,10 @@
   color: var(--text-dim);
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast),
+    color var(--t-fast);
   flex-shrink: 0;
 
   &:hover {
@@ -474,12 +489,12 @@
    ═════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .btn,
+  .filter-btn,
+  .notif-item,
+  .btn-mark-read,
+  .btn-delete {
+    transition: none !important;
   }
 }
 

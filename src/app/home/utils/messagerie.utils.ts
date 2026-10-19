@@ -1,5 +1,3 @@
-// src/app/home/utils/messagerie.utils.ts
-
 import type { MessagerieMessage } from 'src/app/home/models/message.model';
 import type { SortMode } from 'src/app/home/models/messagerie.model';
 

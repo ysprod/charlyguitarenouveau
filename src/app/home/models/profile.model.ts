@@ -1,5 +1,3 @@
-// src/app/profil/models/profile.model.ts
-
 import { FormControl } from '@angular/forms';
 
 /* ═══════════════════════════════════════════════════════════

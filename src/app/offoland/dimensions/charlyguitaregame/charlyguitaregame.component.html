@@ -1,36 +1,16 @@
-<!-- src/app/univers/charlyguitaregame/charlyguitaregame.component.html -->
-
 <div class="method-container">
-
-  <!-- ═══════════════════════════════════════════════════════
-       HEADER ÉPIQUE
-       ═══════════════════════════════════════════════════════ -->
   <header class="method-header">
     <h1 class="title-glow">DIMENSIONS</h1>
     <h2 class="title-sub">CHARLY GUITARE</h2>
-
-    <div class="header-divider" aria-hidden="true">
-      <span class="line"></span>
-      <span class="icon">🎸</span>
-      <span class="line"></span>
-    </div>
-
-    <p class="header-intro">
-      Les Dimensions de Charly Guitare
-    </p>
   </header>
-
-  <!-- ═══════════════════════════════════════════════════════
-       GRILLE DES 7 DIMENSIONS
-       ═══════════════════════════════════════════════════════ -->
+  
   <main class="dimensions-grid">
-    @for (dim of dimensions; track dim.nom; let i = $index) {
+    @for (dim of dimensions; track dim.nom) {
       <a
         [routerLink]="dim.route"
         class="dimension-card"
         [style.--accent]="dim.couleur"
         [style.--accent-light]="dim.couleurSecondaire"
-        [style.animation-delay]="(i * 0.15) + 's'"
         [attr.title]="'Dimension ' + dim.nom + ' — ' + dim.sage"
         [attr.aria-label]="'Explorer la dimension ' + dim.nom + ', gardée par ' + dim.sage"
       >

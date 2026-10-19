@@ -1,5 +1,3 @@
-// src/app/offoland/dimensions/vert/constants/vert.constants.ts
-
 import {
   Correspondance,
   PhenomeneNaturel,

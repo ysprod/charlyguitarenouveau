@@ -30,16 +30,6 @@ import { NOTIFICATIONS_DB_PATH } from '../constants/notifications.constants';
 
 /* ═════════════════════════════════════════════════════════════════════
    SERVICE
-
-   Structure Firebase : /notifications/{uid}/{notifId}
-     ├── userId: "uid_destinataire"
-     ├── type: "system" | "message" | "promotion"
-     ├── title: "..."
-     ├── body: "..."
-     ├── icon?: "..."
-     ├── link?: "..."
-     ├── read: boolean
-     └── createdAt: number
    ═════════════════════════════════════════════════════════════════════ */
 
 @Injectable({ providedIn: 'root' })
@@ -53,10 +43,6 @@ export class NotificationsService {
      FLUX PRINCIPAL — Notifications du user courant
      ═══════════════════════════════════════════════════════════════════ */
 
-  /**
-   * ✅ Lecture directe sur /notifications/{uid} (pas de query)
-   * → la règle `.read` sur `$uid` autorise `auth.uid === $uid`.
-   */
   readonly notifications$: Observable<NotificationItem[]> =
     authState(this.auth).pipe(
       switchMap((user) => {
@@ -87,10 +73,6 @@ export class NotificationsService {
      ACTIONS
      ═══════════════════════════════════════════════════════════════════ */
 
-  /**
-   * Marque une notification comme lue.
-   * ✅ Autorisé par la règle : user peut modifier `read` sur SES notifs.
-   */
   async markAsRead(notifId: string): Promise<boolean> {
     const uid = this.auth.currentUser?.uid;
     if (!uid) return false;
@@ -104,26 +86,37 @@ export class NotificationsService {
       );
       return true;
     } catch (err) {
-      console.warn(
-        '[NotificationsService] markAsRead refusé :',
-        err,
-      );
+      console.warn('[NotificationsService] markAsRead refusé :', err);
       return false;
     }
   }
 
   /**
-   * Marque TOUTES les notifications comme lues.
-   * Fire-and-forget pour éviter un blocage si certaines échouent.
+   * ✅ Une seule requête multi-path au lieu de N `markAsRead`.
    */
   async markAllAsRead(notifIds: string[]): Promise<void> {
-    await Promise.all(notifIds.map((id) => this.markAsRead(id)));
+    if (notifIds.length === 0) return;
+
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) return;
+
+    const updates: Record<string, boolean> = {};
+    for (const id of notifIds) {
+      updates[`${NOTIFICATIONS_DB_PATH}/${uid}/${id}/read`] = true;
+    }
+
+    try {
+      await runInInjectionContext(this.environmentInjector, () =>
+        update(ref(this.db, '/'), updates),
+      );
+    } catch (err) {
+      console.warn(
+        '[NotificationsService] markAllAsRead échoué (rollback partiel possible) :',
+        err,
+      );
+    }
   }
 
-  /**
-   * Supprime une notification.
-   * ⚠️ Admin uniquement selon la règle `.write` au niveau `$uid`.
-   */
   async delete(notifId: string): Promise<boolean> {
     const uid = this.auth.currentUser?.uid;
     if (!uid) return false;
@@ -144,6 +137,8 @@ export class NotificationsService {
      ═══════════════════════════════════════════════════════════════════ */
 
   private sortByRecent(notifs: NotificationItem[]): NotificationItem[] {
-    return [...notifs].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    return [...notifs].sort(
+      (a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0),
+    );
   }
 }

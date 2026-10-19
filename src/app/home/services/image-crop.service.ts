@@ -54,7 +54,6 @@ export class ImageCropService {
       throw new Error('Canvas 2D non supporté par ce navigateur.');
     }
 
-    /* Améliore la qualité du redimensionnement */
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 

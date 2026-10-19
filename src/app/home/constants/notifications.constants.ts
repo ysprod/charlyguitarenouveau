@@ -1,5 +1,3 @@
-// src/app/notifications/constants/notifications.constants.ts
-
 import type {
   NotificationFilterOption,
   NotificationType,

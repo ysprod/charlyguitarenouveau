@@ -40,7 +40,7 @@ export interface DifficultyConfig {
   mode: DifficultyMode;
   label: string;
   emoji: string;
-  perfectThreshold: number;  // ms
+  perfectThreshold: number;   
   greatThreshold: number;
   okThreshold: number;
   description: string;

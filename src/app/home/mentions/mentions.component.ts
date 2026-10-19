@@ -1,5 +1,3 @@
-// src/app/legal/mentions/mentions.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,

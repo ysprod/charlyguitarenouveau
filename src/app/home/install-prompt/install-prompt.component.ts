@@ -1,5 +1,3 @@
-// src/app/home/install-prompt/install-prompt.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,

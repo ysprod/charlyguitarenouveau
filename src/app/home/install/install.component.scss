@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   BOUTON + MODALE D'INSTALLATION
+   BOUTON + MODALE D'INSTALLATION — Optimisé GPU
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
@@ -22,9 +22,26 @@
   display: block;
 }
 
+/* ✅ Scoped : n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
+
 /* ═════════════════════════════════════════════════════════════════════
-   BOUTON « INSTALLER L'APP »
+   BOUTON « INSTALLER L'APP » — CENTRÉ
    ═════════════════════════════════════════════════════════════════════ */
+
+/* ✅ Wrapper centré */
+.contact-cta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 1rem 0;
+}
+
 .btn-install-app {
   display: inline-flex;
   align-items: center;
@@ -39,16 +56,16 @@
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 8px 22px -8px var(--warning-glow);
+  /* ✅ Ombre simple (au lieu de 0 8px 22px -8px) */
+  box-shadow: 0 2px 8px rgba(234, 88, 12, .2);
   transition:
     transform .2s ease,
-    background .2s ease,
-    box-shadow .2s ease;
+    background .2s ease;
 
   &:hover {
     background: var(--warning-hover);
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px -8px var(--warning-glow);
+    box-shadow: 0 4px 14px rgba(234, 88, 12, .3);
   }
 
   &:active {
@@ -70,6 +87,7 @@
 /* ═════════════════════════════════════════════════════════════════════
    MODALE
    ═════════════════════════════════════════════════════════════════════ */
+
 .install-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -78,15 +96,9 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(15, 23, 42, .55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  animation: fadeIn .25s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  /* ✅ Fond opaque au lieu de backdrop-filter (coûteux en GPU) */
+  background: rgba(15, 23, 42, .7);
+  /* ✅ animation fadeIn supprimée */
 }
 
 .install-modal-card {
@@ -97,15 +109,9 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 20px;
-  box-shadow:
-    0 25px 60px rgba(15, 23, 42, .25),
-    0 0 0 1px rgba(255, 255, 255, .6);
-  animation: slideIn .35s cubic-bezier(.22, 1, .36, 1);
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(20px) scale(.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  /* ✅ Ombre simple (au lieu de 0 25px 60px + ring) */
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .15);
+  /* ✅ animation slideIn supprimée */
 }
 
 /* Croix de fermeture */
@@ -224,13 +230,16 @@
   font-family: inherit;
   letter-spacing: .02em;
   cursor: pointer;
-  box-shadow: 0 10px 25px -10px var(--warning-glow);
-  transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+  /* ✅ Ombre simple (au lieu de 0 10px 25px -10px) */
+  box-shadow: 0 2px 8px rgba(234, 88, 12, .2);
+  transition:
+    background .2s ease,
+    transform .2s ease;
 
   &:hover {
     background: var(--warning-hover);
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px -10px var(--warning-glow);
+    box-shadow: 0 4px 14px rgba(234, 88, 12, .3);
   }
 
   &:active {
@@ -246,6 +255,7 @@
 /* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═════════════════════════════════════════════════════════════════════ */
+
 @media (max-width: 480px) {
   .install-modal-card {
     padding: 1.5rem 1.25rem 1.25rem;
@@ -284,12 +294,11 @@
 /* ═════════════════════════════════════════════════════════════════════
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+  .btn-install-app,
+  .modal-close,
+  .btn-understand {
+    transition: none !important;
   }
 }

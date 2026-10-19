@@ -1,5 +1,3 @@
-// src/app/offoland/dimensions/violet/constants/violet.constants.ts
-
 import { Dimension } from '../models/violet.model';
 
 /* ═══════════════════════════════════════════════════════════

@@ -35,17 +35,14 @@ const PREVIEW_MAX_LENGTH = 140;
    ADAPTATEUR
    ═════════════════════════════════════════════════════════════════════ */
 
-export function toInboxMessage(
-  message: MessagerieMessage,
-): InboxMessage {
+export function toInboxMessage(message: MessagerieMessage): InboxMessage {
   const id = message.key ?? `msg-${message.createdAt}`;
 
   const subject = message.subject?.trim() || DEFAULT_SUBJECT;
 
   const body = message.body ?? '';
 
-  const isUnread =
-    message._direction !== 'out' && message.read === false;
+  const isUnread = message._direction !== 'out' && message.read === false;
 
   const from = message.fromName || message.fromEmail || DEFAULT_FROM;
 
@@ -56,10 +53,8 @@ export function toInboxMessage(
 
   const direction = message._direction ?? 'in';
 
-  const receivedAt =
-    typeof message.createdAt === 'number'
-      ? message.createdAt
-      : Date.now();
+  /* ✅ Gère à la fois number et string ISO (Firebase peut stocker les 2) */
+  const receivedAt = parseTimestamp(message.createdAt);
 
   return {
     id,
@@ -86,6 +81,23 @@ export function toInboxMessages(
 /* ═════════════════════════════════════════════════════════════════════
    HELPERS
    ═════════════════════════════════════════════════════════════════════ */
+
+/**
+ * ✅ Convertit un timestamp Firebase (number ou string ISO) en number.
+ *    Retourne `Date.now()` si la valeur est invalide.
+ */
+function parseTimestamp(value: unknown): number {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : Date.now();
+  }
+
+  if (typeof value === 'string') {
+    const ts = new Date(value).getTime();
+    return Number.isFinite(ts) ? ts : Date.now();
+  }
+
+  return Date.now();
+}
 
 function truncateForPreview(text: string, maxLength: number): string {
   if (!text) return '';

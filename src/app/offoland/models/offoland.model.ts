@@ -1,9 +1,3 @@
-// src/app/offoland/models/offoland.model.ts
-
-/* ═════════════════════════════════════════════════════════════════════
-   OFFLOLAND — MODÈLES
-   ═════════════════════════════════════════════════════════════════════ */
-
 /** Portail vers un module d'Offoland (actif ou verrouillé). */
 export interface Portail {
   /** Identifiant unique (utilisé pour le track). */
@@ -45,16 +39,4 @@ export interface NoteSacree {
   readonly label: string;
   readonly color: string;
 }
-
-/** Citation sacrée d'Offoland. */
-export interface OffolandQuote {
-  readonly text: string;
-  readonly author: string;
-}
-
-/** Section « Le Chemin ». */
-export interface CheminSection {
-  readonly title: string;
-  readonly icon: string;
-  readonly paragraphs: readonly string[];
-}
+ 

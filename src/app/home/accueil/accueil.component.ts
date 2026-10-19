@@ -15,10 +15,6 @@ import {
   SafeResourceUrl,
 } from '@angular/platform-browser';
 
-import { toSignal } from '@angular/core/rxjs-interop';
-import { fromEvent } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
-
 import { RevealDirective } from 'src/app/shared/reveal.directive';
 
 import {
@@ -80,43 +76,19 @@ export class AccueilComponent {
   readonly awards: readonly Award[] = AWARDS;
 
   /* ═══════════════════════════════════════════════════════
-     URL VIDÉO SÉCURISÉE (Angular 21)
+     URL VIDÉO SÉCURISÉE
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Angular `sanitize` les URLs d'iframe. Pour YouTube,
-   * il faut explicitement bypasser avec `bypassSecurityTrustResourceUrl`.
-   */
   readonly safeVideoUrl = computed<SafeResourceUrl>(() =>
-    this.sanitizer.bypassSecurityTrustResourceUrl(ARTIST_VIDEO_URL)
+    this.sanitizer.bypassSecurityTrustResourceUrl(ARTIST_VIDEO_URL),
   );
 
   /* ═══════════════════════════════════════════════════════
-     PARTICULES (hero)
-     ═══════════════════════════════════════════════════════ */
-
-  readonly particles = signal<readonly number[]>(
-    Array.from({ length: 20 }, (_, i) => i)
-  );
-
-  /* ═══════════════════════════════════════════════════════
-     COMPTEURS ANIMÉS (stats)
+     COMPTEURS ANIMÉS (stats) — one-shot, conservé
      ═══════════════════════════════════════════════════════ */
 
   readonly animatedStats = signal<Record<string, number>>(
-    Object.fromEntries(STATS.map((s) => [s.id, 0]))
-  );
-
-  /* ═══════════════════════════════════════════════════════
-     SCROLL
-     ═══════════════════════════════════════════════════════ */
-
-  private readonly isScrolled = toSignal(
-    fromEvent(window, 'scroll', { passive: true }).pipe(
-      map(() => window.scrollY > 100),
-      distinctUntilChanged()
-    ),
-    { initialValue: false }
+    Object.fromEntries(STATS.map((s) => [s.id, 0])),
   );
 
   /* ═══════════════════════════════════════════════════════
@@ -130,7 +102,7 @@ export class AccueilComponent {
   }
 
   /* ═══════════════════════════════════════════════════════
-     ANIMATION DES COMPTEURS
+     ANIMATION DES COMPTEURS (one-shot)
      ═══════════════════════════════════════════════════════ */
 
   private launchCounters(): void {

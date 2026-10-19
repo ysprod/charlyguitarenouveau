@@ -1,19 +1,17 @@
 /* ============================================================
-   VARIABLES — alignées avec le reste du site
+   LIVE — Hub des lives Charly Guitare
    ============================================================ */
+
 :host {
-  /* Fonds — conformes consigne : blanc pour le contenu */
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
   --bg-card: #ffffff;
 
-  /* Identité dorée — assombrie pour contraste AA sur fond blanc */
   --gold-primary: #b8860b;
   --gold-hover: #d4a017;
   --gold-glow: rgba(184, 134, 11, .18);
   --gold-soft: rgba(184, 134, 11, .08);
 
-  /* Palette fonctionnelle */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --success: #16a34a;
@@ -22,24 +20,20 @@
   --danger: #dc2626;
   --danger-soft: #ef4444;
 
-  /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
   --border-gold: rgba(184, 134, 11, .3);
   --border-live: rgba(220, 38, 38, .35);
 
-  /* Rayons */
   --radius-lg: 20px;
   --radius-md: 14px;
   --radius-sm: 10px;
 
-  /* Transitions */
   --t-fast: .2s cubic-bezier(.4, 0, .2, 1);
   --t-base: .3s cubic-bezier(.4, 0, .2, 1);
   --t-bounce: .4s cubic-bezier(.34, 1.56, .64, 1);
@@ -52,7 +46,10 @@
   -webkit-font-smoothing: antialiased;
 }
 
-* {
+/* ✅ Scoped : le * ne s'applique qu'aux enfants du composant */
+:host *,
+:host *::before,
+:host *::after {
   box-sizing: border-box;
 }
 
@@ -64,7 +61,7 @@
 }
 
 /* ============================================================
-   HERO BANNER — version claire
+   HERO BANNER
    ============================================================ */
 .hero-banner {
   position: relative;
@@ -80,15 +77,8 @@
     0 0 40px rgba(184, 134, 11, .06);
   margin-bottom: 4rem;
   overflow: hidden;
-  animation: heroEntry .9s ease both;
 }
 
-@keyframes heroEntry {
-  from { opacity: 0; transform: translateY(30px) scale(.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Grille de fond — très discrète sur fond clair */
 .hero-grid-bg {
   position: absolute;
   inset: 0;
@@ -98,16 +88,9 @@
   background-size: 50px 50px;
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
-  animation: gridPulse 6s ease-in-out infinite;
   pointer-events: none;
 }
 
-@keyframes gridPulse {
-  0%, 100% { opacity: .4; }
-  50%      { opacity: .8; }
-}
-
-/* Halo pulsant — discret sur fond clair */
 .hero-glow {
   position: absolute;
   top: -40%;
@@ -117,16 +100,10 @@
   transform: translateX(-50%);
   background: radial-gradient(circle, rgba(184, 134, 11, .12), transparent 60%);
   filter: blur(60px);
-  animation: heroGlow 5s ease-in-out infinite;
   pointer-events: none;
+  opacity: .65;
 }
 
-@keyframes heroGlow {
-  0%, 100% { opacity: .5; transform: translateX(-50%) scale(1); }
-  50%      { opacity: .8; transform: translateX(-50%) scale(1.15); }
-}
-
-/* Contenu hero */
 .hero-content {
   position: relative;
   z-index: 2;
@@ -134,7 +111,6 @@
   margin: 0 auto;
 }
 
-/* Badge LIVE */
 .live-badge {
   display: inline-flex;
   align-items: center;
@@ -150,30 +126,17 @@
   text-transform: uppercase;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 14px rgba(220, 38, 38, .1);
-  animation: badgeFloat 3s ease-in-out infinite;
 }
 
-@keyframes badgeFloat {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
-}
-
+/* ✅ Point LIVE statique (plus de pulse infini) */
 .pulse-dot {
   width: 8px;
   height: 8px;
   background-color: var(--danger);
   border-radius: 50%;
-  box-shadow: 0 0 12px rgba(220, 38, 38, .5);
-  animation: pulseDot 1.5s infinite;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, .15);
 }
 
-@keyframes pulseDot {
-  0%   { opacity: 1; transform: scale(1); }
-  50%  { opacity: .4; transform: scale(1.5); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-/* Titre */
 .hero-title {
   display: flex;
   flex-direction: column;
@@ -187,21 +150,18 @@
 
 .title-main {
   font-size: clamp(2rem, 5vw, 3.4rem);
-  background: linear-gradient(135deg, var(--text-dark) 0%, var(--gold-primary) 60%, var(--gold-hover) 100%);
-  background-size: 200% 200%;
+  background: linear-gradient(
+    135deg,
+    var(--text-dark) 0%,
+    var(--gold-primary) 60%,
+    var(--gold-hover) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: gradientShift 5s ease infinite;
   line-height: 1.05;
 }
 
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
-}
-
-/* Description */
 .hero-description {
   color: var(--text-muted);
   font-size: 1.05rem;
@@ -211,7 +171,7 @@
 }
 
 /* ============================================================
-   GRILLE DE CARTES
+   GRILLE
    ============================================================ */
 .grid-section {
   max-width: 1200px;
@@ -222,7 +182,6 @@
     "video video"
     "concerts replay";
   gap: 1.8rem;
-  animation: heroEntry .9s .15s ease both;
 }
 
 .video-card    { grid-area: video; }
@@ -230,7 +189,7 @@
 .card-replay   { grid-area: replay; }
 
 /* ============================================================
-   CARTE VIDÉO (YouTube embarqué) — version claire
+   CARTE VIDÉO
    ============================================================ */
 .video-card {
   position: relative;
@@ -241,7 +200,10 @@
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   overflow: hidden;
-  transition: transform var(--t-base), box-shadow var(--t-base), border-color var(--t-base);
+  transition:
+    transform var(--t-base),
+    box-shadow var(--t-base),
+    border-color var(--t-base);
   box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
 
   /* Shimmer au survol uniquement */
@@ -292,13 +254,13 @@
   text-transform: uppercase;
 }
 
+/* ✅ Point "LIVE" statique */
 .dot-live {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--danger);
-  box-shadow: 0 0 8px rgba(220, 38, 38, .6);
-  animation: pulseDot 1.4s infinite;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, .18);
 }
 
 .video-header h3 {
@@ -319,14 +281,14 @@
   background: #000;
   border: 1px solid var(--border-subtle);
   box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
-}
 
-.video-wrapper iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
+  iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
 }
 
 .video-footer {
@@ -335,7 +297,7 @@
   justify-content: flex-end;
 }
 
-/* 🟠 Bouton YouTube — CTA important */
+/* 🟠 Bouton YouTube */
 .yt-link-btn {
   position: relative;
   overflow: hidden;
@@ -351,13 +313,15 @@
   letter-spacing: .5px;
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 15px rgba(234, 88, 12, .3);
-  transition: transform var(--t-base), box-shadow var(--t-base), filter var(--t-base);
+  transition:
+    transform var(--t-base),
+    box-shadow var(--t-base),
+    filter var(--t-base);
 
   .icon {
     font-size: .9rem;
   }
 
-  /* Shimmer au survol uniquement */
   &::before {
     content: '';
     position: absolute;
@@ -388,7 +352,7 @@
 }
 
 /* ============================================================
-   CARTES LIVE — version claire
+   CARTES LIVE
    ============================================================ */
 .live-card {
   position: relative;
@@ -399,7 +363,10 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform var(--t-base), box-shadow var(--t-base), border-color var(--t-base);
+  transition:
+    transform var(--t-base),
+    box-shadow var(--t-base),
+    border-color var(--t-base);
   overflow: hidden;
   box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
 
@@ -434,7 +401,6 @@
   }
 }
 
-/* Icône dans un carré */
 .card-icon-wrap {
   width: 56px;
   height: 56px;
@@ -446,7 +412,9 @@
   border: 1px solid var(--border-gold);
   margin-bottom: 1rem;
   box-shadow: 0 4px 12px rgba(184, 134, 11, .1);
-  transition: transform var(--t-bounce), box-shadow var(--t-base);
+  transition:
+    transform var(--t-bounce),
+    box-shadow var(--t-base);
 }
 
 .card-icon {
@@ -456,22 +424,22 @@
 
 .card-content {
   flex: 1;
-}
 
-.card-content h3 {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--text-dark);
-  margin: 0 0 .6rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0 0 .6rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
 
-.card-content p {
-  color: var(--text-muted);
-  font-size: .9rem;
-  line-height: 1.5;
-  margin: 0 0 1.5rem;
+  p {
+    color: var(--text-muted);
+    font-size: .9rem;
+    line-height: 1.5;
+    margin: 0 0 1.5rem;
+  }
 }
 
 .card-action {
@@ -532,29 +500,14 @@
 
   .hero-description { font-size: .95rem; }
 
-  .grid-section {
-    gap: 1.25rem;
-  }
+  .grid-section { gap: 1.25rem; }
 
   .video-card { padding: 1.25rem; }
   .video-header h3 { font-size: 1rem; }
 }
 
 /* ============================================================
-   PREFERS-REDUCED-MOTION
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-}
-
-/* ============================================================
-   ACCESSIBILITÉ — FOCUS
+   ACCESSIBILITÉ
    ============================================================ */
 a:focus-visible,
 button:focus-visible {

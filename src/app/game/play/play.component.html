@@ -15,7 +15,7 @@
     </header>
 
     <!-- ═══════════════════════════════════════════════════════
-         TOAST (succès / erreur)
+         TOAST
          ═══════════════════════════════════════════════════════ -->
     @if (toastMessage()) {
       <div
@@ -69,7 +69,6 @@
               [attr.aria-label]="'Lancer ' + game.title"
             >
               <span class="btn-glow" aria-hidden="true"></span>
-              <span class="btn-border-anim" aria-hidden="true"></span>
               <span class="btn-icon" aria-hidden="true">{{ game.icon }}</span>
               <span class="btn-content">
                 <span class="btn-tag" [class]="game.tagClass">{{ game.tag }}</span>
@@ -90,7 +89,7 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
-       🎁 MODALE CODE PROMO — Composant réutilisable
+       MODALE CODE PROMO
        ═══════════════════════════════════════════════════════ -->
   @if (showPromoModal()) {
     <app-promo-modal

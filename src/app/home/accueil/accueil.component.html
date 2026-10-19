@@ -7,34 +7,11 @@
        ═══════════════════════════════════════════════════════ -->
   <header class="artist-hero-header">
 
-    <!-- Auras lumineuses -->
-    <div class="hero-auras" aria-hidden="true">
-      <span class="aura aura-1"></span>
-      <span class="aura aura-2"></span>
-      <span class="aura aura-3"></span>
-    </div>
-
-    <!-- Particules dorées -->
-    <div class="hero-particles" aria-hidden="true">
-      @for (p of particles(); track p) {
-        <span
-          class="particle"
-          [style.left.%]="(p * 17) % 100"
-          [style.animation-delay]="(p * 0.4) + 's'"
-          [style.animation-duration]="(8 + (p % 5)) + 's'"
-        ></span>
-      }
-    </div>
-
     <!-- Grille décorative -->
     <div class="hero-grid-bg" aria-hidden="true"></div>
 
     <!-- Contenu -->
     <div class="hero-content">
-      <span class="hero-eyebrow" appReveal>
-        <span class="dot" aria-hidden="true"></span>
-        ARTISTE PREMIUM • CÔTE D’IVOIRE
-      </span>
 
       <h1 class="artist-title" appReveal [revealDelay]="120">
         {{ artistName }}
@@ -173,8 +150,8 @@
           <p class="scenic-desc">{{ scenicDesc }}</p>
 
           <div class="festivals-timeline">
-            @for (festival of festivals; track festival.id; let i = $index) {
-              <div class="timeline-item" [style.animation-delay]="(i * 0.1) + 's'">
+            @for (festival of festivals; track festival.id) {
+              <div class="timeline-item">
                 <span class="year-badge">{{ festival.year }}</span>
                 <span class="event-desc">{{ festival.description }}</span>
               </div>

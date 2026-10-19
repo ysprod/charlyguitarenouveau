@@ -1,5 +1,3 @@
-// src/app/shared/avatar-crop-dialog/models/crop.model.ts
-
 /**
  * Point 2D dans le repère du canvas (px logiques).
  *

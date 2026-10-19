@@ -3,6 +3,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -18,9 +19,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 import { Auth, User, authState } from '@angular/fire/auth';
 
-import {
-  ContactForm,
-} from 'src/app/home/models/contact.model';
+import { ContactForm } from 'src/app/home/models/contact.model';
 
 import {
   MESSAGE_MAX_LENGTH,
@@ -30,9 +29,13 @@ import {
   SUPPORT_UID,
   SUPPORT_NAME,
 } from '../constants/contact.constants';
+
 import { MessagerieService } from '../services/messagerie.service';
- 
- 
+
+/* ═════════════════════════════════════════════════════════════════════
+   COMPOSANT
+   ═════════════════════════════════════════════════════════════════════ */
+
 @Component({
   selector: 'app-contact',
   imports: [ReactiveFormsModule],
@@ -77,23 +80,64 @@ export class ContactComponent {
     initialValue: null as User | null,
   });
 
+  /* ✅ Signal réactif du textarea */
+  private readonly messageValue = toSignal(
+    this.contactForm.controls.message.valueChanges,
+    { initialValue: this.contactForm.controls.message.value },
+  );
+
+  readonly messageLength = computed(() => this.messageValue()?.length ?? 0);
+
+  readonly isNearLimit = computed(
+    () => this.messageLength() > MESSAGE_MAX_LENGTH * 0.85,
+  );
+
+  /**
+   * ✅ Bouton actif en permanence SAUF pendant l'envoi
+   *    (évite les doubles soumissions).
+   */
+  readonly isDisabled = computed(() => this.isSubmitting());
+
+  /* ═══════════════════════════════════════════════════════
+     SOUMISSION
+     ═══════════════════════════════════════════════════════ */
+
   async onSubmit(): Promise<void> {
+    if (this.isSubmitting()) return;
+
     this.submitSuccess.set(false);
     this.submitError.set(false);
     this.errorMessage.set('');
 
+    /* ─── 1. Utilisateur connecté ? ─── */
     const user = this.currentUser();
     if (!user) {
       this.submitError.set(true);
-      this.errorMessage.set('Vous devez être connecté pour envoyer un message.');
+      this.errorMessage.set(
+        'Vous devez être connecté pour envoyer un message.',
+      );
       return;
     }
 
+    /* ─── 2. Formulaire valide ? ─── */
     if (this.contactForm.invalid) {
       this.contactForm.markAllAsTouched();
+      this.submitError.set(true);
+      this.errorMessage.set(
+        'Veuillez corriger les erreurs du formulaire avant d\'envoyer.',
+      );
+
+      /* ✅ Focus sur le premier champ invalide */
+      const firstInvalid = this.getFirstInvalidField();
+      if (firstInvalid) {
+        const el = document.getElementById(firstInvalid);
+        el?.focus();
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
+    /* ─── 3. Envoi ─── */
     this.isSubmitting.set(true);
 
     try {
@@ -108,11 +152,10 @@ export class ContactComponent {
 
       this.submitSuccess.set(true);
       this.contactForm.reset({ subject: '', message: '' });
-
     } catch (error: unknown) {
       this.submitError.set(true);
       this.errorMessage.set(
-        'Une erreur est survenue lors de l’envoi. Veuillez réessayer.',
+        'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.',
       );
       console.error('Erreur Realtime Database :', error);
     } finally {
@@ -120,11 +163,17 @@ export class ContactComponent {
     }
   }
 
-  get f(): FormGroup<ContactForm>['controls'] {
-    return this.contactForm.controls;
+  /* ═══════════════════════════════════════════════════════
+     HELPERS
+     ═══════════════════════════════════════════════════════ */
+
+  private getFirstInvalidField(): string | null {
+    if (this.contactForm.controls.subject.invalid) return 'subject';
+    if (this.contactForm.controls.message.invalid) return 'message';
+    return null;
   }
 
-  get messageLength(): number {
-    return this.contactForm.controls.message.value.length;
+  get f(): FormGroup<ContactForm>['controls'] {
+    return this.contactForm.controls;
   }
 }

@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════
-   TYPES & INTERFACES — Charly Guitare Hero
-   ═══════════════════════════════════════════════════════ */
-
 export type Difficulty = 'facile' | 'normal' | 'hardcore';
 export type FeedbackKind = 'success' | 'error' | 'perfect';
 export type UiSoundKind =

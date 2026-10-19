@@ -15,11 +15,26 @@ import {
 import { Observable } from 'rxjs';
 import { shareReplay } from 'rxjs/operators';
 
+/* ═════════════════════════════════════════════════════════════════════
+   SERVICE — Authentification partagée
+   ═════════════════════════════════════════════════════════════════════ */
+
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+
   private readonly auth = inject(Auth);
+
+  /**
+   * ✅ Provider hoisté : instancié 1 fois, réutilisé à chaque login.
+   *    `setCustomParameters` n'a pas besoin d'être rappelé.
+   */
+  private readonly googleProvider: GoogleAuthProvider = (() => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    return provider;
+  })();
 
   /**
    * État courant de l'utilisateur (temps réel).
@@ -31,17 +46,21 @@ export class AuthService {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
+  /* ═══════════════════════════════════════════════════════
+     LOGIN
+     ═══════════════════════════════════════════════════════ */
+
   /**
    * Connexion Google via popup.
    * Force la sélection du compte à chaque appel.
    */
   async loginWithGoogle(): Promise<UserCredential> {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: 'select_account',
-    });
-    return signInWithPopup(this.auth, provider);
+    return signInWithPopup(this.auth, this.googleProvider);
   }
+
+  /* ═══════════════════════════════════════════════════════
+     LOGOUT
+     ═══════════════════════════════════════════════════════ */
 
   /**
    * Déconnexion de l'utilisateur courant.

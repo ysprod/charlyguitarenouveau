@@ -7,7 +7,6 @@ import {
   EnvironmentInjector,
   afterNextRender,
   computed,
-  effect,
   inject,
   runInInjectionContext,
   signal,
@@ -51,7 +50,7 @@ import {
 import { PromoCodeService } from 'src/app/shared/services/promo-code.service';
 
 /* ═════════════════════════════════════════════════════════════════════
-   DOCUMENTS — Boutique numérique
+   DOCUMENTS — Boutique numérique (optimisé)
    ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
@@ -75,6 +74,13 @@ export class DocumentsComponent {
   private readonly toastService = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
+
+  /* ═══════════════════════════════════════════════════════
+     CONSTANTES EXPOSÉES AU TEMPLATE
+     ═══════════════════════════════════════════════════════ */
+
+  readonly filters = DOCUMENT_FILTERS;
+  readonly FILTER_ALL_LABEL = FILTER_ALL_LABEL;
 
   /* ═══════════════════════════════════════════════════════
      UTILISATEUR CONNECTÉ
@@ -110,7 +116,6 @@ export class DocumentsComponent {
      FILTRES, RECHERCHE, TRI
      ═══════════════════════════════════════════════════════ */
 
-  readonly filters = DOCUMENT_FILTERS;
   readonly selectedFilter = signal(FILTER_ALL_LABEL);
   readonly searchTerm = signal('');
   readonly sortBy = signal<SortOption>('recent');
@@ -133,27 +138,48 @@ export class DocumentsComponent {
   private readonly pendingPurchase = signal<PendingPurchase | null>(null);
 
   /* ═══════════════════════════════════════════════════════
-     DOCUMENTS
+     DOCUMENTS — chargement fiable
      ═══════════════════════════════════════════════════════ */
 
-  private readonly documentsStream$ = listVal<DocumentItem>(
-    ref(this.db, DOCUMENTS_DB_PATHS.DOCUMENTS),
-    { keyField: 'key' },
-  ).pipe(
-    catchError((err) => {
-      console.error('Erreur Firebase (documents) :', err);
-      return of([] as DocumentItem[]);
-    }),
+  /**
+   * ✅ `undefined` initial tant que Firebase n'a pas émis.
+   *    Dès la 1ère émission (même tableau vide), on considère chargé.
+   *    `listVal` émet toujours un tableau → pas besoin de timeout de secours.
+   */
+  private readonly allDocsRaw = toSignal(
+    runInInjectionContext(this.environmentInjector, () =>
+      listVal<DocumentItem>(
+        ref(this.db, DOCUMENTS_DB_PATHS.DOCUMENTS),
+        { keyField: 'key' },
+      ).pipe(
+        catchError((err) => {
+          console.error('Erreur Firebase (documents) :', err);
+          return of([] as DocumentItem[]);
+        }),
+      ),
+    ),
+    { initialValue: undefined },
   );
 
-  readonly allDocs = toSignal(this.documentsStream$, {
-    initialValue: [] as DocumentItem[],
-  });
+  /** ✅ Tableau stable (jamais `undefined`) pour le template */
+  readonly allDocs = computed(() => this.allDocsRaw() ?? []);
 
-  readonly isLoading = signal(true);
+  /** ✅ `true` uniquement tant qu'aucune émission Firebase n'est arrivée */
+  readonly isLoading = computed(() => this.allDocsRaw() === undefined);
 
+  /** ✅ Boutique réellement vide (chargement terminé + 0 docs) */
   readonly isEmpty = computed(
     () => !this.isLoading() && this.allDocs().length === 0,
+  );
+
+  /** ✅ Nombre de documents filtrés (évite 3 appels au computed dans le HTML) */
+  readonly documentCount = computed(() => this.visibleDocuments().length);
+
+  /** ✅ Filtres actifs ? */
+  readonly hasActiveFilters = computed(
+    () =>
+      this.selectedFilter() !== FILTER_ALL_LABEL ||
+      this.searchTerm() !== '',
   );
 
   /* ═══════════════════════════════════════════════════════
@@ -188,24 +214,6 @@ export class DocumentsComponent {
   constructor() {
     afterNextRender(() => {
       window.scrollTo({ top: 0, behavior: 'auto' });
-    });
-
-    /* ✅ isLoading passe à false dès que des docs arrivent */
-    effect(() => {
-      if (this.allDocs().length > 0) {
-        this.isLoading.set(false);
-      }
-    });
-
-    /* ✅ Filet de sécurité : jamais plus de 3s de skeleton */
-    const safetyTimeout = setTimeout(() => {
-      if (this.isLoading()) {
-        this.isLoading.set(false);
-      }
-    }, 3000);
-
-    this.destroyRef.onDestroy(() => {
-      clearTimeout(safetyTimeout);
     });
   }
 
@@ -392,10 +400,11 @@ export class DocumentsComponent {
 
         const result = await runTransaction(
           creditRef,
-          (currentValue: number | null) => {
+          // ✅ Type correct : `undefined` annule la transaction
+          (currentValue: number | null): number | undefined => {
             const balance = currentValue ?? 0;
             if (balance < docPrice) {
-              return undefined as any;
+              return undefined;
             }
             return balance - docPrice;
           },

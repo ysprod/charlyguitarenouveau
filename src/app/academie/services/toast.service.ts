@@ -1,5 +1,3 @@
-// src/app/academie/services/toast.service.ts
-
 import {
   DestroyRef,
   Injectable,
@@ -38,7 +36,6 @@ const TOAST_DURATION_MS = 4000;
 @Injectable({ providedIn: 'root' })
 export class ToastService {
 
-  /* ─── Injection ─── */
   private readonly destroyRef = inject(DestroyRef);
 
   /* ─── État interne ─── */

@@ -1,13 +1,14 @@
 // src/app/shared/directives/reveal.directive.ts
 
 import {
+  DestroyRef,
   Directive,
   ElementRef,
   afterNextRender,
   inject,
   input,
+  numberAttribute,
   signal,
-  DestroyRef,
 } from '@angular/core';
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -17,14 +18,11 @@ import {
    lorsque l'élément entre dans le viewport.
 
    SSR-safe : l'observation démarre uniquement côté navigateur.
+   Accessibilité : respecte `prefers-reduced-motion`.
    ═════════════════════════════════════════════════════════════════════ */
 
 @Directive({
   selector: '[appReveal]',
-
-  /* ═══════════════════════════════════════════════════════
-     HOST BINDINGS — pas de manipulation DOM directe
-     ═══════════════════════════════════════════════════════ */
   host: {
     '[class.reveal-init]': '!isRevealed()',
     '[class.reveal-in]': 'isRevealed()',
@@ -38,54 +36,74 @@ export class RevealDirective {
   private readonly destroyRef = inject(DestroyRef);
 
   /* ─── Inputs ─── */
-  /** Délai d'animation en ms (permet un effet cascade). */
-  readonly revealDelay = input<number>(0);
+  /**
+   * Délai d'animation en ms (permet un effet cascade).
+   * ✅ `numberAttribute` garantit que `revealDelay="300"` est bien un number.
+   */
+  readonly revealDelay = input<number, unknown>(0, {
+    transform: numberAttribute,
+  });
 
   /* ─── État interne ─── */
-  private readonly _isRevealed = signal(false);
-
-  /** Exposé pour les host bindings. */
-  protected readonly isRevealed = this._isRevealed.asReadonly();
+  protected readonly isRevealed = signal(false);
 
   /* ─── Observer ─── */
   private observer?: IntersectionObserver;
 
   /* ═══════════════════════════════════════════════════════
-     CONSTRUCTEUR — afterNextRender + cleanup
+     CONSTRUCTEUR
      ═══════════════════════════════════════════════════════ */
 
   constructor() {
-
-    /* Démarre l'observation uniquement côté navigateur */
     afterNextRender(() => {
+      /* ─── 1. Environnement sans DOM → rien à faire ─── */
       if (typeof window === 'undefined') return;
-      if (typeof IntersectionObserver === 'undefined') {
-        /* Navigateur sans support → révélation immédiate */
-        this._isRevealed.set(true);
+
+      /* ─── 2. Respect de `prefers-reduced-motion` ─── */
+      const prefersReducedMotion =
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ??
+        false;
+
+      if (prefersReducedMotion) {
+        /* ✅ Utilisateur sensible aux animations : on révèle immédiatement,
+           sans transition visuelle. */
+        this.isRevealed.set(true);
         return;
       }
 
+      /* ─── 3. Navigateur sans IntersectionObserver ─── */
+      if (typeof IntersectionObserver === 'undefined') {
+        this.isRevealed.set(true);
+        return;
+      }
+
+      /* ─── 4. Observation ─── */
       const host = this.el.nativeElement;
 
       this.observer = new IntersectionObserver(
-        (entries) => {
+        (entries, observer) => {
           for (const entry of entries) {
             if (entry.isIntersecting) {
-              this._isRevealed.set(true);
-              this.observer?.unobserve(host);
+              this.isRevealed.set(true);
+              observer.unobserve(host);
+              /* ✅ On libère complètement l'observer dès qu'il a rempli
+                 son rôle — plus de référence à l'élément. */
+              observer.disconnect();
+              this.observer = undefined;
+              break;
             }
           }
         },
         {
           threshold: 0.12,
           rootMargin: '0px 0px -60px 0px',
-        }
+        },
       );
 
       this.observer.observe(host);
     });
 
-    /* Nettoyage automatique à la destruction */
+    /* Nettoyage automatique à la destruction du composant hôte */
     this.destroyRef.onDestroy(() => {
       this.observer?.disconnect();
       this.observer = undefined;

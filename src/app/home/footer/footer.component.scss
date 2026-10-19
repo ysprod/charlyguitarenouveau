@@ -1,43 +1,35 @@
 /* ═════════════════════════════════════════════════════════════════════
-   APP FOOTER — Styles optimisés (version claire)
+   APP FOOTER — Version claire (sans animation continue)
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
-  /* Fonds — conformes consigne : blanc pour le contenu principal */
   --bg-footer: #ffffff;
   --bg-footer-bottom: #f8fafc;
   --bg-soft: #f1f5f9;
 
-  /* Identité dorée — assombrie pour contraste AA sur fond blanc */
   --gold-primary: #b8860b;
   --gold-hover: #d4a017;
   --gold-glow: rgba(184, 134, 11, .2);
   --gold-soft: rgba(184, 134, 11, .08);
 
-  /* Accent bleu (cohérence avec le reste du site) */
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
 
-  /* Orange (CTA) */
   --warning: #ea580c;
   --warning-hover: #c2410c;
 
-  /* Texte — adapté fond clair */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
   --border-gold: rgba(184, 134, 11, .3);
 
-  /* Rayons */
   --radius-sm: 8px;
   --radius-md: 12px;
 
-  /* Transitions */
   --t-fast: .2s cubic-bezier(.4, 0, .2, 1);
   --t-base: .3s cubic-bezier(.4, 0, .2, 1);
   --t-bounce: .4s cubic-bezier(.68, -.55, .265, 1.55);
@@ -76,7 +68,6 @@
     box-sizing: border-box;
   }
 
-  /* Ligne dorée supérieure */
   &::before {
     content: '';
     position: absolute;
@@ -95,7 +86,6 @@
     );
   }
 
-  /* Fond décoratif — halos très discrets sur fond clair */
   &::after {
     content: '';
     position: absolute;
@@ -108,7 +98,7 @@
   }
 }
 
-/* Halo lumineux supérieur — discret sur fond clair */
+/* ✅ Halo statique (plus de glowPulse) */
 .footer-glow {
   position: absolute;
   top: -50px;
@@ -118,65 +108,9 @@
   height: 100px;
   background: radial-gradient(ellipse at center, var(--gold-glow), transparent 70%);
   filter: blur(40px);
-  opacity: .25;
+  opacity: .2;
   pointer-events: none;
   z-index: 0;
-  animation: glowPulse 4s ease-in-out infinite;
-}
-
-@keyframes glowPulse {
-  0%, 100% { opacity: .15; }
-  50%      { opacity: .3; }
-}
-
-/* ═════════════════════════════════════════════════════════════════════
-   ZONE CTA — ISOLÉE EN HAUT DU FOOTER
-   ═════════════════════════════════════════════════════════════════════ */
-.footer-cta-section {
-  position: relative;
-  z-index: 1;
-  padding: 32px 28px;
-  background:
-    linear-gradient(180deg, var(--gold-soft) 0%, transparent 100%),
-    var(--bg-footer);
-  border-bottom: 1px solid var(--border-subtle);
-
-  /* Fine ligne dorée en bas */
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 180px;
-    height: 1px;
-    opacity: .5;
-    background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
-  }
-}
-
-/* Helper accessibilité — titre invisible mais lu par les lecteurs d'écran */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Conteneur flex pour Install */
-.contact-cta {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -603,7 +537,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   RESPONSIVE — GLOBAL
+   RESPONSIVE
    ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .footer-container {
@@ -613,19 +547,6 @@
 }
 
 @media (max-width: 640px) {
-  .footer-cta-section {
-    padding: 24px 20px;
-  }
-
-  .contact-cta {
-    flex-direction: column;
-    gap: 1rem;
-
-    app-install {
-      width: 100%;
-    }
-  }
-
   .footer-container {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -666,15 +587,17 @@
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    transition-duration: .01ms !important;
-  }
-
-  .footer-glow {
-    animation: none;
+  .brand-logo,
+  .logo-icon,
+  .logo-ring,
+  .logo-text,
+  .social-link,
+  .social-img,
+  .footer-nav a,
+  .footer-nav .nav-dot,
+  .back-to-top,
+  .back-to-top svg {
+    transition: none !important;
   }
 }
 

@@ -1,5 +1,3 @@
-// src/app/academie/academie.component.ts
-
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 

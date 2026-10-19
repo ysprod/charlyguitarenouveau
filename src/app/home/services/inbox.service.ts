@@ -64,10 +64,13 @@ export class InboxService {
           catchError(() => of([] as MessagerieMessage[])),
         );
 
+        /* ✅ Chaîne unique : 1 map au lieu de 3 */
         return combineLatest([inbox$, sent$]).pipe(
-          map(([inbox, sent]) => [...inbox, ...sent]),
-          map((messages) => toInboxMessages(messages)),
-          map((messages) => sortByRecent(messages)),
+          map(([inbox, sent]) => {
+            const merged = [...inbox, ...sent];
+            const adapted = toInboxMessages(merged);
+            return sortByRecent(adapted);
+          }),
         );
       });
     }),
@@ -80,11 +83,14 @@ export class InboxService {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
-  messagesWithFallback$(
+  /**
+   * ✅ `shareReplay` ajouté : évite de recalculer si plusieurs souscriptions.
+   */
+  readonly messagesWithFallback$ = (
     fallback: readonly InboxMessage[],
-  ): Observable<InboxMessage[]> {
-    return this.messages$.pipe(
+  ): Observable<InboxMessage[]> =>
+    this.messages$.pipe(
       map((messages) => (messages.length > 0 ? messages : [...fallback])),
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
-  }
 }

@@ -1,5 +1,3 @@
-// src/app/home/again/utils/animations.util.ts
-
 /**
  * Retourne un délai d'animation en secondes basé sur l'index.
  *

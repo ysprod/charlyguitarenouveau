@@ -1,10 +1,7 @@
 /* ═════════════════════════════════════════════════════════════════════
-   HOMECONNECT — Styles optimisés (version claire, Angular 21)
+   HOMECONNECT — Version claire (sans animation continue)
    ═════════════════════════════════════════════════════════════════════ */
 
-/* ═════════════════════════════════════════════════════════════════════
-   VARIABLES
-   ═════════════════════════════════════════════════════════════════════ */
 :host {
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
@@ -48,19 +45,19 @@
   -webkit-font-smoothing: antialiased;
 }
 
-*,
-*::before,
-*::after {
+/* ✅ Scoped : n'affecte que les enfants du composant */
+:host *,
+:host *::before,
+:host *::after {
   box-sizing: border-box;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   REVEAL ANIMATION (directive appReveal)
+   REVEAL ANIMATION (directive appReveal — one-shot au scroll)
    ═════════════════════════════════════════════════════════════════════ */
 .reveal-init {
   opacity: 0;
   transform: translateY(28px);
-  will-change: opacity, transform;
   transition: opacity .7s ease, transform .7s cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -93,7 +90,6 @@
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 20px rgba(15, 23, 42, .05);
   overflow: hidden;
-  animation: bannerEnter .7s ease both;
 
   &::before {
     content: '';
@@ -105,11 +101,7 @@
   }
 }
 
-@keyframes bannerEnter {
-  from { opacity: 0; transform: translateY(-12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
+/* ✅ Glow statique (plus de glowPulse) */
 .welcome-glow {
   position: absolute;
   top: -60%;
@@ -120,12 +112,6 @@
   filter: blur(60px);
   opacity: .4;
   pointer-events: none;
-  animation: glowPulse 6s ease-in-out infinite;
-}
-
-@keyframes glowPulse {
-  0%, 100% { opacity: .3; }
-  50%      { opacity: .55; }
 }
 
 .welcome-content {
@@ -339,7 +325,10 @@
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
-    transition: transform var(--t-base), border-color var(--t-base), box-shadow var(--t-base);
+    transition:
+      transform var(--t-base),
+      border-color var(--t-base),
+      box-shadow var(--t-base);
 
     &:hover {
       transform: translateY(-6px);
@@ -373,94 +362,6 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   TESTIMONIALS
-   ═════════════════════════════════════════════════════════════════════ */
-.testimonials-section {
-  margin: 5rem 0;
-
-  .testimonials-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .testimonial-card {
-    position: relative;
-    margin: 0;
-    padding: 2rem 1.75rem 1.5rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
-    transition: transform var(--t-base), border-color var(--t-base), box-shadow var(--t-base);
-
-    &:hover {
-      transform: translateY(-6px);
-      border-color: rgba(37, 99, 235, .3);
-      box-shadow: 0 14px 36px rgba(15, 23, 42, .1);
-    }
-
-    .quote-mark {
-      position: absolute;
-      top: .75rem;
-      left: 1.5rem;
-      font-family: Georgia, serif;
-      font-size: 4rem;
-      line-height: 1;
-      color: var(--gold-primary);
-      opacity: .35;
-      pointer-events: none;
-    }
-
-    blockquote {
-      position: relative;
-      z-index: 1;
-      margin: 0 0 1.25rem;
-      font-size: .95rem;
-      font-style: italic;
-      line-height: 1.65;
-      color: var(--text-body);
-    }
-
-    figcaption {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border-subtle);
-
-      .author-avatar {
-        display: grid;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        font-size: 1.2rem;
-        background: linear-gradient(135deg, var(--gold-soft), rgba(37, 99, 235, .12));
-        border: 1px solid var(--border-gold);
-        border-radius: 50%;
-      }
-
-      .author-info {
-        display: flex;
-        flex-direction: column;
-
-        strong {
-          font-size: .9rem;
-          font-weight: 700;
-          color: var(--text-dark);
-        }
-
-        em {
-          font-size: .75rem;
-          font-style: normal;
-          color: var(--text-muted);
-        }
-      }
-    }
-  }
-}
-
-/* ═════════════════════════════════════════════════════════════════════
    PLACEHOLDER & SKELETON (pour @defer)
    ═════════════════════════════════════════════════════════════════════ */
 .documents-placeholder {
@@ -474,25 +375,11 @@
   border-radius: var(--radius-lg);
 }
 
+/* ✅ Skeleton statique (plus de pulse infini) */
 .skeleton {
   height: 140px;
-  background: linear-gradient(
-    90deg,
-    rgba(15, 23, 42, .04) 0%,
-    rgba(15, 23, 42, .08) 50%,
-    rgba(15, 23, 42, .04) 100%
-  );
-  background-size: 200% 100%;
+  background: rgba(15, 23, 42, .06);
   border-radius: var(--radius-md);
-}
-
-.skeleton-pulse {
-  animation: skeletonPulse 1.4s ease-in-out infinite;
-}
-
-@keyframes skeletonPulse {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
 
 .documents-error {
@@ -538,8 +425,7 @@
     margin: 3.5rem 0 2rem;
   }
 
-  .why-section,
-  .testimonials-section {
+  .why-section {
     margin: 3.5rem 0;
   }
 }
@@ -548,21 +434,17 @@
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-
   .reveal-init {
     opacity: 1;
     transform: none;
     transition: none;
   }
 
-  .skeleton-pulse {
-    animation: none;
+  .quick-action,
+  .quick-action .qa-icon,
+  .quick-action .qa-arrow,
+  .why-card,
+  .why-card .why-icon {
+    transition: none !important;
   }
 }

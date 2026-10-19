@@ -36,8 +36,7 @@ import {
 
 import { getInitials } from 'src/app/home/utils/string.utils';
 import { MessagerieService } from '../services/messagerie.service';
- 
- 
+
 @Component({
   selector: 'app-messagerie',
   imports: [
@@ -221,7 +220,7 @@ export class MessagerieComponent {
     } catch (error) {
       console.error('[Messagerie] Erreur envoi :', error);
       this.snackBar.open(
-        'Impossible d’envoyer le message.',
+        'Impossible d\'envoyer le message.',
         'Fermer',
         { duration: 4000, panelClass: ['snack-error'] },
       );

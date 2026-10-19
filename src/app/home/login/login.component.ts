@@ -1,5 +1,3 @@
-// src/app/auth/login/login.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -89,7 +87,7 @@ export class LoginComponent {
   constructor() {
     afterNextRender(() => {
       this.returnUrl.set(
-        this.authContext.resolveReturnUrl(DEFAULT_RETURN_URL_LOGIN)
+        this.authContext.resolveReturnUrl(DEFAULT_RETURN_URL_LOGIN),
       );
     });
 
@@ -114,13 +112,15 @@ export class LoginComponent {
      ═══════════════════════════════════════════════════════ */
 
   async handleSubmit(): Promise<void> {
+    if (this.loading()) return;
+
     this.clearMessages();
 
     const email = this.email().trim();
     const password = this.password();
 
     if (!email || !password) {
-      this.showToast('Veuillez remplir tous les champs.', 'error');
+      this.showError('Veuillez remplir tous les champs.');
       return;
     }
 
@@ -128,12 +128,12 @@ export class LoginComponent {
 
     try {
       const credential = await this.authContext.runInContext(() =>
-        signInWithEmailAndPassword(this.auth, email, password)
+        signInWithEmailAndPassword(this.auth, email, password),
       );
 
       await this.handleSuccessfulLogin(credential.user, 'email');
     } catch (error: unknown) {
-      this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
+      this.showError(this.authContext.getFrenchErrorMessage(error));
     } finally {
       this.loading.set(false);
     }
@@ -144,6 +144,8 @@ export class LoginComponent {
      ═══════════════════════════════════════════════════════ */
 
   async loginWithGoogle(): Promise<void> {
+    if (this.loading()) return;
+
     this.clearMessages();
     this.loading.set(true);
 
@@ -152,16 +154,17 @@ export class LoginComponent {
       provider.setCustomParameters({ prompt: 'select_account' });
 
       const credential = await this.authContext.runInContext(() =>
-        signInWithPopup(this.auth, provider)
+        signInWithPopup(this.auth, provider),
       );
 
       await this.handleSuccessfulLogin(credential.user, 'google');
     } catch (error: unknown) {
+      /* ✅ Ignore la fermeture volontaire de popup */
       if (
         this.authContext.getFirebaseErrorCode(error) !==
         'auth/popup-closed-by-user'
       ) {
-        this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
+        this.showError(this.authContext.getFrenchErrorMessage(error));
       }
     } finally {
       this.loading.set(false);
@@ -174,7 +177,7 @@ export class LoginComponent {
 
   private async handleSuccessfulLogin(
     user: User | null,
-    origine: UserOrigin
+    origine: UserOrigin,
   ): Promise<void> {
     if (!user) {
       await this.router.navigateByUrl(this.returnUrl());
@@ -191,18 +194,18 @@ export class LoginComponent {
 
     try {
       const snapshot = await this.authContext.runInContext(() =>
-        get(userReference)
+        get(userReference),
       );
       exists = snapshot.exists();
     } catch {
       /* Lecture échouée — on continue en mode création */
     }
 
-    /* Écriture en arrière-plan (ne bloque pas la navigation) */
+    /* ✅ Écriture en arrière-plan (ne bloque pas la navigation) */
     void this.writeUserToDatabaseInBackground(
       user,
       exists || isLikelyNewUser,
-      origine
+      origine,
     );
 
     await this.router.navigateByUrl(this.returnUrl());
@@ -215,12 +218,13 @@ export class LoginComponent {
   private async writeUserToDatabaseInBackground(
     user: User,
     exists: boolean,
-    origine: UserOrigin
+    origine: UserOrigin,
   ): Promise<void> {
     const userReference = ref(this.database, `users/${user.uid}`);
     const now = new Date().toISOString();
     const email = user.email ?? '';
-    const displayName = user.displayName ?? email.split('@')[0] ?? '';
+    /* ✅ `split` retourne toujours un tableau → le `?? ''` était mort */
+    const displayName = user.displayName ?? email.split('@')[0] ?? 'Utilisateur';
     const photoURL = user.photoURL ?? '';
 
     try {
@@ -231,7 +235,7 @@ export class LoginComponent {
             email,
             displayName,
             photoURL,
-          })
+          }),
         );
         return;
       }
@@ -250,7 +254,7 @@ export class LoginComponent {
       };
 
       await this.authContext.runInContext(() =>
-        set(userReference, newUser)
+        set(userReference, newUser),
       );
     } catch (err) {
       console.error('[Login] Erreur sauvegarde profil :', err);
@@ -262,14 +266,15 @@ export class LoginComponent {
      ═══════════════════════════════════════════════════════ */
 
   async onForgotPassword(): Promise<void> {
+    if (this.loading()) return;
+
     this.clearMessages();
 
     const email = this.email().trim();
 
     if (!email) {
-      this.showToast(
+      this.showError(
         'Entrez votre e-mail pour recevoir un lien de réinitialisation.',
-        'error'
       );
       return;
     }
@@ -278,22 +283,21 @@ export class LoginComponent {
 
     try {
       await this.authContext.runInContext(() =>
-        sendPasswordResetEmail(this.auth, email)
+        sendPasswordResetEmail(this.auth, email),
       );
 
-      this.showToast(
+      this.showSuccess(
         'Un e-mail de réinitialisation vous a été envoyé.',
-        'success'
       );
     } catch (error: unknown) {
-      this.showToast(this.authContext.getFrenchErrorMessage(error), 'error');
+      this.showError(this.authContext.getFrenchErrorMessage(error));
     } finally {
       this.loading.set(false);
     }
   }
 
   /* ═══════════════════════════════════════════════════════
-     HELPERS
+     HELPERS — MESSAGES
      ═══════════════════════════════════════════════════════ */
 
   private clearMessages(): void {
@@ -301,22 +305,26 @@ export class LoginComponent {
     this.successMessage.set('');
   }
 
-  private showToast(message: string, type: 'success' | 'error'): void {
-    if (type === 'success') {
-      this.successMessage.set(message);
-      this.errorMessage.set('');
-    } else {
-      this.errorMessage.set(message);
-      this.successMessage.set('');
-    }
+  private showError(message: string): void {
+    this.errorMessage.set(message);
+    this.successMessage.set('');
+    this.scheduleMessageClear(message);
+  }
 
+  private showSuccess(message: string): void {
+    this.successMessage.set(message);
+    this.errorMessage.set('');
+    this.scheduleMessageClear(message);
+  }
+
+  private scheduleMessageClear(message: string): void {
     if (this.toastTimeoutId !== null) {
       clearTimeout(this.toastTimeoutId);
     }
 
     this.toastTimeoutId = setTimeout(() => {
-      if (this.successMessage() === message) this.successMessage.set('');
       if (this.errorMessage() === message) this.errorMessage.set('');
+      if (this.successMessage() === message) this.successMessage.set('');
       this.toastTimeoutId = null;
     }, TOAST_DURATION_MS);
   }

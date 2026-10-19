@@ -1,5 +1,4 @@
-// src/app/home/services/body-scroll.service.ts
-
+ 
 import { DOCUMENT, Injectable, inject } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })

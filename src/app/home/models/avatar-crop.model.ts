@@ -32,5 +32,4 @@ export const AVATAR_OUTPUT_SIZE = 200;
 /** Ratio qualité JPEG à l'export. */
 export const AVATAR_JPEG_QUALITY = 0.9;
 
-/** Taille maximale du fichier source accepté (avant recadrage). */
-export const MAX_SOURCE_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo
+export const MAX_SOURCE_FILE_SIZE = 12 * 1024 * 1024; // 10 Mo

@@ -1,5 +1,3 @@
-// src/app/home/install/install.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,

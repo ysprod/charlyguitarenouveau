@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════
-   TYPES PARTAGÉS — Code promo
-   ═══════════════════════════════════════════════════════ */
-
 export interface CachedPromoValidation {
   readonly code: string;
   readonly validatedAt: number;

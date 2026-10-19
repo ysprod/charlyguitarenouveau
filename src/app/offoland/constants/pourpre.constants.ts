@@ -1,5 +1,3 @@
-// src/app/offoland/dimensions/pourpre/constants/pourpre.constants.ts
-
 import { Dimension } from '../models/pourpre.model';
 
 /* ═══════════════════════════════════════════════════════════

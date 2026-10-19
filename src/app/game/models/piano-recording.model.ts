@@ -1,9 +1,3 @@
-// src/app/game/pianovirtuel/models/piano-recording.model.ts
-
-/* ═══════════════════════════════════════════════════════════
-   ENREGISTREMENT
-   ═══════════════════════════════════════════════════════════ */
-
 /** Note enregistrée avec sa position temporelle et sa durée. */
 export interface RecordedNote {
   readonly note: string;

@@ -1,9 +1,5 @@
 import { FilterOption } from '../models/documents-ui.model';
 
-/* ═══════════════════════════════════════════════════════
-   FILTRES
-   ═══════════════════════════════════════════════════════ */
-
 export const DOCUMENT_FILTERS: readonly FilterOption[] = [
   { label: 'Tous les documents', icon: '✨' },
   { label: 'Méthodes', icon: '📙' },
@@ -13,10 +9,6 @@ export const DOCUMENT_FILTERS: readonly FilterOption[] = [
 ];
 
 export const FILTER_ALL_LABEL = 'Tous les documents';
-
-/* ═══════════════════════════════════════════════════════
-   FIREBASE
-   ═══════════════════════════════════════════════════════ */
 
 export const DOCUMENTS_DB_PATHS = {
   DOCUMENTS: 'documents',
