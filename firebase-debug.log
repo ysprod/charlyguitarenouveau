@@ -1,0 +1,27 @@
+[debug] [2026-10-20T01:01:26.251Z] ----------------------------------------------------------------------
+[debug] [2026-10-20T01:01:26.255Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\commu\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting:charlyguitare
+[debug] [2026-10-20T01:01:26.256Z] CLI Version:   15.30.1
+[debug] [2026-10-20T01:01:26.256Z] Platform:      win32
+[debug] [2026-10-20T01:01:26.256Z] Node Version:  v22.23.3
+[debug] [2026-10-20T01:01:26.257Z] Detected Agent: unknown
+[debug] [2026-10-20T01:01:26.257Z] Time:          Tue Oct 20 2026 01:01:26 GMT+0000 (heure moyenne de Greenwich)
+[debug] [2026-10-20T01:01:26.257Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-10-20T01:01:31.825Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-10-20T01:01:31.826Z] > authorizing via signed-in user (yayasidibeproduction@gmail.com)
+[debug] [2026-10-20T01:01:31.827Z] [iam] checking project charly-guitare for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-10-20T01:01:31.852Z] Checked if tokens are valid: false, expires at: 1792449625179
+[debug] [2026-10-20T01:01:31.852Z] Checked if tokens are valid: false, expires at: 1792449625179
+[debug] [2026-10-20T01:01:31.852Z] > refreshing access token with scopes: []
+[debug] [2026-10-20T01:01:31.856Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-10-20T01:01:31.856Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-10-20T01:01:32.519Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-10-20T01:01:32.519Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-10-20T01:01:32.532Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/charly-guitare:testIamPermissions [none]
+[debug] [2026-10-20T01:01:32.533Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/charly-guitare:testIamPermissions  x-goog-user-project=charly-guitare
+[debug] [2026-10-20T01:01:32.533Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/charly-guitare:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-10-20T01:01:34.128Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/charly-guitare:testIamPermissions 200
+[debug] [2026-10-20T01:01:34.128Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/charly-guitare:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-10-20T01:01:34.129Z] Checked if tokens are valid: true, expires at: 1792461691520
+[debug] [2026-10-20T01:01:34.129Z] Checked if tokens are valid: true, expires at: 1792461691520
+[debug] [2026-10-20T01:01:34.129Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/charly-guitare [none]

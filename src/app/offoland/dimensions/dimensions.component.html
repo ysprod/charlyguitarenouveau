@@ -1,0 +1,43 @@
+<!-- src/app/offoland/dimensions/dimensions.component.html -->
+
+<div class="dimensions-shell">
+
+  <!-- ═══════════════════════════════════════════════════════
+       TOOLBAR
+       ═══════════════════════════════════════════════════════ -->
+  <header class="dimensions-toolbar">
+    <div class="toolbar-left">
+
+      <!-- ✅ Bouton retour conditionnel -->
+      @if (showBackButton()) {
+        <a
+          routerLink="/offoland/dimensions/charlyguitaregame"
+          class="btn-back"
+          aria-label="Retour à la galerie des dimensions"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          <span>Retour</span>
+        </a>
+      }
+
+      <!-- ✅ Nom de la dimension en cours -->
+      <div class="toolbar-title">
+        <span class="title-icon" aria-hidden="true">{{ currentIcon() }}</span>
+        <span class="title-text">{{ currentLabel() }}</span>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CONTENU (router-outlet)
+       ═══════════════════════════════════════════════════════ -->
+  <main class="dimensions-content">
+    <router-outlet />
+  </main>
+
+</div>

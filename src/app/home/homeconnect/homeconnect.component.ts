@@ -14,28 +14,19 @@ import { Auth, authState } from '@angular/fire/auth';
 import { Database, objectVal, ref } from '@angular/fire/database';
 import { RouterLink } from '@angular/router';
 import { of, switchMap } from 'rxjs';
-
+import { QUICK_ACTIONS, WHY_PILLARS, } from 'src/app/home/constants/homeconnect.constants';
+import { FooterComponent } from 'src/app/home/footer/footer.component';
 import { UserProfile } from 'src/app/home/models/user.model';
 import { getInitials } from 'src/app/home/utils/string.utils';
-
-import {
-  QUICK_ACTIONS,
-  WHY_PILLARS,
-} from 'src/app/home/constants/homeconnect.constants';
-
-import { DocumentsComponent } from 'src/app/academie/documents/documents.component';
-import { FooterComponent } from 'src/app/home/footer/footer.component';
-import { RevealDirective } from 'src/app/shared/reveal.directive';
 import { InboxPanelComponent } from './inbox-panel/inbox-panel.component';
 
 @Component({
   selector: 'app-homeconnect',
   imports: [
     RouterLink,
-    RevealDirective,
+ 
     FooterComponent,
     InboxPanelComponent,
-    DocumentsComponent,
   ],
   templateUrl: './homeconnect.component.html',
   styleUrls: ['./homeconnect.component.scss'],
@@ -92,8 +83,8 @@ export class HomeconnectComponent {
   readonly userInitials = computed(() =>
     getInitials(
       this.userProfile()?.displayName ??
-        this.currentUser()?.displayName ??
-        'OFFOLANDAIS',
+      this.currentUser()?.displayName ??
+      'OFFOLANDAIS',
       this.currentUser()?.email,
       'M',
     ),
@@ -124,10 +115,6 @@ export class HomeconnectComponent {
 
   readonly quickActions = QUICK_ACTIONS;
   readonly whyPillars = WHY_PILLARS;
-
-  /* ═══════════════════════════════════════════════════════
-     CYCLE DE VIE
-     ═══════════════════════════════════════════════════════ */
 
   constructor() {
     afterNextRender(() => {

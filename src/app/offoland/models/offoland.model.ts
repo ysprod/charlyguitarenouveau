@@ -18,25 +18,4 @@ export interface Portail {
   /** Classe CSS additionnelle (ex : portail-economie). */
   readonly cssClass: string;
 }
-
-/** Divinité d'Offoland. */
-export interface Divinite {
-  readonly id: string;
-  readonly icon: string;
-  readonly name: string;
-  readonly role: string;
-  readonly quote: string;
-}
-
-/** Note de la Mélodie des Origines (La m – Ré m – Fa M – Sol M). */
-export interface AccordOrigine {
-  readonly label: string;
-  readonly color: string;
-}
-
-/** Note sacrée (Do, Ré, Mi…). */
-export interface NoteSacree {
-  readonly label: string;
-  readonly color: string;
-}
  

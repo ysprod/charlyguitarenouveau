@@ -1,10 +1,11 @@
+// src/app/academie/academie.component.ts
+
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { DocumentsComponent } from './documents/documents.component';
-
 import { Formation, LiveCard } from './models/academie.model';
 import { FORMATIONS, LIVE_CARDS } from './data/academie.data';
+import { OffresComponent } from './offres/offres.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    ACADEMIE — Offolomou Ecosysteme Academie
@@ -14,7 +15,7 @@ import { FORMATIONS, LIVE_CARDS } from './data/academie.data';
   selector: 'app-academie',
   imports: [
     RouterLink,
-    DocumentsComponent,
+    OffresComponent,
   ],
   templateUrl: './academie.component.html',
   styleUrls: ['./academie.component.scss'],

@@ -10,33 +10,8 @@
 
     <div class="hero-content">
       <div class="hero-brand">
-        <h1 class="hero-title">Nos Produits Numériques</h1>
-      </div>
-
-      <div class="credit-card">
-        <div class="credit-card-glow" aria-hidden="true"></div>
-
-        <div class="credit-header">
-          <div class="credit-icon-wrapper" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="5" width="20" height="14" rx="2" />
-              <line x1="2" y1="10" x2="22" y2="10" />
-            </svg>
-          </div>
-          <span class="credit-tag">Crédits</span>
-        </div>
-
-        <div class="credit-body">
-          <span class="credit-amount">{{ userCredit() | formatPrice }}</span>
-          <a routerLink="/contact" class="btn-recharge" title="Recharger mon solde">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>Recharger</span>
-          </a>
-        </div>
-      </div>
+        <h1 class="hero-title">BOUTIQUE</h1>
+      </div> 
     </div>
   </header>
 
@@ -90,22 +65,7 @@
           </svg>
         </div>
       </div>
-    </div>
-
-    <div class="categories-scroll">
-      @for (filter of filters; track filter.label) {
-        <button
-          type="button"
-          class="filter-pill"
-          [class.active]="selectedFilter() === filter.label"
-          (click)="filterBy(filter.label)"
-        >
-          <span class="filter-icon" aria-hidden="true">{{ filter.icon }}</span>
-          <span class="filter-text">{{ filter.label }}</span>
-        </button>
-      }
-    </div>
-
+    </div> 
     <div class="results-header">
       <p class="results-count">
         <strong>{{ documentCount() }}</strong>

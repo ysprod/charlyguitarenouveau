@@ -1,24 +1,20 @@
 /* ==========================================================================
-   OFFOLAND FINANCE — Fond blanc, palette fonctionnelle (Angular 21)
+   OFFOLAND FINANCE — Optimisé GPU
    ========================================================================== */
 
 :host {
-  /* Fonds — conformes consigne : blanc pour le contenu */
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
   --bg-card: #ffffff;
 
-  /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
 
-  /* Palette fonctionnelle */
   --primary: #2563eb;
   --primary-soft: rgba(37, 99, 235, .08);
   --success: #16a34a;
@@ -34,11 +30,9 @@
   --neutral: #64748b;
   --neutral-soft: rgba(100, 116, 139, .08);
 
-  /* Identité dorée pour accents */
   --gold: #b8860b;
   --gold-soft: rgba(184, 134, 11, .1);
 
-  /* Transitions */
   --t-fast: .2s cubic-bezier(.4, 0, .2, 1);
   --t-base: .3s cubic-bezier(.4, 0, .2, 1);
 
@@ -48,6 +42,13 @@
   background-color: var(--bg-page);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+/* ✅ Scoped : n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
 }
 
 .offoland-finance {
@@ -109,14 +110,16 @@
   border: 1px solid var(--border-subtle);
   overflow: hidden;
   text-align: center;
-  box-shadow: 0 10px 30px -15px rgba(15, 23, 42, .1);
-  animation: fadeInUp .7s cubic-bezier(.22, 1, .36, 1) both;
+  /* ✅ Ombre réduite */
+  box-shadow: 0 2px 12px rgba(15, 23, 42, .06);
+  /* ✅ animation fadeInUp supprimée */
 
   .hero-background {
     position: absolute;
     inset: 0;
     pointer-events: none;
 
+    /* ✅ Coins statiques (plus de floatCoin) */
     .floating-coins {
       position: absolute;
       inset: 0;
@@ -125,7 +128,6 @@
         position: absolute;
         font-size: 1.8rem;
         opacity: .18;
-        animation: floatCoin 4s ease-in-out infinite alternate;
 
         &:nth-child(1) { top: 15%; left: 10%; }
         &:nth-child(2) { top: 25%; right: 12%; }
@@ -135,15 +137,33 @@
       }
     }
 
+    /* ✅ Orbs sans blur(80px) → gradient radial simple */
     .gradient-orb {
       position: absolute;
       border-radius: 50%;
-      filter: blur(80px);
-      opacity: .25;
+      opacity: .2;
 
-      &.orb-1 { width: 250px; height: 250px; background: #fbbf24; top: -50px; left: -50px; }
-      &.orb-2 { width: 300px; height: 300px; background: #a5b4fc; bottom: -100px; right: -50px; }
-      &.orb-3 { width: 180px; height: 180px; background: #6ee7b7; top: 40%; left: 45%; }
+      &.orb-1 {
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, #fbbf24 0%, transparent 70%);
+        top: -50px;
+        left: -50px;
+      }
+      &.orb-2 {
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, #a5b4fc 0%, transparent 70%);
+        bottom: -100px;
+        right: -50px;
+      }
+      &.orb-3 {
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, #6ee7b7 0%, transparent 70%);
+        top: 40%;
+        left: 45%;
+      }
     }
   }
 
@@ -182,9 +202,8 @@
     border: 1px solid rgba(184, 134, 11, .3);
     padding: 1.25rem 2.5rem;
     border-radius: 1.5rem;
-    box-shadow:
-      0 10px 25px -12px rgba(15, 23, 42, .15),
-      0 0 0 1px rgba(184, 134, 11, .06);
+    /* ✅ Ombre simple */
+    box-shadow: 0 2px 10px rgba(15, 23, 42, .08);
 
     .supply-label {
       display: flex;
@@ -197,13 +216,13 @@
       margin-bottom: .5rem;
       font-weight: 600;
 
+      /* ✅ Point live statique (plus de pulse) */
       .live-dot {
         width: 8px;
         height: 8px;
         background-color: var(--success);
         border-radius: 50%;
         box-shadow: 0 0 0 4px rgba(22, 163, 74, .15);
-        animation: pulse 1.8s infinite;
       }
     }
 
@@ -238,10 +257,13 @@
       padding: 2rem;
       display: flex;
       flex-direction: column;
-      transition: all .3s cubic-bezier(.4, 0, .2, 1);
+      transition:
+        transform var(--t-base),
+        border-color var(--t-base),
+        box-shadow var(--t-base);
       overflow: hidden;
-      box-shadow: 0 2px 12px rgba(15, 23, 42, .04);
-      animation: fadeInUp .6s cubic-bezier(.22, 1, .36, 1) both;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+      /* ✅ animation fadeInUp supprimée */
 
       &.variant-primary { --card-color: var(--primary); --card-soft: var(--primary-soft); }
       &.variant-success { --card-color: var(--success); --card-soft: var(--success-soft); }
@@ -259,15 +281,13 @@
         height: 3px;
         background: var(--card-color);
         opacity: .75;
-        transition: opacity .3s ease;
+        transition: opacity var(--t-base);
       }
 
       &:hover {
         transform: translateY(-6px);
         border-color: var(--card-color);
-        box-shadow:
-          0 20px 45px -12px rgba(15, 23, 42, .12),
-          0 0 25px -12px var(--card-color);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .1);
 
         &::before { opacity: 1; }
 
@@ -284,7 +304,7 @@
         inset: 0;
         background: radial-gradient(circle at 80% 0%, var(--card-soft), transparent 55%);
         opacity: .25;
-        transition: opacity .3s ease;
+        transition: opacity var(--t-base);
         pointer-events: none;
       }
 
@@ -301,7 +321,7 @@
           border-radius: 1rem;
           background: var(--bg-soft);
           border: 1px solid var(--border-subtle);
-          transition: all .3s ease;
+          transition: background var(--t-base), transform var(--t-base);
         }
 
         .card-number {
@@ -392,14 +412,17 @@
       border-radius: 1.25rem;
       padding: 1.5rem;
       text-align: center;
-      transition: all .3s ease;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
-      animation: fadeInUp .6s cubic-bezier(.22, 1, .36, 1) both;
+      transition:
+        transform var(--t-base),
+        border-color var(--t-base),
+        box-shadow var(--t-base);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+      /* ✅ animation fadeInUp supprimée */
 
       &:hover {
         border-color: rgba(37, 99, 235, .35);
         transform: translateY(-4px);
-        box-shadow: 0 14px 30px -10px rgba(15, 23, 42, .1);
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
       }
 
       .step-number {
@@ -432,7 +455,6 @@
         color: var(--text-muted);
       }
 
-      /* Flèche entre étapes — visible desktop, masquée mobile */
       .step-arrow {
         position: absolute;
         top: 50%;
@@ -454,7 +476,7 @@
     padding: 2rem;
     max-width: 600px;
     margin: 0 auto;
-    box-shadow: 0 10px 30px -15px rgba(15, 23, 42, .1);
+    box-shadow: 0 2px 12px rgba(15, 23, 42, .06);
 
     .example-header {
       text-align: center;
@@ -514,7 +536,7 @@
     border: 1px solid var(--border-subtle);
     overflow: hidden;
     margin-bottom: 2.5rem;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, .04);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
 
     .exchange-row {
       display: grid;
@@ -522,7 +544,7 @@
       align-items: center;
       padding: 1rem 1.5rem;
       border-bottom: 1px solid var(--border-subtle);
-      animation: fadeInUp .5s cubic-bezier(.22, 1, .36, 1) both;
+      /* ✅ animation fadeInUp supprimée */
 
       &:last-child { border-bottom: none; }
 
@@ -533,7 +555,6 @@
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: .06em;
-        animation: none;
       }
 
       .exchange-flag {
@@ -583,8 +604,10 @@
       border-radius: 1rem;
       padding: 1.5rem;
       text-align: center;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
-      transition: all .3s ease;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+      transition:
+        transform var(--t-base),
+        border-color var(--t-base);
 
       &:hover {
         border-color: rgba(184, 134, 11, .35);
@@ -626,7 +649,7 @@
     border: 1px solid var(--border-subtle);
     overflow-x: auto;
     margin-bottom: 1.5rem;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, .04);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
 
     .ledger-row {
       display: grid;
@@ -712,22 +735,6 @@
   }
 }
 
-/* ==================== KEYFRAMES ==================== */
-@keyframes floatCoin {
-  0%   { transform: translateY(0) rotate(0deg); }
-  100% { transform: translateY(-15px) rotate(10deg); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1;  transform: scale(1);   }
-  50%      { opacity: .5; transform: scale(1.4); }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .offoland-finance {
@@ -757,12 +764,13 @@
 
 /* ==================== ACCESSIBILITÉ ==================== */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+  .finance-card,
+  .finance-card .card-emoji,
+  .finance-card .card-glow,
+  .pipeline-step,
+  .dual-card,
+  .ledger-row {
+    transition: none !important;
   }
 }
 

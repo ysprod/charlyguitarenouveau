@@ -57,7 +57,6 @@ export type QuickActionColor =
 export interface QuickAction {
   icon: string;
   label: string;
-  description: string;
   route: string;
   color: QuickActionColor;
 } 

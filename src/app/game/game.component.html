@@ -1,33 +1,85 @@
+<!-- src/app/game/game.component.html -->
+
 <div class="game-shell">
-  <nav class="game-toolbar">
-    <!-- Retour -->
-    <button type="button" class="toolbar-btn" [disabled]="!isChildRoute()" (click)="goBack()" aria-label="Retour"
-      title="Retour">
-      ← Retour
-    </button>
 
-    <!-- Son -->
-    <button type="button" class="toolbar-btn" (click)="toggleSound()" [attr.aria-pressed]="soundOn()"
-      [attr.aria-label]="soundAriaLabel()" [title]="soundAriaLabel()">
-      {{ soundIcon() }}
-    </button>
+  <!-- ═══════════════════════════════════════════════════════
+       TOOLBAR
+       ═══════════════════════════════════════════════════════ -->
+  <nav class="game-toolbar" aria-label="Barre d'outils du jeu">
 
-    <!-- Aide -->
-    <button type="button" class="toolbar-btn" (click)="toggleHelp()" aria-label="Aide" title="Aide">
-      ❓
-    </button>
+    <!-- ✅ Bouton retour (masqué sur /game/play) -->
+    @if (showBackButton()) {
+      <button
+        type="button"
+        class="toolbar-btn"
+        (click)="goBack()"
+        aria-label="Retour aux jeux"
+        title="Retour aux jeux"
+      >
+        <svg class="toolbar-icon" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span class="toolbar-label">Retour</span>
+      </button>
+    }
+
+    <!-- ✅ Nom du jeu en cours -->
+    <span class="toolbar-title">{{ activeGameLabel() }}</span>
+
+    <!-- Actions à droite -->
+    <div class="toolbar-actions">
+
+      <!-- Son -->
+      <button
+        type="button"
+        class="toolbar-btn toolbar-btn--icon"
+        (click)="toggleSound()"
+        [attr.aria-pressed]="soundOn()"
+        [attr.aria-label]="soundAriaLabel()"
+        [title]="soundAriaLabel()"
+      >
+        {{ soundIcon() }}
+      </button>
+
+      <!-- Aide -->
+      <button
+        type="button"
+        class="toolbar-btn toolbar-btn--icon"
+        (click)="toggleHelp()"
+        aria-label="Aide"
+        title="Aide"
+      >
+        ❓
+      </button>
+
+    </div>
   </nav>
 
-  <!-- Panneau d'aide -->
+  <!-- ═══════════════════════════════════════════════════════
+       PANNEAU D'AIDE
+       ═══════════════════════════════════════════════════════ -->
   @if (helpOpen()) {
-  <aside class="game-help">
-    <button type="button" class="game-help-close" (click)="toggleHelp()" aria-label="Fermer l'aide">✕</button>
-    <ng-content select="[help]"></ng-content>
-    <p>Utilise les boutons ci-dessus pour revenir, couper le son ou afficher cette aide.</p>
-  </aside>
+    <aside class="game-help" role="region" aria-label="Aide">
+      <button
+        type="button"
+        class="game-help-close"
+        (click)="toggleHelp()"
+        aria-label="Fermer l'aide"
+      >✕</button>
+      <ng-content select="[help]"></ng-content>
+      <p>Utilise les boutons ci-dessus pour revenir, couper le son ou afficher cette aide.</p>
+    </aside>
   }
 
+  <!-- ═══════════════════════════════════════════════════════
+       CONTENU
+       ═══════════════════════════════════════════════════════ -->
   <main class="game-content">
-    <router-outlet></router-outlet>
+    <router-outlet />
   </main>
+
 </div>

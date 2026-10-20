@@ -1,8 +1,14 @@
+// src/app/app.routes.ts
+
 import { Routes } from '@angular/router';
+
 import { AuthGuard } from './guards/auth/auth.guard';
 import { HomeComponent } from './home/home.component';
 
 export const routes: Routes = [
+  /* ═══════════════════════════════════════════════════════
+     AUTH
+     ═══════════════════════════════════════════════════════ */
   {
     path: 'login',
     loadComponent: () =>
@@ -20,6 +26,9 @@ export const routes: Routes = [
     title: 'Inscription — Charly Guitare',
   },
 
+  /* ═══════════════════════════════════════════════════════
+     HOME
+     ═══════════════════════════════════════════════════════ */
   {
     path: '',
     component: HomeComponent,
@@ -35,7 +44,6 @@ export const routes: Routes = [
   /* ═══════════════════════════════════════════════════════
      GAME (lazy loading par sous-module)
      ═══════════════════════════════════════════════════════ */
-
   {
     path: 'game',
     loadChildren: () =>
@@ -45,7 +53,6 @@ export const routes: Routes = [
   /* ═══════════════════════════════════════════════════════
      REDIRECTIONS ANCIENNES URLS → /game/...
      ═══════════════════════════════════════════════════════ */
-
   { path: 'play', redirectTo: 'game/play', pathMatch: 'full' },
   { path: 'fretboard', redirectTo: 'game/fretboard', pathMatch: 'full' },
   { path: 'memory', redirectTo: 'game/memory', pathMatch: 'full' },
@@ -113,6 +120,15 @@ export const routes: Routes = [
       ),
     canActivate: [AuthGuard],
     title: 'Conversation',
+  },
+  {
+    path: 'studio',
+    loadComponent: () =>
+      import('./home/studio/studio.component').then(
+        (m) => m.StudioComponent,
+      ),
+    canActivate: [AuthGuard],
+    title: 'Studio professionnel',
   },
   {
     path: 'notifications',
@@ -202,114 +218,31 @@ export const routes: Routes = [
     title: 'Live',
   },
 
-  /* ═══════════════════════════════════════════════════════
-     OFFOLAND (protégées par AuthGuard — lazy loading)
-     ═══════════════════════════════════════════════════════ */
+    /* ─── Live ─── */
+  {
+    path: 'store',
+    loadComponent: () =>
+      import('./academie/documents/documents.component').then(
+        (m) => m.DocumentsComponent,
+      ),
+    canActivate: [AuthGuard],
+    title: 'Boutique',
+  },
 
+  /* ═══════════════════════════════════════════════════════
+     OFFOLAND (lazy loading par sous-module)
+     ═══════════════════════════════════════════════════════ */
   {
     path: 'offoland',
-    loadComponent: () =>
-      import('./offoland/offoland.component').then(
-        (m) => m.OffolandComponent,
+    loadChildren: () =>
+      import('./offoland/offoland.routes').then(
+        (m) => m.offolandRoutes,
       ),
-    canActivate: [AuthGuard],
-    title: 'Offoland',
-  },
-  {
-    path: 'charlyguitaregame',
-    loadComponent: () =>
-      import(
-        './offoland/dimensions/charlyguitaregame/charlyguitaregame.component'
-      ).then((m) => m.CharlyguitaregameComponent),
-    canActivate: [AuthGuard],
-    title: 'Charly Guitare Game',
-  },
-  {
-    path: 'finance',
-    loadComponent: () =>
-      import('./offoland/finance/finance.component').then(
-        (m) => m.FinanceComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Finance',
-  },
-  {
-    path: 'bco',
-    loadComponent: () =>
-      import('./offoland/bco/bco.component').then(
-        (m) => m.BcoComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'BCO',
-  },
-  {
-    path: 'blanc',
-    loadComponent: () =>
-      import('./offoland/dimensions/blanc/blanc.component').then(
-        (m) => m.BlancComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Blanc',
-  },
-  {
-    path: 'bleu',
-    loadComponent: () =>
-      import('./offoland/dimensions/bleu/bleu.component').then(
-        (m) => m.BleuComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Bleu',
-  },
-  {
-    path: 'noir',
-    loadComponent: () =>
-      import('./offoland/dimensions/noir/noir.component').then(
-        (m) => m.NoirComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Noir',
-  },
-  {
-    path: 'pourpre',
-    loadComponent: () =>
-      import('./offoland/dimensions/pourpre/pourpre.component').then(
-        (m) => m.PourpreComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Pourpre',
-  },
-  {
-    path: 'rouge',
-    loadComponent: () =>
-      import('./offoland/dimensions/rouge/rouge.component').then(
-        (m) => m.RougeComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Rouge',
-  },
-  {
-    path: 'vert',
-    loadComponent: () =>
-      import('./offoland/dimensions/vert/vert.component').then(
-        (m) => m.VertComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Vert',
-  },
-  {
-    path: 'violet',
-    loadComponent: () =>
-      import('./offoland/dimensions/violet/violet.component').then(
-        (m) => m.VioletComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Violet',
   },
 
   /* ═══════════════════════════════════════════════════════
      FALLBACK
      ═══════════════════════════════════════════════════════ */
-
   {
     path: '**',
     redirectTo: 'home',

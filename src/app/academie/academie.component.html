@@ -1,3 +1,5 @@
+<!-- src/app/academie/academie.component.html -->
+
 <div class="academie-container">
 
   <!-- ═══════════════════════════════════════════════════════
@@ -9,39 +11,85 @@
     <div class="hero-glow glow-2" aria-hidden="true"></div>
 
     <div class="hero-content">
-      <div class="hero-title-wrapper">
-        <span class="hero-line" aria-hidden="true"></span>
-        <h1 id="academie-hero-title" class="hero-title">
-          OFFOLOMOU ECOSYSTEME ACADEMIE
-        </h1>
-        <span class="hero-line" aria-hidden="true"></span>
-      </div>
+      <span class="hero-eyebrow">
+       École de formation et d’innovation
+      </span>
+
+      <h1 id="academie-hero-title" class="hero-title">
+        OFFOLOMOU<br>
+        <span class="title-accent">ÉCOSYSTÈME ACADÉMIE</span>
+      </h1>
 
       <p class="hero-description">
-        Développez votre potentiel artistique grâce à nos méthodes,
-        cours particuliers, master class et ressources pédagogiques exclusives.
+       Profitez de méthodes innovantes, de masterclass et de ressources pédagogiques exclusives.
+        Explorez notre boutique pour retrouver tout ce dont vous avez besoin. 
       </p>
     </div>
   </section>
+  <section class="boutique-cta" aria-labelledby="boutique-title">
+    <div class="cta-orb cta-orb--gold" aria-hidden="true"></div>
+    <div class="cta-orb cta-orb--blue" aria-hidden="true"></div>
+
+    <div class="cta-inner">
+
+      <div class="cta-icon-wrapper">
+        <span class="cta-icon" aria-hidden="true">🎼</span>
+      </div>
+
+      <span class="cta-eyebrow">Bibliothèque numérique</span>
+
+      <h2 id="boutique-title" class="cta-title">
+        Découvre la <em>Boutique</em>
+      </h2> 
+      <div class="cta-features" aria-hidden="true">
+        <span class="cta-feature">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Méthodes PDF
+        </span>
+        <span class="cta-feature">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Livres
+        </span>
+        <span class="cta-feature">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Accessoires
+        </span>
+      </div>
+
+      <a routerLink="/offres" class="cta-button">
+        <span>Explorer la boutique</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+             stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </a>
+
+    </div>
+  </section>
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION OFFRES
+       ═══════════════════════════════════════════════════════ -->
+  <app-offres />
 
   <!-- ═══════════════════════════════════════════════════════
-       DOCUMENTS (lazy)
+       ✅ CTA "Wahou" — Accès à la boutique (remplace <app-documents />)
        ═══════════════════════════════════════════════════════ -->
-  @defer (on viewport) {
-  <app-documents />
-  } @placeholder (minimum 300ms) {
-  <div class="documents-placeholder" style="min-height: 320px;" aria-hidden="true">
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-  </div>
-  } @loading (after 100ms; minimum 300ms) {
-  <div class="documents-placeholder" aria-hidden="true">
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-    <div class="skeleton"></div>
-  </div>
-  }
+
 
   <!-- ═══════════════════════════════════════════════════════
        FORMATIONS
@@ -50,43 +98,43 @@
 
     <div class="cards-grid">
       @for (formation of formations; track formation.id) {
-      <article class="academy-card" [class.highlight-card]="formation.highlighted">
+        <article class="academy-card" [class.highlight-card]="formation.highlighted">
 
-        @if (formation.popular) {
-        <div class="popular-badge">
-          <span aria-hidden="true">⭐</span> POPULAIRE
-        </div>
-        }
-
-        <div class="card-number" aria-hidden="true">{{ formation.number }}</div>
-
-        <div class="card-header">
-
-          <div class="card-icon-wrap">
-            <span class="card-icon" aria-hidden="true">{{ formation.icon }}</span>
-          </div>
-
-          <div>
-            <span class="card-label">{{ formation.label }}</span>
-            <h3>{{ formation.title }}</h3>
-          </div>
-
-        </div>
-
-        <p class="card-description">{{ formation.description }}</p>
-
-        <ul class="subcategories-list">
-          @for (sub of formation.subcategories; track sub) {
-          <li>{{ sub }}</li>
+          @if (formation.popular) {
+            <div class="popular-badge">
+              <span aria-hidden="true">⭐</span> POPULAIRE
+            </div>
           }
-        </ul>
 
-        <a [routerLink]="formation.actionRoute" class="card-action">
-          <span>{{ formation.actionLabel }}</span>
-          <span class="arrow" aria-hidden="true">→</span>
-        </a>
+          <div class="card-number" aria-hidden="true">{{ formation.number }}</div>
 
-      </article>
+          <div class="card-header">
+
+            <div class="card-icon-wrap">
+              <span class="card-icon" aria-hidden="true">{{ formation.icon }}</span>
+            </div>
+
+            <div>
+              <span class="card-label">{{ formation.label }}</span>
+              <h3>{{ formation.title }}</h3>
+            </div>
+
+          </div>
+
+          <p class="card-description">{{ formation.description }}</p>
+
+          <ul class="subcategories-list">
+            @for (sub of formation.subcategories; track sub) {
+              <li>{{ sub }}</li>
+            }
+          </ul>
+
+          <a [routerLink]="formation.actionRoute" class="card-action">
+            <span>{{ formation.actionLabel }}</span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </a>
+
+        </article>
       }
     </div>
   </section>
@@ -109,35 +157,35 @@
 
     <div class="live-grid">
       @for (live of liveCards; track live.id) {
-      <article class="live-card">
+        <article class="live-card">
 
-        <div class="live-background-icon" aria-hidden="true">
-          {{ live.backgroundIcon }}
-        </div>
-
-        <div class="live-card-content">
-
-          <div class="live-icon-wrap">
-            <span aria-hidden="true">{{ live.icon }}</span>
+          <div class="live-background-icon" aria-hidden="true">
+            {{ live.backgroundIcon }}
           </div>
 
-          <span class="live-label">
-            <span class="pulse-dot" aria-hidden="true"></span>
-            LIVE
-          </span>
+          <div class="live-card-content">
 
-          <h3>{{ live.title }}</h3>
+            <div class="live-icon-wrap">
+              <span aria-hidden="true">{{ live.icon }}</span>
+            </div>
 
-          <p>{{ live.description }}</p>
+            <span class="live-label">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              LIVE
+            </span>
 
-        </div>
+            <h3>{{ live.title }}</h3>
 
-        <a [routerLink]="live.actionRoute" class="live-action">
-          {{ live.actionLabel }}
-          <span aria-hidden="true">→</span>
-        </a>
+            <p>{{ live.description }}</p>
 
-      </article>
+          </div>
+
+          <a [routerLink]="live.actionRoute" class="live-action">
+            {{ live.actionLabel }}
+            <span aria-hidden="true">→</span>
+          </a>
+
+        </article>
       }
     </div>
 

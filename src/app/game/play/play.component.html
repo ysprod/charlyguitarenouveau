@@ -5,16 +5,6 @@
   <div class="main-game-area">
 
     <!-- ═══════════════════════════════════════════════════════
-         HERO HEADER
-         ═══════════════════════════════════════════════════════ -->
-    <header class="hero-header">
-      <div class="hero-badge">
-        <span class="badge-dot" aria-hidden="true"></span>
-        <span>JEUX</span>
-      </div>
-    </header>
-
-    <!-- ═══════════════════════════════════════════════════════
          TOAST
          ═══════════════════════════════════════════════════════ -->
     @if (toastMessage()) {
@@ -23,33 +13,14 @@
         [class.toast-success]="toastType() === 'success'"
         [class.toast-error]="toastType() === 'error'"
         role="status"
+        aria-live="polite"
       >
         {{ toastMessage() }}
       </div>
     }
 
     <!-- ═══════════════════════════════════════════════════════
-         FILTRES
-         ═══════════════════════════════════════════════════════ -->
-    <div class="filter-bar" role="tablist" aria-label="Filtrer les jeux">
-      @for (f of filters; track f.id) {
-        <button
-          type="button"
-          role="tab"
-          class="filter-chip"
-          [class.active]="selectedFilter() === f.id"
-          [attr.aria-selected]="selectedFilter() === f.id"
-          (click)="selectFilter(f.id)"
-          [attr.aria-label]="'Filtrer : ' + f.label"
-        >
-          <span class="chip-icon" aria-hidden="true">{{ f.icon }}</span>
-          <span class="chip-label">{{ f.label }}</span>
-        </button>
-      }
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════
-         GRILLE DE JEUX
+         GRILLE DES JEUX
          ═══════════════════════════════════════════════════════ -->
     <section class="games-selector-section" aria-label="Liste des jeux">
 
@@ -68,14 +39,28 @@
               (click)="tryLaunchGame(game)"
               [attr.aria-label]="'Lancer ' + game.title"
             >
+              <!-- Halo coloré -->
               <span class="btn-glow" aria-hidden="true"></span>
+
+              <!-- Icône -->
               <span class="btn-icon" aria-hidden="true">{{ game.icon }}</span>
+
+              <!-- Contenu -->
               <span class="btn-content">
-                <span class="btn-tag" [class]="game.tagClass">{{ game.tag }}</span>
                 <span class="btn-text">{{ game.title }}</span>
                 <span class="btn-sub">{{ game.subtitle }}</span>
               </span>
-              <span class="btn-arrow" aria-hidden="true">→</span>
+
+              <!-- Flèche -->
+              <svg class="btn-arrow" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round"
+                   aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+
+              <!-- Coins décoratifs -->
               <span class="corner corner-tl" aria-hidden="true"></span>
               <span class="corner corner-tr" aria-hidden="true"></span>
               <span class="corner corner-bl" aria-hidden="true"></span>

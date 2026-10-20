@@ -11,7 +11,6 @@ export interface GameItem {
   readonly action?: () => void;
   readonly title: string;
   readonly subtitle: string;
-  readonly tag: string;
   readonly tagClass: string;
   readonly icon: string;
   readonly btnClass: string;

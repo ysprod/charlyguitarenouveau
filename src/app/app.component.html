@@ -17,7 +17,7 @@
         Accueil
       </a>
 
-      <a routerLink="/play" routerLinkActive="active" (click)="closeMobileMenu()">
+      <a routerLink="/game/play" routerLinkActive="active" (click)="closeMobileMenu()">
         Jeux
       </a>
 
@@ -26,21 +26,16 @@
         Live
       </a>
 
-      <a routerLink="/inbox" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link">
-        <span>Inbox</span>
-        @if (unreadCount() > 0) {
-        <span class="nav-badge" aria-label="messages non lus">
-          {{ unreadCount() > 99 ? '99+' : unreadCount() }}
-        </span>
-        }
+      <a routerLink="/studio" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link">
+        <span>Studio</span> 
       </a>
 
       <a routerLink="/academie" routerLinkActive="active" (click)="closeMobileMenu()">
         Académie
       </a>
 
-      <a routerLink="/abonnement" routerLinkActive="active" (click)="closeMobileMenu()">
-        Offres
+      <a routerLink="/store" routerLinkActive="active" (click)="closeMobileMenu()">
+        Boutique
       </a>
 
       <a routerLink="/offoland" routerLinkActive="active" (click)="closeMobileMenu()">

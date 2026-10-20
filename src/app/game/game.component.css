@@ -1,61 +1,229 @@
+/* ═════════════════════════════════════════════════════════════════════
+   GAME — Layout parent (toolbar + router-outlet)
+   ═════════════════════════════════════════════════════════════════════ */
+
+:host {
+  --bg-page: #ffffff;
+  --bg-soft: #f8fafc;
+  --border-subtle: rgba(15, 23, 42, .08);
+  --border-medium: rgba(15, 23, 42, .14);
+  --text-dark: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+  --gold: #b8860b;
+  --primary: #2563eb;
+
+  display: block;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+/* ✅ Scoped : n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SHELL
+   ═════════════════════════════════════════════════════════════════════ */
+
 .game-shell {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  min-height: 100vh;
+  background: #ffffff;
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   TOOLBAR
+   ═════════════════════════════════════════════════════════════════════ */
+
 .game-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
-  gap: 0.5rem;
   align-items: center;
-  padding: 0.5rem 0.75rem;
-  background: rgba(0, 0, 0, 0.05);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, .95);
+  border-bottom: 1px solid var(--border-subtle);
+  min-height: 60px;
 }
+
+/* ─── Bouton générique ─── */
 
 .toolbar-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.4rem 0.7rem;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 0.5rem;
-  background: #fff;
-  cursor: pointer;
-  font-size: 1rem;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  border-radius: 999px;
+  color: var(--text-body);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
   line-height: 1;
-  transition: background 0.15s, opacity 0.15s;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    background: var(--bg-soft);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
 }
 
-.toolbar-btn:hover:not(:disabled) {
-  background: #f0f0f0;
+/* ─── Bouton icône (son, aide) ─── */
+
+.toolbar-btn--icon {
+  padding: 0.5rem 0.65rem;
+  font-size: 1rem;
 }
 
-.toolbar-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
+/* ─── Icône SVG ─── */
+
+.toolbar-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-.game-content {
-  flex: 1 1 auto;
-  position: relative;
+.toolbar-btn:hover .toolbar-icon {
+  transform: translateX(-2px);
 }
+
+/* ─── Label "Retour" ─── */
+
+.toolbar-label {
+  display: inline-block;
+}
+
+/* ─── Nom du jeu ─── */
+
+.toolbar-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Actions à droite ─── */
+
+.toolbar-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   AIDE
+   ═════════════════════════════════════════════════════════════════════ */
 
 .game-help {
   position: relative;
   padding: 1rem 1.25rem;
-  margin: 0.75rem;
+  margin: 0.75rem 1.25rem;
   background: #fffbe6;
   border: 1px solid #ffe58f;
-  border-radius: 0.5rem;
+  border-radius: 12px;
 }
 
 .game-help-close {
   position: absolute;
-  top: 0.25rem;
-  right: 0.5rem;
+  top: 0.5rem;
+  right: 0.75rem;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
   border: none;
   background: transparent;
-  cursor: pointer;
+  border-radius: 50%;
+  color: var(--text-muted);
   font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: rgba(234, 88, 12, .1);
+    color: #ea580c;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   CONTENU
+   ═════════════════════════════════════════════════════════════════════ */
+
+.game-content {
+  flex: 1;
+  background: #ffffff;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .game-toolbar {
+    padding: 0.6rem 0.85rem;
+    min-height: 54px;
+    gap: 0.5rem;
+  }
+
+  /* ✅ Texte "Retour" masqué sur mobile → icône seule */
+  .toolbar-label {
+    display: none;
+  }
+
+  .toolbar-btn {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .toolbar-title {
+    font-size: 0.9rem;
+  }
+
+  .game-help {
+    margin: 0.5rem 0.75rem;
+    padding: 0.85rem 1rem;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-btn,
+  .toolbar-icon,
+  .game-help-close {
+    transition: none !important;
+  }
 }

@@ -1,5 +1,4 @@
-// src/app/home/footer/footer.component.ts
-
+ 
 import {
   ChangeDetectionStrategy,
   Component,

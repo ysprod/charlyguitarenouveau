@@ -1,3 +1,5 @@
+<!-- src/app/offoland/offoland.component.html -->
+
 <div class="offoland-app">
 
   <!-- ═══════════════════════════════════════════════════════
@@ -31,26 +33,26 @@
         <span class="hero-title-gold">OFFOLAND</span>
       </h1>
 
-      <!-- 🎵 Mélodie des Origines -->
-      <div class="melodie-origines" aria-label="Mélodie des Origines">
-        @for (accord of melodie; track accord.label; let last = $last) {
-          <span class="note" [style.--note-color]="accord.color">
-            {{ accord.label }}
-          </span>
-          @if (!last) {
-            <span class="note-sep" aria-hidden="true">·</span>
-          }
-        }
-      </div>
-
-      <!-- 🎼 Les Sept Notes de la Création -->
-      <ul class="sept-notes" aria-label="Les Sept Notes de la Création">
-        @for (note of notes; track note.label) {
-          <li class="sept-note" [style.--note-color]="note.color">
-            {{ note.label }}
-          </li>
-        }
-      </ul>
+      <!-- ═══════════════════════════════════════════════════════
+           SECTION — Accès aux dimensions (TON ORDRE)
+           ═══════════════════════════════════════════════════════ -->
+      <main class="main-content">
+        <section class="section-wrapper" aria-label="Accéder aux dimensions">
+          <div class="dimensions-cta">
+            <div class="cta-icon" aria-hidden="true">🌌</div>
+            <h2 class="cta-title">Explore les Sept Dimensions</h2>
+         
+            <a routerLink="/offoland/dimensions/charlyguitaregame" class="cta-button">
+              <span>Entrer dans les dimensions</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
+          </div>
+        </section>
+      </main> 
 
       <!-- 🌈 Divider sacré -->
       <div class="hero-divider">
@@ -63,30 +65,23 @@
       <div class="portails-grid">
         @for (portail of portails; track portail.id) {
 
-          @if (portail.route) {
-            <a
-              class="portail-btn"
-              [class]="'portail-btn ' + portail.cssClass"
-              [routerLink]="portail.route"
-              [attr.aria-label]="'Accéder à ' + portail.label + ' — ' + portail.sub"
-            >
-              <span class="portail-glow" aria-hidden="true"></span>
-              <span class="portail-icon" aria-hidden="true">{{ portail.icon }}</span>
-              <span class="portail-label">{{ portail.label }}</span>
-              <span class="portail-sub">{{ portail.sub }}</span>
-            </a>
-          } @else {
-            <div
-              class="portail-btn portail-locked"
-              aria-disabled="true"
-              [attr.aria-label]="'Portail verrouillé : ' + portail.label + ' — Bientôt disponible'"
-            >
-              <span class="portail-icon" aria-hidden="true">{{ portail.icon }}</span>
-              <span class="portail-label">{{ portail.label }}</span>
-              <span class="portail-sub">{{ portail.sub }}</span>
-              <span class="portail-lock" aria-hidden="true">🔒</span>
-            </div>
-          }
+        @if (portail.route) {
+        <a class="portail-btn" [class]="'portail-btn ' + portail.cssClass" [routerLink]="portail.route"
+          [attr.aria-label]="'Accéder à ' + portail.label + ' — ' + portail.sub">
+          <span class="portail-glow" aria-hidden="true"></span>
+          <span class="portail-icon" aria-hidden="true">{{ portail.icon }}</span>
+          <span class="portail-label">{{ portail.label }}</span>
+          <span class="portail-sub">{{ portail.sub }}</span>
+        </a>
+        } @else {
+        <div class="portail-btn portail-locked" aria-disabled="true"
+          [attr.aria-label]="'Portail verrouillé : ' + portail.label + ' — Bientôt disponible'">
+          <span class="portail-icon" aria-hidden="true">{{ portail.icon }}</span>
+          <span class="portail-label">{{ portail.label }}</span>
+          <span class="portail-sub">{{ portail.sub }}</span>
+          <span class="portail-lock" aria-hidden="true">🔒</span>
+        </div>
+        }
 
         }
       </div>
@@ -94,26 +89,5 @@
     </div>
 
   </section>
-
-  <!-- ═══════════════════════════════════════════════════════
-       JEU — Charly Guitare (chargement différé)
-       ═══════════════════════════════════════════════════════ -->
-  <main class="main-content">
-    <section class="appReveal section-wrapper" aria-label="Jeu Charly Guitare">
-      @defer (on viewport) {
-        <app-charlyguitaregame />
-      } @placeholder {
-        <div class="defer-placeholder" aria-hidden="true">
-          <span class="defer-spinner"></span>
-          <p>L'instrument s'accorde…</p>
-        </div>
-      } @loading (minimum 300ms) {
-        <div class="defer-placeholder" aria-hidden="true">
-          <span class="defer-spinner"></span>
-          <p>L'instrument s'accorde…</p>
-        </div>
-      }
-    </section>
-  </main>
 
 </div>

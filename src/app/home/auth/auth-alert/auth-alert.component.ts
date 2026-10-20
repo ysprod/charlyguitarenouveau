@@ -1,5 +1,4 @@
-// src/app/shared/auth-alert/auth-alert.component.ts
-
+ 
 import {
   ChangeDetectionStrategy,
   Component,

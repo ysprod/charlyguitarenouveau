@@ -10,30 +10,7 @@
     <div class="bg-glow bg-glow-3"></div>
   </div>
 
-  <!-- ═══════════ TOP BAR ═══════════ -->
-  <header class="game-top-bar">
-    <div class="logo-zone">
-      <span class="icon">🎸</span>
-      <h1>GUITARE LIVE</h1>
-    </div>
 
-    <!-- Affichage note jouée -->
-    <div class="note-display" [class.active]="lastPlayedNote()">
-      @if (lastPlayedNote()) {
-      <span class="note-name">{{ lastPlayedNote() }}</span>
-      } @else {
-      <span class="note-placeholder">Joue...</span>
-      }
-    </div>
-  </header>
-
-  <!-- ═══════════ INSTRUCTION ═══════════ -->
-  <div class="instruction-banner">
-    <span class="instruction-icon">👆</span>
-    <span class="instruction-text">
-      Touche une case pour la faire sonner — comme sur une vraie guitare !
-    </span>
-  </div>
 
   <!-- ═══════════ GUITARE ACOUSTIQUE ═══════════ -->
   <div class="guitar-viewport">
@@ -138,4 +115,28 @@
 
   <!-- Indication scroll -->
   <div class="scroll-hint">← Glisse pour explorer le manche →</div>
+
+  <br>
+  <!-- ═══════════ TOP BAR ═══════════ -->
+  <header class="game-top-bar">
+ 
+
+    <!-- Affichage note jouée -->
+    <div class="note-display" [class.active]="lastPlayedNote()">
+      @if (lastPlayedNote()) {
+      <span class="note-name">{{ lastPlayedNote() }}</span>
+      } @else {
+      <span class="note-placeholder">Joue...</span>
+      }
+    </div>
+  </header>
+
+  <!-- ═══════════ INSTRUCTION ═══════════ -->
+  <div class="instruction-banner">
+    <span class="instruction-icon">👆</span>
+    <span class="instruction-text">
+      Touche une case pour la faire sonner — comme sur une vraie guitare !
+    </span>
+  </div>
+
 </div>

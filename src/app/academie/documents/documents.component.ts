@@ -3,16 +3,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   EnvironmentInjector,
   afterNextRender,
   computed,
   inject,
   runInInjectionContext,
-  signal,
+  signal
 } from '@angular/core';
 
-import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { Auth, user } from '@angular/fire/auth';
@@ -24,7 +22,7 @@ import {
   runTransaction,
 } from '@angular/fire/database';
 
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, of, switchMap } from 'rxjs';
 
 import { DocumentItem } from '../models/document.model';
 import {
@@ -34,20 +32,19 @@ import {
 
 import {
   DOCUMENTS_DB_PATHS,
-  DOCUMENT_FILTERS,
-  FILTER_ALL_LABEL,
+  FILTER_ALL_LABEL
 } from '../constants/documents-ui.constants';
 
-import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
-import { ToastService } from 'src/app/academie/services/toast.service';
 import { FormatPricePipe } from 'src/app/academie/pipes/format-price.pipe';
+import { ToastService } from 'src/app/academie/services/toast.service';
 import { ToastComponent } from 'src/app/academie/toast/toast.component';
 import {
+  formatPrice,
   matchesCategory,
   sortDocuments,
-  formatPrice,
 } from 'src/app/academie/utils/documents.utils';
 import { PromoCodeService } from 'src/app/shared/services/promo-code.service';
+import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    DOCUMENTS — Boutique numérique (optimisé)
@@ -55,8 +52,7 @@ import { PromoCodeService } from 'src/app/shared/services/promo-code.service';
 
 @Component({
   selector: 'app-documents',
-  imports: [
-    RouterLink,
+  imports: [ 
     PromoModalComponent,
     ToastComponent,
     FormatPricePipe,
@@ -72,14 +68,13 @@ export class DocumentsComponent {
   private readonly auth = inject(Auth);
   private readonly promoService = inject(PromoCodeService);
   private readonly toastService = inject(ToastService);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
 
   /* ═══════════════════════════════════════════════════════
      CONSTANTES EXPOSÉES AU TEMPLATE
      ═══════════════════════════════════════════════════════ */
 
-  readonly filters = DOCUMENT_FILTERS;
+ 
   readonly FILTER_ALL_LABEL = FILTER_ALL_LABEL;
 
   /* ═══════════════════════════════════════════════════════

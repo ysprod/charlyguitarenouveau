@@ -1,44 +1,23 @@
-import { GameFilter, GameItem } from '../models/play.model';
-
-/* ═══════════════════════════════════════════════════════
-   FILTRES
-   ═══════════════════════════════════════════════════════ */
-
-export const GAME_FILTERS: readonly GameFilter[] = [
-  { id: 'all',      label: 'Tous',      icon: '🎮' },
-  { id: 'enfants',  label: 'Enfants',   icon: '🧒' },
-  { id: 'music',    label: 'Musique',   icon: '🎵' },
-  { id: 'learning', label: 'Apprendre', icon: '📚' },
-  { id: 'live',     label: 'Live',      icon: '🎸' },
-  { id: 'multi',    label: 'Multi',     icon: '👥' },
-  { id: 'quiz',     label: 'Quiz',      icon: '🧠' },
-  { id: 'tools',    label: 'Outils',    icon: '🛠️' }
-];
-
-/* ═══════════════════════════════════════════════════════
-   JEUX
-   ═══════════════════════════════════════════════════════ */
+import { GameItem } from '../models/play.model'; 
 
 export function buildGamesList(navigate: (path: string) => void): readonly GameItem[] {
   return [
     {
       id: 'lyko',
       category: 'enfants',
-      title: 'LYKO LE SAGE',
+      title: 'LYKO',
       subtitle: 'Jouez avec vos amis ou contre LYKO !',
-      tag: 'DUEL',
       tagClass: 'tag-new',
       icon: '🐵',
       btnClass: 'btn-lyko btn-duo',
       isLink: false,
-      action: () => navigate('/lykomode?etape=1')
+      action: () => navigate('/lykomode')
     },
      {
       id: 'boubouni',
       category: 'enfants',
       title: 'BOUBOUNI',
-      subtitle: 'Jeu de cartes endiablé',
-      tag: 'CARTES',
+      subtitle: 'Jeu de cartes',
       tagClass: 'tag-card',
       icon: '🃏',
       btnClass: 'btn-boubouni',
@@ -48,9 +27,8 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
     {
       id: 'oracle',
       category: 'quiz',
-      title: "L'ORACLE",
+      title: "YAYUS",
       subtitle: 'Réponds à la question',
-      tag: 'MATRIX',
       tagClass: 'tag-oracle',
       icon: '🔮',
       btnClass: 'btn-oracle',
@@ -60,9 +38,8 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
     {
       id: 'guitarlive',
       category: 'live',
-      title: 'GUITARE LIVE',
+      title: 'GUITARE',
       subtitle: 'Joue pour le plaisir',
-      tag: 'LIVE',
       tagClass: 'tag-live',
       icon: '🎸',
       btnClass: 'btn-guitarlive',
@@ -72,9 +49,8 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
     {
       id: 'fretboard',
       category: 'music',
-      title: 'CHARLY GUITARE HERO',
-      subtitle: 'Chasse au fretboard',
-      tag: 'RAPIDITÉ',
+      title: 'NEW GAME',
+      subtitle: 'Charly Guitare Hero',
       tagClass: 'tag-speed',
       icon: '🎸',
       btnClass: 'btn-fretboard',
@@ -84,9 +60,8 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
     {
       id: 'molkky',
       category: 'learning',
-      title: 'METHODE CHARLY GUITARE',
+      title: 'METHODE',
       subtitle: 'Essentiel des accords',
-      tag: 'NOUVEAU',
       tagClass: 'tag-new',
       icon: '🪵',
       btnClass: 'btn-molkky',
@@ -96,9 +71,8 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
     {
       id: 'acoustic',
       category: 'quiz',
-      title: 'QUIZ ACOUSTIQUE',
+      title: 'QUIZ',
       subtitle: 'Physique & lutherie',
-      tag: 'QUIZ',
       tagClass: 'tag-quiz',
       icon: '🔊',
       btnClass: 'btn-quiz',
@@ -108,9 +82,8 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
     {
       id: 'chord',
       category: 'tools',
-      title: 'EXO SIMULATION',
+      title: 'EXO',
       subtitle: 'Décodeur & grille',
-      tag: 'OUTIL',
       tagClass: 'tag-tool',
       icon: '🎼',
       btnClass: 'btn-simulator',
@@ -120,34 +93,19 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
     {
       id: 'metronome',
       category: 'music',
-      title: 'DÉFI MÉTRONOME',
+      title: 'TEMPO',
       subtitle: 'Precision groove',
-      tag: 'DÉFI',
       tagClass: 'tag-metro',
       icon: '⏱️',
       btnClass: 'btn-metronome',
       isLink: false,
       action: () => navigate('/metronome')
     },
-   
-    {
-      id: 'kronos',
-      category: 'multi',
-      title: 'DÉ DE KRONOS',
-      subtitle: 'Maître du temps',
-      tag: 'TEMPS',
-      tagClass: 'tag-time',
-      icon: '⏳',
-      btnClass: 'btn-kronos',
-      isLink: false,
-      action: () => navigate('/kronos?etape=3')
-    },
     {
       id: 'piano',
       category: 'tools',
-      title: 'JEU DE PIANO',
+      title: 'JEU',
       subtitle: 'Piano Hero',
-      tag: 'OUTIL',
       tagClass: 'tag-tool',
       icon: '🎹',
       btnClass: 'btn-piano',
@@ -155,11 +113,21 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       action: () => navigate('/piano')
     },
     {
+      id: 'kronos',
+      category: 'multi',
+      title: 'LE DÉ',
+      subtitle: 'Maître du temps',
+      tagClass: 'tag-time',
+      icon: '⏳',
+      btnClass: 'btn-kronos',
+      isLink: false,
+      action: () => navigate('/kronos?etape=3')
+    },   
+    {
       id: 'pianovirtuel',
       category: 'tools',
-      title: 'APPRENDRE LE PIANO',
+      title: 'PIANO',
       subtitle: 'Piano Virtuel',
-      tag: 'OUTIL',
       tagClass: 'tag-tool',
       icon: '🎹',
       btnClass: 'btn-pianovirtuel',

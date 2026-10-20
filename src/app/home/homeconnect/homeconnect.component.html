@@ -1,108 +1,61 @@
+<!-- src/app/home/homeconnect/homeconnect.component.html -->
+
 <div class="landing-page">
 
   <!-- ═══════════════════════════════════════════════════════
-       BANNIÈRE DE BIENVENUE PERSONNALISÉE
+       HERO — Bienvenue personnalisée
        ═══════════════════════════════════════════════════════ -->
-  <section class="welcome-banner" aria-labelledby="welcome-title">
-    <div class="welcome-glow" aria-hidden="true"></div>
+  <section class="hero-welcome" aria-labelledby="welcome-title">
+    <div class="hero-orb hero-orb--gold" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb--blue" aria-hidden="true"></div>
 
-    <div class="welcome-content">
-      <div class="welcome-avatar" aria-hidden="true">
-        @if (hasPhoto()) {
-          <img [src]="userPhoto()!" [alt]="userName()" />
-        } @else {
-          <span>{{ userInitials() }}</span>
+    <div class="hero-inner">
+
+      <!-- Avatar + texte -->
+      <div class="hero-profile">
+        <div class="avatar-ring">
+          <div class="avatar">
+            @if (hasPhoto()) {
+              <img [src]="userPhoto()!" [alt]="userName()" />
+            } @else {
+              <span>{{ userInitials() }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="hero-text">
+          <p class="hero-greeting">{{ greeting() }},</p>
+          <h1 id="welcome-title" class="hero-name">
+            {{ userFirstName() }} <span class="wave" aria-hidden="true">👋</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Actions rapides -->
+      <nav class="hero-actions" aria-label="Actions rapides">
+        @for (action of quickActions; track action.route) {
+          <a
+            [routerLink]="action.route"
+            class="action-card"
+            [attr.data-color]="action.color"
+            [attr.aria-label]="action.label"
+          >
+            <span class="action-icon" aria-hidden="true">{{ action.icon }}</span>
+            <span class="action-label">{{ action.label }}</span>
+            <svg class="action-arrow" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
         }
-      </div>
+      </nav>
 
-      <div class="welcome-text">
-        <p class="welcome-greeting">{{ greeting() }},</p>
-        <h1 id="welcome-title" class="welcome-name">
-          {{ userFirstName() }} <span aria-hidden="true">👋</span>
-        </h1>
-        <p class="welcome-subtitle">
-          Prêt à faire vibrer les cordes aujourd'hui ?
-        </p>
-      </div>
     </div>
-
-    <!-- Actions rapides -->
-    <nav class="quick-actions" aria-label="Actions rapides">
-      @for (action of quickActions; track action.route) {
-        <a
-          [routerLink]="action.route"
-          class="quick-action"
-          [attr.data-color]="action.color"
-        >
-          <span class="qa-icon" aria-hidden="true">{{ action.icon }}</span>
-          <span class="qa-text">
-            <span class="qa-label">{{ action.label }}</span>
-            <span class="qa-desc">{{ action.description }}</span>
-          </span>
-          <span class="qa-arrow" aria-hidden="true">→</span>
-        </a>
-      }
-    </nav>
   </section>
-
-  <!-- ═══════════════════════════════════════════════════════
-       ✉️ BOÎTE DE RÉCEPTION
-       ═══════════════════════════════════════════════════════ -->
+  
   <app-inbox-panel />
-
-  <!-- ═══════════════════════════════════════════════════════
-       SECTION HEADER
-       ═══════════════════════════════════════════════════════ -->
-  <section class="section-header" aria-labelledby="ecosystem-title">
-    <h2 id="ecosystem-title" class="section-title">
-      Offolomou Écosystème Académie
-    </h2>
-    <p class="section-desc">
-      Jeux, formations, lives et expériences immersives — tout au même endroit.
-    </p>
-  </section>
-
-  <!-- ═══════════════════════════════════════════════════════
-       POURQUOI NOUS — 3 PILIERS
-       ═══════════════════════════════════════════════════════ -->
-  <section class="why-section" aria-labelledby="why-title">
-    <div class="section-header">
-      <span class="section-eyebrow">POURQUOI NOUS</span>
-      <h2 id="why-title" class="section-title">L'apprentissage, réinventé</h2>
-    </div>
-
-    <div class="why-grid">
-      @for (pillar of whyPillars; track pillar.title) {
-        <article class="why-card" appReveal>
-          <div class="why-icon" aria-hidden="true">{{ pillar.icon }}</div>
-          <h3>{{ pillar.title }}</h3>
-          <p>{{ pillar.description }}</p>
-        </article>
-      }
-    </div>
-  </section>
-
-  <!-- ================= DOCUMENTS (lazy) ================= -->
-  @defer (on viewport; prefetch on idle) {
-    <app-documents />
-  } @placeholder (minimum 500ms) {
-    <div class="documents-placeholder" aria-hidden="true">
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-      <div class="skeleton"></div>
-    </div>
-  } @loading (after 100ms; minimum 300ms) {
-    <div class="documents-placeholder" aria-hidden="true">
-      <div class="skeleton skeleton-pulse"></div>
-      <div class="skeleton skeleton-pulse"></div>
-      <div class="skeleton skeleton-pulse"></div>
-    </div>
-  } @error {
-    <div class="documents-error" role="alert">
-      Impossible de charger les documents pour le moment.
-    </div>
-  }
-
   <app-footer />
-
 </div>

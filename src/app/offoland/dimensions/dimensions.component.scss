@@ -1,0 +1,194 @@
+/* ═════════════════════════════════════════════════════════════════════
+   DIMENSIONS — Layout parent (fond blanc, toolbar + router-outlet)
+   ═════════════════════════════════════════════════════════════════════ */
+
+:host {
+  --bg-page: #ffffff;
+  --bg-soft: #f8fafc;
+  --border-subtle: rgba(15, 23, 42, .08);
+  --border-medium: rgba(15, 23, 42, .14);
+  --text-dark: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --gold: #b8860b;
+  --gold-hover: #d4a017;
+  --primary: #2563eb;
+
+  display: block;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+/* ✅ Scoped : n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SHELL
+   ═════════════════════════════════════════════════════════════════════ */
+
+.dimensions-shell {
+  width: 100%;
+  min-height: 100vh;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   TOOLBAR
+   ═════════════════════════════════════════════════════════════════════ */
+
+.dimensions-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, .95);
+  border-bottom: 1px solid var(--border-subtle);
+  min-height: 64px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Bouton retour ─── */
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .9rem;
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  border-radius: 999px;
+  color: var(--text-body);
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    color .2s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    transition: transform .2s ease;
+  }
+
+  &:hover {
+    background: var(--bg-soft);
+    border-color: var(--gold);
+    color: var(--gold);
+
+    svg {
+      transform: translateX(-2px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+/* ─── Titre de la dimension ─── */
+
+.toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.title-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.title-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   CONTENU
+   ═════════════════════════════════════════════════════════════════════ */
+
+.dimensions-content {
+  flex: 1;
+  width: 100%;
+  background: #ffffff;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .dimensions-toolbar {
+    padding: .75rem 1rem;
+    min-height: 56px;
+  }
+
+  .btn-back {
+    padding: .45rem .75rem;
+    font-size: .78rem;
+
+    span {
+      display: none;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .toolbar-title {
+    gap: .4rem;
+  }
+
+  .title-text {
+    font-size: .95rem;
+  }
+
+  .title-icon {
+    font-size: 1.1rem;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-back,
+  .btn-back svg {
+    transition: none !important;
+  }
+}

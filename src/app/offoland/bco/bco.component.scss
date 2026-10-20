@@ -1,25 +1,21 @@
 /* ============================================================
-   BCO — Banque Centrale d'Offoland
+   BCO — Banque Centrale d'Offoland (optimisé GPU)
    Fond blanc, palette fonctionnelle, WCAG AA
    ============================================================ */
 
 :host {
-  /* Fonds — conformes consigne : blanc pour le contenu */
   --bg-page: #ffffff;
   --bg-soft: #f8fafc;
   --bg-card: #ffffff;
 
-  /* Texte */
   --text-dark: #0f172a;
   --text-body: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Bordures */
   --border-subtle: rgba(15, 23, 42, .08);
   --border-medium: rgba(15, 23, 42, .14);
 
-  /* Palette fonctionnelle */
   --primary: #2563eb;
   --primary-soft: rgba(37, 99, 235, .08);
   --success: #16a34a;
@@ -31,23 +27,19 @@
   --neutral: #64748b;
   --neutral-soft: rgba(100, 116, 139, .08);
 
-  /* Couleurs par KPI */
   --kpi-supply: #b8860b;
   --kpi-circulating: #0ea5e9;
   --kpi-reserves: #16a34a;
   --kpi-inflation: #dc2626;
 
-  /* Couleurs taux */
   --rate-xof: #b8860b;
   --rate-eur: #0ea5e9;
   --rate-usd: #16a34a;
 
-  /* Rayons */
   --radius-lg: 20px;
   --radius-md: 14px;
   --radius-sm: 10px;
 
-  /* Transitions */
   --t-fast: .2s ease;
   --t-base: .3s ease;
 
@@ -57,6 +49,13 @@
   min-height: 100vh;
   font-family: 'Inter', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* ✅ Scoped : n'affecte que le composant */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
 }
 
 .bco-page {
@@ -80,8 +79,9 @@
   border-radius: var(--radius-lg);
   margin-bottom: 2rem;
   flex-wrap: wrap;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, .05);
-  animation: fadeInUp .6s cubic-bezier(.22, 1, .36, 1) both;
+  /* ✅ Ombre simple (au lieu de 0 4px 20px) */
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .06);
+  /* ✅ animation fadeInUp supprimée */
 }
 
 .header-left {
@@ -100,7 +100,7 @@
   background: linear-gradient(135deg, #fef3c7, #fde68a);
   border: 1px solid rgba(184, 134, 11, .25);
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(184, 134, 11, .15);
+  /* ✅ Ombre supprimée */
 }
 
 .header-titles h1 {
@@ -120,18 +120,13 @@
   margin: 0;
 }
 
+/* ✅ Point live statique (plus de dotPulse) */
 .live-dot {
   width: 8px;
   height: 8px;
   background: var(--success);
   border-radius: 50%;
   box-shadow: 0 0 0 4px rgba(22, 163, 74, .15);
-  animation: dotPulse 1.6s ease-in-out infinite;
-}
-
-@keyframes dotPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: .55; transform: scale(1.4); }
 }
 
 .header-right {
@@ -141,6 +136,7 @@
   flex-wrap: wrap;
 }
 
+/* ✅ Chip statique (plus de chipPulse) */
 .status-chip {
   display: flex;
   align-items: center;
@@ -152,19 +148,12 @@
   font-size: .8rem;
   font-weight: 600;
   color: var(--success);
-  transition: all var(--t-base);
 
   &.active {
     background: var(--warning-soft);
     border-color: rgba(234, 88, 12, .35);
     color: var(--warning);
-    animation: chipPulse 1.2s ease-in-out infinite;
   }
-}
-
-@keyframes chipPulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.03); }
 }
 
 .status-dot {
@@ -204,7 +193,7 @@
 
 section {
   margin-bottom: 3rem;
-  animation: fadeInUp .6s cubic-bezier(.22, 1, .36, 1) both;
+  /* ✅ animation fadeInUp supprimée */
 }
 
 .section-title-row {
@@ -229,11 +218,6 @@ section {
   color: var(--text-muted);
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 /* ============================================================
    KPIs
    ============================================================ */
@@ -251,13 +235,13 @@ section {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 12px rgba(15, 23, 42, .04);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
   transition:
     transform var(--t-base),
     box-shadow var(--t-base),
     border-color var(--t-base);
   overflow: hidden;
-  animation: fadeInUp .6s cubic-bezier(.22, 1, .36, 1) both;
+  /* ✅ animation fadeInUp supprimée */
 
   &::before {
     content: '';
@@ -275,9 +259,8 @@ section {
   &.active {
     transform: translateY(-6px);
     border-color: var(--kpi-color);
-    box-shadow:
-      0 20px 45px rgba(15, 23, 42, .1),
-      0 0 30px -12px var(--kpi-color);
+    /* ✅ Ombre simple (au lieu de 0 20px 45px) */
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .1);
 
     &::before { opacity: 1; }
   }
@@ -350,13 +333,16 @@ section {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   text-align: center;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, .04);
-  transition: all var(--t-base);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  transition:
+    transform var(--t-base),
+    border-color var(--t-base),
+    box-shadow var(--t-base);
 
   &:hover {
     border-color: rgba(184, 134, 11, .35);
     transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
   }
 }
 
@@ -388,14 +374,16 @@ section {
   border-radius: var(--radius-md);
   text-align: left;
   cursor: pointer;
-  transition: all var(--t-base);
+  transition:
+    transform var(--t-base),
+    border-color var(--t-base),
+    box-shadow var(--t-base);
   font-family: inherit;
   color: inherit;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
-  animation: fadeInUp .5s cubic-bezier(.22, 1, .36, 1) both;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  /* ✅ animation fadeInUp supprimée */
 
-  /* Bande de couleur latérale */
   &::before {
     content: '';
     position: absolute;
@@ -408,7 +396,6 @@ section {
     transition: width var(--t-base), opacity var(--t-base);
   }
 
-  /* 🎨 Palette fonctionnelle par variante */
   &.variant-primary { --action-color: var(--primary); --action-soft: var(--primary-soft); }
   &.variant-success { --action-color: var(--success); --action-soft: var(--success-soft); }
   &.variant-warning { --action-color: var(--warning); --action-soft: var(--warning-soft); }
@@ -418,9 +405,7 @@ section {
   &:hover {
     transform: translateY(-4px);
     border-color: var(--action-color);
-    box-shadow:
-      0 16px 36px rgba(15, 23, 42, .08),
-      0 0 28px -14px var(--action-color);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
 
     &::before {
       opacity: 1;
@@ -442,15 +427,7 @@ section {
     outline-offset: 3px;
   }
 
-  &.triggered {
-    animation: actionFlash .8s ease-out;
-  }
-}
-
-@keyframes actionFlash {
-  0%   { background: var(--bg-card); }
-  30%  { background: var(--action-soft); }
-  100% { background: var(--bg-card); }
+  /* ✅ animation actionFlash supprimée */
 }
 
 .action-icon {
@@ -531,13 +508,16 @@ section {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
-  transition: all var(--t-base);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  transition:
+    transform var(--t-base),
+    border-color var(--t-base),
+    box-shadow var(--t-base);
 
   &:hover {
     transform: translateY(-3px);
     border-color: var(--rate-color, var(--primary));
-    box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
   }
 }
 
@@ -618,7 +598,7 @@ section {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, .04);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
 }
 
 .event-row {
@@ -769,12 +749,14 @@ section {
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+  .kpi-card,
+  .gauge-card,
+  .action-card,
+  .action-icon,
+  .action-arrow,
+  .rate-card,
+  .event-row {
+    transition: none !important;
   }
 }
 

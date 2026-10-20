@@ -11,6 +11,5 @@ import { DIMENSIONS } from '../../data/dimensions.data';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CharlyguitaregameComponent {
-
   readonly dimensions: readonly Dimension[] = DIMENSIONS;
 }

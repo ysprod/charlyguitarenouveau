@@ -1,25 +1,26 @@
-import { Dimension } from "../models/dimension.model";
+// src/app/offoland/data/dimensions.data.ts
 
- 
+import { Dimension } from '../models/dimension.model';
 
 /* ═════════════════════════════════════════════════════════════════════
    LES 7 DIMENSIONS D'OFFOLAND
    ─────────────────────────────────────────────────────────────────────
-   Ordre sacré (selon la Bible d'Offoland) : Do → Ré → Mi → Fa → Sol → La → Si
-   ⚠️ Couleurs assombries pour contraste AA sur fond blanc.
+   Ordre sacré : Do → Ré → Mi → Fa → Sol → La → Si
+   Couleurs assombries pour contraste AA sur fond blanc.
+   Routes : /offoland/dimensions/{nom}
    ═════════════════════════════════════════════════════════════════════ */
 
 export const DIMENSIONS: readonly Dimension[] = [
   {
     nom: 'BLANC',
-    couleur: '#475569',          // gris foncé (assombrissement du blanc)
+    couleur: '#475569',
     couleurSecondaire: '#94a3b8',
     symbole: '✨',
     note: 'Do',
     sage: 'Offodo',
     description: 'La Dimension du Commencement',
     image: 'assets/blanc.jpg',
-    route: '/blanc'
+    route: '/offoland/dimensions/blanc',
   },
   {
     nom: 'ROUGE',
@@ -30,29 +31,29 @@ export const DIMENSIONS: readonly Dimension[] = [
     sage: 'Offoré',
     description: 'La Dimension du Courage',
     image: 'assets/rouge.jpg',
-    route: '/rouge'
+    route: '/offoland/dimensions/rouge',
   },
   {
     nom: 'VERT',
-    couleur: '#16a34a',          // vert assombri pour contraste AA
+    couleur: '#16a34a',
     couleurSecondaire: '#15803d',
     symbole: '🌿',
     note: 'Mi',
     sage: 'Offomi',
     description: 'La Dimension de la Vie',
     image: 'assets/vert.jpg',
-    route: '/vert'
+    route: '/offoland/dimensions/vert',
   },
   {
     nom: 'BLEU',
-    couleur: '#2563eb',          // bleu assombri pour contraste AA
+    couleur: '#2563eb',
     couleurSecondaire: '#1d4ed8',
     symbole: '🌊',
     note: 'Fa',
     sage: 'Offofa',
     description: 'La Dimension de la Connaissance',
     image: 'assets/bleu.jpg',
-    route: '/bleu'
+    route: '/offoland/dimensions/bleu',
   },
   {
     nom: 'NOIR',
@@ -63,7 +64,7 @@ export const DIMENSIONS: readonly Dimension[] = [
     sage: 'Offosol',
     description: "La Dimension de l'Épreuve",
     image: 'assets/noir.jpg',
-    route: '/noir'
+    route: '/offoland/dimensions/noir',
   },
   {
     nom: 'POURPRE',
@@ -74,17 +75,17 @@ export const DIMENSIONS: readonly Dimension[] = [
     sage: 'Offola',
     description: 'La Dimension de la Vision',
     image: 'assets/pourpre.jpg',
-    route: '/pourpre'
+    route: '/offoland/dimensions/pourpre',
   },
   {
     nom: 'JAUNE',
-    couleur: '#b8860b',          // doré assombri (assombrissement du jaune)
+    couleur: '#b8860b',
     couleurSecondaire: '#d4a017',
     symbole: '👑',
     note: 'Si',
     sage: 'Offosi',
     description: "La Dimension de l'Accomplissement",
     image: 'assets/jaune.jpg',
-    route: '/violet'             // ⚠️ Route conservée volontairement
-  }
+    route: '/offoland/dimensions/violet', // ⚠️ Route conservée volontairement
+  },
 ];

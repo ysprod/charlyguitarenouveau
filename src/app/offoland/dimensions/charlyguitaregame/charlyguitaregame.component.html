@@ -1,9 +1,5 @@
-<div class="method-container">
-  <header class="method-header">
-    <h1 class="title-glow">DIMENSIONS</h1>
-    <h2 class="title-sub">CHARLY GUITARE</h2>
-  </header>
-  
+ 
+<div class="method-container"> 
   <main class="dimensions-grid">
     @for (dim of dimensions; track dim.nom) {
       <a
@@ -18,14 +14,25 @@
         <!-- Halo lumineux -->
         <div class="card-halo" aria-hidden="true"></div>
 
+        <!-- Bande supérieure -->
+        <div class="card-top-band" aria-hidden="true"></div>
+
         <!-- Contenu de la carte -->
         <div class="card-content">
 
-          <!-- Badge de couleur -->
-          <div class="dimension-badge">
-            <span class="badge-symbol" aria-hidden="true">{{ dim.symbole }}</span>
-            <span class="badge-name">{{ dim.nom }}</span>
-          </div>
+          <!-- En-tête : symbole + nom -->
+          <header class="dimension-header">
+            <div class="dimension-symbol" aria-hidden="true">
+              {{ dim.symbole }}
+            </div>
+            <div class="dimension-title">
+              <span class="dimension-name">{{ dim.nom }}</span>
+              <span class="dimension-note">{{ dim.note }}</span>
+            </div>
+          </header>
+
+          <!-- Description -->
+          <p class="dimension-description">{{ dim.description }}</p>
 
           <!-- Métadonnées -->
           <div class="dimension-meta">
@@ -40,13 +47,16 @@
             </div>
           </div>
 
-          <!-- Description -->
-          <p class="dimension-description">{{ dim.description }}</p>
-
           <!-- Action -->
           <div class="card-action">
             <span>Explorer</span>
-            <span class="material-icons" aria-hidden="true">arrow_forward</span>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
           </div>
         </div>
 

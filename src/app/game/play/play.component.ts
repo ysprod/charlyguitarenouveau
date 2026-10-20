@@ -9,22 +9,14 @@ import {
   inject,
   signal,
 } from '@angular/core';
-
 import { Router } from '@angular/router';
-
 import {
-  GAME_FILTERS,
   TOAST_DURATION_MS,
   buildGamesList,
 } from '../constants/play.constants';
 import { GameItem } from '../models/play.model';
-
 import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
 import { PromoCodeService } from '../../shared/services/promo-code.service';
-
-/* ═══════════════════════════════════════════════════════════
-   COMPOSANT
-   ═══════════════════════════════════════════════════════════ */
 
 @Component({
   selector: 'app-play',
@@ -57,7 +49,7 @@ export class PlayComponent {
      FILTRES
      ═══════════════════════════════════════════════════════ */
 
-  readonly filters = GAME_FILTERS;
+
   readonly selectedFilter = signal<string>('all');
 
   /* ═══════════════════════════════════════════════════════

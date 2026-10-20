@@ -6,7 +6,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
        ───────────────────────────────────────────── */
     {
         id: 'debutant',
-        title: 'Pack de formation Débutants',
+        title: 'Débutants',
         subtitle: 'Faire ses premiers pas sur la guitare',
         objective: 'Apprendre les bases, prendre confiance et jouer ses premières chansons.',
         icon: '🎯',
@@ -77,7 +77,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
        ───────────────────────────────────────────── */
     {
         id: 'intermediaire',
-        title: 'Pack Intermédiaire',
+        title: 'Intermédiaire',
         subtitle: 'Gagner en fluidité et en autonomie',
         objective: 'Maîtriser les transitions, les rythmes avancés et commencer à jouer en autonomie.',
         icon: '🎸',
@@ -149,7 +149,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
        ───────────────────────────────────────────── */
     {
         id: 'solo',
-        title: 'Pack Solo et Techniques',
+        title: 'Solo et Techniques',
         subtitle: 'Développer son jeu personnel',
         objective: "Explorer les gammes, le bend, l'improvisation et les techniques avancées.",
         icon: '⚡',
@@ -222,7 +222,7 @@ export const PACK_CATEGORIES: PackCategory[] = [
        ───────────────────────────────────────────── */
     {
         id: 'chansons',
-        title: 'Pack Chansons et Accompagnement',
+        title: 'Chansons et Accompagnement',
         subtitle: 'Jouer et chanter ses morceaux préférés',
         objective: "Maîtriser l'accompagnement, le chant et se produire en public.",
         icon: '🎤',

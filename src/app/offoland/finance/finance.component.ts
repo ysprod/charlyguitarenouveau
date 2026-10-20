@@ -35,7 +35,7 @@ import {
 } from '../constants/finance.constants';
 
 /* ═══════════════════════════════════════════════════════════
-   FORMATTERS (instanciés une seule fois)
+   FORMATTERS
    ═══════════════════════════════════════════════════════════ */
 
 const NUMBER_FORMATTER = new Intl.NumberFormat('fr-FR');
@@ -79,9 +79,8 @@ export class FinanceComponent {
      COMPUTED
      ═══════════════════════════════════════════════════════ */
 
-  /** Masse monétaire formatée (pré-calculée, pas d'appel Intl dans le template). */
   readonly formattedSupply = computed(() =>
-    NUMBER_FORMATTER.format(Math.round(this.totalSupply()))
+    NUMBER_FORMATTER.format(Math.round(this.totalSupply())),
   );
 
   /* ═══════════════════════════════════════════════════════
@@ -107,7 +106,7 @@ export class FinanceComponent {
   private tickSupply(): void {
     const current = this.totalSupply();
     const delta = Math.floor(
-      current * SUPPLY_VARIATION_FACTOR * (Math.random() - 0.5)
+      current * SUPPLY_VARIATION_FACTOR * (Math.random() - 0.5),
     );
     this.totalSupply.update((v) => Math.max(0, v + delta));
   }
@@ -129,7 +128,7 @@ export class FinanceComponent {
           rate: Math.max(MIN_RATE, nextRate),
           change: nextChange,
         };
-      })
+      }),
     );
   }
 
