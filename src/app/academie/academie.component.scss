@@ -53,14 +53,14 @@
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  padding: 2rem 1.5rem 6rem;
+  padding: 1rem 0.5rem 4rem;
   color: var(--text-dark);
   font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   background: var(--bg-page);
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
-  gap: 5rem;
+  gap: 3rem;
 }
 
 /* ═════════════════════════════════════════════════════════════════════

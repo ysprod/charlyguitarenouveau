@@ -12,7 +12,7 @@
 
     <div class="hero-content">
       <span class="hero-eyebrow">
-       École de formation et d’innovation
+        École de formation et d’innovation
       </span>
 
       <h1 id="academie-hero-title" class="hero-title">
@@ -21,8 +21,8 @@
       </h1>
 
       <p class="hero-description">
-       Profitez de méthodes innovantes, de masterclass et de ressources pédagogiques exclusives.
-        Explorez notre boutique pour retrouver tout ce dont vous avez besoin. 
+        Profitez de méthodes innovantes, de masterclass et de ressources pédagogiques exclusives.
+        Explorez notre boutique pour retrouver tout ce dont vous avez besoin.
       </p>
     </div>
   </section>
@@ -31,37 +31,30 @@
     <div class="cta-orb cta-orb--blue" aria-hidden="true"></div>
 
     <div class="cta-inner">
-
-      <div class="cta-icon-wrapper">
-        <span class="cta-icon" aria-hidden="true">🎼</span>
-      </div>
-
-      <span class="cta-eyebrow">Bibliothèque numérique</span>
+ 
+ 
 
       <h2 id="boutique-title" class="cta-title">
         Découvre la <em>Boutique</em>
-      </h2> 
+      </h2>
       <div class="cta-features" aria-hidden="true">
         <span class="cta-feature">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-               stroke="currentColor" stroke-width="2.5"
-               stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
           Méthodes PDF
         </span>
         <span class="cta-feature">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-               stroke="currentColor" stroke-width="2.5"
-               stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
           Livres
         </span>
         <span class="cta-feature">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-               stroke="currentColor" stroke-width="2.5"
-               stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
           Accessoires
@@ -70,10 +63,8 @@
 
       <a routerLink="/offres" class="cta-button">
         <span>Explorer la boutique</span>
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
-             stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="5" y1="12" x2="19" y2="12" />
           <polyline points="12 5 19 12 12 19" />
         </svg>
@@ -85,63 +76,6 @@
        SECTION OFFRES
        ═══════════════════════════════════════════════════════ -->
   <app-offres />
-
-  <!-- ═══════════════════════════════════════════════════════
-       ✅ CTA "Wahou" — Accès à la boutique (remplace <app-documents />)
-       ═══════════════════════════════════════════════════════ -->
-
-
-  <!-- ═══════════════════════════════════════════════════════
-       FORMATIONS
-       ═══════════════════════════════════════════════════════ -->
-  <section class="grid-section" aria-label="Nos formations">
-
-    <div class="cards-grid">
-      @for (formation of formations; track formation.id) {
-        <article class="academy-card" [class.highlight-card]="formation.highlighted">
-
-          @if (formation.popular) {
-            <div class="popular-badge">
-              <span aria-hidden="true">⭐</span> POPULAIRE
-            </div>
-          }
-
-          <div class="card-number" aria-hidden="true">{{ formation.number }}</div>
-
-          <div class="card-header">
-
-            <div class="card-icon-wrap">
-              <span class="card-icon" aria-hidden="true">{{ formation.icon }}</span>
-            </div>
-
-            <div>
-              <span class="card-label">{{ formation.label }}</span>
-              <h3>{{ formation.title }}</h3>
-            </div>
-
-          </div>
-
-          <p class="card-description">{{ formation.description }}</p>
-
-          <ul class="subcategories-list">
-            @for (sub of formation.subcategories; track sub) {
-              <li>{{ sub }}</li>
-            }
-          </ul>
-
-          <a [routerLink]="formation.actionRoute" class="card-action">
-            <span>{{ formation.actionLabel }}</span>
-            <span class="arrow" aria-hidden="true">→</span>
-          </a>
-
-        </article>
-      }
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════════════════════════
-       LIVE
-       ═══════════════════════════════════════════════════════ -->
   <section class="live-section" aria-labelledby="live-heading-title">
 
     <div class="section-heading live-heading">
@@ -157,35 +91,35 @@
 
     <div class="live-grid">
       @for (live of liveCards; track live.id) {
-        <article class="live-card">
+      <article class="live-card">
 
-          <div class="live-background-icon" aria-hidden="true">
-            {{ live.backgroundIcon }}
+        <div class="live-background-icon" aria-hidden="true">
+          {{ live.backgroundIcon }}
+        </div>
+
+        <div class="live-card-content">
+
+          <div class="live-icon-wrap">
+            <span aria-hidden="true">{{ live.icon }}</span>
           </div>
 
-          <div class="live-card-content">
+          <span class="live-label">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            LIVE
+          </span>
 
-            <div class="live-icon-wrap">
-              <span aria-hidden="true">{{ live.icon }}</span>
-            </div>
+          <h3>{{ live.title }}</h3>
 
-            <span class="live-label">
-              <span class="pulse-dot" aria-hidden="true"></span>
-              LIVE
-            </span>
+          <p>{{ live.description }}</p>
 
-            <h3>{{ live.title }}</h3>
+        </div>
 
-            <p>{{ live.description }}</p>
+        <a [routerLink]="live.actionRoute" class="live-action">
+          {{ live.actionLabel }}
+          <span aria-hidden="true">→</span>
+        </a>
 
-          </div>
-
-          <a [routerLink]="live.actionRoute" class="live-action">
-            {{ live.actionLabel }}
-            <span aria-hidden="true">→</span>
-          </a>
-
-        </article>
+      </article>
       }
     </div>
 

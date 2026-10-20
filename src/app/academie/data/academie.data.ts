@@ -67,7 +67,7 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     id: 'master-class-live',
     icon: '🎓',
     backgroundIcon: '🎓',
-    title: 'MASTER CLASS LIVE',
+    title: 'MASTER CLASS',
     description:
       'Participez aux sessions interactives avec des experts et développez votre technique.',
     actionLabel: 'Rejoindre la session',
@@ -77,7 +77,7 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     id: 'cours-live',
     icon: '🎸',
     backgroundIcon: '🎸',
-    title: 'COURS LIVE',
+    title: 'COURS',
     description:
       'Apprenez en temps réel avec un formateur et bénéficiez de conseils personnalisés.',
     actionLabel: "S'inscrire au cours",

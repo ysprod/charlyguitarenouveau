@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   INBOX PANEL — Boîte de réception (optimisé GPU)
+   INBOX PANEL — Boîte de réception (pagination "wahou", GPU-friendly)
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
@@ -59,10 +59,8 @@
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  /* ✅ Ombre simple + bordure pour la profondeur (plus de box-shadow large) */
   box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
   overflow: hidden;
-  /* ✅ animation bannerEnter supprimée */
 }
 
 /* ─── En-tête ─── */
@@ -100,7 +98,6 @@
     letter-spacing: -0.01em;
   }
 
-  /* ✅ Badge sans box-shadow (border suffit) */
   .inbox-unread-badge {
     display: inline-grid;
     place-items: center;
@@ -149,7 +146,6 @@
     outline-offset: 2px;
   }
 
-  /* ✅ Plus de box-shadow sur les boutons : couleur unie + bordure */
   &.inbox-btn-blue {
     background: var(--primary);
     color: #fff;
@@ -199,7 +195,6 @@
     color: var(--primary);
   }
 
-  /* ✅ Plus de box-shadow sur le filtre actif */
   &.active {
     background: var(--primary);
     border-color: var(--primary);
@@ -231,8 +226,6 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  /* ✅ max-height + overflow-y retirés : crée un scroll layer GPU inutile.
-     Le scroll est géré par la page entière (plus économique). */
 }
 
 /* ─── Item ─── */
@@ -258,7 +251,6 @@
     border-bottom: none;
   }
 
-  /* ✅ Unread : bordure gauche colorée au lieu d'un background semi-transparent */
   &.unread {
     background: #f8fbff;
     border-left: 3px solid var(--primary);
@@ -271,7 +263,6 @@
     }
   }
 
-  /* ✅ Sent : bordure gauche plus légère */
   &.sent {
     background: #fafcff;
     border-left: 3px solid rgba(37, 99, 235, 0.3);
@@ -289,7 +280,6 @@
     padding-top: 0.1rem;
   }
 
-  /* ✅ Avatar : couleur unie au lieu d'un gradient */
   .inbox-avatar {
     display: inline-grid;
     place-items: center;
@@ -374,7 +364,6 @@
     white-space: nowrap;
   }
 
-  /* ✅ Point statique : plus de pulse infini */
   .inbox-dot {
     width: 8px;
     height: 8px;
@@ -433,56 +422,163 @@
   }
 }
 
-/* ─── Pagination ─── */
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ PAGINATION — Wahou
+   ═════════════════════════════════════════════════════════════════════ */
 
 .inbox-pagination {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 1rem 1.5rem 1.25rem;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+  padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--border-subtle);
-  background: var(--bg-soft);
+  background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg-page) 100%);
 }
 
-.inbox-page-btn {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 0.6rem;
+/* ─── Info "1–8 sur 42" ─── */
+
+.pagination-info {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .78rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: .02em;
+
+  strong {
+    color: var(--text-dark);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .info-sep {
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .info-of {
+    color: var(--text-dim);
+    font-weight: 500;
+    margin: 0 .15rem;
+  }
+}
+
+/* ─── Contrôles ─── */
+
+.pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: .35rem;
+  background: var(--bg-page);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, .04),
+    inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+
+/* ─── Pages numérotées ─── */
+
+.page-numbers {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+}
+
+.page-ellipsis {
   display: inline-grid;
   place-items: center;
-  background: #fff;
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-sm);
+  min-width: 28px;
+  height: 34px;
+  color: var(--text-dim);
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  user-select: none;
+}
+
+/* ─── Bouton de page ─── */
+
+.page-btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 .55rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
   color: var(--text-body);
-  font-size: 0.82rem;
+  font-family: inherit;
+  font-size: .82rem;
   font-weight: 700;
   cursor: pointer;
   transition:
-    border-color var(--t-fast),
+    background var(--t-fast),
     color var(--t-fast),
-    background var(--t-fast);
+    border-color var(--t-fast),
+    transform var(--t-fast);
 
-  &:hover:not(:disabled) {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: var(--bg-soft);
+  svg {
+    display: block;
+    flex-shrink: 0;
   }
 
-  /* ✅ Plus de box-shadow sur la page active */
+  &:hover:not(:disabled):not(.active) {
+    background: var(--gold-soft);
+    color: var(--gold-primary);
+    transform: translateY(-1px);
+  }
+
   &.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
+    background: var(--gold-primary);
+    color: #ffffff;
+    cursor: default;
+    box-shadow:
+      0 2px 8px rgba(184, 134, 11, .25),
+      inset 0 1px 0 rgba(255, 255, 255, .2);
   }
 
   &:disabled {
-    opacity: 0.4;
+    opacity: .35;
     cursor: not-allowed;
+    color: var(--text-dim);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
 }
 
-/* ─── Responsive ─── */
+/* ─── Styles spécifiques par type ─── */
+
+.page-btn--num {
+  min-width: 34px;
+}
+
+.page-btn--nav,
+.page-btn--edge {
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    color: var(--gold-primary);
+    background: var(--gold-soft);
+  }
+}
+
+.page-btn--edge svg {
+  opacity: .8;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
   .inbox-header {
@@ -519,13 +615,58 @@
   }
 }
 
-/* ─── Accessibilité ─── */
+@media (max-width: 640px) {
+  .inbox-pagination {
+    padding: 1rem;
+    gap: .6rem;
+  }
+
+  .pagination-info {
+    font-size: .72rem;
+  }
+
+  .pagination-controls {
+    padding: .25rem;
+    gap: .2rem;
+  }
+
+  .page-btn {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 .4rem;
+    font-size: .75rem;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .page-btn--num {
+    min-width: 30px;
+  }
+
+  .page-ellipsis {
+    min-width: 22px;
+    height: 30px;
+    font-size: .75rem;
+  }
+
+  /* ✅ Masquer première / dernière page sur mobile */
+  .page-btn--edge {
+    display: none;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
   .inbox-btn,
   .inbox-filter,
   .inbox-item,
-  .inbox-page-btn {
+  .page-btn {
     transition: none !important;
   }
 }

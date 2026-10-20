@@ -27,6 +27,5 @@ export class AcademieComponent {
      DONNÉES — Immuables
      ═══════════════════════════════════════════════════════ */
 
-  readonly formations: readonly Formation[] = FORMATIONS;
-  readonly liveCards: readonly LiveCard[] = LIVE_CARDS;
+   readonly liveCards: readonly LiveCard[] = LIVE_CARDS;
 }

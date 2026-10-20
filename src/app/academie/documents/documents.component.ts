@@ -45,6 +45,7 @@ import {
 } from 'src/app/academie/utils/documents.utils';
 import { PromoCodeService } from 'src/app/shared/services/promo-code.service';
 import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
+import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    DOCUMENTS — Boutique numérique (optimisé)
@@ -52,10 +53,9 @@ import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.compon
 
 @Component({
   selector: 'app-documents',
-  imports: [ 
-    PromoModalComponent,
-    ToastComponent,
-    FormatPricePipe,
+  imports: [
+    PromoModalComponent, ToastComponent,
+    FormatPricePipe, PodcastvideoComponent,
   ],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss'],
@@ -74,7 +74,7 @@ export class DocumentsComponent {
      CONSTANTES EXPOSÉES AU TEMPLATE
      ═══════════════════════════════════════════════════════ */
 
- 
+
   readonly FILTER_ALL_LABEL = FILTER_ALL_LABEL;
 
   /* ═══════════════════════════════════════════════════════

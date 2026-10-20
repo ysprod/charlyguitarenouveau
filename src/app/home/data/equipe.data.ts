@@ -43,12 +43,6 @@ export const MEMBRES_EQUIPE: MembreEquipe[] = [
     isFeatured: true
   },
   {
-    nom: 'Lago Séry Patrick',
-    role: 'Décors',
-    icone: '🏞️',
-    couleur: '#10b981'
-  },
-  {
     nom: 'Marcel Kouassi',
     role: 'Animation',
     icone: '🎬',

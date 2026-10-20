@@ -8,9 +8,8 @@ import { AuthGuard } from '../guards/auth/auth.guard';
    OFFOLAND ROUTES
    ─────────────────────────────────────────────────────────────────────
    - /offoland                     → page principale
-   - /offoland/finance             → Finance
-   - /offoland/bco                 → BCO
    - /offoland/dimensions/*        → 7 dimensions (sous-module)
+   - /offoland/vie/*               → BCO, Finance (sous-module)
    ═════════════════════════════════════════════════════════════════════ */
 
 export const offolandRoutes: Routes = [
@@ -24,27 +23,7 @@ export const offolandRoutes: Routes = [
     pathMatch: 'full',
   },
 
-  /* ─── Finance ─── */
-  {
-    path: 'finance',
-    loadComponent: () =>
-      import('./finance/finance.component').then(
-        (m) => m.FinanceComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Finance — Offoland',
-  },
-
-  /* ─── BCO ─── */
-  {
-    path: 'bco',
-    loadComponent: () =>
-      import('./bco/bco.component').then((m) => m.BcoComponent),
-    canActivate: [AuthGuard],
-    title: 'BCO — Offoland',
-  },
-
-  /* ─── Dimensions (sous-module avec router-outlet dédié) ─── */
+  /* ─── Dimensions (sous-module) ─── */
   {
     path: 'dimensions',
     loadChildren: () =>
@@ -53,45 +32,24 @@ export const offolandRoutes: Routes = [
       ),
   },
 
-  /* ─── Redirections legacy (anciennes URLs) ─── */
+  /* ─── Vie d'Offoland (sous-module) ─── */
   {
-    path: 'charlyguitaregame',
-    redirectTo: 'dimensions/charlyguitaregame',
-    pathMatch: 'full',
+    path: 'vie',
+    loadChildren: () =>
+      import('./vie/vie.routes').then((m) => m.vieRoutes),
   },
-  {
-    path: 'blanc',
-    redirectTo: 'dimensions/blanc',
-    pathMatch: 'full',
-  },
-  {
-    path: 'bleu',
-    redirectTo: 'dimensions/bleu',
-    pathMatch: 'full',
-  },
-  {
-    path: 'noir',
-    redirectTo: 'dimensions/noir',
-    pathMatch: 'full',
-  },
-  {
-    path: 'pourpre',
-    redirectTo: 'dimensions/pourpre',
-    pathMatch: 'full',
-  },
-  {
-    path: 'rouge',
-    redirectTo: 'dimensions/rouge',
-    pathMatch: 'full',
-  },
-  {
-    path: 'vert',
-    redirectTo: 'dimensions/vert',
-    pathMatch: 'full',
-  },
-  {
-    path: 'violet',
-    redirectTo: 'dimensions/violet',
-    pathMatch: 'full',
-  },
+
+  /* ─── Redirections legacy ─── */
+  { path: 'charlyguitaregame', redirectTo: 'dimensions/charlyguitaregame', pathMatch: 'full' },
+  { path: 'blanc',  redirectTo: 'dimensions/blanc',  pathMatch: 'full' },
+  { path: 'bleu',   redirectTo: 'dimensions/bleu',   pathMatch: 'full' },
+  { path: 'noir',   redirectTo: 'dimensions/noir',   pathMatch: 'full' },
+  { path: 'pourpre', redirectTo: 'dimensions/pourpre', pathMatch: 'full' },
+  { path: 'rouge',  redirectTo: 'dimensions/rouge',  pathMatch: 'full' },
+  { path: 'vert',   redirectTo: 'dimensions/vert',   pathMatch: 'full' },
+  { path: 'violet', redirectTo: 'dimensions/violet', pathMatch: 'full' },
+
+  /* ✅ Redirections BCO/Finance → /offoland/vie/* */
+  { path: 'bco',     redirectTo: 'vie/bco',     pathMatch: 'full' },
+  { path: 'finance', redirectTo: 'vie/finance', pathMatch: 'full' },
 ];

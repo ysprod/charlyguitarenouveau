@@ -16,9 +16,9 @@
         <div class="avatar-ring">
           <div class="avatar">
             @if (hasPhoto()) {
-              <img [src]="userPhoto()!" [alt]="userName()" />
+            <img [src]="userPhoto()!" [alt]="userName()" />
             } @else {
-              <span>{{ userInitials() }}</span>
+            <span>{{ userInitials() }}</span>
             }
           </div>
         </div>
@@ -31,31 +31,27 @@
         </div>
       </div>
 
+      <app-podcastvideo />
+      
       <!-- Actions rapides -->
       <nav class="hero-actions" aria-label="Actions rapides">
         @for (action of quickActions; track action.route) {
-          <a
-            [routerLink]="action.route"
-            class="action-card"
-            [attr.data-color]="action.color"
-            [attr.aria-label]="action.label"
-          >
-            <span class="action-icon" aria-hidden="true">{{ action.icon }}</span>
-            <span class="action-label">{{ action.label }}</span>
-            <svg class="action-arrow" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5"
-                 stroke-linecap="round" stroke-linejoin="round"
-                 aria-hidden="true">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
+        <a [routerLink]="action.route" class="action-card" [attr.data-color]="action.color"
+          [attr.aria-label]="action.label">
+          <span class="action-icon" aria-hidden="true">{{ action.icon }}</span>
+          <span class="action-label">{{ action.label }}</span>
+          <svg class="action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
         }
       </nav>
 
     </div>
   </section>
-  
+
   <app-inbox-panel />
   <app-footer />
 </div>

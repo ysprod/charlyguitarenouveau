@@ -1,0 +1,75 @@
+<div class="live-hub-container">
+
+  <section class="grid-section" aria-label="Podcast vidéo">
+    <div class="video-card">
+
+      <!-- Header -->
+      <div class="video-header">
+        <span class="live-badge-card">
+          <span class="dot-live" aria-hidden="true"></span>
+          {{ video.badge }}
+        </span>
+        <h2 class="video-title">{{ video.title }}</h2>
+      </div>
+
+      <!-- Vidéo -->
+      <div class="video-wrapper">
+        <iframe
+          [src]="safeEmbedUrl()"
+          title="La GrandeBible d'Offoland (ecrit par Charly Guitare) enfin expliquée..."
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <!-- Actions -->
+      <div class="video-footer">
+        <a
+          href="https://youtube.com/playlist?list=PLY4Ohx8IPP3KVikGEK3QHkNL8zYUVfqoO&si=snGoYbv_CCdTQ2-E"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="playlist-btn"
+        >
+          <svg class="icon" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
+          <span>Autres podcasts Video</span>
+        </a>
+
+        <!-- ✨ Nouveau bouton Acheter -->
+        <a
+          routerLink="/store"
+          class="shop-btn"
+          aria-label="Acheter — aller à la boutique"
+        >
+          <svg class="icon" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+          </svg>
+          <span>Acheter la Bible  d'Offoland</span>
+          <svg class="arrow" viewBox="0 0 24 24" width="16" height="16"
+               fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+</div>

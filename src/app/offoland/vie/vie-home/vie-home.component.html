@@ -1,0 +1,66 @@
+<!-- src/app/offoland/vie/vie-home/vie-home.component.html -->
+
+<div class="vie-home-container">
+ 
+  <main class="vie-grid">
+    @for (section of sections; track section.id) {
+      <a
+        [routerLink]="section.route"
+        class="vie-card"
+        [style.--accent]="section.color"
+        [attr.aria-label]="'Explorer ' + section.label"
+      >
+
+        <!-- Halo -->
+        <div class="card-halo" aria-hidden="true"></div>
+
+        <!-- Bande supérieure -->
+        <div class="card-band" aria-hidden="true"></div>
+
+        <!-- Contenu -->
+        <div class="card-content">
+
+          <!-- En-tête : icône + tag -->
+          <header class="card-header">
+            <div class="card-icon-wrapper">
+              <span class="card-icon" aria-hidden="true">{{ section.icon }}</span>
+            </div>
+            @if (section.tag) {
+              <span class="card-tag">{{ section.tag }}</span>
+            }
+          </header>
+
+          <!-- Titre + subtitle -->
+          <div class="card-title-block">
+            <h2 class="card-title">{{ section.label }}</h2>
+            <p class="card-subtitle">{{ section.subtitle }}</p>
+          </div>
+
+          <!-- Description -->
+          <p class="card-description">{{ section.description }}</p>
+
+          <!-- Action -->
+          <footer class="card-footer">
+            <span class="card-action-label">Explorer</span>
+            <svg class="card-arrow" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </footer>
+
+        </div>
+
+        <!-- Coins décoratifs -->
+        <span class="corner corner-tl" aria-hidden="true"></span>
+        <span class="corner corner-tr" aria-hidden="true"></span>
+        <span class="corner corner-bl" aria-hidden="true"></span>
+        <span class="corner corner-br" aria-hidden="true"></span>
+
+      </a>
+    }
+  </main>
+
+</div>

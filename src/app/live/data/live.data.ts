@@ -5,11 +5,11 @@ import { LiveCard, LiveVideo } from '../models/live.model';
    ═════════════════════════════════════════════════════════════════════ */
 
 export const LIVE_VIDEO: LiveVideo = {
-  title: 'Freestyle',
+  title: ' ',
   embedUrl:
     'https://www.youtube.com/embed/3bvbSb43SvM?autoplay=1&rel=0&modestbranding=1',
   watchUrl: 'https://www.youtube.com/watch?v=3bvbSb43SvM',
-  badge: 'LIVE',
+  badge: 'SHOWCASE',
 };
 
 /* ═════════════════════════════════════════════════════════════════════

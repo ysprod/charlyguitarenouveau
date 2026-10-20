@@ -2,7 +2,7 @@ import type { QuickAction, InboxFilter, WhyPillar, } from '../models/homeconnect
 
 export const QUICK_ACTIONS: readonly QuickAction[] = [
   {
-    label: 'Jouer',
+    label: 'Jeux',
     icon: '🎮',
     route: '/game/play',
     color: 'primary',

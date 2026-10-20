@@ -1,6 +1,10 @@
+<!-- src/app/home/homeconnect/inbox-panel/inbox-panel.component.html -->
+
 <section class="inbox-section" aria-labelledby="inbox-title">
 
-  <!-- En-tête -->
+  <!-- ═══════════════════════════════════════════════════════
+       EN-TÊTE
+       ═══════════════════════════════════════════════════════ -->
   <header class="inbox-header">
     <div class="inbox-title-wrapper">
       <span class="inbox-eyebrow">MESSAGERIE</span>
@@ -31,7 +35,9 @@
     </div>
   </header>
 
-  <!-- Filtres -->
+  <!-- ═══════════════════════════════════════════════════════
+       FILTRES
+       ═══════════════════════════════════════════════════════ -->
   <nav class="inbox-filters" role="tablist" aria-label="Filtres messages">
     @for (filter of inboxFilters; track filter.value) {
       <button type="button"
@@ -53,7 +59,9 @@
     }
   </nav>
 
-  <!-- Liste -->
+  <!-- ═══════════════════════════════════════════════════════
+       LISTE
+       ═══════════════════════════════════════════════════════ -->
   <div class="inbox-list" role="list">
 
     @if (paginatedMessages().length === 0) {
@@ -127,34 +135,114 @@
     }
   </div>
 
-  <!-- Pagination -->
+  <!-- ═══════════════════════════════════════════════════════
+       PAGINATION — Wahou
+       ═══════════════════════════════════════════════════════ -->
   @if (totalPages() > 1) {
-    <nav class="inbox-pagination" aria-label="Pagination messages">
-      <button type="button"
-              class="inbox-page-btn"
-              [disabled]="currentPage() === 1"
-              (click)="goToPage(currentPage() - 1)"
-              aria-label="Page précédente">
-        ←
-      </button>
+    <nav class="inbox-pagination" aria-label="Pagination des messages">
 
-      @for (page of pagesArray(); track page) {
-        <button type="button"
-                class="inbox-page-btn"
-                [class.active]="page === currentPage()"
-                (click)="goToPage(page)"
-                [attr.aria-current]="page === currentPage() ? 'page' : null">
-          {{ page }}
+      <!-- Info range "1–8 sur 42" -->
+      <div class="pagination-info" aria-live="polite">
+        <strong>{{ rangeStart() }}</strong>
+        <span class="info-sep">–</span>
+        <strong>{{ rangeEnd() }}</strong>
+        <span class="info-of">sur</span>
+        <strong>{{ filteredMessages().length }}</strong>
+      </div>
+
+      <!-- Contrôles -->
+      <div class="pagination-controls">
+
+        <!-- Première page -->
+        <button
+          type="button"
+          class="page-btn page-btn--edge"
+          [disabled]="!hasPrevPage()"
+          (click)="goToFirstPage()"
+          aria-label="Première page"
+          title="Première page"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="11 17 6 12 11 7" />
+            <polyline points="18 17 13 12 18 7" />
+          </svg>
         </button>
-      }
 
-      <button type="button"
-              class="inbox-page-btn"
-              [disabled]="currentPage() === totalPages()"
-              (click)="goToPage(currentPage() + 1)"
-              aria-label="Page suivante">
-        →
-      </button>
+        <!-- Précédent -->
+        <button
+          type="button"
+          class="page-btn page-btn--nav"
+          [disabled]="!hasPrevPage()"
+          (click)="prevPage()"
+          aria-label="Page précédente"
+          title="Page précédente"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <!-- Pages numérotées (avec ellipsis) -->
+        <div class="page-numbers">
+          @for (item of paginationItems(); track $index) {
+            @if (item === 'ellipsis-start' || item === 'ellipsis-end') {
+              <span class="page-ellipsis" aria-hidden="true">···</span>
+            } @else {
+              <button
+                type="button"
+                class="page-btn page-btn--num"
+                [class.active]="item === currentPage()"
+                [attr.aria-current]="item === currentPage() ? 'page' : null"
+                (click)="goToPage(item)"
+              >
+                {{ item }}
+              </button>
+            }
+          }
+        </div>
+
+        <!-- Suivant -->
+        <button
+          type="button"
+          class="page-btn page-btn--nav"
+          [disabled]="!hasNextPage()"
+          (click)="nextPage()"
+          aria-label="Page suivante"
+          title="Page suivante"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+
+        <!-- Dernière page -->
+        <button
+          type="button"
+          class="page-btn page-btn--edge"
+          [disabled]="!hasNextPage()"
+          (click)="goToLastPage()"
+          aria-label="Dernière page"
+          title="Dernière page"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="13 17 18 12 13 7" />
+            <polyline points="6 17 11 12 6 7" />
+          </svg>
+        </button>
+
+      </div>
     </nav>
   }
 </section>

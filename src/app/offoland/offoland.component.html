@@ -2,12 +2,9 @@
 
 <div class="offoland-app">
 
-  <!-- ═══════════════════════════════════════════════════════
-       HERO — LE PORTAIL D'OFFOLAND
-       ═══════════════════════════════════════════════════════ -->
   <section class="hero-section" aria-labelledby="offoland-title">
 
-    <!-- 🌌 Sept couleurs primordiales en auras -->
+    <!-- Auras -->
     <div class="hero-aura" aria-hidden="true">
       <div class="aura aura-do"></div>
       <div class="aura aura-re"></div>
@@ -18,74 +15,93 @@
       <div class="aura aura-si"></div>
     </div>
 
-    <!-- 🥁 Battement du Premier Tambour -->
+    <!-- Premier Tambour -->
     <div class="premier-tambour" aria-hidden="true">
       <span class="pulse-ring ring-1"></span>
       <span class="pulse-ring ring-2"></span>
       <span class="pulse-ring ring-3"></span>
     </div>
 
-    <!-- 📜 Contenu sacré -->
     <div class="hero-content">
 
-      <!-- 🌟 Titre principal -->
       <h1 id="offoland-title" class="hero-title">
         <span class="hero-title-gold">OFFOLAND</span>
       </h1>
 
       <!-- ═══════════════════════════════════════════════════════
-           SECTION — Accès aux dimensions (TON ORDRE)
+           DOUBLE CTA — Dimensions & Vie d'Offoland
            ═══════════════════════════════════════════════════════ -->
       <main class="main-content">
-        <section class="section-wrapper" aria-label="Accéder aux dimensions">
-          <div class="dimensions-cta">
-            <div class="cta-icon" aria-hidden="true">🌌</div>
-            <h2 class="cta-title">Explore les Sept Dimensions</h2>
-         
-            <a routerLink="/offoland/dimensions/charlyguitaregame" class="cta-button">
-              <span>Entrer dans les dimensions</span>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <section class="hub-grid" aria-label="Explorer Offoland">
+
+          <!-- 🌌 Dimensions -->
+          <a
+            routerLink="/offoland/dimensions/charlyguitaregame"
+            class="hub-card hub-card--dimensions"
+            aria-label="Explorer les Sept Dimensions"
+          >
+            <div class="hub-glow" aria-hidden="true"></div>
+            <div class="hub-band" aria-hidden="true"></div>
+
+            <div class="hub-icon" aria-hidden="true">🌌</div>
+
+            <div class="hub-body">
+              <h2 class="hub-title">Les Sept Dimensions</h2>
+              <p class="hub-subtitle">Explore les 7 royaumes d'Offoland</p>
+            </div>
+
+            <span class="hub-cta">
+              <span>Entrer</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                   stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round"
+                   aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
               </svg>
-            </a>
-          </div>
+            </span>
+
+            <span class="corner corner-tl" aria-hidden="true"></span>
+            <span class="corner corner-tr" aria-hidden="true"></span>
+            <span class="corner corner-bl" aria-hidden="true"></span>
+            <span class="corner corner-br" aria-hidden="true"></span>
+          </a>
+
+          <!-- 🌍 Vie d'Offoland -->
+          <a
+            routerLink="/offoland/vie"
+            class="hub-card hub-card--vie"
+            aria-label="Explorer la Vie d'Offoland"
+          >
+            <div class="hub-glow" aria-hidden="true"></div>
+            <div class="hub-band" aria-hidden="true"></div>
+
+            <div class="hub-icon" aria-hidden="true">🌍</div>
+
+            <div class="hub-body">
+              <h2 class="hub-title">Offoland City</h2>
+              <p class="hub-subtitle">BCO, Finance et institutions, etc...</p>
+            </div>
+
+            <span class="hub-cta">
+              <span>Explorer</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                   stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round"
+                   aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </span>
+
+            <span class="corner corner-tl" aria-hidden="true"></span>
+            <span class="corner corner-tr" aria-hidden="true"></span>
+            <span class="corner corner-bl" aria-hidden="true"></span>
+            <span class="corner corner-br" aria-hidden="true"></span>
+          </a>
+
         </section>
-      </main> 
-
-      <!-- 🌈 Divider sacré -->
-      <div class="hero-divider">
-        <span class="line" aria-hidden="true"></span>
-        <span class="icon" aria-hidden="true">🥁</span>
-        <span class="line" aria-hidden="true"></span>
-      </div>
-
-      <!-- 🏦 Portails -->
-      <div class="portails-grid">
-        @for (portail of portails; track portail.id) {
-
-        @if (portail.route) {
-        <a class="portail-btn" [class]="'portail-btn ' + portail.cssClass" [routerLink]="portail.route"
-          [attr.aria-label]="'Accéder à ' + portail.label + ' — ' + portail.sub">
-          <span class="portail-glow" aria-hidden="true"></span>
-          <span class="portail-icon" aria-hidden="true">{{ portail.icon }}</span>
-          <span class="portail-label">{{ portail.label }}</span>
-          <span class="portail-sub">{{ portail.sub }}</span>
-        </a>
-        } @else {
-        <div class="portail-btn portail-locked" aria-disabled="true"
-          [attr.aria-label]="'Portail verrouillé : ' + portail.label + ' — Bientôt disponible'">
-          <span class="portail-icon" aria-hidden="true">{{ portail.icon }}</span>
-          <span class="portail-label">{{ portail.label }}</span>
-          <span class="portail-sub">{{ portail.sub }}</span>
-          <span class="portail-lock" aria-hidden="true">🔒</span>
-        </div>
-        }
-
-        }
-      </div>
-
+      </main>
     </div>
 
   </section>

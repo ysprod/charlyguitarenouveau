@@ -244,7 +244,6 @@
     border-bottom: 1px solid var(--border-subtle);
     cursor: pointer;
     transition: background var(--t-fast), transform var(--t-fast);
-    /* ✅ animation slideIn supprimée */
 
     &:hover { background: var(--bg-soft); }
     &:focus-visible {
@@ -258,7 +257,6 @@
       padding-left: calc(1.1rem - 3px);
     }
 
-    /* ✅ Point unread statique (plus de pulse infini) */
     &.unread::before {
       content: '';
       position: absolute;
@@ -503,7 +501,6 @@
     display: flex;
     gap: 0.75rem;
     max-width: 85%;
-    /* ✅ animation bubbleIn supprimée */
 
     .avatar {
       flex-shrink: 0;
@@ -587,7 +584,6 @@
       .bubble-header .time { color: var(--text-muted); }
     }
 
-    /* ✅ Typing indicator statique (plus de dots animés) */
     &.typing {
       .bubble-content {
         display: flex;
@@ -735,7 +731,6 @@
         z-index: 1;
       }
 
-      /* ✅ Pulse-ring statique */
       .pulse-ring {
         position: absolute;
         inset: 0;
@@ -946,7 +941,8 @@
   .btn-send,
   .btn-new-message,
   .btn-new-message-prompt,
-  .reply-box {
+  .reply-box,
+  .page-btn {
     transition: none !important;
   }
 }
@@ -959,4 +955,153 @@ textarea:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ RESULTS INFO — Compteur de résultats
+   ═════════════════════════════════════════════════════════════════════ */
+
+.results-info {
+  padding: .6rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: .75rem;
+  color: var(--text-muted);
+  background: var(--bg-page);
+
+  strong {
+    color: var(--text-dark);
+    font-weight: 800;
+  }
+
+  .results-hint {
+    margin-left: .35rem;
+    font-style: italic;
+    color: var(--text-dim);
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ PAGINATION BAR
+   ═════════════════════════════════════════════════════════════════════ */
+
+.pagination-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .35rem;
+  padding: .85rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-soft);
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 .55rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  color: var(--text-body);
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast),
+    color var(--t-fast),
+    transform var(--t-fast);
+
+  &:hover:not(:disabled):not(.active) {
+    background: var(--gold-soft);
+    border-color: var(--gold-primary);
+    color: var(--gold-primary);
+    transform: translateY(-1px);
+  }
+
+  &.active {
+    background: var(--gold-primary);
+    border-color: var(--gold-primary);
+    color: #ffffff;
+    cursor: default;
+    box-shadow: 0 2px 8px rgba(184, 134, 11, .25);
+  }
+
+  &.page-nav {
+    padding: 0;
+    width: 32px;
+
+    svg {
+      display: block;
+    }
+  }
+
+  &:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ PAGINATION — Ellipsis
+   ═════════════════════════════════════════════════════════════════════ */
+
+.page-btn.page-ellipsis {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 800;
+  letter-spacing: .05em;
+  padding: 0;
+  width: 32px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+
+  &:hover {
+    background: var(--gold-soft);
+    border-color: var(--border-gold);
+    color: var(--gold-primary);
+    transform: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ RESPONSIVE — Pagination mobile
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  .pagination-bar {
+    padding: .75rem .5rem;
+    gap: .3rem;
+  }
+
+  .page-btn {
+    min-width: 30px;
+    height: 30px;
+    font-size: .72rem;
+
+    &.page-nav {
+      width: 30px;
+    }
+
+    &.page-ellipsis {
+      width: 30px;
+      font-size: .78rem;
+    }
+  }
 }

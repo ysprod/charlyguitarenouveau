@@ -1,4 +1,6 @@
- <div class="user-messages-container">
+<!-- src/app/features/messagerie/messagerie.component.html -->
+
+<div class="user-messages-container">
 
   <!-- Header -->
   <header class="page-header">
@@ -27,6 +29,7 @@
            [class.hidden-mobile]="selectedThread() !== null"
            aria-label="Liste des conversations">
 
+      <!-- Toolbar -->
       <div class="list-toolbar">
         <a routerLink="/contact" class="btn-new-message">
           <span aria-hidden="true">✉️</span>
@@ -45,15 +48,36 @@
         </div>
       </div>
 
+      <!-- Compteur de résultats -->
+      @if (filteredThreads().length > 0) {
+        <div class="results-info">
+          <span>
+            <strong>{{ filteredThreads().length }}</strong>
+            conversation{{ filteredThreads().length > 1 ? 's' : '' }}
+            @if (searchTerm()) {
+              <span class="results-hint">pour « {{ searchTerm() }} »</span>
+            }
+          </span>
+        </div>
+      }
+
+      <!-- Empty state -->
       @if (filteredThreads().length === 0) {
         <div class="empty-state">
           <div class="empty-illustration">📭</div>
           <h3>Aucune conversation</h3>
-          <p>Commencez par envoyer un message !</p>
+          <p>
+            @if (searchTerm()) {
+              Aucun résultat pour « {{ searchTerm() }} ».
+            } @else {
+              Commencez par envoyer un message !
+            }
+          </p>
         </div>
       } @else {
+        <!-- Liste paginée -->
         <div class="messages-scroll">
-          @for (thread of filteredThreads(); track trackThread($index, thread)) {
+          @for (thread of paginatedThreads(); track trackThread($index, thread)) {
             <article class="message-card"
                      [class.active]="selectedThread()?.threadId === thread.threadId"
                      [class.unread]="thread.unreadCount > 0"
@@ -78,6 +102,68 @@
             </article>
           }
         </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <nav class="pagination-bar" aria-label="Pagination des conversations">
+            <!-- Précédent -->
+            <button type="button"
+                    class="page-btn page-nav"
+                    [disabled]="!hasPrevPage()"
+                    (click)="prevPage()"
+                    aria-label="Page précédente">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                   stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round"
+                   aria-hidden="true">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            <!-- Pages (avec ellipsis) -->
+            @for (page of visiblePages(); track $index) {
+              @if (isEllipsis(page)) {
+                <button type="button"
+                        class="page-btn page-ellipsis"
+                        (click)="onEllipsisClick(page)"
+                        [attr.aria-label]="
+                          page === 'ellipsis-left'
+                            ? 'Pages précédentes'
+                            : 'Pages suivantes'
+                        "
+                        [attr.title]="
+                          page === 'ellipsis-left'
+                            ? 'Reculer de plusieurs pages'
+                            : 'Avancer de plusieurs pages'
+                        ">
+                  …
+                </button>
+              } @else {
+                <button type="button"
+                        class="page-btn"
+                        [class.active]="page === currentPage()"
+                        [attr.aria-current]="page === currentPage() ? 'page' : null"
+                        (click)="goToPage(page)">
+                  {{ page }}
+                </button>
+              }
+            }
+
+            <!-- Suivant -->
+            <button type="button"
+                    class="page-btn page-nav"
+                    [disabled]="!hasNextPage()"
+                    (click)="nextPage()"
+                    aria-label="Page suivante">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                   stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round"
+                   aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </nav>
+        }
       }
     </aside>
 

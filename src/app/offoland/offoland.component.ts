@@ -1,17 +1,14 @@
+// src/app/offoland/offoland.component.ts
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import {
-  Portail
-} from './models/offoland.model';
-
-import {
-  PORTAILS
-} from './data/offoland.data';
-
 /* ═════════════════════════════════════════════════════════════════════
    OFFOLAND — Portail d'entrée du royaume
+   ─────────────────────────────────────────────────────────────────────
+   Deux points d'entrée :
+   - /offoland/dimensions/charlyguitaregame → Les 7 Dimensions
+   - /offoland/vie                        → La Vie d'Offoland (BCO, Finance…)
    ═════════════════════════════════════════════════════════════════════ */
 
 @Component({
@@ -21,7 +18,4 @@ import {
   styleUrls: ['./offoland.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OffolandComponent {
-
-  readonly portails: readonly Portail[] = PORTAILS;
-}
+export class OffolandComponent {}

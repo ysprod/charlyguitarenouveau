@@ -6,7 +6,7 @@ export const PORTAILS: readonly Portail[] = [
     icon: '🏦',
     label: 'ÉCONOMIE',
     sub: 'Offo Money · BCO · Marché',
-    route: '/finance',
+     route: '/offoland/vie/finance', 
     cssClass: 'portail-economie',
   },
   {
@@ -14,7 +14,7 @@ export const PORTAILS: readonly Portail[] = [
     icon: '⚖️',
     label: 'BANQUE CENTRALE',
     sub: 'Masse monétaire · Réserves',
-    route: '/bco',
+    route: '/offoland/vie/bco',  
     cssClass: 'portail-banque',
   },
   {

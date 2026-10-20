@@ -1,0 +1,372 @@
+/* ═════════════════════════════════════════════════════════════════════
+   VIE HOME — Hub des sections (BCO, Finance)
+   ═════════════════════════════════════════════════════════════════════ */
+
+:host {
+  --bg-page: #ffffff;
+  --bg-soft: #f8fafc;
+  --bg-card: #ffffff;
+
+  --gold: #b8860b;
+  --gold-bright: #d4a017;
+  --gold-soft: rgba(184, 134, 11, .08);
+
+  --text-dark: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+
+  --border-subtle: rgba(15, 23, 42, .06);
+  --border-medium: rgba(15, 23, 42, .12);
+
+  --t-base: .25s cubic-bezier(.4, 0, .2, 1);
+
+  display: block;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ✅ Scoped */
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   CONTAINER
+   ═════════════════════════════════════════════════════════════════════ */
+
+.vie-home-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   HEADER
+   ═════════════════════════════════════════════════════════════════════ */
+
+.vie-header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.header-eyebrow {
+  display: inline-block;
+  padding: .35rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--gold-soft);
+  border: 1px solid rgba(184, 134, 11, .3);
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.header-title {
+  margin: 0 0 .875rem;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 900;
+  letter-spacing: -.02em;
+  line-height: 1.15;
+  color: var(--text-dark);
+
+  em {
+    font-style: italic;
+    color: var(--gold);
+  }
+}
+
+.header-description {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   GRILLE
+   ═════════════════════════════════════════════════════════════════════ */
+
+.vie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   CARTE
+   ═════════════════════════════════════════════════════════════════════ */
+
+.vie-card {
+  --accent: var(--gold);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.75rem 1.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 24px;
+  color: var(--text-dark);
+  text-decoration: none;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  transition:
+    transform var(--t-base),
+    border-color var(--t-base),
+    box-shadow var(--t-base);
+
+  /* Bande supérieure */
+  .card-band {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: .85;
+    z-index: 2;
+  }
+
+  /* Halo coloré */
+  .card-halo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(
+      circle at 50% 0%,
+      color-mix(in srgb, var(--accent) 10%, transparent) 0%,
+      transparent 60%
+    );
+    transition: opacity var(--t-base);
+  }
+
+  .card-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+  }
+
+  /* En-tête : icône + tag */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .card-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 18px;
+    transition:
+      transform .35s cubic-bezier(.34, 1.56, .64, 1),
+      background var(--t-base);
+  }
+
+  .card-icon {
+    font-size: 1.85rem;
+    line-height: 1;
+  }
+
+  .card-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 999px;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* Titre + subtitle */
+  .card-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+  }
+
+  .card-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -.02em;
+    color: var(--text-dark);
+    line-height: 1.15;
+  }
+
+  .card-subtitle {
+    margin: 0;
+    font-size: .85rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .card-description {
+    margin: 0;
+    font-size: .9rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    flex: 1;
+  }
+
+  /* Footer */
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-subtle);
+    color: var(--accent);
+    font-weight: 800;
+    font-size: .85rem;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+
+  .card-arrow {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    transition: transform var(--t-base);
+  }
+
+  /* Coins décoratifs */
+  .corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--t-base),
+      width var(--t-base),
+      height var(--t-base);
+    z-index: 2;
+  }
+
+  .corner-tl { top: 10px; left: 10px;     border-top: 2px solid;    border-left: 2px solid;   border-top-left-radius: 6px; }
+  .corner-tr { top: 10px; right: 10px;    border-top: 2px solid;    border-right: 2px solid;  border-top-right-radius: 6px; }
+  .corner-bl { bottom: 10px; left: 10px;  border-bottom: 2px solid; border-left: 2px solid;   border-bottom-left-radius: 6px; }
+  .corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid;  border-bottom-right-radius: 6px; }
+
+  /* Hover */
+  &:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    box-shadow:
+      0 8px 24px rgba(15, 23, 42, .08),
+      0 0 0 1px var(--accent);
+
+    .card-halo {
+      opacity: 1;
+    }
+
+    .card-icon-wrapper {
+      transform: scale(1.08) rotate(-5deg);
+      background: color-mix(in srgb, var(--accent) 15%, var(--bg-card));
+    }
+
+    .card-arrow {
+      transform: translateX(4px);
+    }
+
+    .corner {
+      opacity: 1;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .vie-home-container {
+    padding: 1.75rem 1rem 3rem;
+    gap: 2rem;
+  }
+
+  .vie-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .vie-card {
+    padding: 1.5rem 1.25rem 1.25rem;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .vie-home-container {
+    padding: 1.25rem .875rem 2.5rem;
+  }
+
+  .header-title {
+    font-size: 1.5rem;
+  }
+
+  .card-icon-wrapper {
+    width: 52px;
+    height: 52px;
+  }
+
+  .card-icon {
+    font-size: 1.6rem;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .vie-card,
+  .vie-card .card-halo,
+  .vie-card .card-icon-wrapper,
+  .vie-card .card-arrow,
+  .vie-card .corner {
+    transition: none !important;
+  }
+}

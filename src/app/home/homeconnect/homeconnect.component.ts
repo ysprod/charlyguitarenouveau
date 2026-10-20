@@ -19,12 +19,13 @@ import { FooterComponent } from 'src/app/home/footer/footer.component';
 import { UserProfile } from 'src/app/home/models/user.model';
 import { getInitials } from 'src/app/home/utils/string.utils';
 import { InboxPanelComponent } from './inbox-panel/inbox-panel.component';
+import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
 
 @Component({
   selector: 'app-homeconnect',
   imports: [
     RouterLink,
- 
+    PodcastvideoComponent,
     FooterComponent,
     InboxPanelComponent,
   ],

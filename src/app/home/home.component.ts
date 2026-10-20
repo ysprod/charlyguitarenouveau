@@ -5,16 +5,14 @@ import {
   inject,
   untracked,
 } from '@angular/core';
-
-import { Router, RouterLink } from '@angular/router';
-import { Auth, authState } from '@angular/fire/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
-
+import { Auth, authState } from '@angular/fire/auth';
+import { Router, RouterLink } from '@angular/router';
 import { FooterComponent } from './footer/footer.component';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, FooterComponent],
+  imports: [RouterLink, FooterComponent,],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

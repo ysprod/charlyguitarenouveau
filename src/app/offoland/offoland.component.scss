@@ -38,10 +38,10 @@
   --offo-pourpre: #9333ea;
 
   --offo-radius-lg: 20px;
+  --offo-radius-xl: 28px;
   --offo-radius-md: 12px;
-  --offo-radius-sm: 8px;
   --offo-t-fast: .2s ease;
-  --offo-t-base: .4s cubic-bezier(.22, 1, .36, 1);
+  --offo-t-base: .35s cubic-bezier(.22, 1, .36, 1);
 
   display: block;
   background: var(--offo-fond);
@@ -51,7 +51,7 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* ✅ Scoped : n'affecte que le composant */
+/* ✅ Scoped */
 :host *,
 :host *::before,
 :host *::after {
@@ -78,7 +78,7 @@
     linear-gradient(180deg, var(--offo-fond) 0%, var(--offo-fond-2) 50%, var(--offo-fond) 100%);
 }
 
-/* ─── Auras : sept couleurs des Dimensions ─── */
+/* ─── Auras ─── */
 .hero-aura {
   position: absolute;
   inset: 0;
@@ -86,14 +86,12 @@
   z-index: 0;
 }
 
-/* ✅ Gradient radial au lieu de blur(140px) → GPU-friendly */
 .aura {
   position: absolute;
   border-radius: 50%;
   opacity: .08;
 }
 
-/* Tailles / positions par dimension */
 $auras: (
   do:  (420, -8%,  50%,  translateX(-50%), var(--offo-texte-3)),
   re:  (320, 25%,  5%,   null,             var(--offo-rouge)),
@@ -128,7 +126,7 @@ $auras: (
   }
 }
 
-/* ─── Premier Tambour : rings statiques ─── */
+/* ─── Premier Tambour ─── */
 .premier-tambour {
   position: absolute;
   top: 50%;
@@ -154,17 +152,18 @@ $auras: (
   &.ring-3 { width: 700px; height: 700px; opacity: .15; }
 }
 
-/* ─── Contenu sacré ─── */
+/* ─── Contenu ─── */
 .hero-content {
   position: relative;
   z-index: 3;
-  max-width: 880px;
+  max-width: 920px;
+  width: 100%;
   text-align: center;
 }
 
 /* ─── Titre ─── */
 .hero-title {
-  margin: 0 0 1rem;
+  margin: 0 0 2.5rem;
   font-size: clamp(3rem, 10vw, 7rem);
   font-weight: 900;
   line-height: .95;
@@ -183,89 +182,14 @@ $auras: (
   filter: drop-shadow(0 0 20px var(--offo-or-glow));
 }
 
-/* ─── Mélodie des Origines ─── */
-.melodie-origines {
-  display: inline-flex;
-  align-items: center;
-  gap: .6rem;
-  padding: .7rem 1.5rem;
-  margin: 0 auto 1rem;
-  background: var(--offo-fond-2);
-  border: 1px solid var(--offo-border);
-  border-radius: 100px;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
-}
-
-.note {
-  position: relative;
-  padding: 0 .25rem;
-  font-size: .8rem;
-  font-weight: 700;
-  color: var(--note-color);
-  letter-spacing: .05em;
-
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    left: 50%;
-    width: 4px;
-    height: 4px;
-    background: var(--note-color);
-    border-radius: 50%;
-    opacity: .6;
-    transform: translateX(-50%);
-  }
-}
-
-.note-sep {
-  color: var(--offo-texte-3);
-  font-size: .9rem;
-}
-
-/* ─── Bandeau des Sept Notes ─── */
-.sept-notes {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: .55rem;
-  flex-wrap: wrap;
-  max-width: 480px;
-  margin: 0 auto 2rem;
-  padding: 0;
-  list-style: none;
-}
-
-.sept-note {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  height: 34px;
-  padding: 0 .55rem;
-  font-size: .78rem;
-  font-weight: 800;
-  letter-spacing: .06em;
-  color: var(--note-color);
-  background: var(--offo-fond-2);
-  border: 1px solid var(--offo-border);
-  border-radius: 999px;
-  transition: transform var(--offo-t-fast), box-shadow var(--offo-t-fast);
-
-  &:hover {
-    transform: translateY(-2px) scale(1.06);
-    box-shadow: 0 6px 16px rgba(15, 23, 42, .08);
-  }
-}
-
-/* ─── Divider sacré ─── */
+/* ─── Divider ─── */
 .hero-divider {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
   max-width: 320px;
-  margin: 2rem auto;
+  margin: 3rem auto 0;
 
   .line {
     flex: 1;
@@ -284,231 +208,188 @@ $auras: (
   }
 }
 
-/* ─── Portails (boutons) ─── */
-.portails-grid {
+/* ═════════════════════════════════════════════════════════════════════
+   DOUBLE CTA — HUB GRID
+   ═════════════════════════════════════════════════════════════════════ */
+
+.main-content {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.hub-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.25rem;
-  max-width: 720px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.portail-btn {
+/* ─── Card hub ─── */
+.hub-card {
+  --accent: var(--offo-or);
+  --accent-soft: var(--offo-or-soft);
+
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .5rem;
-  padding: 1.5rem 1.5rem 1.75rem;
-  border-radius: var(--offo-radius-lg);
-  text-decoration: none;
+  text-align: center;
+  gap: 1rem;
+  padding: 2.5rem 1.75rem 1.75rem;
+  background: var(--offo-surface);
+  border: 1px solid var(--offo-border);
+  border-radius: var(--offo-radius-xl);
   color: var(--offo-texte);
+  text-decoration: none;
   overflow: hidden;
   cursor: pointer;
   isolation: isolate;
-  background: var(--offo-surface);
   box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
   transition:
     transform var(--offo-t-base),
-    box-shadow var(--offo-t-base),
-    border-color var(--offo-t-base);
+    border-color var(--offo-t-base),
+    box-shadow var(--offo-t-base);
 
-  &::before {
-    content: '';
+  &--dimensions {
+    --accent: var(--offo-violet);
+    --accent-soft: rgba(124, 58, 237, .08);
+  }
+
+  &--vie {
+    --accent: var(--offo-bleu);
+    --accent-soft: rgba(37, 99, 235, .08);
+  }
+
+  /* Bande supérieure colorée */
+  .hub-band {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg,
+      transparent,
+      var(--accent) 50%,
+      transparent);
+    opacity: .85;
+    z-index: 2;
+  }
+
+  /* Halo au hover */
+  .hub-glow {
     position: absolute;
     inset: 0;
-    padding: 1px;
-    border-radius: inherit;
-    background: linear-gradient(135deg, var(--offo-or-glow), rgba(124, 58, 237, .25));
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    z-index: -1;
     pointer-events: none;
-    transition: background var(--offo-t-base);
+    opacity: 0;
+    background: radial-gradient(circle at 50% 0%,
+      var(--accent-soft) 0%,
+      transparent 65%);
+    transition: opacity var(--offo-t-base);
   }
 
-  &:not(.portail-locked):hover {
+  /* Icône */
+  .hub-icon {
+    font-size: 2.75rem;
+    line-height: 1;
+    filter: drop-shadow(0 4px 12px var(--accent-soft));
+    transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+  }
+
+  /* Body */
+  .hub-body {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+  }
+
+  .hub-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: -.02em;
+    color: var(--offo-texte);
+    line-height: 1.15;
+  }
+
+  .hub-subtitle {
+    margin: 0;
+    font-size: .88rem;
+    color: var(--offo-texte-2);
+    line-height: 1.5;
+  }
+
+  /* CTA */
+  .hub-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: auto;
+    padding-top: .75rem;
+    border-top: 1px solid var(--offo-border);
+    width: 100%;
+    justify-content: center;
+    color: var(--accent);
+    font-weight: 800;
+    font-size: .85rem;
+    letter-spacing: .02em;
+
+    svg {
+      transition: transform var(--offo-t-fast);
+    }
+  }
+
+  /* Coins décoratifs */
+  .corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--offo-t-base),
+      width var(--offo-t-base),
+      height var(--offo-t-base);
+    z-index: 2;
+  }
+
+  .corner-tl { top: 10px; left: 10px;     border-top: 2px solid;    border-left: 2px solid;   border-top-left-radius: 6px; }
+  .corner-tr { top: 10px; right: 10px;    border-top: 2px solid;    border-right: 2px solid;  border-top-right-radius: 6px; }
+  .corner-bl { bottom: 10px; left: 10px;  border-bottom: 2px solid; border-left: 2px solid;   border-bottom-left-radius: 6px; }
+  .corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid;  border-bottom-right-radius: 6px; }
+
+  /* Hover */
+  &:hover {
     transform: translateY(-6px);
+    border-color: var(--accent);
     box-shadow:
       0 8px 24px rgba(15, 23, 42, .08),
-      0 0 20px var(--offo-or-glow);
+      0 0 0 1px var(--accent);
 
-    .portail-glow  { opacity: 1; }
-    .portail-icon  { transform: translateY(-4px) scale(1.12); }
-    .portail-label { letter-spacing: .18em; }
+    .hub-glow {
+      opacity: 1;
+    }
+
+    .hub-icon {
+      transform: scale(1.15) rotate(-5deg);
+    }
+
+    .hub-cta svg {
+      transform: translateX(4px);
+    }
+
+    .corner {
+      opacity: 1;
+      width: 18px;
+      height: 18px;
+    }
   }
 
   &:focus-visible {
-    outline: 2px solid var(--offo-or);
-    outline-offset: 3px;
-  }
-}
-
-.portail-economie {
-  &:hover::before {
-    background: linear-gradient(135deg, var(--offo-or), var(--offo-bleu));
-  }
-}
-
-.portail-banque {
-  &:hover::before {
-    background: linear-gradient(135deg, var(--offo-pourpre), var(--offo-rouge));
-  }
-}
-
-.portail-glow {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(circle at 50% 100%, var(--offo-or-soft) 0%, transparent 65%);
-  transition: opacity var(--offo-t-base);
-}
-
-.portail-icon {
-  font-size: 2.2rem;
-  margin-bottom: .25rem;
-  transition: transform var(--offo-t-base);
-}
-
-.portail-label {
-  font-size: .85rem;
-  font-weight: 800;
-  letter-spacing: .14em;
-  transition: letter-spacing var(--offo-t-base);
-}
-
-.portail-sub {
-  font-size: .7rem;
-  color: var(--offo-texte-2);
-  letter-spacing: .02em;
-  text-align: center;
-}
-
-/* ─── Portails verrouillés ─── */
-.portail-locked {
-  cursor: not-allowed;
-  opacity: .55;
-  filter: saturate(.6);
-
-  &::before {
-    background: linear-gradient(135deg, var(--offo-border), rgba(15, 23, 42, .12));
-  }
-
-  &:hover {
-    transform: none;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
-  }
-}
-
-.portail-lock {
-  position: absolute;
-  top: .75rem;
-  right: .85rem;
-  font-size: .9rem;
-  opacity: .7;
-  filter: grayscale(.3);
-}
-
-/* ═════════════════════════════════════════════════════════════════════
-   MAIN CONTENT — CTA dimensions (INTÉGRÉ DANS LE HERO)
-   ═════════════════════════════════════════════════════════════════════ */
-
-/* ✅ Pas de padding externe — c'est dans le hero */
-.main-content {
-  width: 100%;
-  margin: 2rem auto;
-  padding: 0;
-}
-
-.section-wrapper {
-  margin: 0;
-}
-
-.dimensions-cta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 2.5rem 2rem;
-  text-align: center;
-  background: linear-gradient(
-    135deg,
-    var(--offo-fond-2) 0%,
-    var(--offo-surface) 100%
-  );
-  border: 1px solid var(--offo-border);
-  border-radius: var(--offo-radius-lg);
-  box-shadow: 0 1px 4px rgba(15, 23, 42, .05);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.cta-icon {
-  font-size: 2.5rem;
-  margin-bottom: .25rem;
-  filter: drop-shadow(0 0 16px var(--offo-or-glow));
-}
-
-.cta-title {
-  margin: 0;
-  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-  font-weight: 900;
-  letter-spacing: -.02em;
-  color: var(--offo-texte);
-}
-
-.cta-description {
-  margin: 0;
-  font-size: .95rem;
-  line-height: 1.6;
-  color: var(--offo-texte-2);
-  max-width: 420px;
-}
-
-.cta-button {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  padding: .9rem 1.75rem;
-  margin-top: .5rem;
-  background: var(--offo-or);
-  color: #ffffff;
-  text-decoration: none;
-  font-weight: 800;
-  font-size: .95rem;
-  letter-spacing: .02em;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(184, 134, 11, .2);
-  transition:
-    transform var(--offo-t-fast),
-    background var(--offo-t-fast),
-    box-shadow var(--offo-t-fast);
-
-  svg {
-    transition: transform var(--offo-t-fast);
-  }
-
-  &:hover {
-    background: var(--offo-or-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(184, 134, 11, .3);
-
-    svg { transform: translateX(4px); }
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--offo-or);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 }
@@ -530,36 +411,28 @@ $auras: (
 
   .hero-title {
     font-size: clamp(2.5rem, 15vw, 4rem);
+    margin-bottom: 2rem;
   }
 
-  .melodie-origines {
-    gap: .4rem;
-    padding: .6rem 1rem;
-    font-size: .7rem;
-  }
-
-  .sept-notes {
-    gap: .4rem;
-  }
-
-  .sept-note {
-    min-width: 30px;
-    height: 30px;
-    font-size: .72rem;
-  }
-
-  .portails-grid {
+  .hub-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  .dimensions-cta {
-    padding: 2rem 1.25rem;
+  .hub-card {
+    padding: 2rem 1.5rem 1.5rem;
   }
 
-  .cta-button {
-    width: 100%;
-    justify-content: center;
+  .hub-icon {
+    font-size: 2.5rem;
+  }
+
+  .hub-title {
+    font-size: 1.25rem;
+  }
+
+  .hero-divider {
+    margin-top: 2rem;
   }
 }
 
@@ -572,31 +445,20 @@ $auras: (
     font-size: clamp(2.2rem, 18vw, 3rem);
   }
 
-  .sept-note {
-    min-width: 28px;
-    height: 28px;
-    font-size: .68rem;
-    padding: 0 .45rem;
+  .hub-card {
+    padding: 1.75rem 1.25rem 1.25rem;
   }
 
-  .portail-btn {
-    padding: 1.25rem 1.25rem 1.5rem;
+  .hub-icon {
+    font-size: 2.25rem;
   }
 
-  .portail-icon {
-    font-size: 1.9rem;
-  }
-
-  .portail-label {
-    font-size: .8rem;
-  }
-
-  .cta-title {
+  .hub-title {
     font-size: 1.15rem;
   }
 
-  .cta-description {
-    font-size: .85rem;
+  .hub-subtitle {
+    font-size: .82rem;
   }
 }
 
@@ -605,13 +467,11 @@ $auras: (
    ═════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
-  .sept-note,
-  .portail-btn,
-  .portail-icon,
-  .portail-label,
-  .portail-glow,
-  .cta-button,
-  .cta-button svg {
+  .hub-card,
+  .hub-card .hub-glow,
+  .hub-card .hub-icon,
+  .hub-card .hub-cta svg,
+  .hub-card .corner {
     transition: none !important;
   }
 }
