@@ -42,8 +42,9 @@ import type { Message } from './home/models/message.model';
 
 import { AuthService } from './home/services/auth.service';
 import { VoiceService } from './game/services/voice.service';
-
+ 
 import { getInitials } from './home/utils/string.utils';
+import { AnalyticsService } from './shared/services/analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -69,6 +70,7 @@ export class AppComponent {
   private readonly voice = inject(VoiceService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
+  private readonly analytics = inject(AnalyticsService);
 
   readonly auth = inject(AuthService);
 
@@ -89,6 +91,9 @@ export class AppComponent {
   private voiceTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    /* ✅ Initialisation GA4 manuelle */
+    this.analytics.initPageTracking();
+
     this.setupVoicePrime();
 
     afterNextRender(() => {

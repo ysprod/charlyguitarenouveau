@@ -1,0 +1,173 @@
+<!-- src/app/offoland/innovation/innovation.component.html -->
+
+<main class="innovation-page">
+
+  <!-- ═══════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════ -->
+  <header class="hero" id="accueil">
+    <div class="hero-pattern" aria-hidden="true"></div>
+    <div class="hero-glow" aria-hidden="true"></div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow">CENTRE DE RECHERCHE & INNOVATION</p>
+
+      <div class="hero-emblem" aria-hidden="true">
+        <span>⚙</span>
+        <i></i>
+        <i></i>
+        <i></i>
+      </div>
+
+      <h1>
+        C.R.I.O.<br />
+        <span class="hero-accent">Offoland</span>
+      </h1>
+
+      <div class="gold-line"></div>
+
+      <p class="hero-motto">La science au service de l'harmonie.</p>
+
+      <p class="hero-description">
+        Le Centre de Recherche & Innovation d'Offoland explore les mystères des Sept Dimensions,
+        étudie les harmoniques sacrées et développe les interfaces qui relient
+        le monde visible à l'invisible.
+      </p>
+
+      <div class="hero-actions">
+        <a class="primary-link" (click)="scrollTo('piliers', $event)" role="button" tabindex="0"
+           (keydown.enter)="scrollTo('piliers', $event)">
+          Explorer les piliers <span aria-hidden="true">↓</span>
+        </a> 
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="hero-stats">
+      @for (stat of stats; track stat.label) {
+        <div class="stat-item">
+          <span class="stat-value">{{ stat.value }}</span>
+          <span class="stat-label">{{ stat.label }}</span>
+        </div>
+      }
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       PILIERS DE RECHERCHE
+       ═══════════════════════════════════════════════════════ -->
+  <section class="pillars-section section-shell" id="piliers">
+    <p class="eyebrow">01 — NOS AXES DE RECHERCHE</p>
+    <h2>Les piliers <span>d'innovation</span></h2>
+    <p class="section-lead">
+      Quatre domaines fondamentaux où la science d'Offoland repousse les frontières
+      de la compréhension des Sept Dimensions.
+    </p>
+
+    <div class="pillars-grid">
+      @for (pillar of pillars; track pillar.id) {
+        <a
+          [routerLink]="pillar.route"
+          class="pillar-card"
+          [style.--accent]="pillar.color"
+          [attr.aria-label]="'Explorer ' + pillar.title"
+        >
+          <div class="pillar-glow" aria-hidden="true"></div>
+          <div class="pillar-band" aria-hidden="true"></div>
+
+          <div class="pillar-content">
+            <header class="pillar-header">
+              <div class="pillar-icon-wrapper">
+                <span class="pillar-icon" aria-hidden="true">{{ pillar.icon }}</span>
+              </div>
+              @if (pillar.tag) {
+                <span class="pillar-tag">{{ pillar.tag }}</span>
+              }
+            </header>
+
+            <div class="pillar-title-block">
+              <h3 class="pillar-title">{{ pillar.title }}</h3>
+              <p class="pillar-subtitle">{{ pillar.subtitle }}</p>
+            </div>
+
+            <p class="pillar-description">{{ pillar.description }}</p>
+
+            <footer class="pillar-footer">
+              <span class="pillar-cta">Explorer</span>
+              <svg class="pillar-arrow" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round"
+                   aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </footer>
+          </div>
+
+          <span class="corner corner-tl" aria-hidden="true"></span>
+          <span class="corner corner-tr" aria-hidden="true"></span>
+          <span class="corner corner-bl" aria-hidden="true"></span>
+          <span class="corner corner-br" aria-hidden="true"></span>
+        </a>
+      }
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MANIFESTE
+       ═══════════════════════════════════════════════════════ -->
+  <section class="manifesto-section" id="manifeste">
+    <div class="section-shell">
+      <p class="eyebrow">02 — NOTRE MANIFESTE</p>
+      <h2>La science <span>au service de l'harmonie</span></h2>
+
+      <blockquote class="manifesto-quote">
+        <span class="quote-mark" aria-hidden="true">“</span>
+        <p>
+          La technologie n'est pas une fin. Elle est un pont entre ce que nous savons
+          et ce que nous sommes appelés à devenir. Au C.R.I.O., chaque recherche
+          commence par l'écoute et se termine par la transmission.
+        </p>
+        <cite>— Les Chercheurs du C.R.I.O.</cite>
+      </blockquote>
+
+      <div class="manifesto-principles">
+        <div class="principle-card">
+          <span class="principle-symbol" aria-hidden="true">◉</span>
+          <h3>Écoute avant tout</h3>
+          <p>Chaque découverte naît d'une observation attentive des vibrations du monde.</p>
+        </div>
+        <div class="principle-card">
+          <span class="principle-symbol" aria-hidden="true">◎</span>
+          <h3>Respect des Dimensions</h3>
+          <p>Aucune technologie ne doit rompre l'équilibre des Sept Dimensions.</p>
+        </div>
+        <div class="principle-card">
+          <span class="principle-symbol" aria-hidden="true">❋</span>
+          <h3>Transmission ouverte</h3>
+          <p>Le savoir n'appartient à personne. Il doit circuler librement.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CTA FINAL
+       ═══════════════════════════════════════════════════════ -->
+  <section class="cta-section section-shell">
+    <div class="cta-card">
+      <div class="cta-glow" aria-hidden="true"></div>
+      <h2>Prêt à explorer les confins d'Offoland ?</h2>
+      <p>Rejoignez nos chercheurs et participez à la plus grande aventure scientifique.</p>
+      <a routerLink="/offoland/vie" class="cta-button">
+        Retour au hub Offoland
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+</main>

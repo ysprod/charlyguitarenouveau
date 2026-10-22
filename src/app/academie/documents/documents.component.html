@@ -13,8 +13,9 @@
         <h1 class="hero-title">BOUTIQUE</h1>
       </div> 
     </div>
+     <app-podcastvideo [affichebouton]="false" [randommode]="true" />
   </header>
-
+ 
   <!-- ═══════════════════════════════════════════════════════
        RECHERCHE & FILTRES
        ═══════════════════════════════════════════════════════ -->
@@ -181,18 +182,38 @@
           </div>
 
           <div class="product-footer">
-            <button
-              type="button"
-              class="btn-buy"
-              [class.btn-free]="!doc.price || doc.price === 0"
-              (click)="initiatePurchase(doc, $event)"
-            >
-              <span>{{ doc.price ? 'Obtenir le document' : 'Téléchargement gratuit' }}</span>
-              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
+            <div class="product-actions">
+              <button
+                type="button"
+                class="btn-buy"
+                [class.btn-free]="!doc.price || doc.price === 0"
+                (click)="initiatePurchase(doc, $event)"
+              >
+                <span>{{ doc.price ? 'Acheter' : 'Téléchargement gratuit' }}</span>
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+
+              @if (doc.urlpodcast) {
+                <button
+                  type="button"
+                  class="btn-podcast"
+                  (click)="openPodcast(doc, $event)"
+                  [attr.aria-label]="'Écouter le podcast de ' + doc.title"
+                  title="Écouter le podcast"
+                >
+                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="23" />
+                    <line x1="8" y1="23" x2="16" y2="23" />
+                  </svg>
+                  <span>Ecouter</span>
+                </button>
+              }
+            </div>
           </div>
 
         </article>
@@ -315,7 +336,6 @@
   @defer {
     <app-toast />
   }
-
+   <app-immersive-carousel />
 </main>
 
-  <app-podcastvideo />

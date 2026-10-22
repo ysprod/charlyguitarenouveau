@@ -23,6 +23,28 @@ interface VieSection {
    ═════════════════════════════════════════════════════════════════════ */
 
 const VIE_SECTIONS: readonly VieSection[] = [
+   {
+    id: 'charte',
+    label: 'La Charte',
+    subtitle: 'Texte fondateur d\'Offoland',
+    description:
+      'Le texte fondateur de l\'univers d\'Offoland : l\'écoute, la connaissance, le respect de la vie et la transmission.',
+    icon: '📜',
+    color: '#b8860b',
+    route: '/offoland/vie/charte',
+    tag: 'Fondateur',
+  },
+  {
+  id: 'innovation',
+  label: 'C.R.I.O.',
+  subtitle: 'Centre de Recherche & Innovation',
+  description:
+    'Notre portail technologique avancé : harmoniques sacrées, portails dimensionnels, interfaces totémiques et archives vivantes.',
+  icon: '⚙️',
+  color: '#b8860b',
+  route: '/offoland/vie/innovation',
+  tag: 'Technologie',
+},
   {
     id: 'bco',
     label: 'BCO',
@@ -45,6 +67,7 @@ const VIE_SECTIONS: readonly VieSection[] = [
     route: '/offoland/vie/finance',
     tag: 'Économie',
   },
+ 
 ];
 
 /* ═════════════════════════════════════════════════════════════════════

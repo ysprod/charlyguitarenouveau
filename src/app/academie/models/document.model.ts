@@ -27,4 +27,7 @@ export interface DocumentItem {
   readonly createdAt?: string;
   readonly views?: number;
   readonly downloads?: number;
+
+  /* ─── Contenu ─── */
+  readonly urlpodcast?: string;
 }

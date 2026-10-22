@@ -58,29 +58,109 @@
     </div>
   </header>
 
-  <!-- ═══════════ HUD ═══════════ -->
-  <header class="game-hud">
-    <div class="hud-box score-box">
-      <span class="label">SCORE</span>
-      <span class="value">{{ score() }}</span>
-    </div>
+  <!-- ═══════════ ÉCRAN D'ACCUEIL (inline, sans modale) ═══════════ -->
+  @if (!isPlaying() && !isGameOver()) {
+    <div class="screen-start">
 
-    @if (isPlaying()) {
+      <div class="hero-badge" aria-hidden="true">🎸</div>
+
+      <h1 class="screen-title">CHARLY GUITARE HERO</h1>
+
+      <p class="screen-description">
+        Retrouve les notes demandées sur le manche pour remplir ton
+        <strong>Star Power</strong> et débloquer la
+        <strong>Mélodie des Origines</strong> !
+      </p>
+
+      <div class="difficulty-selector">
+        <span class="selector-label">DIFFICULTÉ :</span>
+        <div class="difficulty-buttons">
+          @for (d of DIFFICULTIES; track d.id) {
+            <button type="button"
+                    class="diff-btn"
+                    [class.active]="difficulty() === d.id"
+                    [attr.aria-pressed]="difficulty() === d.id"
+                    (click)="setDifficulty(d.id)">
+              <span class="diff-icon" aria-hidden="true">{{ d.icon }}</span>
+              <span class="diff-name">{{ d.name }}</span>
+              <span class="diff-desc">{{ d.desc }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <button class="btn-start-main" (click)="startGame()" type="button">
+        LANCER LE DÉFI
+      </button>
+    </div>
+  }
+
+  <!-- ═══════════ ÉCRAN GAME OVER (inline, sans modale) ═══════════ -->
+  @if (!isPlaying() && isGameOver()) {
+    <div class="screen-gameover">
+
+      <div class="go-header">
+        <span class="go-icon" aria-hidden="true">🎸</span>
+        <h2 class="go-title">PARTIE TERMINÉE</h2>
+      </div>
+
+      <div class="final-stats">
+        <div class="final-stat highlight">
+          <span class="stat-label">Score Final</span>
+          <span class="stat-value">{{ score() }} Pts</span>
+        </div>
+        <div class="final-stat">
+          <span class="stat-label">Meilleur Combo</span>
+          <span class="stat-value">x{{ maxCombo() }}</span>
+        </div>
+        <div class="final-stat">
+          <span class="stat-label">Précision</span>
+          <span class="stat-value">{{ accuracy() }}%</span>
+        </div>
+        <div class="final-stat">
+          <span class="stat-label">Notes Réussies</span>
+          <span class="stat-value">{{ notesHit() }}</span>
+        </div>
+      </div>
+
+      @if (score() > highScore()) {
+        <div class="new-record">🎉 NOUVEAU RECORD ! 🎉</div>
+      }
+
+      <div class="go-actions">
+        <button class="btn-start-main" (click)="startGame()" type="button">
+          RÉESSAYER
+        </button>
+        <button class="btn-secondary-main" (click)="backToMenu()" type="button">
+          MENU PRINCIPAL
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════ HUD ═══════════ -->
+  @if (isPlaying()) {
+    <header class="game-hud">
+      <div class="hud-box score-box">
+        <span class="label">SCORE</span>
+        <span class="value">{{ score() }}</span>
+      </div>
+
       <div class="target-card"
            [class.star-power-pulse]="isStarPowerActive()">
         <span class="sub-text">TROUVE</span>
         <h2 class="target-note">{{ targetNote() }}</h2>
       </div>
-    }
 
-    <div class="hud-box combo-box"
-         [class.multiplier-active]="multiplier() > 1"
-         [class.combo-flash]="comboFlashKey() > 0"
-         [attr.data-flash-key]="comboFlashKey()">
-      <span class="label">COMBO</span>
-      <span class="value">x{{ effectiveMultiplier() }}</span>
-    </div>
-  </header>
+      <div class="hud-box combo-box"
+           [class.multiplier-active]="multiplier() > 1"
+           [class.combo-flash]="comboFlashKey() > 0"
+           [attr.data-flash-key]="comboFlashKey()">
+        <span class="label">COMBO</span>
+        <span class="value">x{{ effectiveMultiplier() }}</span>
+      </div>
+    </header>
+  }
 
   <!-- ═══════════ STAR POWER + TIMER ═══════════ -->
   @if (isPlaying()) {
@@ -175,7 +255,6 @@
   @if (isPlaying()) {
     <div class="guitar-viewport">
 
-      <!-- Tête -->
       <div class="guitar-headstock">
         <div class="headstock-wood">
           <div class="tuning-pegs">
@@ -189,7 +268,6 @@
         </div>
       </div>
 
-      <!-- Sillet -->
       <div class="guitar-nut">
         <div class="nut-grooves">
           @for (str of strings; track str.index) {
@@ -198,7 +276,6 @@
         </div>
       </div>
 
-      <!-- Manche scrollable -->
       <div class="fretboard-scroll">
         <div class="fretboard-inner">
 
@@ -206,7 +283,6 @@
             <div class="wood-grain" aria-hidden="true"></div>
             <div class="wood-highlight" aria-hidden="true"></div>
 
-            <!-- Inlays -->
             <div class="fret-inlays" aria-hidden="true">
               <span class="inlay" style="--fret: 3"></span>
               <span class="inlay" style="--fret: 5"></span>
@@ -217,7 +293,6 @@
               </span>
             </div>
 
-            <!-- Frettes -->
             <div class="fret-wires" aria-hidden="true">
               @for (fret of frets; track fret) {
                 @if (fret > 0) {
@@ -226,7 +301,6 @@
               }
             </div>
 
-            <!-- Cordes -->
             <div class="strings-layer" aria-hidden="true">
               @for (str of strings; track str.index) {
                 <div class="string-track">
@@ -241,7 +315,6 @@
               }
             </div>
 
-            <!-- Zones interactives -->
             <div class="notes-layer">
               @for (str of strings; track str.index) {
                 <div class="notes-row">
@@ -277,7 +350,6 @@
               }
             </div>
 
-            <!-- Particules -->
             @for (p of particles(); track p.id) {
               <div class="particle"
                    [style.left.%]="p.x"
@@ -288,7 +360,6 @@
             }
           </div>
 
-          <!-- Numéros de frettes -->
           <div class="fret-numbers" aria-hidden="true">
             @for (fret of frets; track fret) {
               <div class="fret-num" [style.--fret-pos]="fret">
@@ -299,7 +370,6 @@
         </div>
       </div>
 
-      <!-- Rosace -->
       <div class="guitar-rosette" aria-hidden="true">
         <div class="rosette-ring outer"></div>
         <div class="rosette-ring inner"></div>
@@ -332,78 +402,4 @@
     </div>
   }
 
-  <!-- ═══════════ ÉCRANS MODAUX ═══════════ -->
-  @if (!isPlaying()) {
-    <div class="overlay-screen">
-
-      @if (!isGameOver()) {
-        <div class="card-modal modal-enter">
-          <div class="modal-icon" aria-hidden="true">🎸</div>
-          <h1>CHARLY GUITARE HERO</h1>
-          <p class="modal-description">
-            Retrouve les notes demandées sur le manche pour remplir ton <strong>Star Power</strong>
-            et débloquer la <strong>Mélodie des Origines</strong> !
-          </p>
-
-          <div class="difficulty-selector">
-            <span class="selector-label">DIFFICULTÉ :</span>
-            <div class="difficulty-buttons">
-              @for (d of DIFFICULTIES; track d.id) {
-                <button type="button"
-                        class="diff-btn"
-                        [class.active]="difficulty() === d.id"
-                        [attr.aria-pressed]="difficulty() === d.id"
-                        (click)="setDifficulty(d.id)">
-                  <span class="diff-icon" aria-hidden="true">{{ d.icon }}</span>
-                  <span class="diff-name">{{ d.name }}</span>
-                  <span class="diff-desc">{{ d.desc }}</span>
-                </button>
-              }
-            </div>
-          </div>
-
-          <div class="modal-actions-horizontal">
-             <button class="btn-start" (click)="startGame()" type="button">LANCER LE DÉFI</button>
-          </div>
-        </div>
-      }
-
-      @if (isGameOver()) {
-        <div class="card-modal game-over-modal modal-enter">
-          <div class="game-over-header">
-            <span class="game-over-icon" aria-hidden="true">🎸</span>
-            <h2>PARTIE TERMINÉE</h2>
-          </div>
-
-          <div class="final-stats">
-            <div class="final-stat highlight">
-              <span class="stat-label">Score Final</span>
-              <span class="stat-value">{{ score() }} Pts</span>
-            </div>
-            <div class="final-stat">
-              <span class="stat-label">Meilleur Combo</span>
-              <span class="stat-value">x{{ maxCombo() }}</span>
-            </div>
-            <div class="final-stat">
-              <span class="stat-label">Précision</span>
-              <span class="stat-value">{{ accuracy() }}%</span>
-            </div>
-            <div class="final-stat">
-              <span class="stat-label">Notes Réussies</span>
-              <span class="stat-value">{{ notesHit() }}</span>
-            </div>
-          </div>
-
-          @if (score() > highScore()) {
-            <div class="new-record">🎉 NOUVEAU RECORD ! 🎉</div>
-          }
-
-          <div class="modal-actions">
-            <button class="btn-start" (click)="startGame()" type="button">RÉESSAYER</button>
-            <button class="btn-secondary" (click)="backToMenu()" type="button">MENU PRINCIPAL</button>
-           </div>
-        </div>
-      }
-    </div>
-  }
 </div>

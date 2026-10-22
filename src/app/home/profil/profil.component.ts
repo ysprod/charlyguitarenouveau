@@ -80,6 +80,7 @@ import {
   PHONE_PATTERN,
   ROLE_LABELS
 } from '../constants/profile.constants';
+import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
 
 /* ═══════════════════════════════════════════════════════════
    COMPOSANT
@@ -90,7 +91,7 @@ import {
   imports: [
     ReactiveFormsModule,
     MatSnackBarModule,
-    AvatarCropDialogComponent,
+    AvatarCropDialogComponent,ImmersiveCarouselComponent
   ],
   templateUrl: './profil.component.html',
   styleUrls: ['./profil.component.scss'],

@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   APP COMPONENT — Styles unifiés (sans animation continue)
+   APP COMPONENT — Styles unifiés
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
@@ -137,6 +137,16 @@
   .mobile-auth {
     display: none;
   }
+}
+
+.desktop-only-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.mobile-only-links {
+  display: none;
 }
 
 /* ✅ Point LIVE statique (plus de pulse infini) */
@@ -319,13 +329,22 @@
   flex: 1 0 auto;
   width: 100%;
   background: var(--bg-page);
+  /* ✅ Padding par défaut (sans bottom nav sur desktop) */
+  padding-bottom: 0;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   RESPONSIVE
+   ✅ BOTTOM NAVIGATION (Mobile)
    ═════════════════════════════════════════════════════════════════════ */
+.bottom-nav {
+  display: none; /* Caché sur desktop */
+}
 
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE (Tablette & Mobile)
+   ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
+  /* Ajustement Navbar */
   .navbar-container {
     display: flex;
     justify-content: space-between;
@@ -340,6 +359,19 @@
     display: none;
   }
 
+  /* Gestion des liens Desktop / Mobile */
+  .desktop-only-links {
+    display: none; /* On cache les liens principaux du burger */
+  }
+
+  .mobile-only-links {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 1.25rem;
+  }
+
+  /* Menu Burger (s'ouvre du haut) */
   .nav-links {
     position: fixed;
     top: var(--navbar-height);
@@ -370,10 +402,6 @@
 
       &.active {
         color: var(--primary);
-
-        &::after {
-          display: none;
-        }
       }
     }
 
@@ -400,6 +428,102 @@
       }
     }
   }
+
+  /* ✅ AJOUT DU PADDING POUR LA BOTTOM NAV */
+  .main-content {
+    padding-bottom: 85px; 
+  }
+
+  /* ✅ STYLE DE LA BOTTOM NAV */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-subtle);
+    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom); /* Gère l'encoche iPhone */
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 600;
+    width: 20%;
+    height: 100%;
+    transition: color 0.2s ease;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      transition: transform 0.2s ease;
+    }
+
+    &.active {
+      color: var(--primary);
+      
+      mat-icon {
+        transform: translateY(-2px);
+      }
+    }
+
+    &:active mat-icon {
+      transform: scale(0.9);
+    }
+  }
+
+  /* ✅ BOUTON CENTRAL "JOUER" (Floating Action Button style) */
+  .bottom-nav-item.play-btn {
+    position: relative;
+    color: var(--text-dark);
+    font-weight: 800;
+
+    .play-icon-wrapper {
+      position: absolute;
+      top: -24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      border-radius: 50%;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+      border: 4px solid #ffffff;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      mat-icon {
+        color: #ffffff;
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    span {
+      margin-top: 32px; /* Décale le texte sous le bouton flottant */
+    }
+
+    &.active .play-icon-wrapper {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 12px 25px rgba(37, 99, 235, 0.6);
+    }
+  }
 }
 
 /* ─── Accessibilité ─── */
@@ -414,8 +538,12 @@
   .btn-login-desktop,
   .burger-btn,
   .burger-btn span,
-  .btn-login-mobile {
+  .btn-login-mobile,
+  .bottom-nav,
+  .bottom-nav-item,
+  .bottom-nav-item mat-icon {
     transition: none !important;
+    animation: none !important;
   }
 }
 

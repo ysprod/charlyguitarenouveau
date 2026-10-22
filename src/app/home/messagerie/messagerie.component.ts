@@ -36,6 +36,7 @@ import {
 
 import { getInitials } from 'src/app/home/utils/string.utils';
 import { MessagerieService } from '../services/messagerie.service';
+import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    CONSTANTES — Pagination
@@ -58,7 +59,7 @@ export type PageItem = number | 'ellipsis-left' | 'ellipsis-right';
     DatePipe,
     FormsModule,
     MatSnackBarModule,
-    RouterLink,
+    RouterLink,ImmersiveCarouselComponent
   ],
   templateUrl: './messagerie.component.html',
   styleUrls: ['./messagerie.component.scss'],

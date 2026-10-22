@@ -1,6 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════
-   HOST & DESIGN TOKENS
-   ═══════════════════════════════════════════════════════════════ */
+/* src/app/home/podcastvideo/podcastvideo.component.scss */
+
 :host {
   --gold-primary: #b8860b;
   --gold-hover:   #d4a017;
@@ -8,7 +7,6 @@
   --gold-soft:    rgba(184, 134, 11, .08);
 
   --primary:       #2563eb;
-  --primary-hover: #1d4ed8;
   --warning:       #ea580c;
   --warning-hi:    #f97316;
   --danger:        #dc2626;
@@ -17,16 +15,13 @@
   --text-muted: #64748b;
 
   --border-subtle: rgba(15, 23, 42, .06);
-  --border-medium: rgba(15, 23, 42, .12);
   --border-gold:   rgba(184, 134, 11, .3);
   --border-live:   rgba(220, 38, 38, .35);
 
   --radius-lg: 24px;
   --radius-md: 16px;
 
-  --ease:  cubic-bezier(.4, 0, .2, 1);
-  --t-fast: .15s var(--ease);
-  --t-base: .25s var(--ease);
+  --t-base: .25s cubic-bezier(.4, 0, .2, 1);
 
   display: block;
   color: var(--text-dark);
@@ -38,42 +33,26 @@
 :host *::before,
 :host *::after { box-sizing: border-box; }
 
-/* ═══════════════════════════════════════════════════════════════
-   CONTAINER — compact, réutilisable partout
-   ═══════════════════════════════════════════════════════════════ */
 .live-hub-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0;
 }
 
-.grid-section {
-  width: 100%;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CARTE VIDÉO — effet "wahou" : gradient border + hover glow
-   ═══════════════════════════════════════════════════════════════ */
 .video-card {
   position: relative;
   display: flex;
   flex-direction: column;
   padding: 1.25rem;
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, #ffffff 0%, #fbfaf6 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfaf6 100%);
   border: 1px solid var(--border-subtle);
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, .04),
-    0 4px 16px -8px rgba(15, 23, 42, .06);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 16px -8px rgba(15, 23, 42, .06);
   overflow: hidden;
   isolation: isolate;
-  transition:
-    transform var(--t-base),
-    box-shadow var(--t-base),
-    border-color var(--t-base);
+  contain: layout style paint;
+  transition: transform var(--t-base), box-shadow var(--t-base), border-color var(--t-base);
 
-  /* Lueur dorée subtile en haut à droite */
   &::after {
     content: '';
     position: absolute;
@@ -88,37 +67,17 @@
     transition: opacity var(--t-base);
   }
 
-  /* Shimmer diagonal au hover */
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    left: -150%;
-    width: 60%;
-    background: linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
-    transform: skewX(-25deg);
-    pointer-events: none;
-    transition: left .8s ease;
-    z-index: 2;
-  }
-
   &:hover {
     transform: translateY(-3px);
     border-color: var(--border-gold);
-    box-shadow:
-      0 12px 32px -12px rgba(184, 134, 11, .25),
-      0 4px 12px -4px rgba(15, 23, 42, .08),
-      0 0 0 1px var(--gold-glow);
+    box-shadow: 0 12px 32px -12px rgba(184, 134, 11, .25), 0 4px 12px -4px rgba(15, 23, 42, .08);
 
-    &::before { left: 150%; }
-    &::after  { opacity: .6; }
+    &::after { opacity: .6; }
   }
 
-  /* Tout le contenu au-dessus des pseudo-elements */
   > * { position: relative; z-index: 1; }
 }
 
-/* ── Header ── */
 .video-header {
   display: flex;
   align-items: center;
@@ -168,7 +127,6 @@
   color: var(--text-dark);
 }
 
-/* ── Iframe ── */
 .video-wrapper {
   position: relative;
   width: 100%;
@@ -189,9 +147,6 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   FOOTER ACTIONS
-   ═══════════════════════════════════════════════════════════════ */
 .video-footer {
   display: flex;
   flex-wrap: wrap;
@@ -200,8 +155,6 @@
   justify-content: flex-end;
 }
 
-/* ── Base commune aux boutons ── */
-.yt-link-btn,
 .playlist-btn,
 .shop-btn {
   position: relative;
@@ -218,55 +171,15 @@
   border-radius: 999px;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    transform var(--t-base),
-    box-shadow var(--t-base),
-    background var(--t-base),
-    border-color var(--t-base);
+  transition: transform var(--t-base), box-shadow var(--t-base), background var(--t-base), border-color var(--t-base);
 
   .icon, .arrow { flex-shrink: 0; }
   .arrow { transition: transform var(--t-base); }
 
   &:active { transform: translateY(0); }
-
-  &:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 3px;
-  }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 }
 
-/* ── Bouton YouTube — CTA principal ── */
-.yt-link-btn {
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning-hi) 100%);
-  color: #fff;
-  box-shadow:
-    0 4px 14px -4px rgba(234, 88, 12, .5),
-    inset 0 1px 0 rgba(255, 255, 255, .25);
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    left: -150%;
-    width: 60%;
-    background: linear-gradient(120deg, transparent, rgba(255,255,255,.45), transparent);
-    transform: skewX(-25deg);
-    transition: left .6s ease;
-    pointer-events: none;
-  }
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 10px 22px -6px rgba(234, 88, 12, .55),
-      inset 0 1px 0 rgba(255, 255, 255, .25);
-
-    .arrow { transform: translateX(4px); }
-    &::before { left: 150%; }
-  }
-}
-
-/* ── Bouton Playlist — CTA secondaire ── */
 .playlist-btn {
   background: #fff;
   color: var(--text-dark);
@@ -274,92 +187,45 @@
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 
   .icon { color: var(--danger); }
-  .arrow { color: var(--gold-primary); }
 
   &:hover {
     transform: translateY(-2px);
     background: var(--gold-soft);
     border-color: var(--gold-primary);
-    box-shadow:
-      0 6px 16px -6px rgba(184, 134, 11, .3),
-      0 0 0 1px var(--gold-primary);
-
-    .arrow { transform: translateX(4px); }
   }
 }
 
-/* ── ✨ Bouton Acheter — CTA premium ── */
 .shop-btn {
   color: #fff;
-  background:
-    linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-hover) 50%, var(--gold-primary) 100%);
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-hover) 50%, var(--gold-primary) 100%);
   background-size: 200% 200%;
   border: 1px solid rgba(255, 255, 255, .2);
-  box-shadow:
-    0 4px 14px -4px rgba(184, 134, 11, .55),
-    inset 0 1px 0 rgba(255, 255, 255, .35);
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    left: -150%;
-    width: 60%;
-    background: linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
-    transform: skewX(-25deg);
-    transition: left .7s ease;
-    pointer-events: none;
-  }
+  box-shadow: 0 4px 14px -4px rgba(184, 134, 11, .55), inset 0 1px 0 rgba(255, 255, 255, .35);
 
   &:hover {
     transform: translateY(-2px);
     background-position: 100% 50%;
-    box-shadow:
-      0 10px 24px -6px rgba(184, 134, 11, .6),
-      inset 0 1px 0 rgba(255, 255, 255, .35);
-
     .arrow { transform: translateX(4px); }
-    &::before { left: 150%; }
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .video-card { padding: 1rem; }
-
   .video-title { font-size: .98rem; }
-
   .video-footer {
     flex-direction: column;
     gap: .5rem;
+    justify-content: stretch;
   }
-
-  .yt-link-btn,
   .playlist-btn,
   .shop-btn {
     width: 100%;
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   ACCESSIBILITÉ
-   ═══════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  .video-card,
-  .video-card::before,
-  .video-card::after,
-  .dot-live,
-  .yt-link-btn,
-  .yt-link-btn::before,
-  .yt-link-btn .arrow,
-  .playlist-btn,
-  .playlist-btn .arrow,
-  .shop-btn,
-  .shop-btn::before,
-  .shop-btn .arrow {
-    transition: none !important;
-    animation: none !important;
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
   }
 }

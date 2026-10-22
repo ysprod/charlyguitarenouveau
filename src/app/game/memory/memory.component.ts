@@ -444,11 +444,4 @@ export class MemoryComponent {
     this.setManagedTimeout(() => this.particles.set([]), 1500);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     NAVIGATION
-     ═══════════════════════════════════════════════════════ */
-
-  goToPlay(): void {
-    void this.router.navigate(['/play']);
-  }
 }

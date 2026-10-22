@@ -46,6 +46,7 @@ import {
 import { PromoCodeService } from 'src/app/shared/services/promo-code.service';
 import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
 import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
+import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    DOCUMENTS — Boutique numérique (optimisé)
@@ -55,7 +56,7 @@ import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.co
   selector: 'app-documents',
   imports: [
     PromoModalComponent, ToastComponent,
-    FormatPricePipe, PodcastvideoComponent,
+    FormatPricePipe, PodcastvideoComponent,ImmersiveCarouselComponent
   ],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss'],
@@ -232,6 +233,22 @@ export class DocumentsComponent {
     this.selectedFilter.set(FILTER_ALL_LABEL);
     this.searchTerm.set('');
     this.sortBy.set('recent');
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     PODCAST — ouverture du lien audio
+     ═══════════════════════════════════════════════════════ */
+
+  openPodcast(doc: DocumentItem, event?: Event): void {
+    event?.stopPropagation();
+
+    if (!doc.urlpodcast) {
+      this.toastService.error('Aucun podcast disponible pour ce document.');
+      return;
+    }
+
+    window.open(doc.urlpodcast, '_blank');
+    this.toastService.success(`Podcast de "${doc.title}" ouvert 🎧`);
   }
 
   /* ═══════════════════════════════════════════════════════

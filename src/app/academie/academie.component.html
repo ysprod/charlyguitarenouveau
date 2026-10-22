@@ -2,16 +2,21 @@
 
 <div class="academie-container">
 
+  <!-- Effets de fond (Lueurs) -->
+  <div class="bg-glow bg-glow-1" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-2" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
   <!-- ═══════════════════════════════════════════════════════
        HERO
        ═══════════════════════════════════════════════════════ -->
   <section class="hero-banner" aria-labelledby="academie-hero-title">
-
     <div class="hero-glow glow-1" aria-hidden="true"></div>
     <div class="hero-glow glow-2" aria-hidden="true"></div>
 
     <div class="hero-content">
       <span class="hero-eyebrow">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
         École de formation et d’innovation
       </span>
 
@@ -26,17 +31,19 @@
       </p>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CTA BOUTIQUE
+       ═══════════════════════════════════════════════════════ -->
   <section class="boutique-cta" aria-labelledby="boutique-title">
     <div class="cta-orb cta-orb--gold" aria-hidden="true"></div>
     <div class="cta-orb cta-orb--blue" aria-hidden="true"></div>
 
     <div class="cta-inner">
- 
- 
-
       <h2 id="boutique-title" class="cta-title">
         Découvre la <em>Boutique</em>
       </h2>
+
       <div class="cta-features" aria-hidden="true">
         <span class="cta-feature">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -69,59 +76,101 @@
           <polyline points="12 5 19 12 12 19" />
         </svg>
       </a>
-
     </div>
   </section>
+
   <!-- ═══════════════════════════════════════════════════════
-       SECTION OFFRES
+       CTA OFFRES
        ═══════════════════════════════════════════════════════ -->
-  <app-offres />
+  <section class="boutique-cta cta-variant-blue" aria-labelledby="offres-title">
+    <div class="cta-orb cta-orb--gold" aria-hidden="true"></div>
+    <div class="cta-orb cta-orb--blue" aria-hidden="true"></div>
+
+    <div class="cta-inner">
+      <h2 id="offres-title" class="cta-title">
+        Accéder à nos <em>Offres</em>
+      </h2>
+
+      <div class="cta-features" aria-hidden="true">
+        <span class="cta-feature">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Packs de cours
+        </span>
+        <span class="cta-feature">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Masterclass
+        </span>
+        <span class="cta-feature">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Accompagnement
+        </span>
+      </div>
+
+      <a href="/offres" class="cta-button btn-blue">
+        <span>Voir les tarifs</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION LIVE
+       ═══════════════════════════════════════════════════════ -->
   <section class="live-section" aria-labelledby="live-heading-title">
 
     <div class="section-heading live-heading">
       <h2 id="live-heading-title">
-        Apprenez <span>en live</span>
+        Apprendre en <span>Live</span>
       </h2>
-
       <p>
-        Rejoignez nos sessions interactives et échangez directement
-        avec nos formateurs.
+        Rejoignez nos sessions interactives et échangez directement avec nos formateurs.
       </p>
     </div>
 
     <div class="live-grid">
       @for (live of liveCards; track live.id) {
       <article class="live-card">
-
-        <div class="live-background-icon" aria-hidden="true">
-          {{ live.backgroundIcon }}
-        </div>
+        <div class="live-background-icon" aria-hidden="true">{{ live.backgroundIcon }}</div>
 
         <div class="live-card-content">
-
           <div class="live-icon-wrap">
             <span aria-hidden="true">{{ live.icon }}</span>
           </div>
-
           <span class="live-label">
             <span class="pulse-dot" aria-hidden="true"></span>
             LIVE
           </span>
-
           <h3>{{ live.title }}</h3>
-
           <p>{{ live.description }}</p>
-
         </div>
 
         <a [routerLink]="live.actionRoute" class="live-action">
           {{ live.actionLabel }}
           <span aria-hidden="true">→</span>
         </a>
-
       </article>
       }
     </div>
-
   </section>
+
+  <!-- SECTION OFFRES (Cachée temporairement pour le scroll) -->
+  <div id="offres-section" style="display: none;"><app-offres /></div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CARROUSEL
+       ═══════════════════════════════════════════════════════ -->
+  <app-immersive-carousel />
 </div>

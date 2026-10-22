@@ -20,6 +20,7 @@ import { UserProfile } from 'src/app/home/models/user.model';
 import { getInitials } from 'src/app/home/utils/string.utils';
 import { InboxPanelComponent } from './inbox-panel/inbox-panel.component';
 import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
+import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
 
 @Component({
   selector: 'app-homeconnect',
@@ -27,7 +28,7 @@ import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.co
     RouterLink,
     PodcastvideoComponent,
     FooterComponent,
-    InboxPanelComponent,
+    InboxPanelComponent,ImmersiveCarouselComponent
   ],
   templateUrl: './homeconnect.component.html',
   styleUrls: ['./homeconnect.component.scss'],

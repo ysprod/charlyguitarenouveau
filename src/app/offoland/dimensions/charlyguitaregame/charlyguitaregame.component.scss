@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════════════
-   DIMENSIONS — Galerie des 7 royaumes (optimisé GPU)
+   DIMENSIONS — Galerie des 7 royaumes (mobile-first + GPU-friendly)
    ═════════════════════════════════════════════════════════════════════ */
 
 :host {
@@ -10,6 +10,12 @@
   --gold: #b8860b;
   --gold-hover: #d4a017;
   --gold-glow: rgba(184, 134, 11, .2);
+  --gold-soft: rgba(184, 134, 11, .08);
+
+  --youtube: #ff0000;
+  --youtube-hover: #cc0000;
+  --youtube-soft: rgba(255, 0, 0, .08);
+  --youtube-glow: rgba(255, 0, 0, .25);
 
   --text-dark: #0f172a;
   --text-body: #334155;
@@ -27,7 +33,6 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* ✅ Scoped : n'affecte que le composant */
 :host *,
 :host *::before,
 :host *::after {
@@ -42,72 +47,151 @@
   position: relative;
   max-width: 1500px;
   margin: 0 auto;
-  padding: 30px 20px 60px;
+  padding: 20px 16px 50px;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   HEADER
+   BANNIÈRE TUTORIELS VIDÉO
    ═════════════════════════════════════════════════════════════════════ */
 
-.method-header {
+.tutorial-section {
+  margin-bottom: 30px;
+}
+
+.tutorial-banner {
   position: relative;
-  z-index: 5;
-  text-align: center;
-  padding: 40px 20px;
-  margin-bottom: 50px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .9rem;
+  padding: 1rem 1.1rem;
+  background: linear-gradient(135deg, var(--youtube-soft), var(--bg-card) 55%);
+  border: 1px solid rgba(255, 0, 0, .25);
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--text-dark);
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  contain: layout style paint;
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    border-color .25s ease;
 
-  .title-eyebrow {
-    display: inline-block;
-    font-family: 'Cinzel', Georgia, serif;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 16px;
-    padding: 6px 18px;
-    background: rgba(184, 134, 11, .08);
-    border: 1px solid rgba(184, 134, 11, .3);
-    border-radius: 999px;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--youtube);
+    z-index: 1;
+    pointer-events: none;
   }
 
-  .title-glow {
-    font-family: 'Cinzel', Georgia, serif;
-    font-size: clamp(2.5rem, 6vw, 3.75rem);
-    font-weight: 900;
-    margin: 0;
-    letter-spacing: 8px;
-    background: linear-gradient(
-      135deg,
-      var(--gold) 0%,
-      var(--gold-hover) 50%,
-      var(--gold) 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    line-height: 1.1;
-  }
+  &:active { transform: scale(.995); }
 
-  .title-sub {
-    font-family: 'Cinzel', Georgia, serif;
-    font-size: clamp(1rem, 2vw, 1.35rem);
-    font-weight: 700;
-    margin: 8px 0 20px;
-    letter-spacing: 10px;
-    color: var(--text-dark);
-    opacity: .75;
-  }
-
-  .title-intro {
-    max-width: 560px;
-    margin: 0 auto;
-    font-size: 1rem;
-    line-height: 1.65;
-    color: var(--text-muted);
-    font-style: italic;
+  &:focus-visible {
+    outline: 2px solid var(--youtube);
+    outline-offset: 2px;
   }
 }
+
+.tutorial-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .5;
+  background: radial-gradient(circle at 0% 50%, rgba(255, 0, 0, .1) 0%, transparent 60%);
+}
+
+.tutorial-icon {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--youtube-soft);
+  border: 1px solid rgba(255, 0, 0, .22);
+  color: var(--youtube);
+
+  svg { width: 22px; height: 22px; }
+}
+
+.tutorial-content {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 60%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.tutorial-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: .92rem;
+  font-weight: 800;
+  letter-spacing: .3px;
+  color: var(--text-dark);
+  line-height: 1.25;
+}
+
+.tutorial-subtitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: .8rem;
+  font-style: italic;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.tutorial-cta {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  padding: .55rem .85rem;
+  background: var(--youtube);
+  color: #fff;
+  border-radius: 10px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .3px;
+  white-space: nowrap;
+  transition: background .15s ease;
+}
+
+.tutorial-arrow { width: 12px; height: 12px; }
+
+/* Coins décoratifs */
+.tutorial-banner .corner {
+  border-color: var(--youtube);
+}
+
+.corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, width .25s ease, height .25s ease;
+  z-index: 2;
+}
+
+.corner-tl { top: 10px; left: 10px;     border-top: 2px solid;    border-left: 2px solid;   border-top-left-radius: 6px; }
+.corner-tr { top: 10px; right: 10px;    border-top: 2px solid;    border-right: 2px solid;  border-top-right-radius: 6px; }
+.corner-bl { bottom: 10px; left: 10px;  border-bottom: 2px solid; border-left: 2px solid;   border-bottom-left-radius: 6px; }
+.corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid;  border-bottom-right-radius: 6px; }
 
 /* ═════════════════════════════════════════════════════════════════════
    GRILLE DES DIMENSIONS
@@ -117,8 +201,8 @@
   position: relative;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 28px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -129,21 +213,21 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: 22px;
+  border-radius: 18px;
   overflow: hidden;
   text-decoration: none;
   color: var(--text-dark);
   border: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
   background: var(--bg-card);
   box-shadow: 0 2px 10px rgba(15, 23, 42, .05);
+  contain: layout style paint;
   transition:
-    transform .4s cubic-bezier(.175, .885, .32, 1.275),
-    box-shadow .4s ease,
-    border-color .4s ease;
+    transform .3s ease,
+    box-shadow .3s ease,
+    border-color .3s ease;
   cursor: pointer;
   isolation: isolate;
 
-  /* Halo coloré au survol */
   .card-halo {
     position: absolute;
     inset: -2px;
@@ -153,18 +237,17 @@
       transparent 70%
     );
     opacity: 0;
-    transition: opacity .4s ease;
+    transition: opacity .3s ease;
     pointer-events: none;
     z-index: 1;
   }
 
-  /* Bande supérieure colorée */
   .card-top-band {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 5px;
+    height: 4px;
     background: linear-gradient(
       90deg,
       transparent 0%,
@@ -175,39 +258,37 @@
     );
     z-index: 2;
     opacity: .85;
-    transition: opacity .4s ease;
   }
 
   .card-content {
     position: relative;
     z-index: 3;
     flex: 1;
-    padding: 28px 24px 24px;
+    padding: 20px 18px 18px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
-  /* ─── En-tête : symbole + nom ─── */
+  /* ─── En-tête ─── */
   .dimension-header {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding-bottom: 14px;
+    gap: 12px;
+    padding-bottom: 12px;
     border-bottom: 1px dashed color-mix(in srgb, var(--accent) 25%, transparent);
 
     .dimension-symbol {
       flex-shrink: 0;
-      width: 52px;
-      height: 52px;
+      width: 44px;
+      height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
       border: 1.5px solid color-mix(in srgb, var(--accent) 40%, transparent);
-      border-radius: 16px;
-      transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+      border-radius: 12px;
     }
 
     .dimension-title {
@@ -218,16 +299,16 @@
 
       .dimension-name {
         font-family: 'Cinzel', Georgia, serif;
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 900;
-        letter-spacing: 3px;
+        letter-spacing: 2px;
         color: var(--accent);
         line-height: 1.1;
       }
 
       .dimension-note {
         font-family: 'Cormorant Garamond', Georgia, serif;
-        font-size: .9rem;
+        font-size: .85rem;
         font-style: italic;
         color: var(--text-muted);
         font-weight: 600;
@@ -235,10 +316,9 @@
     }
   }
 
-  /* ─── Description ─── */
   .dimension-description {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 1rem;
+    font-size: .95rem;
     font-style: italic;
     color: var(--text-body);
     margin: 0;
@@ -250,10 +330,10 @@
   .dimension-meta {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 12px 16px;
+    gap: 12px;
+    padding: 10px 12px;
     background: color-mix(in srgb, var(--accent) 4%, var(--bg-soft));
-    border-radius: 12px;
+    border-radius: 10px;
     border-left: 3px solid var(--accent);
 
     .meta-item {
@@ -263,7 +343,7 @@
 
       .meta-label {
         font-family: 'Cinzel', Georgia, serif;
-        font-size: .6rem;
+        font-size: .58rem;
         letter-spacing: 2px;
         color: var(--text-muted);
         font-weight: 700;
@@ -272,7 +352,7 @@
 
       .meta-value {
         font-family: 'Cinzel', Georgia, serif;
-        font-size: .95rem;
+        font-size: .88rem;
         font-weight: 900;
         color: var(--text-dark);
       }
@@ -280,7 +360,7 @@
 
     .meta-divider {
       width: 1px;
-      height: 24px;
+      height: 20px;
       background: var(--border-medium);
     }
   }
@@ -290,124 +370,257 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 14px;
+    padding-top: 12px;
     margin-top: auto;
     border-top: 1px solid var(--border-subtle);
     font-family: 'Cinzel', Georgia, serif;
-    font-size: .78rem;
+    font-size: .74rem;
     font-weight: 800;
-    letter-spacing: 2.5px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--accent);
-    transition: color .35s ease;
 
     .arrow-icon {
-      width: 18px;
-      height: 18px;
-      transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+      width: 16px;
+      height: 16px;
+      transition: transform .25s ease;
     }
   }
 
   /* ─── Coins décoratifs ─── */
   .corner-decoration {
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border: 2px solid var(--accent);
     z-index: 4;
     opacity: .45;
     transition:
-      opacity .35s ease,
-      width .35s ease,
-      height .35s ease;
+      opacity .3s ease,
+      width .3s ease,
+      height .3s ease;
 
-    &.top-left     { top: 10px; left: 10px;     border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
-    &.top-right    { top: 10px; right: 10px;    border-left: none;  border-bottom: none; border-radius: 0 8px 0 0; }
-    &.bottom-left  { bottom: 10px; left: 10px;  border-right: none; border-top: none;    border-radius: 0 0 0 8px; }
-    &.bottom-right { bottom: 10px; right: 10px; border-left: none;  border-top: none;    border-radius: 0 0 8px 0; }
+    &.top-left     { top: 8px; left: 8px;     border-right: none; border-bottom: none; border-radius: 6px 0 0 0; }
+    &.top-right    { top: 8px; right: 8px;    border-left: none;  border-bottom: none; border-radius: 0 6px 0 0; }
+    &.bottom-left  { bottom: 8px; left: 8px;  border-right: none; border-top: none;    border-radius: 0 0 0 6px; }
+    &.bottom-right { bottom: 8px; right: 8px; border-left: none;  border-top: none;    border-radius: 0 0 6px 0; }
   }
 
-  /* ─── Hover / Focus ─── */
-  &:hover,
-  &:focus-visible {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow:
-      0 20px 40px rgba(15, 23, 42, .12),
-      0 0 32px color-mix(in srgb, var(--accent) 20%, transparent);
-    border-color: var(--accent-light);
-
-    .card-halo { opacity: .12; }
-    .card-top-band { opacity: 1; }
-
-    .dimension-symbol {
-      transform: rotate(-6deg) scale(1.1);
-    }
-
-    .card-action .arrow-icon {
-      transform: translateX(8px);
-    }
-
-    .corner-decoration {
-      opacity: 1;
-      width: 26px;
-      height: 26px;
-    }
-  }
+  &:active { transform: scale(.99); }
 
   &:focus-visible {
     outline: 2px solid var(--accent);
-    outline-offset: 4px;
+    outline-offset: 3px;
   }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE — Tablette (≥ 480px)
    ═════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 1200px) {
-  .dimensions-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-  }
-}
-
-@media (max-width: 768px) {
+@media (min-width: 480px) {
   .method-container {
-    padding: 20px 16px 40px;
+    padding: 24px 20px 60px;
   }
 
-  .method-header {
-    padding: 30px 10px;
-    margin-bottom: 30px;
+  .tutorial-banner {
+    flex-wrap: nowrap;
+    padding: 1.1rem 1.3rem;
+    gap: 1.15rem;
+  }
 
-    .title-glow {
-      font-size: 2rem;
-      letter-spacing: 4px;
-    }
+  .tutorial-content {
+    flex: 1;
+  }
 
-    .title-sub {
-      font-size: 1rem;
-      letter-spacing: 5px;
-    }
-
-    .title-intro {
-      font-size: .9rem;
-    }
-
-    .title-eyebrow {
-      font-size: .65rem;
-      letter-spacing: 4px;
-    }
+  .tutorial-cta {
+    flex: 0 0 auto;
+    width: auto;
   }
 
   .dimensions-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
   }
 
   .dimension-card .card-content {
-    padding: 22px 20px 20px;
+    padding: 24px 22px 20px;
   }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE — Desktop (≥ 720px)
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 720px) {
+  .method-container {
+    padding: 30px 20px 60px;
+  }
+
+  .tutorial-section {
+    margin-bottom: 40px;
+  }
+
+  .tutorial-banner {
+    padding: 1.35rem 1.6rem;
+    gap: 1.4rem;
+
+    &:hover {
+      transform: translateY(-3px);
+      border-color: var(--youtube);
+      box-shadow:
+        0 8px 24px rgba(15, 23, 42, .08),
+        0 0 0 1px var(--youtube),
+        0 0 30px rgba(255, 0, 0, .12);
+
+      .tutorial-icon {
+        background: var(--youtube);
+        color: #fff;
+        transform: scale(1.08) rotate(-5deg);
+      }
+
+      .tutorial-arrow { transform: translateX(4px); }
+      .corner { opacity: 1; width: 14px; height: 14px; }
+    }
+  }
+
+  .tutorial-icon {
+    width: 52px;
+    height: 52px;
+    transition: background .25s ease, color .25s ease, transform .25s ease;
+
+    svg { width: 26px; height: 26px; }
+  }
+
+  .tutorial-title { font-size: 1.05rem; }
+  .tutorial-subtitle { font-size: .85rem; }
+
+  .tutorial-cta {
+    padding: .7rem 1rem;
+    font-size: .8rem;
+    background: transparent;
+    color: var(--youtube);
+    border: 1.5px solid var(--youtube);
+    transition: background .25s ease, color .25s ease;
+
+    .tutorial-banner:hover & {
+      background: var(--youtube);
+      color: #fff;
+    }
+  }
+
+  .tutorial-arrow {
+    width: 14px;
+    height: 14px;
+    transition: transform .25s ease;
+  }
+
+  .dimensions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
+  }
+
+  .dimension-card {
+    border-radius: 22px;
+    transition:
+      transform .4s cubic-bezier(.175, .885, .32, 1.275),
+      box-shadow .3s ease,
+      border-color .3s ease;
+
+    .card-content {
+      padding: 28px 24px 24px;
+      gap: 16px;
+    }
+
+    .dimension-header {
+      gap: 14px;
+      padding-bottom: 14px;
+
+      .dimension-symbol {
+        width: 52px;
+        height: 52px;
+        font-size: 1.75rem;
+        border-radius: 16px;
+        transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+      }
+
+      .dimension-title {
+        .dimension-name {
+          font-size: 1.05rem;
+          letter-spacing: 3px;
+        }
+        .dimension-note {
+          font-size: .9rem;
+        }
+      }
+    }
+
+    .dimension-description {
+      font-size: 1rem;
+    }
+
+    .dimension-meta {
+      gap: 15px;
+      padding: 12px 16px;
+      border-radius: 12px;
+
+      .meta-item {
+        .meta-label { font-size: .6rem; }
+        .meta-value { font-size: .95rem; }
+      }
+      .meta-divider { height: 24px; }
+    }
+
+    .card-action {
+      padding-top: 14px;
+      font-size: .78rem;
+      letter-spacing: 2.5px;
+
+      .arrow-icon { width: 18px; height: 18px; }
+    }
+
+    .corner-decoration {
+      width: 20px;
+      height: 20px;
+
+      &.top-left     { top: 10px; left: 10px;     border-radius: 8px 0 0 0; }
+      &.top-right    { top: 10px; right: 10px;    border-radius: 0 8px 0 0; }
+      &.bottom-left  { bottom: 10px; left: 10px;  border-radius: 0 0 0 8px; }
+      &.bottom-right { bottom: 10px; right: 10px; border-radius: 0 0 8px 0; }
+    }
+
+    &:hover,
+    &:focus-visible {
+      transform: translateY(-8px) scale(1.015);
+      box-shadow:
+        0 20px 40px rgba(15, 23, 42, .12),
+        0 0 32px color-mix(in srgb, var(--accent) 20%, transparent);
+      border-color: var(--accent-light);
+
+      .card-halo { opacity: .12; }
+      .card-top-band { height: 5px; }
+      .dimension-symbol { transform: rotate(-6deg) scale(1.1); }
+      .card-action .arrow-icon { transform: translateX(8px); }
+      .corner-decoration { opacity: 1; width: 26px; height: 26px; }
+    }
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   TRÈS PETITS ÉCRANS (< 360px)
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 360px) {
+  .method-container { padding: 16px 12px 40px; }
+
+  .tutorial-title { font-size: .85rem; }
+  .tutorial-subtitle { font-size: .72rem; }
+  .tutorial-cta { font-size: .7rem; padding: .5rem .7rem; }
+
+  .dimension-card .card-content { padding: 18px 16px 16px; }
+
+  .dimension-card .dimension-name { font-size: .92rem; }
+  .dimension-card .dimension-description { font-size: .88rem; }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -415,13 +628,11 @@
    ═════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
-  .dimension-card,
-  .dimension-card .dimension-symbol,
-  .dimension-card .card-halo,
-  .dimension-card .card-top-band,
-  .dimension-card .card-action,
-  .dimension-card .card-action .arrow-icon,
-  .dimension-card .corner-decoration {
-    transition: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
   }
 }

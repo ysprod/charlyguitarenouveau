@@ -1,24 +1,21 @@
+// src/app/home/podcastvideo/podcastvideo.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
+  Input,
+  OnInit,
   computed,
   inject,
+  signal,
 } from '@angular/core';
 
 import {
   DomSanitizer,
   SafeResourceUrl,
 } from '@angular/platform-browser';
-import { LiveVideo } from '../../live/models/live.model';
 import { RouterLink } from '@angular/router';
-
-const LIVE_VIDEO: LiveVideo = {
-  title: 'La Grande Bible d\'Offoland (ecrit par Charly Guitare) enfin expliquée...',
-  embedUrl:
-    'https://www.youtube.com/embed/TCJUEVCt8LI?autoplay=1&rel=0&modestbranding=1',
-  watchUrl: 'https://www.youtube.com/watch?v=TCJUEVCt8LI',
-  badge: 'PODCASTS VIDEO',
-};
+import { PODCAST_STORAGE_KEY, PODCAST_VIDEOS, PodcastVideo } from '../data/podcast.data';
 
 @Component({
   selector: 'app-podcastvideo',
@@ -27,23 +24,74 @@ const LIVE_VIDEO: LiveVideo = {
   styleUrl: './podcastvideo.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PodcastvideoComponent {
+export class PodcastvideoComponent implements OnInit {
 
   /* ─── Injection ─── */
   private readonly sanitizer = inject(DomSanitizer);
 
-  readonly video: LiveVideo = LIVE_VIDEO;
+  /* ─── Inputs ─── */
+  @Input() affichebouton: boolean = true;
+  @Input() randommode: boolean = false;
+
+  /* ─── État ─── */
+  private readonly currentVideo = signal<PodcastVideo>(PODCAST_VIDEOS[0]);
+  readonly video = computed(() => this.currentVideo());
+
+  /* ─── URL sécurisée ─── */
+  readonly safeEmbedUrl = computed<SafeResourceUrl>(() =>
+    this.sanitizer.bypassSecurityTrustResourceUrl(this.video().embedUrl)
+  );
+
+  ngOnInit(): void {
+    if (this.randommode) {
+      this.initRotation();
+    }
+  }
 
   /* ═══════════════════════════════════════════════════════
-     URL D'EMBED SÉCURISÉE
+     LOGIQUE DE ROTATION (Équéquitable / Random)
      ═══════════════════════════════════════════════════════ */
 
-  /**
-   * Angular `sanitize` automatiquement les URLs d'iframe.
-   * Pour YouTube, il faut explicitement bypasser avec
-   * `bypassSecurityTrustResourceUrl`.
-   */
-  readonly safeEmbedUrl = computed<SafeResourceUrl>(() =>
-    this.sanitizer.bypassSecurityTrustResourceUrl(this.video.embedUrl)
-  );
+  private initRotation(): void {
+    const plays = this.getPlaysFromStorage();
+    
+    // Trouver le nombre minimum de lectures parmi toutes les vidéos
+    const minPlays = Math.min(...PODCAST_VIDEOS.map(v => plays[v.id] || 0));
+
+    // Filtrer les vidéos qui ont ce score minimum (pour l'équité)
+    const candidates = PODCAST_VIDEOS.filter(
+      (v) => (plays[v.id] || 0) === minPlays
+    );
+
+    // Choisir une vidéo au hasard parmi les candidates équéquitables
+    const selected = candidates[Math.floor(Math.random() * candidates.length)];
+
+    // Mettre à jour le signal de la vidéo courante
+    this.currentVideo.set(selected);
+
+    // Incrémenter et sauvegarder dans le stockage local
+    plays[selected.id] = (plays[selected.id] || 0) + 1;
+    this.savePlaysToStorage(plays);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     LOCAL STORAGE
+     ═══════════════════════════════════════════════════════ */
+
+  private getPlaysFromStorage(): Record<string, number> {
+    try {
+      const raw = localStorage.getItem(PODCAST_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private savePlaysToStorage(plays: Record<string, number>): void {
+    try {
+      localStorage.setItem(PODCAST_STORAGE_KEY, JSON.stringify(plays));
+    } catch {
+      // Silencieux si localStorage est bloqué (navigation privée, etc.)
+    }
+  }
 }

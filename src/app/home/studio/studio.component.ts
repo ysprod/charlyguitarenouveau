@@ -12,6 +12,7 @@ import { Auth, authState } from '@angular/fire/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { MessagerieService } from '../services/messagerie.service';
+import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    TYPES
@@ -41,26 +42,22 @@ interface Service {
 
 @Component({
   selector: 'app-studio',
-  imports: [],
+  imports: [ImmersiveCarouselComponent],
   templateUrl: './studio.component.html',
-  styleUrl: './studio.component.css',
+  styleUrl: './studio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudioComponent {
 
-  /* ─── Injection ─── */
   private readonly auth = inject(Auth);
   private readonly messagerie = inject(MessagerieService);
 
-  /* ─── Constante support ─── */
   private readonly SUPPORT_UID = '4gKIsx61Ief3iIvNgWgIy8PKVpm2';
   private readonly SUPPORT_NAME = 'Studio Charly Guitare';
 
-  /* ─── État UI ─── */
   protected readonly cartCount = signal(0);
   protected readonly isSending = signal(false);
 
-  /* ─── Utilisateur courant ─── */
   private readonly currentUser = toSignal(authState(this.auth), {
     initialValue: null,
   });
@@ -69,7 +66,7 @@ export class StudioComponent {
      DONNÉES
      ═══════════════════════════════════════════════════════════════════ */
 
-  protected readonly services: Service[] = [
+  protected readonly services: readonly Service[] = [
     {
       id: 'acoustique',
       title: 'Prise de Son Acoustique',
@@ -93,16 +90,20 @@ export class StudioComponent {
     },
   ];
 
-  protected readonly formules: Formule[] = [
+  protected readonly formules: readonly Formule[] = [
     { id: 'capitale', label: 'Prise de Guitare', pistes: "5 pistes d'audio", prix: 50000, tag: 'Essentiel' },
     { id: 'electrique', label: 'Prise de voix', pistes: "5 pistes d'audio", prix: 30000, tag: 'Populaire' },
     { id: 'mastering', label: 'Mastering & Export WAV', pistes: '1 projet stéréo', prix: 35000, tag: 'Finalisation' },
   ];
 
-  protected readonly creneaux: string[] = ['09h – 12h', '13h – 16h', '17h – 20h'];
+  protected readonly creneaux: readonly string[] = [
+    '09h – 12h',
+    '13h – 16h',
+    '17h – 20h',
+  ];
 
   /* ═══════════════════════════════════════════════════════════════════
-     SIGNAUX DU FORMULAIRE
+     SIGNAUX
      ═══════════════════════════════════════════════════════════════════ */
 
   protected readonly formuleId = signal(this.formules[1].id);
@@ -141,22 +142,16 @@ export class StudioComponent {
      VALIDATION CONTACT
      ═══════════════════════════════════════════════════════════════════ */
 
-  /**
-   * ✅ Accepte soit un email valide, soit un numéro de téléphone (10+ chiffres).
-   */
-  protected  isContactValid(value: string): boolean {
+  protected isContactValid(value: string): boolean {
     const trimmed = value.trim();
     if (!trimmed) return false;
 
-    // Email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailRegex.test(trimmed)) return true;
 
-    // Téléphone (chiffres, espaces, +, -, parenthèses) — au moins 8 chiffres
     const phoneRegex = /^[\d\s+\-()]{8,}$/;
     if (phoneRegex.test(trimmed)) {
-      const digits = trimmed.replace(/\D/g, '');
-      if (digits.length >= 8) return true;
+      return trimmed.replace(/\D/g, '').length >= 8;
     }
 
     return false;
@@ -190,16 +185,15 @@ export class StudioComponent {
     this.confirmation.set(null);
     this.errorMessage.set(null);
 
-    /* ✅ Validation en temps réel (seulement si non vide) */
-    if (value.trim() && !this.isContactValid(value)) {
-      this.contactError.set('Entrez un email ou un numéro valide.');
-    } else {
-      this.contactError.set(null);
-    }
+    this.contactError.set(
+      value.trim() && !this.isContactValid(value)
+        ? 'Entrez un email ou un numéro valide.'
+        : null,
+    );
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     RÉSERVATION → ENVOI AU SUPPORT
+     RÉSERVATION
      ═══════════════════════════════════════════════════════════════════ */
 
   protected async reserver(): Promise<void> {
@@ -231,7 +225,6 @@ export class StudioComponent {
       const dateFormatted = `${d}/${m}/${y}`;
       const contactTrimmed = this.contact().trim();
 
-      /* ✅ Construction du message */
       const subject = `Réservation du studio — UID: ${user.uid}`;
 
       const body = [
@@ -251,22 +244,17 @@ export class StudioComponent {
         `Message envoyé depuis le formulaire de réservation studio.`,
       ].join('\n');
 
-      /* ✅ Envoi via MessagerieService */
       await this.messagerie.sendMessage(
         this.SUPPORT_UID,
         this.SUPPORT_NAME,
         { subject, body },
       );
 
-      /* ✅ Confirmation locale */
       this.confirmation.set(
         `Session « ${this.formule().label} » demandée le ${dateFormatted}, créneau ${this.creneau()} — ${this.prixAffiche()}. Le support a été notifié.`,
       );
 
-      /* ✅ Incrément du "panier" pour feedback visuel */
       this.cartCount.update((n) => n + 1);
-
-      /* ✅ Reset du champ contact après succès */
       this.contact.set('');
     } catch (error) {
       console.error('[Studio] Erreur envoi réservation :', error);

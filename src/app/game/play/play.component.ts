@@ -17,10 +17,11 @@ import {
 import { GameItem } from '../models/play.model';
 import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
 import { PromoCodeService } from '../../shared/services/promo-code.service';
+import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
 
 @Component({
   selector: 'app-play',
-  imports: [PromoModalComponent],
+  imports: [PromoModalComponent,ImmersiveCarouselComponent],
   templateUrl: './play.component.html',
   styleUrls: ['./play.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

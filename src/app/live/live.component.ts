@@ -12,6 +12,7 @@ import {
 
 import { LiveCard, LiveVideo } from './models/live.model';
 import { LIVE_CARDS, LIVE_VIDEO } from './data/live.data';
+import { ImmersiveCarouselComponent } from '../shared/immersive-carousel/immersive-carousel.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    LIVE — Hub des lives Charly Guitare
@@ -19,6 +20,7 @@ import { LIVE_CARDS, LIVE_VIDEO } from './data/live.data';
 
 @Component({
   selector: 'app-live',
+  imports:[ImmersiveCarouselComponent],
   templateUrl: './live.component.html',
   styleUrls: ['./live.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -9,7 +9,7 @@ import { AuthGuard } from '../../guards/auth/auth.guard';
    VIE D'OFFOLAND ROUTES
    ─────────────────────────────────────────────────────────────────────
    - Parent : VieComponent (avec <router-outlet>)
-   - Enfants : BCO, Finance (lazy-loadés)
+   - Enfants : BCO, Finance, Charte (lazy-loadés)
    - Page par défaut : /offoland/vie → vie-home
    ═════════════════════════════════════════════════════════════════════ */
 
@@ -45,6 +45,25 @@ export const vieRoutes: Routes = [
             (m) => m.FinanceComponent,
           ),
         title: 'Finance — Offoland',
+      },
+
+      {
+        path: 'innovation',
+        loadComponent: () =>
+          import('./innovation/innovation.component').then(
+            (m) => m.InnovationComponent,
+          ),
+        title: 'C.R.I.O. — Centre de Recherche d\'Offoland',
+      },
+
+      /* ─── Charte d'Offoland ─── */
+      {
+        path: 'charte',
+        loadComponent: () =>
+          import('../vie/charte-offoland/charte-offoland.component').then(
+            (m) => m.CharteOffolandComponent,
+          ),
+        title: 'La Charte d\'Offoland',
       },
     ],
   },

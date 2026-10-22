@@ -1,0 +1,73 @@
+<!-- src/app/shared/immersive-carousel/immersive-carousel.component.html -->
+
+<div class="carousel-wrapper" (mouseenter)="stopAutoRotation()" (mouseleave)="resetAutoRotation()">
+  
+  @if (filteredCards().length === 0) {
+    <div class="carousel-empty">
+      <p>Aucune autre destination à explorer pour le moment.</p>
+    </div>
+  }
+
+  @if (filteredCards().length > 1) {
+    <button class="nav-btn nav-prev" (click)="prev()" aria-label="Carte précédente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </button>
+  }
+
+  <div class="carousel-track" [style.transform]="'translateX(-' + (activeIndex() * 100) + '%)'">
+    @for (card of filteredCards(); track card.id; let i = $index) {
+      <div class="carousel-slide" [class.is-active]="i === activeIndex()">
+        <a [routerLink]="card.route" class="slide-card" [attr.aria-label]="'Découvrir ' + card.title">
+          
+          <div class="slide-image-wrapper">
+            <img [src]="card.imageUrl" [alt]="card.title" loading="lazy" class="slide-image" />
+            <div class="slide-overlay" aria-hidden="true"></div>
+            
+            @if (card.tag) {
+              <span class="slide-tag" [class.tag-gold]="card.tagColor === 'gold'" [class.tag-live]="card.tagColor === 'live'">
+                @if (card.tagColor === 'live') { <span class="live-dot"></span> }
+                {{ card.tag }}
+              </span>
+            }
+          </div>
+
+          <div class="slide-content">
+            <h3 class="slide-title">{{ card.title }}</h3>
+            <!-- La description sera masquée sur mobile via le CSS -->
+            <p class="slide-desc">{{ card.description }}</p>
+            <span class="slide-link">
+              Explorer
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </span>
+          </div>
+        </a>
+      </div>
+    }
+  </div>
+
+  @if (filteredCards().length > 1) {
+    <button class="nav-btn nav-next" (click)="next()" aria-label="Carte suivante">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+    </button>
+  }
+
+  @if (filteredCards().length > 1) {
+    <div class="carousel-dots">
+      @for (card of filteredCards(); track card.id; let i = $index) {
+        <button 
+          class="dot" 
+          [class.active]="i === activeIndex()" 
+          (click)="goTo(i)"
+          [attr.aria-label]="'Aller à la carte ' + (i + 1)"
+        ></button>
+      }
+    </div>
+  }
+</div>

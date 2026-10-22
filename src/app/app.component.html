@@ -1,5 +1,5 @@
 <!-- ═══════════════════════════════════════════════════════
-     EN-TÊTE DE NAVIGATION
+     EN-TÊTE DE NAVIGATION (Desktop)
      ═══════════════════════════════════════════════════════ -->
 <header class="navbar" [class.scrolled]="isScrolled()">
   <div class="navbar-container">
@@ -10,59 +10,42 @@
       <span class="logo-icon" aria-hidden="true">🎸</span>
     </a>
 
-    <!-- 2. Centre : Liens -->
+    <!-- 2. Centre : Liens (Desktop) -->
     <nav class="nav-links" [class.open]="isMobileMenuOpen()" aria-label="Navigation principale">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
-        (click)="closeMobileMenu()">
-        Accueil
-      </a>
-
-      <a routerLink="/game/play" routerLinkActive="active" (click)="closeMobileMenu()">
-        Jeux
-      </a>
-
-      <a routerLink="/live" routerLinkActive="active" (click)="closeMobileMenu()">
-        <span class="live-dot" aria-hidden="true"></span>
-        Live
-      </a>
-
-      <a routerLink="/studio" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link">
-        <span>Studio</span> 
-      </a>
-
-      <a routerLink="/academie" routerLinkActive="active" (click)="closeMobileMenu()">
-        Académie
-      </a>
-
-      <a routerLink="/store" routerLinkActive="active" (click)="closeMobileMenu()">
-        Boutique
-      </a>
-
-      <a routerLink="/offoland" routerLinkActive="active" (click)="closeMobileMenu()">
-        Offoland
-      </a>
-
-      @if (!user()) {
-      <div class="mobile-auth">
-        <a routerLink="/login" class="btn-login-mobile" (click)="closeMobileMenu()">
-          Connexion
-        </a>
+      
+      <!-- Ces liens sont visibles sur desktop, mais cachés sur mobile car gérés par la Bottom Nav -->
+      <div class="desktop-only-links">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Accueil</a>
+        <a routerLink="/game/play" routerLinkActive="active" (click)="closeMobileMenu()">Jeux</a>
+        <a routerLink="/live" routerLinkActive="active" (click)="closeMobileMenu()"><span class="live-dot" aria-hidden="true"></span>Live</a>
+        <a routerLink="/studio" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link"><span>Studio</span></a>
+        <a routerLink="/academie" routerLinkActive="active" (click)="closeMobileMenu()">Académie</a>
+        <a routerLink="/store" routerLinkActive="active" (click)="closeMobileMenu()">Boutique</a>
+        <a routerLink="/offoland" routerLinkActive="active" (click)="closeMobileMenu()">Offoland</a>
       </div>
-      }
+
+      <!-- Liens du menu Burger (Mobile uniquement) -->
+      <div class="mobile-only-links">
+        <a routerLink="/offoland" routerLinkActive="active" (click)="closeMobileMenu()">Offoland</a>
+        <a routerLink="/studio" routerLinkActive="active" (click)="closeMobileMenu()">Studio</a>
+        
+        @if (!user()) {
+          <div class="mobile-auth">
+            <a routerLink="/login" class="btn-login-mobile" (click)="closeMobileMenu()">Connexion</a>
+          </div>
+        }
+      </div>
     </nav>
 
     <!-- 3. Droite : Auth & actions -->
     <div class="header-actions">
 
       @if (user(); as currentUser) {
-
       <!-- Cloche notification -->
       <a routerLink="/inbox" class="notification-bell-btn" title="Voir mes messages" aria-label="Voir mes messages">
         <mat-icon aria-hidden="true">notifications</mat-icon>
         @if (unreadCount() > 0) {
-        <span class="bell-badge" aria-label="messages non lus">
-          {{ unreadCount() > 99 ? '99+' : unreadCount() }}
-        </span>
+        <span class="bell-badge" aria-label="messages non lus">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span>
         }
       </a>
 
@@ -81,56 +64,72 @@
       </button>
 
       <mat-menu #userMenu="matMenu" xPosition="before" class="custom-user-menu">
+        <!-- ... Ton menu utilisateur actuel ... -->
         <div class="menu-header">
           <div class="menu-avatar">
-            @if (currentUser.photoURL) {
-            <img [src]="currentUser.photoURL" [alt]="currentUser.displayName || 'Utilisateur'" />
-            } @else {
-            <span>{{ getInitials(currentUser.displayName) }}</span>
-            }
+            @if (currentUser.photoURL) { <img [src]="currentUser.photoURL" /> } @else { <span>{{ getInitials(currentUser.displayName) }}</span> }
           </div>
-          <div class="user-details">
-            <p class="menu-user-name">{{ currentUser.displayName || 'Offolandais' }}</p>
-          </div>
+          <div class="user-details"><p class="menu-user-name">{{ currentUser.displayName || 'Offolandais' }}</p></div>
         </div>
-
         <mat-divider></mat-divider>
-
-        <button mat-menu-item routerLink="/inbox">
-          <mat-icon aria-hidden="true">mail_outline</mat-icon>
-          <span>Mes Messages</span>
-        </button>
-
-        <button mat-menu-item routerLink="/profil">
-          <mat-icon aria-hidden="true">person_outline</mat-icon>
-          <span>Mon Profil</span>
-        </button>
-
+        <button mat-menu-item routerLink="/inbox"><mat-icon>mail_outline</mat-icon><span>Mes Messages</span></button>
+        <button mat-menu-item routerLink="/profil"><mat-icon>person_outline</mat-icon><span>Mon Profil</span></button>
         <mat-divider></mat-divider>
-
-        <button mat-menu-item (click)="onLogout()" class="logout-item">
-          <mat-icon aria-hidden="true">logout</mat-icon>
-          <span>Déconnexion</span>
-        </button>
+        <button mat-menu-item (click)="onLogout()" class="logout-item"><mat-icon>logout</mat-icon><span>Déconnexion</span></button>
       </mat-menu>
 
       } @else {
-      <a routerLink="/login" class="btn-login-desktop">Connexion</a>
+        <a routerLink="/login" class="btn-login-desktop">Connexion</a>
       }
 
-      <!-- Burger mobile -->
+      <!-- Burger mobile (ne contient plus que les liens secondaires) -->
       <button class="burger-btn" type="button" (click)="toggleMobileMenu()" [class.is-active]="isMobileMenuOpen()"
-        [attr.aria-expanded]="isMobileMenuOpen()" aria-label="Menu Mobile">
+        [attr.aria-expanded]="isMobileMenuOpen()" aria-label="Menu secondaire">
         <span></span>
         <span></span>
         <span></span>
       </button>
     </div>
-
   </div>
 </header>
 
+<!-- ═══════════════════════════════════════════════════════
+     CONTENU PRINCIPAL
+     ═══════════════════════════════════════════════════════ -->
 <main class="main-content">
   <app-install-prompt />
   <router-outlet></router-outlet>
 </main>
+
+<!-- ═══════════════════════════════════════════════════════
+     ✅ NOUVELLE BOTTOM NAVIGATION (Mobile Uniquement)
+     ═══════════════════════════════════════════════════════ -->
+<nav class="bottom-nav" aria-label="Navigation mobile">
+  <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="bottom-nav-item">
+    <mat-icon>home</mat-icon>
+    <span>Accueil</span>
+  </a>
+  
+  <a routerLink="/academie" routerLinkActive="active" class="bottom-nav-item">
+    <mat-icon>school</mat-icon>
+    <span>Académie</span>
+  </a>
+
+  <!-- Bouton central "Jouer" mis en avant -->
+  <a routerLink="/game/play" routerLinkActive="active" class="bottom-nav-item play-btn">
+    <div class="play-icon-wrapper">
+      <mat-icon>sports_esports</mat-icon>
+    </div>
+    <span>Jouer</span>
+  </a>
+
+  <a routerLink="/store" routerLinkActive="active" class="bottom-nav-item">
+    <mat-icon>storefront</mat-icon>
+    <span>Boutique</span>
+  </a>
+
+  <a routerLink="/live" routerLinkActive="active" class="bottom-nav-item">
+    <mat-icon>live_tv</mat-icon>
+    <span>Live</span>
+  </a>
+</nav>

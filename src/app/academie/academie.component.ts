@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { Formation, LiveCard } from './models/academie.model';
 import { FORMATIONS, LIVE_CARDS } from './data/academie.data';
 import { OffresComponent } from './offres/offres.component';
+import { ImmersiveCarouselComponent } from '../shared/immersive-carousel/immersive-carousel.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    ACADEMIE — Offolomou Ecosysteme Academie
@@ -16,6 +17,7 @@ import { OffresComponent } from './offres/offres.component';
   imports: [
     RouterLink,
     OffresComponent,
+    ImmersiveCarouselComponent,
   ],
   templateUrl: './academie.component.html',
   styleUrls: ['./academie.component.scss'],

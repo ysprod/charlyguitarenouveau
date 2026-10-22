@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ImmersiveCarouselComponent } from '../shared/immersive-carousel/immersive-carousel.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    OFFOLAND — Portail d'entrée du royaume
@@ -13,7 +14,7 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-offoland',
-  imports: [RouterLink],
+  imports: [RouterLink,ImmersiveCarouselComponent],
   templateUrl: './offoland.component.html',
   styleUrls: ['./offoland.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

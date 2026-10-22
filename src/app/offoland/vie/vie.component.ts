@@ -39,8 +39,10 @@ const HUB_INFO: VieSectionInfo = {
 };
 
 const VIE_INFO_MAP: Record<string, VieSectionInfo> = {
-  bco:     { segment: 'bco',     label: 'BCO',     icon: '🏦' },
-  finance: { segment: 'finance', label: 'Finance', icon: '💰' },
+  bco:     { segment: 'bco',     label: 'BCO',           icon: '🏦' },
+  finance: { segment: 'finance', label: 'Finance',       icon: '💰' },
+  charte:  { segment: 'charte',  label: 'La Charte',     icon: '📜' },
+  innovation: { segment: 'innovation', label: 'C.R.I.O.', icon: '⚙️' },
 };
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -99,7 +101,7 @@ export class VieComponent {
      ═══════════════════════════════════════════════════════ */
 
   /**
-   * ✅ Le bouton retour n'apparaît que sur les sous-pages (bco, finance).
+   * ✅ Le bouton retour n'apparaît que sur les sous-pages (bco, finance, charte).
    *    Sur la page hub (/offoland/vie), il est masqué.
    */
   readonly showBackButton = computed(() => this.activeSegment() !== null);

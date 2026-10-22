@@ -18,7 +18,7 @@ export const environment = {
     measurementId: "G-4L50T9ZMWJ"
   },
   youtube: {
-    apiKey: 'AIzaSyD19kbfxLHG365zkPZ7av8AxMcE4RttQj8-iZ1YGHPg_yU2X2SoCwtFAZI', // ⚠️ ta clé (à révoquer/remplacer !)
-    playlistId: 'PLY4Ohx8IPP3KVikGEK3QHkNL8zYUVfqoO' // 👉 remplace par l'ID de TA playlist
+    apiKey: 'AIzaSyD19kbfxLHG365zkPZ7av8AxMcE4RttQj8-iZ1YGHPg_yU2X2SoCwtFAZI',
+    playlistId: 'PLY4Ohx8IPP3KVikGEK3QHkNL8zYUVfqoO'
   }
 };

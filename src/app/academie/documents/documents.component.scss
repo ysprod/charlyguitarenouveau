@@ -570,6 +570,17 @@
   border-top: 1px solid var(--border-subtle);
 }
 
+/* ─── Actions produit (Obtenir + Podcast) ─── */
+.product-actions {
+  display: flex;
+  gap: .6rem;
+  align-items: stretch;
+
+  .btn-buy {
+    flex: 1;
+  }
+}
+
 /* 🔵 Bouton Acheter — bleu (action principale) */
 .btn-buy {
   display: flex;
@@ -617,6 +628,45 @@
       background: var(--success);
       color: #fff;
     }
+  }
+}
+
+/* 🎧 Bouton Podcast — identité dorée */
+.btn-podcast {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .85rem 1rem;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  background: var(--gold-soft);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--t-fast);
+
+  .btn-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: #fff;
+    background: var(--gold-primary);
+    border-color: var(--gold-primary);
+    box-shadow: 0 4px 14px var(--gold-glow);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 420px) {
+    span { display: none; } /* icône seule sur très petits écrans */
   }
 }
 

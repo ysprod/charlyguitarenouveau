@@ -1,0 +1,205 @@
+<!-- src/app/charte/charte-offoland.component.html -->
+
+<main class="charter-page">
+
+  <!-- ═══════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════ -->
+  <header class="hero" [id]="SECTION_IDS.HERO">
+    <div class="hero-pattern" aria-hidden="true"></div>
+
+
+
+    <div class="hero-content">
+      <div class="hero-emblem" aria-hidden="true">
+        <span>◉</span>
+        <i></i>
+        <i></i>
+        <i></i>
+      </div>
+
+      <h1>
+        {{ HERO.title }}<br />
+        <span>{{ HERO.titleAccent }}</span>
+      </h1>
+
+      <div class="gold-line"></div>
+
+      <p class="hero-motto">{{ HERO.motto }}</p>
+      <p class="hero-description">{{ HERO.description }}</p>
+
+
+    </div>
+
+    <div class="hero-footer">
+      @for (tag of HERO.footerTags; track tag; let last = $last) {
+      <span>{{ tag }}</span>
+      @if (!last) {
+      <span class="footer-separator">{{ HERO.footerSeparator }}</span>
+      }
+      }
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       NAVIGATION INTERNE
+       ═══════════════════════════════════════════════════════ -->
+  <nav class="section-nav" aria-label="Sommaire de la Charte">
+    @for (item of navigation; track item.id) {
+    <a (click)="scrollTo(item.id, $event)" role="button" tabindex="0" (keydown.enter)="scrollTo(item.id, $event)">
+      {{ item.label }}
+    </a>
+    }
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════
+       PRÉAMBULE
+       ═══════════════════════════════════════════════════════ -->
+  <section class="intro section-shell" [id]="SECTION_IDS.PREAMBULE">
+    <p class="eyebrow">{{ PREAMBULE.eyebrow }}</p>
+    <h2>
+      {{ PREAMBULE.title }} <span>{{ PREAMBULE.titleAccent }}</span>
+    </h2>
+
+    <div class="intro-copy">
+      @for (p of PREAMBULE.paragraphs; track p) {
+      <p>{{ p }}</p>
+      }
+    </div>
+
+    <blockquote class="featured-quote">
+      <span class="quote-mark" aria-hidden="true">“</span>
+      <p>{{ PREAMBULE.quote.text }}</p>
+      <cite>{{ PREAMBULE.quote.cite }}</cite>
+    </blockquote>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       PRINCIPES
+       ═══════════════════════════════════════════════════════ -->
+  <section class="principles-section" [id]="SECTION_IDS.PRINCIPES">
+    <div class="section-shell">
+      <p class="eyebrow">{{ PRINCIPES.eyebrow }}</p>
+      <h2>
+        {{ PRINCIPES.title }} <span>{{ PRINCIPES.titleAccent }}</span>
+      </h2>
+      <p class="section-lead">{{ PRINCIPES.lead }}</p>
+
+      <div class="principle-grid">
+        @for (principle of principles; track principle.number) {
+        <app-principle-card [principle]="principle" />
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ARTICLES
+       ═══════════════════════════════════════════════════════ -->
+  <section class="articles-section section-shell" [id]="SECTION_IDS.ARTICLES">
+    <p class="eyebrow">{{ ARTICLES_SECTION.eyebrow }}</p>
+    <h2>
+      {{ ARTICLES_SECTION.title }} <span>{{ ARTICLES_SECTION.titleAccent }}</span>
+    </h2>
+    <p class="section-lead">{{ ARTICLES_SECTION.lead }}</p>
+
+    <div class="article-grid">
+      @for (article of articles; track article.number) {
+      <app-article-card [article]="article" />
+      }
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       DIMENSIONS
+       ═══════════════════════════════════════════════════════ -->
+  <section class="dimensions-section" [id]="SECTION_IDS.DIMENSIONS">
+    <div class="section-shell">
+      <p class="eyebrow">{{ DIMENSIONS_SECTION.eyebrow }}</p>
+      <h2>
+        {{ DIMENSIONS_SECTION.title }} <span>{{ DIMENSIONS_SECTION.titleAccent }}</span>
+      </h2>
+      <p class="section-lead">{{ DIMENSIONS_SECTION.lead }}</p>
+
+      <div class="dimension-grid">
+        @for (dimension of dimensions; track dimension.name) {
+        <app-dimension-card [dimension]="dimension" />
+        }
+
+        <app-dimension-card [dimension]="{
+            note: DIMENSIONS_SECTION.pending.note,
+            name: DIMENSIONS_SECTION.pending.name,
+            principle: DIMENSIONS_SECTION.pending.principle,
+            color: DIMENSIONS_SECTION.pending.color
+          }" [pending]="true" />
+      </div>
+
+      <p class="dimension-note-text">{{ DIMENSIONS_SECTION.footnote }}</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       GARDIENS
+       ═══════════════════════════════════════════════════════ -->
+  <section class="guardians-section section-shell" [id]="SECTION_IDS.GARDIENS">
+    <p class="eyebrow">{{ GARDIENS.eyebrow }}</p>
+    <h2>
+      {{ GARDIENS.title }} <span>{{ GARDIENS.titleAccent }}</span>
+    </h2>
+
+    <p class="section-lead">{{ GARDIENS.lead }}</p>
+
+    <ul class="guardian-list">
+      @for (duty of guardianDuties; track duty) {
+      <li>
+        <span class="check-symbol" aria-hidden="true">✦</span>
+        <span>{{ duty }}</span>
+      </li>
+      }
+    </ul>
+
+    <blockquote class="guardian-quote">{{ GARDIENS.quote }}</blockquote>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SERMENT
+       ═══════════════════════════════════════════════════════ -->
+  <section class="oath-section" [id]="SECTION_IDS.SERMENT">
+    <div class="oath-inner">
+      <p class="eyebrow">{{ SERMENT.eyebrow }}</p>
+      <div class="oath-emblem" aria-hidden="true">◉</div>
+      <h2>
+        {{ SERMENT.title }} <span>{{ SERMENT.titleAccent }}</span>
+      </h2>
+
+      <div class="oath-text">
+        @for (paragraph of oathParagraphs; track paragraph) {
+        <p>{{ paragraph }}</p>
+        }
+      </div>
+
+      <div class="gold-line"></div>
+
+      <p class="oath-final">{{ SERMENT.final }}</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════ -->
+  <footer class="charter-footer">
+    <a class="brand footer-brand" (click)="scrollTo(SECTION_IDS.HERO, $event)" role="button" tabindex="0"
+      (keydown.enter)="scrollTo(SECTION_IDS.HERO, $event)">
+      <span class="brand-mark" aria-hidden="true">◉</span>
+      <span>{{ FOOTER.brand }}</span>
+    </a>
+
+    <p class="footer-motto">{{ FOOTER.motto }}</p>
+    <p class="footer-note">{{ FOOTER.note }}</p>
+
+    <a class="back-to-top" (click)="scrollTo(SECTION_IDS.HERO, $event)" role="button" tabindex="0"
+      (keydown.enter)="scrollTo(SECTION_IDS.HERO, $event)">
+      {{ FOOTER.backToTop }}
+    </a>
+  </footer>
+</main>

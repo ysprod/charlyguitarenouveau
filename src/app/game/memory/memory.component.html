@@ -3,19 +3,129 @@
 <div class="molkky-container">
 
   <!-- ═══════════════════════════════════════════════════════
-       BANNIÈRE DIFFICULTÉ
+       BANNIÈRE DIFFICULTÉ (visible uniquement en jeu)
        ═══════════════════════════════════════════════════════ -->
-  <div class="difficulty-banner" [style.--diff-color]="currentDifficulty().couleur">
-    <span class="diff-name">
-      <span class="diff-icon">{{ currentDifficulty().icone }}</span>
-      NIVEAU {{ currentDifficulty().nom }}
-    </span>
-    <span class="diff-sep">•</span>
-    <span class="diff-desc">{{ currentDifficulty().description }}</span>
-  </div>
+  @if (isPlaying()) {
+    <div class="difficulty-banner" [style.--diff-color]="currentDifficulty().couleur">
+      <span class="diff-name">
+        <span class="diff-icon">{{ currentDifficulty().icone }}</span>
+        NIVEAU {{ currentDifficulty().nom }}
+      </span>
+      <span class="diff-sep">•</span>
+      <span class="diff-desc">{{ currentDifficulty().description }}</span>
+    </div>
+  }
 
   <!-- ═══════════════════════════════════════════════════════
-       HUD
+       ÉCRAN D'ACCUEIL (inline, sans modale)
+       ═══════════════════════════════════════════════════════ -->
+  @if (!isPlaying() && !isGameOver() && !isVictory()) {
+    <div class="screen-start">
+
+      <div class="hero-badge" aria-hidden="true">🪵</div>
+      <h1 class="screen-title">L'ESSENTIEL</h1>
+      <p class="screen-subtitle">Méthode Charly Guitare</p>
+
+      <p class="screen-description">
+        Atteins <strong>exactement 50 points</strong> pour gagner.
+        Attention : si tu dépasses, tu redescends à 25 points !
+      </p>
+
+      <div class="difficulty-selector">
+        <span class="selector-label">🎚️ CHOISIS TA DIFFICULTÉ</span>
+        <div class="difficulty-buttons">
+          @for (d of difficulties; track d.id) {
+            <button class="diff-btn"
+                    [class.active]="difficulty() === d.id"
+                    [style.--diff-color]="d.couleur"
+                    (click)="setDifficulty(d.id)"
+                    type="button">
+              <span class="diff-btn-icon">{{ d.icone }}</span>
+              <span class="diff-btn-name">{{ d.nom }}</span>
+              <span class="diff-btn-desc">{{ d.description }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="screen-actions">
+        <button class="btn-start" (click)="startGame()" type="button">
+          <span class="material-icons">play_arrow</span>
+          LANCER LA PARTIE
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       ÉCRAN GAME OVER / VICTOIRE (inline, sans modale)
+       ═══════════════════════════════════════════════════════ -->
+  @if (!isPlaying() && (isGameOver() || isVictory())) {
+    <div class="screen-gameover">
+
+      <div class="go-header">
+        <span class="go-icon" aria-hidden="true">{{ isVictory() ? '🏆' : '💥' }}</span>
+        <h2 class="go-title">
+          {{ isVictory() ? 'VICTOIRE ÉPIQUE !' : 'PARTIE TERMINÉE' }}
+        </h2>
+      </div>
+
+      <p class="go-description">
+        @if (isVictory()) {
+          Bravo ! Tu as atteint exactement 50 points !
+        } @else if (strikes() >= strikeLimit()) {
+          Tu as accumulé trop de fautes.
+        } @else {
+          Plus de quilles disponibles.
+        }
+      </p>
+
+      <div class="final-stats">
+        <div class="final-stat">
+          <span class="stat-label">Score Final</span>
+          <span class="stat-value">{{ score() }} PTS</span>
+        </div>
+        <div class="final-stat">
+          <span class="stat-label">Manches jouées</span>
+          <span class="stat-value-small">{{ roundNumber() }}</span>
+        </div>
+        <div class="final-stat">
+          <span class="stat-label">Combo max</span>
+          <span class="stat-value-small">{{ perfectRounds() }} 🔥</span>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════
+           CHANGEMENT DE DIFFICULTÉ À LA FIN DU JEU
+           ═══════════════════════════════════════════════════ -->
+      <div class="difficulty-selector difficulty-selector--end">
+        <span class="selector-label">🎚️ CHANGER DE DIFFICULTÉ</span>
+        <div class="difficulty-buttons">
+          @for (d of difficulties; track d.id) {
+            <button class="diff-btn"
+                    [class.active]="difficulty() === d.id"
+                    [style.--diff-color]="d.couleur"
+                    (click)="setDifficulty(d.id)"
+                    type="button">
+              <span class="diff-btn-icon">{{ d.icone }}</span>
+              <span class="diff-btn-name">{{ d.nom }}</span>
+              <span class="diff-btn-desc">{{ d.description }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="go-actions">
+        <button class="btn-start" (click)="startGame()" type="button">
+          <span class="material-icons">refresh</span>
+          REJOUER
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════
+       HUD (uniquement pendant la partie)
        ═══════════════════════════════════════════════════════ -->
   @if (isPlaying()) {
     <header class="game-hud">
@@ -27,7 +137,7 @@
 
       @if (targetChord(); as target) {
         <div class="target-card">
-          <span class="sub-text">🎯 VISER L'ACCORD :</span>
+          <span class="sub-text">🎯 VISER L'ACCORD</span>
           <h2 class="target-name">{{ target.name }}</h2>
           <span class="target-fullname">{{ target.fullName }}</span>
         </div>
@@ -60,7 +170,7 @@
   }
 
   <!-- ═══════════════════════════════════════════════════════
-       FEEDBACK — affiché UNIQUEMENT pendant la partie
+       FEEDBACK (uniquement pendant la partie)
        ═══════════════════════════════════════════════════════ -->
   @if (isPlaying() && feedbackMessage()) {
     <div class="feedback-overlay" role="status" aria-live="polite">
@@ -73,7 +183,7 @@
   }
 
   <!-- ═══════════════════════════════════════════════════════
-       PARTICULES — affichées UNIQUEMENT pendant la partie
+       PARTICULES (uniquement pendant la partie)
        ═══════════════════════════════════════════════════════ -->
   @if (isPlaying() && particlesView().length > 0) {
     <div class="particles-overlay" aria-hidden="true">
@@ -128,97 +238,4 @@
     </div>
   }
 
-  <!-- ═══════════════════════════════════════════════════════
-       MODALES — affichées UNIQUEMENT hors partie
-       ═══════════════════════════════════════════════════════ -->
-  @if (!isPlaying()) {
-    <div class="overlay-screen">
-
-      <!-- Écran d'accueil -->
-      @if (!isGameOver() && !isVictory()) {
-        <div class="card-modal">
-          <div class="modal-icon">🪵</div>
-          <h1>L'ESSENTIEL</h1>
-          <p class="modal-subtitle">Méthode Charly Guitare</p>
-
-          <p class="modal-description">
-            Atteins <strong>exactement 50 points</strong> pour gagner.
-            Attention : si tu dépasses, tu redescends à 25 points !
-          </p>
-
-          <div class="difficulty-selector">
-            <span class="selector-label">🎚️ CHOISIS TA DIFFICULTÉ :</span>
-            <div class="difficulty-buttons">
-              @for (d of difficulties; track d.id) {
-                <button class="diff-btn"
-                        [class.active]="difficulty() === d.id"
-                        [style.--diff-color]="d.couleur"
-                        (click)="setDifficulty(d.id)"
-                        type="button">
-                  <span class="diff-btn-icon">{{ d.icone }}</span>
-                  <span class="diff-btn-name">{{ d.nom }}</span>
-                  <span class="diff-btn-desc">{{ d.description }}</span>
-                </button>
-              }
-            </div>
-          </div>
-
-          <div class="modal-actions-horizontal">
-            <button class="btn-secondary" (click)="goToPlay()" type="button">
-              <span class="material-icons">arrow_back</span>
-              RETOUR
-            </button>
-            <button class="btn-start" (click)="startGame()" type="button">
-              <span class="material-icons">play_arrow</span>
-              LANCER LA PARTIE
-            </button>
-          </div>
-        </div>
-      }
-
-      <!-- Fin de partie -->
-      @if (isGameOver() || isVictory()) {
-        <div class="card-modal">
-          <div class="modal-icon">{{ isVictory() ? '🏆' : '💥' }}</div>
-          <h2>{{ isVictory() ? 'VICTOIRE ÉPIQUE !' : 'PARTIE TERMINÉE' }}</h2>
-
-          <p class="modal-description">
-            @if (isVictory()) {
-              Bravo ! Tu as atteint exactement 50 points !
-            } @else if (strikes() >= strikeLimit()) {
-              Tu as accumulé trop de fautes.
-            } @else {
-              Plus de quilles disponibles.
-            }
-          </p>
-
-          <div class="final-stats">
-            <div class="final-stat">
-              <span class="stat-label">Score Final</span>
-              <span class="stat-value">{{ score() }} PTS</span>
-            </div>
-            <div class="final-stat">
-              <span class="stat-label">Manches jouées</span>
-              <span class="stat-value-small">{{ roundNumber() }}</span>
-            </div>
-            <div class="final-stat">
-              <span class="stat-label">Combo max</span>
-              <span class="stat-value-small">{{ perfectRounds() }} 🔥</span>
-            </div>
-          </div>
-
-          <div class="modal-actions">
-            <button class="btn-start" (click)="startGame()" type="button">
-              <span class="material-icons">refresh</span>
-              REJOUER
-            </button>
-            <button class="btn-secondary" (click)="goToPlay()" type="button">
-              <span class="material-icons">arrow_back</span>
-              RETOUR AU MENU
-            </button>
-          </div>
-        </div>
-      }
-    </div>
-  }
 </div>

@@ -2,9 +2,15 @@
 
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
-import { Auth, user } from '@angular/fire/auth';
+import { Auth, user, User } from '@angular/fire/auth';
 import { Observable, of } from 'rxjs';
-import { catchError, filter, map, take } from 'rxjs/operators';
+import {
+  catchError,
+  distinctUntilChanged,
+  filter,
+  map,
+  take,
+} from 'rxjs/operators';
 
 import { getSafeReturnUrl } from 'src/app/home/utils/url.utils';
 import {
@@ -13,42 +19,50 @@ import {
 } from 'src/app/home/constants/auth.constants';
 
 /**
- * Guard d'authentification optimisé pour Angular 21.
+ * Guard d'authentification optimisé.
  *
- * Comportement :
- * - Attend que Firebase ait fini de restaurer la session via `user(auth)`.
- * - Filtre l'état indéfini (`undefined`) pour éviter les faux négatifs au rafraîchissement.
- * - Redirige vers `/login?returnUrl=...` si non connecté (avec URL sécurisée).
- * - Gère proprement les erreurs Firebase de manière réactive.
+ * Optimisations apportées :
+ *  - `redirectToLogin()` extrait et réutilisé (map + catchError)
+ *  - `distinctUntilChanged()` sur `uid` → évite les émissions redondantes
+ *    (ex : refresh de token Firebase avec le même utilisateur)
+ *  - `take(1)` placé APRÈS `filter` → garantit la 1ʳᵉ valeur *stable*
+ *  - Log d'erreur structuré (code + message) plus lisible dans la console
+ *  - Typage strict `unknown` pour l'erreur (compatible `strict: true`)
+ *  - Pipeline commenté et lisible
  */
-export const AuthGuard: CanActivateFn = (_route, state): Observable<boolean | UrlTree> => {
+export const AuthGuard: CanActivateFn = (
+  _route,
+  state,
+): Observable<boolean | UrlTree> => {
   const auth = inject(Auth);
   const router = inject(Router);
 
-  const redirectToLogin = (): UrlTree => {
-    const safeReturnUrl = getSafeReturnUrl(state.url);
-    return router.createUrlTree([AUTH_ROUTES.LOGIN], {
-      queryParams: { [RETURN_URL_PARAM]: safeReturnUrl },
+  /** Construit l'URL de login avec le returnUrl sécurisé. */
+  const redirectToLogin = (): UrlTree =>
+    router.createUrlTree([AUTH_ROUTES.LOGIN], {
+      queryParams: { [RETURN_URL_PARAM]: getSafeReturnUrl(state.url) },
     });
-  };
 
   return user(auth).pipe(
-    // Ignore l'état initial où Firebase n'a pas encore restauré la session
-    filter((u): u is NonNullable<typeof u> | null => u !== undefined),
-    
-    // Prend uniquement la première valeur résolue
+    // 1️⃣ Ignore l'état initial `undefined` de Firebase (chargement de session)
+    filter((u): u is User | null => u !== undefined),
+
+    // 2️⃣ Évite les émissions redondantes (ex : refresh de token identique)
+    distinctUntilChanged((prev, curr) => prev?.uid === curr?.uid),
+
+    // 3️⃣ On ne garde que la 1ʳᵉ valeur stable → désinscription auto
     take(1),
-    
-    // Si l'utilisateur existe (User object), on autorise (true), sinon on redirige vers le login
+
+    // 4️⃣ Autorise si connecté, sinon redirige
     map((currentUser) => (currentUser ? true : redirectToLogin())),
-    
-    // Sécurité en cas d'erreur de flux Firebase
-    catchError((error) => {
-      console.warn(
-        '[AuthGuard] Erreur d\'authentification Firebase :',
-        error?.code ?? error,
-        error?.message ?? ''
-      );
+
+    // 5️⃣ Capture d'erreur centralisée + log enrichi
+    catchError((error: unknown) => {
+      const e = error as { code?: string; message?: string };
+      console.warn('[AuthGuard] Erreur Firebase :', {
+        code: e?.code ?? 'unknown',
+        message: e?.message ?? String(error),
+      });
       return of(redirectToLogin());
     }),
   );
