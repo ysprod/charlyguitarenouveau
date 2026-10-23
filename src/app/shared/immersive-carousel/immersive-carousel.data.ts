@@ -73,5 +73,14 @@ export const DEFAULT_IMMERSIVE_CARDS: readonly ImmersiveCard[] = [
     route: '/store',
     tag: 'store',
     tagColor: 'live'
+  },
+  {
+    id: 'accueil',
+    title: 'Page Accueil',
+    description: 'Site officiel de Charly Guitare',
+    imageUrl: 'assets/charly-guitare-hero.jpg',
+    route: '/amanda',
+    tag: 'accueil',
+    tagColor: 'live'
   }
 ];

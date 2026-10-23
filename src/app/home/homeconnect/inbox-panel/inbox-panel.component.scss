@@ -55,7 +55,7 @@
 .inbox-section {
   display: flex;
   flex-direction: column;
-  margin: 3rem 0 5rem;
+  margin: 1rem 0 1rem;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -138,8 +138,13 @@
     background var(--t-fast);
   white-space: nowrap;
 
-  &:hover { transform: translateY(-1px); }
-  &:active { transform: translateY(0); }
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 
   &:focus-visible {
     outline: 3px solid rgba(37, 99, 235, 0.45);
@@ -151,7 +156,9 @@
     color: #fff;
     border: 1px solid var(--primary-hover);
 
-    &:hover { background: var(--primary-hover); }
+    &:hover {
+      background: var(--primary-hover);
+    }
   }
 
   &.inbox-btn-orange {
@@ -159,7 +166,9 @@
     color: #fff;
     border: 1px solid var(--orange-hover);
 
-    &:hover { background: var(--orange-hover); }
+    &:hover {
+      background: var(--orange-hover);
+    }
   }
 }
 
@@ -241,7 +250,10 @@
   transition: background var(--t-fast);
   outline: none;
 
-  &:hover { background: var(--bg-soft); }
+  &:hover {
+    background: var(--bg-soft);
+  }
+
   &:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: -2px;
@@ -599,7 +611,10 @@
     overflow-x: auto;
     flex-wrap: nowrap;
 
-    &::-webkit-scrollbar { height: 4px; }
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
     &::-webkit-scrollbar-thumb {
       background: var(--border-medium);
       border-radius: 2px;
@@ -663,6 +678,7 @@
    ═════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
+
   .inbox-btn,
   .inbox-filter,
   .inbox-item,

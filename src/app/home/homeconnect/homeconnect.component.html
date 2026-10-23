@@ -2,57 +2,48 @@
 
 <div class="landing-page">
 
-  <!-- ═══════════════════════════════════════════════════════
-       HERO — Bienvenue personnalisée
-       ═══════════════════════════════════════════════════════ -->
-  <section class="hero-welcome" aria-labelledby="welcome-title">
-    <div class="hero-orb hero-orb--gold" aria-hidden="true"></div>
-    <div class="hero-orb hero-orb--blue" aria-hidden="true"></div>
+  <div class="hero-inner">
 
-    <div class="hero-inner">
+    <!-- Podcast Vidéo -->
+    <app-podcastvideo [randommode]="true" [affichebouton]="true" />
 
-      <!-- Avatar + texte -->
-      <div class="hero-profile">
-        <div class="avatar-ring">
-          <div class="avatar">
-            @if (hasPhoto()) {
-            <img [src]="userPhoto()!" [alt]="userName()" />
-            } @else {
-            <span>{{ userInitials() }}</span>
-            }
-          </div>
-        </div>
+    <!-- ✅ NOUVEAUX BOUTONS "WAHOU" -->
+    <nav class="hero-actions" aria-label="Actions rapides">
+      @for (action of quickActions; track action.route) {
+        <a [routerLink]="action.route" 
+           class="action-card" 
+           [attr.data-color]="action.color"
+           [attr.aria-label]="action.label">
+          
+          <!-- Effet de lueur au survol -->
+          <span class="action-glow" aria-hidden="true"></span>
+          
+          <!-- Icône -->
+          <span class="action-icon-wrapper">
+            <span class="action-icon" aria-hidden="true">{{ action.icon }}</span>
+          </span>
+          
+          <!-- Contenu -->
+          <span class="action-content">
+            <span class="action-label">{{ action.label }}</span>
+          </span>
 
-        <div class="hero-text">
-          <p class="hero-greeting">{{ greeting() }},</p>
-          <h1 id="welcome-title" class="hero-name">
-            {{ userFirstName() }} <span class="wave" aria-hidden="true">👋</span>
-          </h1>
-        </div>
-      </div>
-
-      <app-podcastvideo [randommode]="true" />
-      
-      <!-- Actions rapides -->
-      <nav class="hero-actions" aria-label="Actions rapides">
-        @for (action of quickActions; track action.route) {
-        <a [routerLink]="action.route" class="action-card" [attr.data-color]="action.color"
-          [attr.aria-label]="action.label">
-          <span class="action-icon" aria-hidden="true">{{ action.icon }}</span>
-          <span class="action-label">{{ action.label }}</span>
+          <!-- Flèche -->
           <svg class="action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
         </a>
-        }
-      </nav>
+      }
+    </nav>
 
-    </div>
-  </section>
-
-  <app-inbox-panel />
-     <app-immersive-carousel />
+    <!-- Boîte de réception -->
+    <app-inbox-panel />
+    
+    <!-- Carrousel -->
+    <app-immersive-carousel />
+  </div> 
+  
   <app-footer />
 </div>
