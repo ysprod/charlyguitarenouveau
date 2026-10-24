@@ -1,0 +1,60 @@
+<!-- src/app/academie/components/chord-of-the-day/chord-of-the-day.component.html -->
+
+<div class="chord-card">
+  <!-- Halo décoratif -->
+  <div class="chord-glow" aria-hidden="true"></div>
+
+  <!-- En-tête -->
+  <header class="chord-header">
+    <div class="chord-badge">
+      <span class="badge-dot" aria-hidden="true"></span>
+      Accord du Jour
+    </div>
+    <button type="button" class="btn-shuffle" (click)="shuffleChord()" aria-label="Tirer un autre accord">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 3 21 3 21 8" />
+        <line x1="4" y1="20" x2="21" y2="3" />
+        <polyline points="21 16 21 21 16 21" />
+        <line x1="15" y1="15" x2="21" y2="21" />
+        <line x1="4" y1="4" x2="9" y2="9" />
+      </svg>
+    </button>
+  </header>
+
+  <!-- Contenu -->
+  <div class="chord-body">
+    <!-- Diagramme de guitare -->
+    <div class="chord-diagram" aria-label="Diagramme de l'accord">
+      @for (fret of chord().frets; track trackByIndex($index); let i = $index) {
+        <div class="string-column">
+          <span class="fret-number">{{ fret === -1 ? 'X' : (fret === 0 ? 'O' : fret) }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Infos -->
+    <div class="chord-info">
+      <h3 class="chord-name">{{ chord().name }}</h3>
+      <p class="chord-fullname">{{ chord().fullName }}</p>
+    </div>
+  </div>
+
+  <!-- Bouton d'écoute -->
+  <button 
+    type="button" 
+    class="btn-play" 
+    (click)="playChord()" 
+    [disabled]="isPlaying()"
+    [attr.aria-busy]="isPlaying()"
+  >
+    @if (!isPlaying()) {
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M8 5v14l11-7z" />
+      </svg>
+      <span>Écouter l'accord</span>
+    } @else {
+      <span class="spinner" aria-hidden="true"></span>
+      <span>En lecture…</span>
+    }
+  </button>
+</div>

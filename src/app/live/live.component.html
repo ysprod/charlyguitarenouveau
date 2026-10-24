@@ -1,35 +1,19 @@
 <div class="live-hub-container">
- 
+
   <section class="grid-section" aria-label="Contenus live">
 
     <!-- 🎥 CARTE VIDÉO ENRICHIE -->
     <div class="video-card">
-      <div class="video-header">
-        <span class="live-badge-card">
-          <span class="dot-live" aria-hidden="true"></span>
-          {{ video.badge }}
-        </span>
-        <h3>{{ video.title }}</h3>
-      </div>
+       
 
       <div class="video-wrapper">
-        <iframe
-          [src]="safeEmbedUrl()"
-          title="Vidéo de présentation Charly Guitare"
-          loading="lazy"
+        <iframe [src]="safeEmbedUrl()" title="Vidéo de présentation Charly Guitare" loading="lazy"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allowfullscreen
-        ></iframe>
+          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       </div>
 
       <div class="video-footer">
-        <a
-          [href]="video.watchUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="yt-link-btn"
-        >
+        <a [href]="video.watchUrl" target="_blank" rel="noopener noreferrer" class="yt-link-btn">
           <span class="icon" aria-hidden="true">▶</span>
           <span>Regarder sur YouTube</span>
         </a>
@@ -38,27 +22,22 @@
 
     <!-- 🎤 CARTES SECONDAIRES -->
     @for (card of cards; track card.id) {
-      <article [class]="'live-card ' + card.cssClass">
-        <div class="card-content">
-          <div class="card-icon-wrap">
-            <span class="card-icon" aria-hidden="true">{{ card.icon }}</span>
-          </div>
-          <h3>{{ card.title }}</h3>
-          <p>{{ card.description }}</p>
+    <article [class]="'live-card ' + card.cssClass">
+      <div class="card-content">
+        <div class="card-icon-wrap">
+          <span class="card-icon" aria-hidden="true">{{ card.icon }}</span>
         </div>
+        <h3>{{ card.title }}</h3>
+        <p>{{ card.description }}</p>
+      </div>
 
-        <a
-          [href]="card.actionUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="card-action"
-        >
-          <span>{{ card.actionLabel }}</span>
-          <span class="arrow" aria-hidden="true">→</span>
-        </a>
-      </article>
+      <a [href]="card.actionUrl" target="_blank" rel="noopener noreferrer" class="card-action">
+        <span>{{ card.actionLabel }}</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </article>
     }
 
   </section>
-     <app-immersive-carousel />
+  <app-immersive-carousel />
 </div>

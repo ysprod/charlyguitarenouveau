@@ -2,32 +2,12 @@
 
 <div class="user-messages-container">
 
-  <!-- Header -->
-  <header class="page-header">
-    <div class="header-content">
-      <div class="header-text">
-        <h1>Mes <span class="accent">Messages</span></h1>
-      </div>
-
-      <div class="stats-grid" role="list">
-        <div class="stat-card" role="listitem">
-          <span class="stat-value">{{ threadsCount() }}</span>
-          <span class="stat-label">Conversations</span>
-        </div>
-        <div class="stat-card accent-amber" role="listitem">
-          <span class="stat-value">{{ unreadTotal() }}</span>
-          <span class="stat-label">Non lus</span>
-        </div>
-      </div>
-    </div>
-  </header>
 
   <div class="content-wrapper">
 
     <!-- Liste des threads -->
-    <aside class="messages-list-section"
-           [class.hidden-mobile]="selectedThread() !== null"
-           aria-label="Liste des conversations">
+    <aside class="messages-list-section" [class.hidden-mobile]="selectedThread() !== null"
+      aria-label="Liste des conversations">
 
       <!-- Toolbar -->
       <div class="list-toolbar">
@@ -41,215 +21,197 @@
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <input type="text"
-                 placeholder="Rechercher..."
-                 [value]="searchTerm()"
-                 (input)="updateSearch($any($event.target).value)" />
+          <input type="text" placeholder="Rechercher..." [value]="searchTerm()"
+            (input)="updateSearch($any($event.target).value)" />
         </div>
       </div>
 
       <!-- Compteur de résultats -->
       @if (filteredThreads().length > 0) {
-        <div class="results-info">
-          <span>
-            <strong>{{ filteredThreads().length }}</strong>
-            conversation{{ filteredThreads().length > 1 ? 's' : '' }}
-            @if (searchTerm()) {
-              <span class="results-hint">pour « {{ searchTerm() }} »</span>
-            }
-          </span>
-        </div>
+      <div class="results-info">
+        <span>
+          <strong>{{ filteredThreads().length }}</strong>
+          conversation{{ filteredThreads().length > 1 ? 's' : '' }}
+          @if (searchTerm()) {
+          <span class="results-hint">pour « {{ searchTerm() }} »</span>
+          }
+        </span>
+      </div>
       }
 
       <!-- Empty state -->
       @if (filteredThreads().length === 0) {
-        <div class="empty-state">
-          <div class="empty-illustration">📭</div>
-          <h3>Aucune conversation</h3>
-          <p>
-            @if (searchTerm()) {
-              Aucun résultat pour « {{ searchTerm() }} ».
-            } @else {
-              Commencez par envoyer un message !
-            }
-          </p>
-        </div>
-      } @else {
-        <!-- Liste paginée -->
-        <div class="messages-scroll">
-          @for (thread of paginatedThreads(); track trackThread($index, thread)) {
-            <article class="message-card"
-                     [class.active]="selectedThread()?.threadId === thread.threadId"
-                     [class.unread]="thread.unreadCount > 0"
-                     (click)="selectThread(thread)">
-              <div class="card-top">
-                <span class="thread-avatar">{{ thread.avatar }}</span>
-                <span class="subject">{{ thread.subject }}</span>
-                @if (thread.unreadCount > 0) {
-                  <span class="unread-badge">{{ thread.unreadCount }}</span>
-                }
-              </div>
-
-              <p class="interlocutor">{{ thread.interlocutor }}</p>
-              <p class="preview-text">{{ previewOf(thread.lastMessage) }}</p>
-
-              <div class="card-footer">
-                <span class="date">
-                  {{ thread.updatedAt | date: 'dd MMM, HH:mm' }}
-                </span>
-                <span class="messages-count">{{ thread.messages.length }} msg</span>
-              </div>
-            </article>
+      <div class="empty-state">
+        <div class="empty-illustration">📭</div>
+        <h3>Aucune conversation</h3>
+        <p>
+          @if (searchTerm()) {
+          Aucun résultat pour « {{ searchTerm() }} ».
+          } @else {
+          Commencez par envoyer un message !
           }
-        </div>
+        </p>
+      </div>
+      } @else {
+      <!-- Liste paginée -->
+      <div class="messages-scroll">
+        @for (thread of paginatedThreads(); track trackThread($index, thread)) {
+        <article class="message-card" [class.active]="selectedThread()?.threadId === thread.threadId"
+          [class.unread]="thread.unreadCount > 0" (click)="selectThread(thread)">
+          <div class="card-top">
+            <span class="thread-avatar">{{ thread.avatar }}</span>
+            <span class="subject">{{ thread.subject }}</span>
+            @if (thread.unreadCount > 0) {
+            <span class="unread-badge">{{ thread.unreadCount }}</span>
+            }
+          </div>
 
-        <!-- Pagination -->
-        @if (totalPages() > 1) {
-          <nav class="pagination-bar" aria-label="Pagination des conversations">
-            <!-- Précédent -->
-            <button type="button"
-                    class="page-btn page-nav"
-                    [disabled]="!hasPrevPage()"
-                    (click)="prevPage()"
-                    aria-label="Page précédente">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-                   stroke="currentColor" stroke-width="2.5"
-                   stroke-linecap="round" stroke-linejoin="round"
-                   aria-hidden="true">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
+          <p class="interlocutor">{{ thread.interlocutor }}</p>
+          <p class="preview-text">{{ previewOf(thread.lastMessage) }}</p>
 
-            <!-- Pages (avec ellipsis) -->
-            @for (page of visiblePages(); track $index) {
-              @if (isEllipsis(page)) {
-                <button type="button"
-                        class="page-btn page-ellipsis"
-                        (click)="onEllipsisClick(page)"
-                        [attr.aria-label]="
+          <div class="card-footer">
+            <span class="date">
+              {{ thread.updatedAt | date: 'dd MMM, HH:mm' }}
+            </span>
+            <span class="messages-count">{{ thread.messages.length }} msg</span>
+          </div>
+        </article>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+      <nav class="pagination-bar" aria-label="Pagination des conversations">
+        <!-- Précédent -->
+        <button type="button" class="page-btn page-nav" [disabled]="!hasPrevPage()" (click)="prevPage()"
+          aria-label="Page précédente">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <!-- Pages (avec ellipsis) -->
+        @for (page of visiblePages(); track $index) {
+        @if (isEllipsis(page)) {
+        <button type="button" class="page-btn page-ellipsis" (click)="onEllipsisClick(page)" [attr.aria-label]="
                           page === 'ellipsis-left'
                             ? 'Pages précédentes'
                             : 'Pages suivantes'
-                        "
-                        [attr.title]="
+                        " [attr.title]="
                           page === 'ellipsis-left'
                             ? 'Reculer de plusieurs pages'
                             : 'Avancer de plusieurs pages'
                         ">
-                  …
-                </button>
-              } @else {
-                <button type="button"
-                        class="page-btn"
-                        [class.active]="page === currentPage()"
-                        [attr.aria-current]="page === currentPage() ? 'page' : null"
-                        (click)="goToPage(page)">
-                  {{ page }}
-                </button>
-              }
-            }
-
-            <!-- Suivant -->
-            <button type="button"
-                    class="page-btn page-nav"
-                    [disabled]="!hasNextPage()"
-                    (click)="nextPage()"
-                    aria-label="Page suivante">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-                   stroke="currentColor" stroke-width="2.5"
-                   stroke-linecap="round" stroke-linejoin="round"
-                   aria-hidden="true">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-          </nav>
+          …
+        </button>
+        } @else {
+        <button type="button" class="page-btn" [class.active]="page === currentPage()"
+          [attr.aria-current]="page === currentPage() ? 'page' : null" (click)="goToPage(page)">
+          {{ page }}
+        </button>
         }
+        }
+
+        <!-- Suivant -->
+        <button type="button" class="page-btn page-nav" [disabled]="!hasNextPage()" (click)="nextPage()"
+          aria-label="Page suivante">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </nav>
+      }
       }
     </aside>
 
     <!-- Fil de discussion -->
-    <section class="thread-section"
-             [class.active-mobile]="selectedThread() !== null"
-             aria-label="Fil de discussion">
+    <section class="thread-section" [class.active-mobile]="selectedThread() !== null" aria-label="Fil de discussion">
 
       @if (selectedThread(); as thread) {
-        <div class="thread-header">
-          <button type="button" class="btn-back" (click)="closeThread()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-          </button>
+      <div class="thread-header">
+        <button type="button" class="btn-back" (click)="closeThread()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+        </button>
 
-          <div class="thread-title">
-            <h2>{{ thread.subject }}</h2>
-            <p class="thread-meta">{{ thread.interlocutor }} · {{ thread.messages.length }} messages</p>
+        <div class="thread-title">
+          <h2>{{ thread.subject }}</h2>
+          <p class="thread-meta">{{ thread.interlocutor }} · {{ thread.messages.length }} messages</p>
+        </div>
+      </div>
+
+      <div class="thread-body" #threadBody>
+        @for (msg of thread.messages; track trackMessage($index, msg)) {
+        <div class="chat-bubble" [class.user-bubble]="isMine(msg)" [class.admin-bubble]="!isMine(msg)">
+          <div class="avatar" [class.avatar-user]="isMine(msg)" [class.avatar-admin]="!isMine(msg)">
+            {{ isMine(msg) ? userInitials() : msg.fromName.charAt(0).toUpperCase() }}
           </div>
-        </div>
-
-        <div class="thread-body" #threadBody>
-          @for (msg of thread.messages; track trackMessage($index, msg)) {
-            <div class="chat-bubble"
-                 [class.user-bubble]="isMine(msg)"
-                 [class.admin-bubble]="!isMine(msg)">
-              <div class="avatar"
-                   [class.avatar-user]="isMine(msg)"
-                   [class.avatar-admin]="!isMine(msg)">
-                {{ isMine(msg) ? userInitials() : msg.fromName.charAt(0).toUpperCase() }}
-              </div>
-              <div class="bubble-content">
-                <div class="bubble-header">
-                  <span class="author">
-                    {{ isMine(msg) ? 'Vous' : msg.fromName }}
-                  </span>
-                  <span class="time">{{ msg.createdAt | date: 'dd/MM · HH:mm' }}</span>
-                </div>
-                <p class="bubble-text">{{ msg.body }}</p>
-              </div>
-            </div>
-          }
-        </div>
-
-        <div class="thread-reply-form">
-          <div class="reply-box">
-            <textarea [ngModel]="replyText()"
-                      (ngModelChange)="replyText.set($event)"
-                      rows="3"
-                      [attr.maxlength]="replyMaxLength"
-                      placeholder="Écrivez votre réponse..."
-                      class="reply-textarea"
-                      (keydown.enter)="onReplyEnter($event)"></textarea>
-
-            <div class="reply-footer">
-              <span class="char-count"
-                    [class.warning]="replyText().length > replyWarningThreshold">
-                {{ replyText().length }} / {{ replyMaxLength }}
+          <div class="bubble-content">
+            <div class="bubble-header">
+              <span class="author">
+                {{ isMine(msg) ? 'Vous' : msg.fromName }}
               </span>
-
-              <button type="button"
-                      class="btn-send"
-                      [disabled]="isSending() || !replyText().trim()"
-                      (click)="sendReply()">
-                @if (!isSending()) {
-                  <span>Envoyer</span>
-                } @else {
-                  <span>Envoi...</span>
-                }
-              </button>
+              <span class="time">{{ msg.createdAt | date: 'dd/MM · HH:mm' }}</span>
             </div>
+            <p class="bubble-text">{{ msg.body }}</p>
           </div>
         </div>
-      } @else {
-        <div class="select-prompt">
-          <div class="prompt-illustration">💬</div>
-          <h3>Choisissez une conversation</h3>
-          <p>Sélectionnez un message à gauche pour afficher le fil complet.</p>
-          <a routerLink="/contact" class="btn-new-message-prompt">
-            ✉️ Créer un nouveau message
-          </a>
+        }
+      </div>
+
+      <div class="thread-reply-form">
+        <div class="reply-box">
+          <textarea [ngModel]="replyText()" (ngModelChange)="replyText.set($event)" rows="3"
+            [attr.maxlength]="replyMaxLength" placeholder="Écrivez votre réponse..." class="reply-textarea"
+            (keydown.enter)="onReplyEnter($event)"></textarea>
+
+          <div class="reply-footer">
+            <span class="char-count" [class.warning]="replyText().length > replyWarningThreshold">
+              {{ replyText().length }} / {{ replyMaxLength }}
+            </span>
+
+            <button type="button" class="btn-send" [disabled]="isSending() || !replyText().trim()"
+              (click)="sendReply()">
+              @if (!isSending()) {
+              <span>Envoyer</span>
+              } @else {
+              <span>Envoi...</span>
+              }
+            </button>
+          </div>
         </div>
+      </div>
+      } @else {
+      <div class="select-prompt">
+        <div class="prompt-illustration">💬</div>
+        <h3>Choisissez une conversation</h3>
+        <p>Sélectionnez un message à gauche pour afficher le fil complet.</p>
+        <a routerLink="/contact" class="btn-new-message-prompt">
+          ✉️ Créer un nouveau message
+        </a>
+      </div>
       }
     </section>
   </div>
-     <app-immersive-carousel />
+<br>
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="stats-grid" role="list">
+        <div class="stat-card" role="listitem">
+          <span class="stat-value">{{ threadsCount() }}</span>
+          <span class="stat-label">Conversations</span>
+        </div>
+        <div class="stat-card accent-amber" role="listitem">
+          <span class="stat-value">{{ unreadTotal() }}</span>
+          <span class="stat-label">Non lus</span>
+        </div>
+      </div>
+    </div>
+  </header>
+  <app-immersive-carousel />
 </div>

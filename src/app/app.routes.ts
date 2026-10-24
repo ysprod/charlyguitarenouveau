@@ -1,14 +1,9 @@
-// src/app/app.routes.ts
-
 import { Routes } from '@angular/router';
-
 import { AuthGuard } from './guards/auth/auth.guard';
+import { GuestGuard } from './guards/guest/guest.guard';
 import { HomeComponent } from './home/home.component';
 
 export const routes: Routes = [
-  /* ═══════════════════════════════════════════════════════
-     AUTH
-     ═══════════════════════════════════════════════════════ */
   {
     path: 'login',
     loadComponent: () =>
@@ -21,34 +16,40 @@ export const routes: Routes = [
       import('./home/register/register.component').then((m) => m.RegisterComponent),
     title: 'Inscription — Charly Guitare',
   },
-
-  /* ═══════════════════════════════════════════════════════
-     HOME
-     ═══════════════════════════════════════════════════════ */
   {
     path: '',
     component: HomeComponent,
+    canActivate: [GuestGuard],
     title: 'Charly Guitare — Apprendre la guitare',
     pathMatch: 'full',
   },
   {
     path: 'home',
     component: HomeComponent,
+    canActivate: [GuestGuard],
     title: 'Charly Guitare — Accueil',
   },
-
-  /* ═══════════════════════════════════════════════════════
-     GAME
-     ═══════════════════════════════════════════════════════ */
   {
     path: 'game',
-    loadChildren: () => import('./game/game.routes').then((m) => m.gameRoutes),
+    loadChildren: () =>
+      import('./game/game.routes').then((m) => m.gameRoutes),
   },
-
-  /* ═══════════════════════════════════════════════════════
-     REDIRECTIONS ANCIENNES URLS
-     ═══════════════════════════════════════════════════════ */
-  /* → /game/... */
+  {
+    path: 'academie',
+    loadChildren: () =>
+      import('./academie/academie.routes').then((m) => m.academieRoutes),
+  },
+  {
+    path: 'offoland',
+    loadChildren: () =>
+      import('./offoland/offoland.routes').then((m) => m.offolandRoutes),
+  },
+  {
+    path: 'user',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./user/user.routes').then((m) => m.userRoutes),
+  },
   { path: 'play', redirectTo: 'game/play', pathMatch: 'full' },
   { path: 'fretboard', redirectTo: 'game/fretboard', pathMatch: 'full' },
   { path: 'memory', redirectTo: 'game/memory', pathMatch: 'full' },
@@ -64,122 +65,20 @@ export const routes: Routes = [
   { path: 'cards', redirectTo: 'game/cards', pathMatch: 'full' },
   { path: 'kronos', redirectTo: 'game/kronos', pathMatch: 'full' },
   { path: 'lykomode', redirectTo: 'game/lykomode', pathMatch: 'full' },
-
-  /* → /academie/... */
   { path: 'store', redirectTo: 'academie/documents', pathMatch: 'full' },
   { path: 'offres', redirectTo: 'academie/offres', pathMatch: 'full' },
   { path: 'abonnement', redirectTo: 'academie/offres', pathMatch: 'full' },
-
-
-  /* ═══════════════════════════════════════════════════════
-     ✅ ACADÉMIE (Sous-module avec RouterOutlet)
-     ═══════════════════════════════════════════════════════ */
-  {
-    path: 'academie',
-    loadChildren: () =>
-      import('./academie/academie.routes').then((m) => m.academieRoutes),
-  },
-
-  /* ═══════════════════════════════════════════════════════
-     USER (protégées par AuthGuard)
-     ═══════════════════════════════════════════════════════ */
-  {
-    path: 'accueil',
-    loadComponent: () =>
-      import('./home/accueil/accueil.component').then((m) => m.AccueilComponent),
-    canActivate: [AuthGuard],
-    title: 'Accueil — Charly Guitare',
-  },
-  {
-    path: 'amanda',
-    loadComponent: () =>
-      import('./home/homeconnect/homeconnect.component').then((m) => m.HomeconnectComponent),
-    canActivate: [AuthGuard],
-    title: 'Mon espace',
-  },
-  {
-    path: 'again',
-    loadComponent: () =>
-      import('./home/again/again.component').then((m) => m.AgainComponent),
-    canActivate: [AuthGuard],
-    title: 'Again',
-  },
-  {
-    path: 'inbox',
-    loadComponent: () =>
-      import('./home/messagerie/messagerie.component').then((m) => m.MessagerieComponent),
-    canActivate: [AuthGuard],
-    title: 'Messages',
-  },
-  {
-    path: 'inbox/:key',
-    loadComponent: () =>
-      import('./home/messagerie/messagerie.component').then((m) => m.MessagerieComponent),
-    canActivate: [AuthGuard],
-    title: 'Conversation',
-  },
-  {
-    path: 'studio',
-    loadComponent: () =>
-      import('./home/studio/studio.component').then((m) => m.StudioComponent),
-    canActivate: [AuthGuard],
-    title: 'Studio professionnel',
-  },
-  {
-    path: 'notifications',
-    loadComponent: () =>
-      import('./home/notifications/notifications.component').then((m) => m.NotificationsComponent),
-    canActivate: [AuthGuard],
-    title: 'Notifications',
-  },
-  {
-    path: 'contact',
-    loadComponent: () =>
-      import('./home/contact/contact.component').then((m) => m.ContactComponent),
-    canActivate: [AuthGuard],
-    title: 'Contact',
-  },
-  {
-    path: 'profil',
-    loadComponent: () =>
-      import('./home/profil/profil.component').then((m) => m.ProfilComponent),
-    canActivate: [AuthGuard],
-    title: 'Mon profil',
-  },
-  {
-    path: 'noslives',
-    loadComponent: () =>
-      import('./live/live.component').then((m) => m.LiveComponent),
-    canActivate: [AuthGuard],
-    title: 'ShowCases',
-  },
-  {
-    path: 'privacy',
-    loadComponent: () =>
-      import('./home/privacy/privacy.component').then((m) => m.PrivacyComponent),
-    canActivate: [AuthGuard],
-    title: 'Confidentialité',
-  },
-  {
-    path: 'mentions',
-    loadComponent: () =>
-      import('./home/mentions/mentions.component').then((m) => m.MentionsComponent),
-    canActivate: [AuthGuard],
-    title: 'Mentions légales',
-  },
-
-  /* ═══════════════════════════════════════════════════════
-     OFFOLAND
-     ═══════════════════════════════════════════════════════ */
-  {
-    path: 'offoland',
-    loadChildren: () =>
-      import('./offoland/offoland.routes').then((m) => m.offolandRoutes),
-  },
-
-  /* ═══════════════════════════════════════════════════════
-     FALLBACK
-     ═══════════════════════════════════════════════════════ */
+  { path: 'amanda', redirectTo: 'user/amanda', pathMatch: 'full' },
+  { path: 'accueil', redirectTo: 'user/accueil', pathMatch: 'full' },
+  { path: 'profil', redirectTo: 'user/profil', pathMatch: 'full' },
+  { path: 'inbox', redirectTo: 'user/inbox', pathMatch: 'full' },
+  { path: 'notifications', redirectTo: 'user/notifications', pathMatch: 'full' },
+  { path: 'studio', redirectTo: 'user/studio', pathMatch: 'full' },
+  { path: 'noslives', redirectTo: 'user/noslives', pathMatch: 'full' },
+  { path: 'contact', redirectTo: 'user/contact', pathMatch: 'full' },
+  { path: 'again', redirectTo: 'user/again', pathMatch: 'full' },
+  { path: 'privacy', redirectTo: 'user/privacy', pathMatch: 'full' },
+  { path: 'mentions', redirectTo: 'user/mentions', pathMatch: 'full' },
   {
     path: '**',
     redirectTo: 'home',

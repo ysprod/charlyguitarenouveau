@@ -7,9 +7,7 @@
   <div class="bg-glow bg-glow--blue" aria-hidden="true"></div>
   <div class="bg-grid" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════
-       HERO
-       ═══════════════════════════════════════════════════════ -->
+  <!-- HERO -->
   <section class="hero-banner" aria-labelledby="academie-hero-title">
     <div class="hero-content"> 
       <h1 id="academie-hero-title" class="hero-title">
@@ -19,12 +17,9 @@
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════
-       CTA COMPACTS (Boutique, Offres, Live)
-       ═══════════════════════════════════════════════════════ -->
+  <!-- CTA COMPACTS -->
   <section class="cta-grid" aria-label="Accès rapides">
     
-    <!-- CTA Boutique -->
     <a routerLink="/store" class="compact-cta compact-cta--gold">
       <div class="cta-glow" aria-hidden="true"></div>
       <div class="cta-icon" aria-hidden="true">🛍️</div>
@@ -38,7 +33,6 @@
       </svg>
     </a>
 
-    <!-- CTA Offres -->
     <a routerLink="/academie/offres" class="compact-cta compact-cta--blue">
       <div class="cta-glow" aria-hidden="true"></div>
       <div class="cta-icon" aria-hidden="true">💎</div>
@@ -52,7 +46,6 @@
       </svg>
     </a>
 
-    <!-- ✅ CTA Live (Nouveau) -->
     <a routerLink="/academie/live" class="compact-cta compact-cta--live">
       <div class="cta-glow" aria-hidden="true"></div>
       <div class="cta-icon" aria-hidden="true">🔴</div>
@@ -65,6 +58,11 @@
         <polyline points="12 5 19 12 12 19" />
       </svg>
     </a>
+  </section>
+
+  <!-- ✅ NOUVEAU WIDGET : Accord du Jour -->
+  <section class="chord-section" aria-labelledby="chord-of-the-day-title">
+    <app-chord-of-the-day />
   </section>
 
   <!-- Carrousel -->

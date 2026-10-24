@@ -1,0 +1,120 @@
+/* src/app/user/user-home/user-home.component.scss */
+
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+.user-home-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem 1.5rem 6rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero-welcome {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(100px);
+  opacity: 0.3;
+  z-index: -1;
+}
+
+.hero-orb--gold {
+  width: 400px; height: 400px;
+  top: -100px; left: -100px;
+  background: radial-gradient(circle, #fbbf24 0%, transparent 70%);
+}
+
+.hero-orb--blue {
+  width: 400px; height: 400px;
+  bottom: 0; right: -100px;
+  background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+}
+
+.hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.hero-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .hero-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.action-card {
+  --accent: #2563eb;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: rgba(20, 27, 45, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  text-decoration: none;
+  color: #f8fafc;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.action-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 1.5rem;
+}
+
+.action-label {
+  flex: 1;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.action-arrow {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+  transition: transform 0.3s ease;
+}
+
+.action-card:hover .action-arrow {
+  transform: translateX(4px);
+}
+
+@media (max-width: 640px) {
+  .user-home-container {
+    padding: 1rem 1rem 4rem;
+  }
+}

@@ -1,0 +1,193 @@
+/* src/app/user/user.component.scss */
+
+:host {
+  /* Palette "Dark Premium" */
+  --bg-deep: #060913;
+  --bg-surface: #0f1526;
+  --bg-card: rgba(20, 27, 45, 0.6);
+
+  --gold-primary: #fbbf24;
+  --gold-hover: #f59e0b;
+  --gold-glow: rgba(251, 191, 36, 0.3);
+
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-glow: rgba(59, 130, 246, 0.3);
+
+  --text-light: #f8fafc;
+  --text-body: #94a3b8;
+  --text-dim: #475569;
+
+  --border-light: rgba(255, 255, 255, 0.08);
+
+  --t-base: .3s cubic-bezier(.4, 0, .2, 1);
+
+  display: block;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg-deep);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   CONTAINER & BACKGROUND FX
+   ═════════════════════════════════════════════════════════════════════ */
+
+.user-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Lueurs de fond */
+.bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(100px);
+  opacity: 0.4;
+}
+
+.bg-glow-1 {
+  width: 600px; height: 600px;
+  top: -200px; left: -200px;
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+}
+
+.bg-glow-2 {
+  width: 500px; height: 500px;
+  bottom: 10%; right: -200px;
+  background: radial-gradient(circle, var(--gold-primary) 0%, transparent 70%);
+}
+
+/* Grille subtile */
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ HEADER (Titre + Bouton Retour)
+   ═════════════════════════════════════════════════════════════════════ */
+
+.user-header {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-light);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Bouton Retour ─── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  border-radius: 50px;
+  color: var(--text-body);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  transition: all var(--t-base);
+
+  svg {
+    width: 16px;
+    height: 16px;
+    transition: transform var(--t-base);
+  }
+
+  &:hover {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: var(--gold-primary);
+    color: var(--gold-primary);
+    transform: translateX(-3px);
+
+    svg {
+      transform: translateX(-4px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 3px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ROUTER OUTLET WRAPPER
+   ═════════════════════════════════════════════════════════════════════ */
+
+.router-content-wrapper {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .user-header {
+    padding: 1rem 1rem 0;
+    gap: 0.75rem;
+  }
+
+  .btn-back {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+
+    span { display: none; }
+    svg { width: 18px; height: 18px; }
+  }
+
+  .page-title {
+    font-size: 1rem;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ACCESSIBILITÉ
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-back, .btn-back svg {
+    transition: none !important;
+  }
+}
