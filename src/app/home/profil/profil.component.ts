@@ -1,4 +1,5 @@
- 
+// src/app/profil/profil.component.ts
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -91,7 +92,8 @@ import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/im
   imports: [
     ReactiveFormsModule,
     MatSnackBarModule,
-    AvatarCropDialogComponent,ImmersiveCarouselComponent
+    AvatarCropDialogComponent,
+    ImmersiveCarouselComponent,
   ],
   templateUrl: './profil.component.html',
   styleUrls: ['./profil.component.scss'],
@@ -134,6 +136,7 @@ export class ProfilComponent {
      ÉTAT PROFIL
      ═══════════════════════════════════════════════════════ */
 
+  readonly isEditing = signal(false); // ✅ Mode édition
   selectedFile: File | null = null;
   avatarPreview: string | null = null;
   isSubmitting = false;
@@ -187,6 +190,19 @@ export class ProfilComponent {
           replaceUrl: true,
         });
       });
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     MODE ÉDITION
+     ═══════════════════════════════════════════════════════ */
+
+  toggleEditMode(): void {
+    this.isEditing.set(true);
+  }
+
+  cancelEdit(): void {
+    this.isEditing.set(false);
+    this.onReset(); // Annule les modifications en cours
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -545,10 +561,6 @@ export class ProfilComponent {
         );
       }
 
-      /* ✅ CORRECTION CRITIQUE :
-         On n'envoie QUE les champs autorisés par les règles Firebase.
-         On utilise update() (patch) au lieu de set() (écrasement).
-         → Ne touche JAMAIS role, disabled, credit, codepromo, codeparrain. */
       const profilePatch: Record<string, unknown> = {
         uid: this.currentUid,
         email: normalizedEmail,
@@ -559,7 +571,6 @@ export class ProfilComponent {
         updatedAt: Date.now(),
       };
 
-      // Si c'est le premier enregistrement, on ajoute createdAt
       if (!this.cachedProfile.createdAt) {
         profilePatch['createdAt'] = Date.now();
       }
@@ -571,7 +582,6 @@ export class ProfilComponent {
         ),
       );
 
-      /* ✅ Mise à jour locale du cache (sans toucher aux champs admin) */
       this.cachedProfile = {
         ...this.cachedProfile,
         ...profilePatch,
@@ -588,6 +598,7 @@ export class ProfilComponent {
       this.selectedFile = null;
       this.avatarPreview = (profilePatch['photoURL'] as string) ?? null;
 
+      this.isEditing.set(false); // ✅ Repasse en mode lecture après sauvegarde
       this.showToast('✓ Profil mis à jour avec succès !', 'success');
     } catch (error) {
       console.error('[Profil] Erreur mise à jour :', error);

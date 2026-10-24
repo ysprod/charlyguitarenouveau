@@ -1,277 +1,391 @@
- 
-<div class="profile-update-container">
+<!-- src/app/profil/profil.component.html -->
 
-  <!-- ═══════════════════════════════════════════════════════
-       EN-TÊTE
-       ═══════════════════════════════════════════════════════ -->
-  <header class="page-header">
-    <div class="header-title">
-      <div class="title-icon-wrapper" aria-hidden="true">
-        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      </div>
-      <div class="title-content">
-        <h1>Paramètres du Profil</h1>
-        <p class="subtitle">
-          Gérez vos informations personnelles et paramètres de compte
-        </p>
-      </div>
-    </div>
-  </header>
+<div class="profile-page">
 
-  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-grid">
+  <div class="profile-container">
 
     <!-- ═══════════════════════════════════════════════════════
-         SIDEBAR : AVATAR
+         EN-TÊTE
          ═══════════════════════════════════════════════════════ -->
-    <aside class="sidebar-column">
-      <div class="glass-card avatar-card">
-
-        <div class="card-header">
-          <span class="card-icon" aria-hidden="true">📷</span>
-          <h3>Photo de Profil</h3>
+    <header class="page-header">
+      <div class="header-title">
+        <div class="title-icon-wrapper" aria-hidden="true">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
         </div>
+        <div class="title-content">
+          <h1>Mon Espace</h1>
+          <p class="subtitle">
+            Gérez vos informations personnelles et suivez votre progression
+          </p>
+        </div>
+      </div>
+    </header>
 
-        <div class="avatar-wrapper" [class.dragging]="isDragging" (dragover)="onDragOver($event)"
-          (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="triggerFileInput()" role="button"
-          tabindex="0" aria-label="Changer la photo de profil" (keydown.enter)="triggerFileInput()">
-          <div class="avatar-ring" aria-hidden="true">
-            <div class="avatar">
-              @if (avatarPreview) {
-              <img [src]="avatarPreview" alt="Photo de profil" class="avatar-img" (error)="avatarPreview = null" />
-              } @else {
-              <span class="avatar-initials">{{ getInitials() }}</span>
-              }
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-grid">
+
+      <!-- ═══════════════════════════════════════════════════════
+           SIDEBAR : AVATAR & RÉSEAU
+           ═══════════════════════════════════════════════════════ -->
+      <aside class="sidebar-column">
+        
+        <!-- Widget 1 : Carte Avatar & Identité -->
+        <div class="glass-card avatar-card">
+
+          <div class="card-header">
+            <span class="card-icon" aria-hidden="true">📷</span>
+            <h3>Photo de Profil</h3>
+          </div>
+
+          <div class="avatar-wrapper" [class.dragging]="isDragging" (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="triggerFileInput()" role="button"
+            tabindex="0" aria-label="Changer la photo de profil" (keydown.enter)="triggerFileInput()">
+            
+            <div class="avatar-ring" aria-hidden="true">
+              <div class="avatar">
+                @if (avatarPreview) {
+                  <img [src]="avatarPreview" alt="Photo de profil" class="avatar-img" (error)="avatarPreview = null" />
+                } @else {
+                  <span class="avatar-initials">{{ getInitials() }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="avatar-overlay" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <span>Changer</span>
+            </div>
+
+            <input type="file" id="avatar-input" #avatarInput (change)="onAvatarSelected($event)"
+              accept="image/png, image/jpeg, image/webp" hidden />
+          </div>
+
+          @if (avatarPreview) {
+            <button type="button" class="btn-remove-avatar" (click)="removeAvatar()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+              </svg>
+              Retirer
+            </button>
+          }
+
+          <p class="avatar-hint">JPG, PNG ou WEBP • Max 2 Mo</p>
+
+          <div class="user-preview">
+            <div class="preview-name">
+              {{ profileForm.get('fullName')?.value || 'Nom Prénom' }}
+            </div>
+            <div class="preview-email">
+              {{ profileForm.get('email')?.value || 'email@exemple.com' }}
+            </div>
+            <div class="preview-meta">
+              <span class="role-chip" [class]="userRole">
+                {{ roleLabel() }}
+              </span>
+              <span class="member-since">
+                Membre depuis {{ formatMemberSince() }}
+              </span>
             </div>
           </div>
-
-          <div class="avatar-overlay" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-            <span>Changer</span>
+           
+          <div class="edit-mode-header">
+            <button type="button" class="btn btn-edit-profile" (click)="toggleEditMode()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              <span>Modifier mon profil</span>
+            </button>
           </div>
-
-          <input type="file" id="avatar-input" #avatarInput (change)="onAvatarSelected($event)"
-            accept="image/png, image/jpeg, image/webp" hidden />
         </div>
 
-        @if (avatarPreview) {
-        <button type="button" class="btn-remove-avatar" (click)="removeAvatar()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-          </svg>
-          Retirer la photo
-        </button>
+        <!-- Widget 2 : Streak (Jours consécutifs) -->
+        <div class="glass-card streak-card">
+          <div class="streak-header">
+            <span class="streak-icon" aria-hidden="true">🔥</span>
+            <h3>Série d'apprentissage</h3>
+          </div>
+          <div class="streak-body">
+            <span class="streak-number">7</span>
+            <span class="streak-label">Jours consécutifs</span>
+          </div>
+          <div class="streak-days">
+            @for (day of [1,2,3,4,5,6,7]; track day) {
+              <span class="day-dot" [class.active]="day <= 7"></span>
+            }
+          </div>
+          <p class="streak-hint">Reviens demain pour ne pas perdre ta flamme !</p>
+        </div>
+
+      </aside>
+
+      <!-- ═══════════════════════════════════════════════════════
+           COLONNE PRINCIPALE
+           ═══════════════════════════════════════════════════════ -->
+      <main class="main-column">
+
+        <!-- ✅ MODE LECTURE : Bouton d'édition + Stats + Leaderboard -->
+        @if (!isEditing()) {
+         
+
+          <section class="glass-card stats-section">
+            <div class="section-header">
+              <div class="section-icon-wrapper" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              </div>
+              <div class="section-title">
+                <h2>Mes Statistiques</h2>
+                <p>Ton activité sur Charly Guitare</p>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-box">
+                <span class="stat-value">12h</span>
+                <span class="stat-name">Temps d'écoute</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">45</span>
+                <span class="stat-name">Accords appris</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">3</span>
+                <span class="stat-name">Jeux terminés</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">#14</span>
+                <span class="stat-name">Classement global</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="glass-card leaderboard-section">
+            <div class="section-header">
+              <div class="section-icon-wrapper" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8 21h8M12 17v4M7 4h10M17 4v8a5 5 0 0 1-10 0V4" />
+                </svg>
+              </div>
+              <div class="section-title">
+                <h2>Top Musiciens</h2>
+                <p>Les meilleurs joueurs de la semaine</p>
+              </div>
+            </div>
+
+            <ul class="leaderboard-list">
+              <li class="leaderboard-item">
+                <span class="rank rank-1">1</span>
+                <span class="avatar-mini">🥇</span>
+                <span class="player-name">Charly G.</span>
+                <span class="player-score">12 450 pts</span>
+              </li>
+              <li class="leaderboard-item">
+                <span class="rank rank-2">2</span>
+                <span class="avatar-mini">🥈</span>
+                <span class="player-name">Amanda K.</span>
+                <span class="player-score">10 200 pts</span>
+              </li>
+              <li class="leaderboard-item">
+                <span class="rank rank-3">3</span>
+                <span class="avatar-mini">🥉</span>
+                <span class="player-name">Offolandais_1</span>
+                <span class="player-score">9 800 pts</span>
+              </li>
+              <li class="leaderboard-item current-user">
+                <span class="rank rank-you">#14</span>
+                <span class="avatar-mini">{{ getInitials() }}</span>
+                <span class="player-name">Toi</span>
+                <span class="player-score">4 300 pts</span>
+              </li>
+            </ul>
+          </section>
         }
 
-        <p class="avatar-hint">
-          JPG, PNG ou WEBP • Max 2 Mo<br>
-          <small>Glissez-déposez une image ou cliquez sur l'avatar</small>
-        </p>
+        <!-- ✅ MODE ÉDITION : Formulaire -->
+        @if (isEditing()) {
+          <div class="edit-mode-form animated-fade-in">
+            
+            <!-- Section Informations Générales -->
+            <section class="glass-card form-section">
+              <div class="section-header">
+                <div class="section-icon-wrapper" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                <div class="section-title">
+                  <h2>Informations Générales</h2>
+                  <p>Vos informations de base</p>
+                </div>
+              </div>
 
-        <div class="user-preview">
-          <div class="preview-name">
-            {{ profileForm.get('fullName')?.value || 'Nom Prénom' }}
-          </div>
-          <div class="preview-email">
-            {{ profileForm.get('email')?.value || 'email@exemple.com' }}
-          </div>
-          <div class="preview-meta">
-            <span class="role-chip" [class]="userRole">
-              {{ roleLabel() }}
-            </span>
-            <span class="member-since">
-              Membre depuis {{ formatMemberSince() }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </aside>
+              <div class="form-group">
+                <label for="fullName">Nom &amp; Prénom <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <input type="text" id="fullName" formControlName="fullName" placeholder="ex: Jean-Charles Kotchi"
+                    [class.invalid]="isFieldInvalid('fullName')" />
+                </div>
+                @if (isFieldInvalid('fullName')) {
+                  <span class="error-text">{{ getFieldError('fullName') }}</span>
+                }
+              </div>
 
-    <!-- ═══════════════════════════════════════════════════════
-         COLONNE PRINCIPALE
-         ═══════════════════════════════════════════════════════ -->
-    <main class="main-column">
+              <div class="form-row two-cols">
+                <div class="form-group">
+                  <label for="email">Adresse Email <span class="required">*</span></label>
+                  <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    <input type="email" id="email" formControlName="email" placeholder="votre@email.com"
+                      [class.invalid]="isFieldInvalid('email')" />
+                  </div>
+                  @if (isFieldInvalid('email')) {
+                    <span class="error-text">{{ getFieldError('email') }}</span>
+                  }
+                </div>
 
-      <!-- Section 1 : Informations Générales -->
-      <section class="glass-card form-section">
-        <div class="section-header">
-          <div class="section-icon-wrapper" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </div>
-          <div class="section-title">
-            <h2>Informations Générales</h2>
-            <p>Vos informations de base</p>
-          </div>
-        </div>
+                <div class="form-group">
+                  <label for="phone">Numéro de Téléphone</label>
+                  <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                    <input type="tel" id="phone" formControlName="phone" placeholder="+225 07 00 00 00 00"
+                      [class.invalid]="isFieldInvalid('phone')" />
+                  </div>
+                  @if (isFieldInvalid('phone')) {
+                    <span class="error-text">{{ getFieldError('phone') }}</span>
+                  }
+                </div>
+              </div>
+            </section>
 
-        <div class="form-group">
-          <label for="fullName">
-            Nom &amp; Prénom <span class="required">*</span>
-          </label>
-          <div class="input-wrapper">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            <input type="text" id="fullName" formControlName="fullName" placeholder="ex: Jean-Charles Kotchi"
-              [class.invalid]="isFieldInvalid('fullName')" />
-          </div>
-          @if (isFieldInvalid('fullName')) {
-          <span class="error-text">{{ getFieldError('fullName') }}</span>
-          }
-        </div>
+            <!-- Section Sécurité -->
+            <section class="glass-card form-section">
+              <div class="section-header">
+                <div class="section-icon-wrapper" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <div class="section-title">
+                  <h2>Sécurité &amp; Mot de passe</h2>
+                  <p>Laissez vide pour ne pas modifier</p>
+                </div>
+              </div>
 
-        <div class="form-row two-cols">
-          <div class="form-group">
-            <label for="email">
-              Adresse Email <span class="required">*</span>
-            </label>
-            <div class="input-wrapper">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                aria-hidden="true">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <polyline points="22,6 12,13 2,6" />
-              </svg>
-              <input type="email" id="email" formControlName="email" placeholder="votre@email.com"
-                [class.invalid]="isFieldInvalid('email')" />
+              <div class="form-group">
+                <label for="currentPassword">
+                  Mot de passe actuel
+                  @if (profileForm.get('newPassword')?.value) { <span class="required">*</span> }
+                </label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input type="password" id="currentPassword" formControlName="currentPassword" placeholder="••••••••"
+                    [class.invalid]="isFieldInvalid('currentPassword')" />
+                </div>
+                @if (isFieldInvalid('currentPassword')) {
+                  <span class="error-text">{{ getFieldError('currentPassword') }}</span>
+                }
+                @if (profileForm.get('newPassword')?.value) {
+                  <small class="field-hint">⚠ Requis pour modifier le mot de passe ou l'email</small>
+                }
+              </div>
+
+              <div class="form-row two-cols">
+                <div class="form-group">
+                  <label for="newPassword">Nouveau mot de passe</label>
+                  <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    <input type="password" id="newPassword" formControlName="newPassword" placeholder="Au moins 8 caractères"
+                      [class.invalid]="isFieldInvalid('newPassword')" />
+                  </div>
+                  @if (isFieldInvalid('newPassword')) {
+                    <span class="error-text">{{ getFieldError('newPassword') }}</span>
+                  }
+                </div>
+
+                <div class="form-group">
+                  <label for="confirmPassword">Confirmer le mot de passe</label>
+                  <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirmez"
+                      [class.invalid]="profileForm.hasError('passwordMismatch') && profileForm.get('confirmPassword')?.touched" />
+                  </div>
+                  @if (profileForm.hasError('passwordMismatch') && profileForm.get('confirmPassword')?.touched) {
+                    <span class="error-text">Les mots de passe ne correspondent pas.</span>
+                  }
+                </div>
+              </div>
+            </section>
+
+            <!-- Actions -->
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" (click)="cancelEdit()" [disabled]="isSubmitting">
+                Annuler
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="onReset()" [disabled]="isSubmitting">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+                Réinitialiser
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || profileForm.invalid">
+                @if (!isSubmitting) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
+                  </svg>
+                  <span>Enregistrer</span>
+                } @else {
+                  <span class="spinner" aria-hidden="true"></span>
+                  <span>Enregistrement...</span>
+                }
+              </button>
             </div>
-            @if (isFieldInvalid('email')) {
-            <span class="error-text">{{ getFieldError('email') }}</span>
-            }
-          </div>
 
-          <div class="form-group">
-            <label for="phone">Numéro de Téléphone</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                aria-hidden="true">
-                <path
-                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-              <input type="tel" id="phone" formControlName="phone" placeholder="+225 07 00 00 00 00"
-                [class.invalid]="isFieldInvalid('phone')" />
-            </div>
-            @if (isFieldInvalid('phone')) {
-            <span class="error-text">{{ getFieldError('phone') }}</span>
-            }
           </div>
-        </div>
-      </section>
+        }
 
-      <!-- Section 2 : Sécurité -->
-      <section class="glass-card form-section">
-        <div class="section-header">
-          <div class="section-icon-wrapper" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-          </div>
-          <div class="section-title">
-            <h2>Sécurité &amp; Mot de passe</h2>
-            <p>Laissez vide pour ne pas modifier</p>
-          </div>
-        </div>
+      </main>
+    </form>
 
-        <div class="form-group">
-          <label for="currentPassword">
-            Mot de passe actuel
-            @if (profileForm.get('newPassword')?.value) {
-            <span class="required">*</span>
-            }
-          </label>
-          <div class="input-wrapper">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              aria-hidden="true">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <input type="password" id="currentPassword" formControlName="currentPassword" placeholder="••••••••"
-              [class.invalid]="isFieldInvalid('currentPassword')" />
-          </div>
-          @if (isFieldInvalid('currentPassword')) {
-          <span class="error-text">{{ getFieldError('currentPassword') }}</span>
-          }
-          @if (profileForm.get('newPassword')?.value) {
-          <small class="field-hint">⚠ Requis pour modifier le mot de passe ou l'email</small>
-          }
-        </div>
+    <!-- Carrousel Immersif en bas de page -->
+    <div class="carousel-wrapper">
+      <app-immersive-carousel />
+    </div>
 
-        <div class="form-row two-cols">
-          <div class="form-group">
-            <label for="newPassword">Nouveau mot de passe</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                aria-hidden="true">
-                <path
-                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-              <input type="password" id="newPassword" formControlName="newPassword" placeholder="Au moins 8 caractères"
-                [class.invalid]="isFieldInvalid('newPassword')" />
-            </div>
-            @if (isFieldInvalid('newPassword')) {
-            <span class="error-text">{{ getFieldError('newPassword') }}</span>
-            }
-          </div>
+  </div>
 
-          <div class="form-group">
-            <label for="confirmPassword">Confirmer le mot de passe</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                aria-hidden="true">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirmez"
-                [class.invalid]="profileForm.hasError('passwordMismatch') && profileForm.get('confirmPassword')?.touched" />
-            </div>
-            @if (profileForm.hasError('passwordMismatch') && profileForm.get('confirmPassword')?.touched) {
-            <span class="error-text">Les mots de passe ne correspondent pas.</span>
-            }
-          </div>
-        </div>
-      </section>
-
-      <!-- Actions -->
-      <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="onReset()" [disabled]="isSubmitting">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
-          </svg>
-          <span>Réinitialiser</span>
-        </button>
-
-        <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || profileForm.invalid">
-          @if (!isSubmitting) {
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-            <polyline points="17 21 17 13 7 13 7 21" />
-            <polyline points="7 3 7 8 15 8" />
-          </svg>
-          <span>Enregistrer les modifications</span>
-          } @else {
-          <span class="spinner" aria-hidden="true"></span>
-          <span>Enregistrement...</span>
-          }
-        </button>
-      </div>
-    </main>
-  </form>
-   <app-immersive-carousel />
-  <!-- ═══════════════════════════════════════════════════════
-       MODALE DE RECADRAGE
-       ═══════════════════════════════════════════════════════ -->
+  <!-- MODALE DE RECADRAGE -->
   @if (pendingCropFile(); as file) {
-  <app-avatar-crop-dialog [sourceFile]="file" (validated)="onCropValidated($event)" (cancelled)="onCropCancelled()" />
+    <app-avatar-crop-dialog [sourceFile]="file" (validated)="onCropValidated($event)" (cancelled)="onCropCancelled()" />
   }
 </div>
