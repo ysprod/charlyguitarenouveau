@@ -1,0 +1,269 @@
+/* src/app/academie/academie-home/academie-home.component.scss */
+
+:host {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: #060913; /* Fond très sombre */
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ FOND TRAVAILLÉ (Lueurs + Grille)
+   ═════════════════════════════════════════════════════════════════════ */
+
+.bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(100px);
+  opacity: 0.3;
+}
+
+.bg-glow--gold {
+  width: 600px; height: 600px;
+  top: -100px; left: -150px;
+  background: radial-gradient(circle, #fbbf24 0%, transparent 70%);
+}
+
+.bg-glow--blue {
+  width: 600px; height: 600px;
+  bottom: 0; right: -200px;
+  background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+}
+
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.academie-home-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  padding: 2rem 1.5rem 6rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   HERO
+   ═════════════════════════════════════════════════════════════════════ */
+.hero-banner {
+  position: relative;
+  text-align: center;
+}
+
+.hero-content {
+  margin: auto;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: #fbbf24;
+  backdrop-filter: blur(8px);
+}
+
+.eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  background: #fbbf24;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #fbbf24;
+}
+
+.hero-title {
+  margin: 0 0 1rem;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  color: #f8fafc;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.title-accent {
+  background: linear-gradient(135deg, #fff 0%, #fbbf24 50%, #fcd34d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+.hero-description {
+  max-width: 600px;
+  margin: 0 auto;
+  color: #94a3b8;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ CTA GRID (3 Cartes)
+   ═════════════════════════════════════════════════════════════════════ */
+
+.cta-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* 1 colonne sur mobile */
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .cta-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 colonnes sur tablette */
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cta-grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 colonnes sur desktop */
+  }
+}
+
+.compact-cta {
+  --accent: #fbbf24;
+  --accent-glow: rgba(251, 191, 36, 0.2);
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(20, 27, 45, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  text-decoration: none;
+  color: #f8fafc;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+  &--blue {
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.2);
+  }
+
+  /* ✅ Couleur pour le Live (Rouge) */
+  &--live {
+    --accent: #ef4444;
+    --accent-glow: rgba(239, 68, 68, 0.2);
+  }
+
+  .cta-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 0% 50%, var(--accent-glow) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .cta-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    font-size: 1.5rem;
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .cta-content {
+    flex: 1;
+    
+    h2 {
+      margin: 0 0 4px;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+    
+    p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+  }
+
+  .cta-arrow {
+    width: 20px;
+    height: 20px;
+    color: var(--accent);
+    opacity: 0.7;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px var(--accent-glow);
+
+    .cta-glow { opacity: 1; }
+    
+    .cta-icon {
+      transform: scale(1.1) rotate(-5deg);
+      background: var(--accent-glow);
+      border-color: var(--accent);
+    }
+
+    .cta-arrow {
+      transform: translateX(4px);
+      opacity: 1;
+    }
+  }
+
+  &:active { transform: translateY(0) scale(0.98); }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .academie-home-container {
+    padding: 1rem 1rem 4rem;
+    gap: 2rem;
+  }
+
+  .compact-cta {
+    padding: 1rem 1.25rem;
+    
+    .cta-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 1.25rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

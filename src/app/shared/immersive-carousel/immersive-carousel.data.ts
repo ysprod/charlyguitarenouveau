@@ -43,7 +43,7 @@ export const DEFAULT_IMMERSIVE_CARDS: readonly ImmersiveCard[] = [
     title: 'Vidéos Live',
     description: 'Rejoignez-nous pour des sessions interactives et des podcasts.',
     imageUrl: 'assets/live.jpg',
-    route: '/live',
+    route: '/noslives',
     tag: 'Live',
     tagColor: 'live'
   },

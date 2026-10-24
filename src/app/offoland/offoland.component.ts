@@ -3,18 +3,15 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ImmersiveCarouselComponent } from '../shared/immersive-carousel/immersive-carousel.component';
-
-/* ═════════════════════════════════════════════════════════════════════
-   OFFOLAND — Portail d'entrée du royaume
-   ─────────────────────────────────────────────────────────────────────
-   Deux points d'entrée :
-   - /offoland/dimensions/charlyguitaregame → Les 7 Dimensions
-   - /offoland/vie                        → La Vie d'Offoland (BCO, Finance…)
-   ═════════════════════════════════════════════════════════════════════ */
+import { CitationWidgetComponent } from './components/citation-widget/citation-widget.component'; // ✅ Import
 
 @Component({
   selector: 'app-offoland',
-  imports: [RouterLink,ImmersiveCarouselComponent],
+  imports: [
+    RouterLink,
+    ImmersiveCarouselComponent,
+    CitationWidgetComponent, // ✅ Ajout dans les imports
+  ],
   templateUrl: './offoland.component.html',
   styleUrls: ['./offoland.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

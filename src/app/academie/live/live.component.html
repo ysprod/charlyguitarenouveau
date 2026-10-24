@@ -1,0 +1,37 @@
+<div class="live-page-container">
+
+  <!-- Effets de fond -->
+  <div class="bg-glow bg-glow-1" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-2" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- En-tête -->
+  <header class="page-header">
+    <p class="page-subtitle">
+      Rejoignez nos sessions interactives et échangez directement avec nos formateurs.
+    </p>
+  </header>
+
+  <!-- Grille des Live -->
+  <section class="live-grid" aria-label="Sessions Live">
+    @for (live of liveCards; track live.id) {
+      <article class="live-card">
+        <div class="live-background-icon" aria-hidden="true">{{ live.backgroundIcon }}</div>
+
+        <div class="live-card-content">
+          <div class="live-icon-wrap">
+            <span aria-hidden="true">{{ live.icon }}</span>
+          </div> 
+          <h3>{{ live.title }}</h3>
+          <p>{{ live.description }}</p>
+        </div>
+
+        <a [routerLink]="live.actionRoute" class="live-action">
+          {{ live.actionLabel }}
+          <span aria-hidden="true">→</span>
+        </a>
+      </article>
+    }
+  </section>
+
+</div>

@@ -2,6 +2,7 @@
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { WeatherWidgetComponent } from './components/weather-widget/weather-widget.component'; // ✅ Import
 
 /* ═════════════════════════════════════════════════════════════════════
    TYPES
@@ -76,7 +77,7 @@ const VIE_SECTIONS: readonly VieSection[] = [
 
 @Component({
   selector: 'app-vie-home',
-  imports: [RouterLink],
+  imports: [RouterLink, WeatherWidgetComponent], // ✅ Ajout dans les imports
   templateUrl: './vie-home.component.html',
   styleUrls: ['./vie-home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

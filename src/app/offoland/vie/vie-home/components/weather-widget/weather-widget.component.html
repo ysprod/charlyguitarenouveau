@@ -1,0 +1,30 @@
+<!-- src/app/offoland/vie/vie-home/components/weather-widget/weather-widget.component.html -->
+
+<div class="weather-card" [style.--weather-color]="currentWeather().color">
+  <!-- Halo décoratif -->
+  <div class="weather-glow" aria-hidden="true"></div>
+
+  <!-- En-tête -->
+  <div class="weather-header">
+    <span class="weather-icon" aria-hidden="true">{{ currentWeather().icon }}</span>
+    <div class="weather-location">
+      <span class="weather-dimension">{{ currentWeather().dimension }}</span>
+      <span class="weather-label">Météo d'Offoland</span>
+    </div>
+    <span class="weather-temp">{{ currentWeather().temperature }}</span>
+  </div>
+
+  <!-- Détails -->
+  <div class="weather-body">
+    <p class="weather-condition">{{ currentWeather().condition }}</p>
+    <p class="weather-description">{{ currentWeather().description }}</p>
+  </div>
+
+  <!-- Bouton actualiser -->
+  <button type="button" class="weather-refresh" (click)="refresh()" aria-label="Actualiser la météo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </svg>
+  </button>
+</div>

@@ -12,17 +12,13 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./home/login/login.component').then(
-        (m) => m.LoginComponent,
-      ),
+      import('./home/login/login.component').then((m) => m.LoginComponent),
     title: 'Connexion — Charly Guitare',
   },
   {
     path: 'register',
     loadComponent: () =>
-      import('./home/register/register.component').then(
-        (m) => m.RegisterComponent,
-      ),
+      import('./home/register/register.component').then((m) => m.RegisterComponent),
     title: 'Inscription — Charly Guitare',
   },
 
@@ -42,17 +38,17 @@ export const routes: Routes = [
   },
 
   /* ═══════════════════════════════════════════════════════
-     GAME (lazy loading par sous-module)
+     GAME
      ═══════════════════════════════════════════════════════ */
   {
     path: 'game',
-    loadChildren: () =>
-      import('./game/game.routes').then((m) => m.gameRoutes),
+    loadChildren: () => import('./game/game.routes').then((m) => m.gameRoutes),
   },
 
   /* ═══════════════════════════════════════════════════════
-     REDIRECTIONS ANCIENNES URLS → /game/...
+     REDIRECTIONS ANCIENNES URLS
      ═══════════════════════════════════════════════════════ */
+  /* → /game/... */
   { path: 'play', redirectTo: 'game/play', pathMatch: 'full' },
   { path: 'fretboard', redirectTo: 'game/fretboard', pathMatch: 'full' },
   { path: 'memory', redirectTo: 'game/memory', pathMatch: 'full' },
@@ -69,175 +65,116 @@ export const routes: Routes = [
   { path: 'kronos', redirectTo: 'game/kronos', pathMatch: 'full' },
   { path: 'lykomode', redirectTo: 'game/lykomode', pathMatch: 'full' },
 
-  /* ═══════════════════════════════════════════════════════
-     USER (protégées par AuthGuard — lazy loading)
-     ═══════════════════════════════════════════════════════ */
+  /* → /academie/... */
+  { path: 'store', redirectTo: 'academie/documents', pathMatch: 'full' },
+  { path: 'offres', redirectTo: 'academie/offres', pathMatch: 'full' },
+  { path: 'abonnement', redirectTo: 'academie/offres', pathMatch: 'full' },
 
-  /* ─── Accueil & navigation ─── */
+
+  /* ═══════════════════════════════════════════════════════
+     ✅ ACADÉMIE (Sous-module avec RouterOutlet)
+     ═══════════════════════════════════════════════════════ */
+  {
+    path: 'academie',
+    loadChildren: () =>
+      import('./academie/academie.routes').then((m) => m.academieRoutes),
+  },
+
+  /* ═══════════════════════════════════════════════════════
+     USER (protégées par AuthGuard)
+     ═══════════════════════════════════════════════════════ */
   {
     path: 'accueil',
     loadComponent: () =>
-      import('./home/accueil/accueil.component').then(
-        (m) => m.AccueilComponent,
-      ),
+      import('./home/accueil/accueil.component').then((m) => m.AccueilComponent),
     canActivate: [AuthGuard],
     title: 'Accueil — Charly Guitare',
   },
   {
     path: 'amanda',
     loadComponent: () =>
-      import('./home/homeconnect/homeconnect.component').then(
-        (m) => m.HomeconnectComponent,
-      ),
+      import('./home/homeconnect/homeconnect.component').then((m) => m.HomeconnectComponent),
     canActivate: [AuthGuard],
     title: 'Mon espace',
   },
   {
     path: 'again',
     loadComponent: () =>
-      import('./home/again/again.component').then(
-        (m) => m.AgainComponent,
-      ),
+      import('./home/again/again.component').then((m) => m.AgainComponent),
     canActivate: [AuthGuard],
     title: 'Again',
   },
-
-  /* ─── Messagerie ─── */
   {
     path: 'inbox',
     loadComponent: () =>
-      import('./home/messagerie/messagerie.component').then(
-        (m) => m.MessagerieComponent,
-      ),
+      import('./home/messagerie/messagerie.component').then((m) => m.MessagerieComponent),
     canActivate: [AuthGuard],
     title: 'Messages',
   },
   {
     path: 'inbox/:key',
     loadComponent: () =>
-      import('./home/messagerie/messagerie.component').then(
-        (m) => m.MessagerieComponent,
-      ),
+      import('./home/messagerie/messagerie.component').then((m) => m.MessagerieComponent),
     canActivate: [AuthGuard],
     title: 'Conversation',
   },
   {
     path: 'studio',
     loadComponent: () =>
-      import('./home/studio/studio.component').then(
-        (m) => m.StudioComponent,
-      ),
+      import('./home/studio/studio.component').then((m) => m.StudioComponent),
     canActivate: [AuthGuard],
     title: 'Studio professionnel',
   },
   {
     path: 'notifications',
     loadComponent: () =>
-      import('./home/notifications/notifications.component').then(
-        (m) => m.NotificationsComponent,
-      ),
+      import('./home/notifications/notifications.component').then((m) => m.NotificationsComponent),
     canActivate: [AuthGuard],
     title: 'Notifications',
   },
   {
     path: 'contact',
     loadComponent: () =>
-      import('./home/contact/contact.component').then(
-        (m) => m.ContactComponent,
-      ),
+      import('./home/contact/contact.component').then((m) => m.ContactComponent),
     canActivate: [AuthGuard],
     title: 'Contact',
   },
-
-  /* ─── Académie & abonnements ─── */
-  {
-    path: 'academie',
-    loadComponent: () =>
-      import('./academie/academie.component').then(
-        (m) => m.AcademieComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Académie',
-  },
-  {
-    path: 'abonnement',
-    loadComponent: () =>
-      import('./academie/offres/offres.component').then(
-        (m) => m.OffresComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Abonnement',
-  },
-  {
-    path: 'offres',
-    loadComponent: () =>
-      import('./academie/offres/offres.component').then(
-        (m) => m.OffresComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Offres',
-  },
-
-  /* ─── Profil & légal ─── */
   {
     path: 'profil',
     loadComponent: () =>
-      import('./home/profil/profil.component').then(
-        (m) => m.ProfilComponent,
-      ),
+      import('./home/profil/profil.component').then((m) => m.ProfilComponent),
     canActivate: [AuthGuard],
     title: 'Mon profil',
   },
   {
+    path: 'noslives',
+    loadComponent: () =>
+      import('./live/live.component').then((m) => m.LiveComponent),
+    canActivate: [AuthGuard],
+    title: 'ShowCases',
+  },
+  {
     path: 'privacy',
     loadComponent: () =>
-      import('./home/privacy/privacy.component').then(
-        (m) => m.PrivacyComponent,
-      ),
+      import('./home/privacy/privacy.component').then((m) => m.PrivacyComponent),
     canActivate: [AuthGuard],
     title: 'Confidentialité',
   },
   {
     path: 'mentions',
     loadComponent: () =>
-      import('./home/mentions/mentions.component').then(
-        (m) => m.MentionsComponent,
-      ),
+      import('./home/mentions/mentions.component').then((m) => m.MentionsComponent),
     canActivate: [AuthGuard],
     title: 'Mentions légales',
   },
 
-  /* ─── Live ─── */
-  {
-    path: 'live',
-    loadComponent: () =>
-      import('./live/live.component').then(
-        (m) => m.LiveComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Live',
-  },
-
-    /* ─── Live ─── */
-  {
-    path: 'store',
-    loadComponent: () =>
-      import('./academie/documents/documents.component').then(
-        (m) => m.DocumentsComponent,
-      ),
-    canActivate: [AuthGuard],
-    title: 'Boutique',
-  },
-
   /* ═══════════════════════════════════════════════════════
-     OFFOLAND (lazy loading par sous-module)
+     OFFOLAND
      ═══════════════════════════════════════════════════════ */
   {
     path: 'offoland',
     loadChildren: () =>
-      import('./offoland/offoland.routes').then(
-        (m) => m.offolandRoutes,
-      ),
+      import('./offoland/offoland.routes').then((m) => m.offolandRoutes),
   },
 
   /* ═══════════════════════════════════════════════════════

@@ -1,0 +1,72 @@
+<!-- src/app/academie/academie-home/academie-home.component.html -->
+
+<div class="academie-home-container">
+
+  <!-- Effets de fond (Lueurs + Grille) -->
+  <div class="bg-glow bg-glow--gold" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow--blue" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════ -->
+  <section class="hero-banner" aria-labelledby="academie-hero-title">
+    <div class="hero-content"> 
+      <h1 id="academie-hero-title" class="hero-title">
+        OFFOLOMOU<br>
+        <span class="title-accent">ÉCOSYSTÈME ACADÉMIE</span>
+      </h1>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CTA COMPACTS (Boutique, Offres, Live)
+       ═══════════════════════════════════════════════════════ -->
+  <section class="cta-grid" aria-label="Accès rapides">
+    
+    <!-- CTA Boutique -->
+    <a routerLink="/store" class="compact-cta compact-cta--gold">
+      <div class="cta-glow" aria-hidden="true"></div>
+      <div class="cta-icon" aria-hidden="true">🛍️</div>
+      <div class="cta-content">
+        <h2>Boutique</h2>
+        <p>Méthodes PDF, Livres, Accessoires</p>
+      </div>
+      <svg class="cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </svg>
+    </a>
+
+    <!-- CTA Offres -->
+    <a routerLink="/academie/offres" class="compact-cta compact-cta--blue">
+      <div class="cta-glow" aria-hidden="true"></div>
+      <div class="cta-icon" aria-hidden="true">💎</div>
+      <div class="cta-content">
+        <h2>Nos Offres</h2>
+        <p>Packs de cours, Masterclass</p>
+      </div>
+      <svg class="cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </svg>
+    </a>
+
+    <!-- ✅ CTA Live (Nouveau) -->
+    <a routerLink="/academie/live" class="compact-cta compact-cta--live">
+      <div class="cta-glow" aria-hidden="true"></div>
+      <div class="cta-icon" aria-hidden="true">🔴</div>
+      <div class="cta-content">
+        <h2>Apprendre en Live</h2>
+        <p>Sessions interactives, Masterclass</p>
+      </div>
+      <svg class="cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </svg>
+    </a>
+  </section>
+
+  <!-- Carrousel -->
+  <app-immersive-carousel />
+</div>

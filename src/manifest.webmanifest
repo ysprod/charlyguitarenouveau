@@ -100,7 +100,7 @@
       "name": "Live",
       "short_name": "Live",
       "description": "Rejoindre le mode live",
-      "url": "/live?source=pwa",
+      "url": "/noslives?source=pwa",
       "icons": [
         {
           "src": "assets/icons/shortcut-live-96x96.png",

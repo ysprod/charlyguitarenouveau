@@ -1,0 +1,173 @@
+/* src/app/offoland/vie/vie-home/components/weather-widget/weather-widget.component.scss */
+
+:host {
+  display: block;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.weather-card {
+  --weather-color: #64748b;
+  
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-subtle, rgba(15, 23, 42, 0.06));
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  }
+}
+
+.weather-glow {
+  position: absolute;
+  top: -50%;
+  left: -10%;
+  width: 200px;
+  height: 200px;
+  background: var(--weather-color);
+  filter: blur(60px);
+  opacity: 0.15;
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+.weather-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.weather-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  background: color-mix(in srgb, var(--weather-color) 10%, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--weather-color) 25%, transparent);
+  border-radius: 16px;
+  font-size: 1.8rem;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--weather-color) 15%, transparent);
+}
+
+.weather-location {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weather-dimension {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--weather-color);
+  letter-spacing: -0.01em;
+}
+
+.weather-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #64748b);
+}
+
+.weather-temp {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--text-dark, #0f172a);
+  margin-left: auto;
+  padding-left: 1rem;
+}
+
+.weather-body {
+  display: none; /* Caché sur mobile pour gagner de la place */
+  flex: 1;
+  padding-left: 1.25rem;
+  border-left: 1px dashed var(--border-subtle, rgba(15, 23, 42, 0.1));
+}
+
+.weather-condition {
+  margin: 0 0 4px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--text-dark, #0f172a);
+}
+
+.weather-description {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.4;
+}
+
+.weather-refresh {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--border-subtle, rgba(15, 23, 42, 0.1));
+  border-radius: 50%;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.5s ease;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--weather-color) 10%, #ffffff);
+    border-color: var(--weather-color);
+    color: var(--weather-color);
+
+    svg {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+/* Responsive : on affiche les détails sur tablette/desktop */
+@media (min-width: 640px) {
+  .weather-body {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .weather-card {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .weather-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+  }
+
+  .weather-dimension {
+    font-size: 1rem;
+  }
+
+  .weather-temp {
+    font-size: 1.5rem;
+  }
+}

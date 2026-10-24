@@ -17,7 +17,7 @@
       <div class="desktop-only-links">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Accueil</a>
         <a routerLink="/game/play" routerLinkActive="active" (click)="closeMobileMenu()">Jeux</a>
-        <a routerLink="/live" routerLinkActive="active" (click)="closeMobileMenu()"><span class="live-dot" aria-hidden="true"></span>Live</a>
+        <a routerLink="/noslives" routerLinkActive="active" (click)="closeMobileMenu()"><span class="live-dot" aria-hidden="true"></span>Live</a>
         <a routerLink="/studio" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link"><span>Studio</span></a>
         <a routerLink="/academie" routerLinkActive="active" (click)="closeMobileMenu()">Académie</a>
         <a routerLink="/store" routerLinkActive="active" (click)="closeMobileMenu()">Boutique</a>
@@ -128,7 +128,7 @@
     <span>Boutique</span>
   </a>
 
-  <a routerLink="/live" routerLinkActive="active" class="bottom-nav-item">
+  <a routerLink="/noslives" routerLinkActive="active" class="bottom-nav-item">
     <mat-icon>live_tv</mat-icon>
     <span>Live</span>
   </a>
