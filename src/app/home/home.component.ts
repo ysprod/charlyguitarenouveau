@@ -39,7 +39,7 @@ export class HomeComponent {
      REDIRECTION AUTOMATIQUE (avec garde anti-boucle)
      ═══════════════════════════════════════════════════════ */
 
-  private static readonly REDIRECT_TARGET = '/amanda';
+  private static readonly REDIRECT_TARGET = '/user/amanda';
 
   constructor() {
     effect(() => {

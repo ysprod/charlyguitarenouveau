@@ -528,7 +528,7 @@ export class TictactoeComponent {
      ═══════════════════════════════════════════════════════ */
 
   goToPlay(lavie: number, lebonus: number, letape: string): void {
-    void this.router.navigate(['/play'], {
+    void this.router.navigate(['/game/play'], {
       queryParams: { vie: lavie, bonus: lebonus, etape: letape },
     });
   }

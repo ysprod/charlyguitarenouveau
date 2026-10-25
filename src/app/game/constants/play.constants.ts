@@ -11,7 +11,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🐵',
       btnClass: 'btn-lyko btn-duo',
       isLink: false,
-      action: () => navigate('/lykomode')
+      action: () => navigate('/game/lykomode')
     },
      {
       id: 'boubouni',
@@ -22,7 +22,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🃏',
       btnClass: 'btn-boubouni',
       isLink: false,
-      action: () => navigate('/cards?etape=2')
+      action: () => navigate('/game/cards?etape=2')
     },
     {
       id: 'oracle',
@@ -33,7 +33,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🔮',
       btnClass: 'btn-oracle',
       isLink: false,
-      action: () => navigate('/oracle')
+      action: () => navigate('/game/oracle')
     },
     {
       id: 'guitarlive',
@@ -44,7 +44,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🎸',
       btnClass: 'btn-guitarlive',
       isLink: false,
-      action: () => navigate('/guitar-live')
+      action: () => navigate('/game/guitar-live')
     },
     {
       id: 'fretboard',
@@ -55,7 +55,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🎸',
       btnClass: 'btn-fretboard',
       isLink: false,
-      action: () => navigate('/fretboard')
+      action: () => navigate('/game/fretboard')
     },
     {
       id: 'molkky',
@@ -66,7 +66,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🪵',
       btnClass: 'btn-molkky',
       isLink: false,
-      action: () => navigate('/memory')
+      action: () => navigate('/game/memory')
     },
     {
       id: 'acoustic',
@@ -77,7 +77,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🔊',
       btnClass: 'btn-quiz',
       isLink: false,
-      action: () => navigate('/acoustic')
+      action: () => navigate('/game/acoustic')
     },
     {
       id: 'chord',
@@ -88,7 +88,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🎼',
       btnClass: 'btn-simulator',
       isLink: false,
-      action: () => navigate('/chord')
+      action: () => navigate('/game/chord')
     },
     {
       id: 'metronome',
@@ -99,7 +99,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '⏱️',
       btnClass: 'btn-metronome',
       isLink: false,
-      action: () => navigate('/metronome')
+      action: () => navigate('/game/metronome')
     },
     {
       id: 'piano',
@@ -110,7 +110,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🎹',
       btnClass: 'btn-piano',
       isLink: false,
-      action: () => navigate('/piano')
+      action: () => navigate('/game/piano')
     },
     {
       id: 'kronos',
@@ -121,7 +121,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '⏳',
       btnClass: 'btn-kronos',
       isLink: false,
-      action: () => navigate('/kronos?etape=3')
+      action: () => navigate('/game/kronos?etape=3')
     },   
     {
       id: 'pianovirtuel',
@@ -132,7 +132,7 @@ export function buildGamesList(navigate: (path: string) => void): readonly GameI
       icon: '🎹',
       btnClass: 'btn-pianovirtuel',
       isLink: false,
-      action: () => navigate('/pianovirtuel')
+      action: () => navigate('/game/pianovirtuel')
     }
   ];
 }

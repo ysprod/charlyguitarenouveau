@@ -138,26 +138,13 @@
             <div class="product-meta">
               @if (doc.format) {
                 <span class="meta-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
                   {{ doc.format }}
                 </span>
               }
 
               @if (doc.level) {
                 <span class="meta-chip level">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
                   {{ doc.level }}
-                </span>
-              }
-
-              @if (doc.downloads !== undefined) {
-                <span class="meta-chip downloads">
-                  <span aria-hidden="true">📥</span> {{ doc.downloads }} téléchargements
                 </span>
               }
             </div>
@@ -186,13 +173,16 @@
                   [attr.aria-label]="'Écouter le podcast de ' + doc.title"
                   title="Écouter le podcast"
                 >
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" y1="19" x2="12" y2="23" />
-                    <line x1="8" y1="23" x2="16" y2="23" />
-                  </svg>
-                  <span>Ecouter</span>
+                  <span class="podcast-icon-wrapper" aria-hidden="true">
+                    <svg class="podcast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 8.5a6.5 6.5 0 1 1 12 0c0 1.8-.7 3.4-1.9 4.6" />
+                      <path d="M9 8.5a3 3 0 1 1 6 0c0 1-.4 1.9-1.1 2.5" />
+                      <path d="M12 11v7" />
+                      <path d="M9 18c1.5 1 4.5 1 6 0" />
+                      <path d="M12 18v3" />
+                    </svg>
+                  </span>
+                  <span class="podcast-label">Ecouter</span>
                 </button>
               }
             </div>
@@ -310,8 +300,6 @@
     }
   }
 
-
-
   <!-- ═══════════════════════════════════════════════════════
        TOAST GLOBAL — ✅ différé
        ═══════════════════════════════════════════════════════ -->
@@ -320,4 +308,3 @@
   }
    <app-immersive-carousel />
 </main>
-

@@ -410,7 +410,7 @@ export class KronosComponent {
      ═══════════════════════════════════════════════════════ */
 
   onrecommencer(): void {
-    void this.router.navigate(['/play'], {
+    void this.router.navigate(['/game/play'], {
       queryParams: {
         vie: this.pointdevies(),
         bonus: this.pointdebonus(),

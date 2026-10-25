@@ -16,7 +16,7 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     icon: '🎸',
     backgroundIcon: '🎸',
     actionLabel: 'Rejoindre la session',
-    actionRoute: '/contact'
+    actionRoute: '/user/contact'
   },
   {
     id: 'cours-collectif',
@@ -25,7 +25,7 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     icon: '👥',
     backgroundIcon: '🎶',
     actionLabel: 'Voir les horaires',
-    actionRoute: '/contact'
+    actionRoute: '/user/contact'
   },
   {
     id: 'analyse-morceau',
@@ -34,7 +34,7 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     icon: '🎼',
     backgroundIcon: '🎵',
     actionLabel: 'Découvrir l\'analyse',
-    actionRoute: '/contact'
+    actionRoute: '/user/contact'
   },
   {
     id: 'studio-live',
@@ -43,6 +43,6 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     icon: '🎙️',
     backgroundIcon: '🎧',
     actionLabel: 'Regarder le stream',
-    actionRoute: '/contact'
+    actionRoute: '/user/contact'
   }
 ];

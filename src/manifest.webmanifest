@@ -87,7 +87,7 @@
       "name": "Jouer",
       "short_name": "Jeux",
       "description": "Accéder à la bibliothèque de jeux",
-      "url": "/play?source=pwa",
+      "url": "/game/play?source=pwa",
       "icons": [
         {
           "src": "assets/icons/shortcut-play-96x96.png",
@@ -100,7 +100,7 @@
       "name": "Live",
       "short_name": "Live",
       "description": "Rejoindre le mode live",
-      "url": "/noslives?source=pwa",
+      "url": "/user/noslives?source=pwa",
       "icons": [
         {
           "src": "assets/icons/shortcut-live-96x96.png",
@@ -126,7 +126,7 @@
       "name": "Mes messages",
       "short_name": "Inbox",
       "description": "Consulter mes messages",
-      "url": "/inbox?source=pwa",
+      "url": "/user/inbox?source=pwa",
       "icons": [
         {
           "src": "assets/icons/shortcut-inbox-96x96.png",

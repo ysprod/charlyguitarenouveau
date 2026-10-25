@@ -18,7 +18,7 @@ export const FORMATIONS: readonly Formation[] = [
       'Exercices et vidéos',
     ],
     actionLabel: "Démarrer l'apprentissage",
-    actionRoute: '/contact',
+    actionRoute: '/user/contact',
     highlighted: true,
     popular: true,
   },
@@ -37,7 +37,7 @@ export const FORMATIONS: readonly Formation[] = [
       'Inscription / Réservation',
     ],
     actionLabel: "S'inscrire aux sessions",
-    actionRoute: '/contact',
+    actionRoute: '/user/contact',
     highlighted: false,
     popular: false,
   },
@@ -56,7 +56,7 @@ export const FORMATIONS: readonly Formation[] = [
       'Accompagnement personnalisé',
     ],
     actionLabel: 'Réserver un professeur',
-    actionRoute: '/contact',
+    actionRoute: '/user/contact',
     highlighted: false,
     popular: false,
   },
@@ -71,7 +71,7 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     description:
       'Participez aux sessions interactives avec des experts et développez votre technique.',
     actionLabel: 'Rejoindre la session',
-    actionRoute: '/contact',
+    actionRoute: '/user/contact',
   },
   {
     id: 'cours-live',
@@ -81,6 +81,6 @@ export const LIVE_CARDS: readonly LiveCard[] = [
     description:
       'Apprenez en temps réel avec un formateur et bénéficiez de conseils personnalisés.',
     actionLabel: "S'inscrire au cours",
-    actionRoute: '/contact',
+    actionRoute: '/user/contact',
   },
 ];

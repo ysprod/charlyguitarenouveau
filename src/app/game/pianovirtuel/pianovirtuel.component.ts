@@ -677,6 +677,6 @@ export class PianovirtuelComponent {
   }
 
   goBack(): void {
-    void this.router.navigate(['/play']);
+    void this.router.navigate(['/game/play']);
   }
 }

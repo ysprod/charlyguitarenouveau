@@ -25,7 +25,7 @@ export const DEFAULT_IMMERSIVE_CARDS: readonly ImmersiveCard[] = [
     title: 'Découvrez nos offres',
     description: 'Choisis ton pack pédagogique et commence ton voyage musical.',
     imageUrl: 'assets/abonnement.jpg',
-    route: '/offres',
+    route: '/academie/offres',
     tag: 'Cours de Guitare',
     tagColor: 'gold'
   },
@@ -43,7 +43,7 @@ export const DEFAULT_IMMERSIVE_CARDS: readonly ImmersiveCard[] = [
     title: 'Vidéos Live',
     description: 'Rejoignez-nous pour des sessions interactives et des podcasts.',
     imageUrl: 'assets/live.jpg',
-    route: '/noslives',
+    route: '/user/noslives',
     tag: 'Live',
     tagColor: 'live'
   },
@@ -61,7 +61,7 @@ export const DEFAULT_IMMERSIVE_CARDS: readonly ImmersiveCard[] = [
     title: 'Studio Professionnel',
     description: 'Enregistrez votre musique dans des conditions optimales.',
     imageUrl: 'assets/studio.jpg',
-    route: '/studio',
+    route: '/user/studio',
     tag: 'Studio',
     tagColor: 'live'
   },
@@ -70,7 +70,7 @@ export const DEFAULT_IMMERSIVE_CARDS: readonly ImmersiveCard[] = [
     title: 'Boutique',
     description: 'Decouvrez nos produits',
     imageUrl: 'assets/boutique.jpg',
-    route: '/store',
+    route: '/academie/documents',
     tag: 'store',
     tagColor: 'live'
   },
@@ -79,7 +79,7 @@ export const DEFAULT_IMMERSIVE_CARDS: readonly ImmersiveCard[] = [
     title: 'Page Accueil',
     description: 'Site officiel de Charly Guitare',
     imageUrl: 'assets/charly-guitare-hero.jpg',
-    route: '/amanda',
+    route: '/user/amanda',
     tag: 'accueil',
     tagColor: 'live'
   }

@@ -17,17 +17,17 @@
       <div class="desktop-only-links">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Accueil</a>
         <a routerLink="/game/play" routerLinkActive="active" (click)="closeMobileMenu()">Jeux</a>
-        <a routerLink="/noslives" routerLinkActive="active" (click)="closeMobileMenu()"><span class="live-dot" aria-hidden="true"></span>Live</a>
-        <a routerLink="/studio" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link"><span>Studio</span></a>
+        <a routerLink="/user/noslives" routerLinkActive="active" (click)="closeMobileMenu()"><span class="live-dot" aria-hidden="true"></span>Live</a>
+        <a routerLink="/user/studio" routerLinkActive="active" (click)="closeMobileMenu()" class="nav-inbox-link"><span>Studio</span></a>
         <a routerLink="/academie" routerLinkActive="active" (click)="closeMobileMenu()">Académie</a>
-        <a routerLink="/store" routerLinkActive="active" (click)="closeMobileMenu()">Boutique</a>
+        <a routerLink="/academie/documents" routerLinkActive="active" (click)="closeMobileMenu()">Boutique</a>
         <a routerLink="/offoland" routerLinkActive="active" (click)="closeMobileMenu()">Offoland</a>
       </div>
 
       <!-- Liens du menu Burger (Mobile uniquement) -->
       <div class="mobile-only-links">
         <a routerLink="/offoland" routerLinkActive="active" (click)="closeMobileMenu()">Offoland</a>
-        <a routerLink="/studio" routerLinkActive="active" (click)="closeMobileMenu()">Studio</a>
+        <a routerLink="/user/studio" routerLinkActive="active" (click)="closeMobileMenu()">Studio</a>
         
         @if (!user()) {
           <div class="mobile-auth">
@@ -42,7 +42,7 @@
 
       @if (user(); as currentUser) {
       <!-- Cloche notification -->
-      <a routerLink="/inbox" class="notification-bell-btn" title="Voir mes messages" aria-label="Voir mes messages">
+      <a routerLink="/user/inbox" class="notification-bell-btn" title="Voir mes messages" aria-label="Voir mes messages">
         <mat-icon aria-hidden="true">notifications</mat-icon>
         @if (unreadCount() > 0) {
         <span class="bell-badge" aria-label="messages non lus">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span>
@@ -72,7 +72,7 @@
           <div class="user-details"><p class="menu-user-name">{{ currentUser.displayName || 'Offolandais' }}</p></div>
         </div>
         <mat-divider></mat-divider>
-        <button mat-menu-item routerLink="/inbox"><mat-icon>mail_outline</mat-icon><span>Mes Messages</span></button>
+        <button mat-menu-item routerLink="/user/inbox"><mat-icon>mail_outline</mat-icon><span>Mes Messages</span></button>
         <button mat-menu-item routerLink="/profil"><mat-icon>person_outline</mat-icon><span>Mon Profil</span></button>
         <mat-divider></mat-divider>
         <button mat-menu-item (click)="onLogout()" class="logout-item"><mat-icon>logout</mat-icon><span>Déconnexion</span></button>
@@ -123,12 +123,12 @@
     <span>Jouer</span>
   </a>
 
-  <a routerLink="/store" routerLinkActive="active" class="bottom-nav-item">
+  <a routerLink="/academie/documents" routerLinkActive="active" class="bottom-nav-item">
     <mat-icon>storefront</mat-icon>
     <span>Boutique</span>
   </a>
 
-  <a routerLink="/noslives" routerLinkActive="active" class="bottom-nav-item">
+  <a routerLink="/user/noslives" routerLinkActive="active" class="bottom-nav-item">
     <mat-icon>live_tv</mat-icon>
     <span>Live</span>
   </a>

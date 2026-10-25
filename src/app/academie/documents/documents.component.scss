@@ -167,7 +167,10 @@
     background: rgba(37, 99, 235, .1);
     color: var(--primary);
 
-    svg { width: 18px; height: 18px; }
+    svg {
+      width: 18px;
+      height: 18px;
+    }
   }
 
   .credit-tag {
@@ -184,7 +187,6 @@
   gap: 1rem;
   position: relative;
 
-  /* 🔵 Montant en bleu (mise en avant) */
   .credit-amount {
     font-size: 1.5rem;
     font-weight: 800;
@@ -192,7 +194,7 @@
   }
 }
 
-/* 🟠 Bouton Recharger — orange (action importante / CTA) */
+/* 🟠 Bouton Recharger — orange */
 .btn-recharge {
   display: inline-flex;
   align-items: center;
@@ -207,7 +209,10 @@
   transition: var(--t-fast);
   box-shadow: 0 4px 12px rgba(234, 88, 12, .25);
 
-  svg { width: 16px; height: 16px; }
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 
   &:hover {
     background: var(--warning-hover);
@@ -350,7 +355,9 @@
   overflow-x: auto;
   scrollbar-width: none;
 
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .filter-pill {
@@ -373,7 +380,6 @@
     color: var(--primary);
   }
 
-  /* 🔵 Filtre actif — bleu */
   &.active {
     background: var(--primary);
     border-color: var(--primary);
@@ -399,7 +405,6 @@
     color: var(--text-dark);
   }
 
-  /* 🔴 Réinitialiser — rouge clair */
   .btn-reset-filters {
     background: transparent;
     border: none;
@@ -440,13 +445,22 @@
     border-color: var(--border-gold);
     box-shadow: 0 20px 40px rgba(15, 23, 42, .12);
 
-    .product-img { transform: scale(1.08); }
+    .product-img {
+      transform: scale(1.08);
+    }
   }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .product-media {
@@ -471,7 +485,9 @@
   height: 100%;
   background: linear-gradient(135deg, var(--bg-soft), #e2e8f0);
 
-  .placeholder-emoji { font-size: 3.5rem; }
+  .placeholder-emoji {
+    font-size: 3.5rem;
+  }
 }
 
 .media-overlay {
@@ -498,7 +514,6 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* 🟠 Prix — orange (mise en avant) */
 .badge-price {
   position: absolute;
   bottom: 1rem;
@@ -512,7 +527,6 @@
   border-radius: var(--r-sm);
   box-shadow: 0 4px 12px rgba(234, 88, 12, .15);
 
-  /* 🟢 Gratuit — vert */
   &.free {
     color: var(--success);
     border-color: var(--success);
@@ -562,7 +576,10 @@
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
 
-  svg { width: 12px; height: 12px; }
+  svg {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .product-footer {
@@ -581,7 +598,7 @@
   }
 }
 
-/* 🔵 Bouton Acheter — bleu (action principale) */
+/* 🔵 Bouton Acheter — bleu */
 .btn-buy {
   display: flex;
   align-items: center;
@@ -609,7 +626,9 @@
     background: var(--primary-hover);
     box-shadow: 0 8px 20px var(--primary-glow);
 
-    .btn-icon { transform: translateX(4px); }
+    .btn-icon {
+      transform: translateX(4px);
+    }
   }
 
   &:focus-visible {
@@ -617,7 +636,6 @@
     outline-offset: 3px;
   }
 
-  /* 🟢 Bouton Téléchargement gratuit — vert */
   &.btn-free {
     color: var(--success);
     background: rgba(22, 163, 74, .1);
@@ -631,33 +649,106 @@
   }
 }
 
-/* 🎧 Bouton Podcast — identité dorée */
+/* 🎧 Bouton Podcast — Design "Wahou" */
 .btn-podcast {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .4rem;
-  padding: .85rem 1rem;
+  gap: .55rem;
+  padding: .85rem 1.1rem;
   font-size: .85rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: .02em;
   color: var(--gold-primary);
-  background: var(--gold-soft);
-  border: 1px solid var(--border-gold);
+  background: linear-gradient(135deg,
+      rgba(184, 134, 11, 0.10) 0%,
+      rgba(184, 134, 11, 0.04) 100%);
+  border: 1.5px solid var(--border-gold);
   border-radius: var(--r-md);
   cursor: pointer;
   white-space: nowrap;
-  transition: var(--t-fast);
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform var(--t-fast),
+    color var(--t-fast),
+    background var(--t-fast),
+    border-color var(--t-fast),
+    box-shadow var(--t-fast);
 
-  .btn-icon {
-    width: 16px;
-    height: 16px;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: radial-gradient(circle at 50% 50%,
+        var(--gold-glow) 0%,
+        transparent 70%);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity var(--t-fast);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(120deg,
+        transparent,
+        rgba(255, 255, 255, 0.5),
+        transparent);
+    transform: skewX(-20deg);
+    pointer-events: none;
+    transition: left .7s ease;
+  }
+
+  .podcast-icon-wrapper {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    transition: transform var(--t-fast);
+  }
+
+  .podcast-icon {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.2;
+  }
+
+  .podcast-label {
+    position: relative;
+    z-index: 1;
   }
 
   &:hover {
+    transform: translateY(-2px);
     color: #fff;
-    background: var(--gold-primary);
+    background: linear-gradient(135deg, var(--gold-primary), var(--gold-hover));
     border-color: var(--gold-primary);
-    box-shadow: 0 4px 14px var(--gold-glow);
+    box-shadow:
+      0 8px 20px rgba(184, 134, 11, 0.35),
+      0 0 0 1px var(--gold-primary);
+
+    &::before {
+      opacity: 1;
+    }
+
+    &::after {
+      left: 150%;
+    }
+
+    .podcast-icon-wrapper {
+      transform: scale(1.12) rotate(-6deg);
+    }
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.97);
   }
 
   &:focus-visible {
@@ -666,7 +757,16 @@
   }
 
   @media (max-width: 420px) {
-    span { display: none; } /* icône seule sur très petits écrans */
+    padding: .85rem;
+
+    .podcast-label {
+      display: none;
+    }
+
+    .podcast-icon-wrapper {
+      width: 20px;
+      height: 20px;
+    }
   }
 }
 
@@ -690,7 +790,10 @@
     border-radius: 50%;
     border: 1px solid var(--border-subtle);
 
-    svg { width: 32px; height: 32px; }
+    svg {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   h3 {
@@ -754,9 +857,20 @@
   border-radius: 4px;
   animation: pulse 1.5s infinite;
 
-  &.title { height: 20px; width: 80%;  }
-  &.desc  { height: 40px; width: 100%; }
-  &.meta  { height: 16px; width: 40%;  }
+  &.title {
+    height: 20px;
+    width: 80%;
+  }
+
+  &.desc {
+    height: 40px;
+    width: 100%;
+  }
+
+  &.meta {
+    height: 16px;
+    width: 40%;
+  }
 }
 
 .skeleton-button {
@@ -768,8 +882,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: .5; }
-  50%      { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: .5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -799,8 +920,15 @@
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(.95) translateY(10px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .modal-close {
@@ -825,7 +953,6 @@
   }
 }
 
-/* 🔵 Badge modale — bleu */
 .modal-badge {
   display: inline-block;
   font-size: .75rem;
@@ -834,8 +961,9 @@
   text-transform: uppercase;
   color: var(--primary);
 
-  /* 🟠 Badge Recharge — orange */
-  &.recharge { color: var(--warning); }
+  &.recharge {
+    color: var(--warning);
+  }
 }
 
 .summary-box {
@@ -859,9 +987,20 @@
     color: var(--text-dark);
   }
 
-  .summary-price { color: var(--warning); font-weight: 700; }
-  .summary-credit { color: var(--primary); font-weight: 700; }
-  .negative { color: var(--danger); font-weight: 700; }
+  .summary-price {
+    color: var(--warning);
+    font-weight: 700;
+  }
+
+  .summary-credit {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .negative {
+    color: var(--danger);
+    font-weight: 700;
+  }
 }
 
 .summary-divider {
@@ -870,7 +1009,6 @@
   background: var(--border-subtle);
 }
 
-/* 🔴 Alerte solde insuffisant — rouge */
 .alert-warning {
   display: flex;
   align-items: flex-start;
@@ -939,7 +1077,6 @@
     }
   }
 
-  /* ⚪ Secondaire — gris */
   .btn-secondary {
     color: var(--text-body);
     background: var(--bg-soft);
@@ -950,7 +1087,6 @@
     }
   }
 
-  /* 🔵 Primaire — bleu */
   .btn-primary {
     color: #fff;
     background: var(--primary);
@@ -960,7 +1096,6 @@
     }
   }
 
-  /* 🟠 Highlight — orange (Recharger) */
   .btn-highlight {
     display: inline-flex;
     align-items: center;
@@ -994,14 +1129,22 @@
   box-shadow: 0 10px 30px rgba(15, 23, 42, .15);
   animation: slideUp .3s ease;
 
-  /* 🟢 Succès — vert */
-  &.success { border-left-color: var(--success); }
-  /* 🔴 Erreur — rouge */
-  &.error   { border-left-color: var(--danger);  }
-  /* 🔵 Info — bleu */
-  &.info    { border-left-color: var(--primary); }
+  &.success {
+    border-left-color: var(--success);
+  }
 
-  .toast-icon { font-size: 1.1rem; }
+  &.error {
+    border-left-color: var(--danger);
+  }
+
+  &.info {
+    border-left-color: var(--primary);
+  }
+
+  .toast-icon {
+    font-size: 1.1rem;
+  }
+
   .toast-message {
     color: var(--text-dark);
     font-size: .9rem;
@@ -1010,18 +1153,32 @@
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(100%); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ═════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═════════════════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
-  .store-container { padding: 1.5rem 1rem 4rem; }
+  .store-container {
+    padding: 1.5rem 1rem 4rem;
+  }
 
-  .store-hero { padding: 2rem 1.5rem; }
-  .hero-title { font-size: 1.75rem; }
+  .store-hero {
+    padding: 2rem 1.5rem;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+  }
 
   .toast-notification {
     right: 1rem;
@@ -1034,6 +1191,7 @@
    ACCESSIBILITÉ
    ═════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

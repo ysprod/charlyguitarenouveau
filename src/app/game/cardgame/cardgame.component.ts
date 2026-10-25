@@ -208,7 +208,7 @@ export class CardgameComponent {
 
   goToPlay(): void {
     this.voice.stopSpeaking();
-    void this.router.navigate(['/play']);
+    void this.router.navigate(['/game/play']);
   }
 
   goBack(): void {

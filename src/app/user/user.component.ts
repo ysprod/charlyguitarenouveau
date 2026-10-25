@@ -35,7 +35,7 @@ export class UserComponent {
 
   /**
    * ✅ Masque le bouton retour UNIQUEMENT sur les vraies pages d'accueil
-   * → /user, /user/, /user/amanda
+   * → /user, /user/, 
    */
   readonly showBackButton = computed(() => {
     const url = this.cleanUrl();

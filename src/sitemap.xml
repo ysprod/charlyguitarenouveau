@@ -9,7 +9,7 @@
   </url>
 
   <url>
-    <loc>https://charlyguitare.com/accueil</loc>
+    <loc>https://charlyguitare.com/user/accueil</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -23,7 +23,7 @@
   </url>
 
   <url>
-    <loc>https://charlyguitare.com/noslives</loc>
+    <loc>https://charlyguitare.com/user/noslives</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -37,28 +37,28 @@
   </url>
 
   <url>
-    <loc>https://charlyguitare.com/accueil</loc>
+    <loc>https://charlyguitare.com/user/accueil</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://charlyguitare.com/contact</loc>
+    <loc>https://charlyguitare.com/user/contact</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://charlyguitare.com/mentions</loc>
+    <loc>https://charlyguitare.com/user/mentions</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://charlyguitare.com/privacy</loc>
+    <loc>https://charlyguitare.com/user/privacy</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

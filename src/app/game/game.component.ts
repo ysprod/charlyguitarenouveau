@@ -89,7 +89,6 @@ export class GameComponent {
   /**
    * Extrait le segment du jeu.
    * Ex: `/game/fretboard` → `'fretboard'`
-   *     `/game/play`      → `'play'`
    */
   private readonly activeSegment = computed<string | null>(() => {
     const url = this.currentUrl().split('?')[0].split('#')[0];

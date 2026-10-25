@@ -10,7 +10,7 @@ export const QUICK_ACTIONS: readonly QuickAction[] = [
   {
     label: 'Boutique',
     icon: '📚',
-    route: '/store',
+    route: '/academie/documents',
     color: 'success',
   },
   {
@@ -22,7 +22,7 @@ export const QUICK_ACTIONS: readonly QuickAction[] = [
   {
     label: 'Studio',
     icon: '💳',
-    route: '/studio',
+    route: '/user/studio',
     color: 'danger',
   },
   {

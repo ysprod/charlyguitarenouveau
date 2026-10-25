@@ -292,7 +292,7 @@ export class MessagerieComponent {
     this.selectedThread.set(thread);
     this.replyText.set('');
     this.markThreadAsRead(thread);
-    void this.router.navigate(['/inbox', thread.threadId], {
+    void this.router.navigate(['/user/inbox', thread.threadId], {
       replaceUrl: true,
     });
   }
@@ -300,7 +300,7 @@ export class MessagerieComponent {
   closeThread(): void {
     this.selectedThread.set(null);
     this.replyText.set('');
-    void this.router.navigate(['/inbox'], { replaceUrl: true });
+    void this.router.navigate(['/user/inbox'], { replaceUrl: true });
   }
 
   onReplyEnter(event: Event): void {

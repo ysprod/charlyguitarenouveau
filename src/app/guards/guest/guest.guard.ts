@@ -8,7 +8,7 @@ import { catchError, filter, map, take } from 'rxjs/operators';
 
 /**
  * Guard inverse de AuthGuard :
- * - Si l'utilisateur EST connecté → redirige vers /amanda (espace personnel)
+ * - Si l'utilisateur EST connecté → redirige vers /user/amanda (espace personnel)
  * - Si l'utilisateur N'EST PAS connecté → autorise l'accès (landing page)
  */
 export const GuestGuard: CanActivateFn = (): Observable<boolean | UrlTree> => {
@@ -22,9 +22,9 @@ export const GuestGuard: CanActivateFn = (): Observable<boolean | UrlTree> => {
     // 2️⃣ Prend uniquement la première valeur résolue et se désabonne automatiquement
     take(1),
 
-    // 3️⃣ Si connecté (User présent) → redirige vers /amanda, sinon → autorise (true)
+    // 3️⃣ Si connecté (User présent) → redirige vers /user/amanda, sinon → autorise (true)
     map((currentUser) => 
-      currentUser ? router.createUrlTree(['/amanda']) : true
+      currentUser ? router.createUrlTree(['/user/amanda']) : true
     ),
 
     // 4️⃣ En cas d'erreur de flux, on laisse passer (mode visiteur de secours)
