@@ -1,101 +1,119 @@
-<!-- ═══════════════════════════════════════════════════════
-     EN-TÊTE DE NAVIGATION
-     ═══════════════════════════════════════════════════════ -->
-<header class="navbar" [class.scrolled]="isScrolled()">
-  <div class="navbar-container">
+<!-- src/app/app.component.html -->
 
-    <!-- 1. Gauche : Logo -->
-    <a routerLink="/" class="logo-link" title="CHARLY GUITARE - Accueil"
-      aria-label="CHARLY GUITARE - Retour à l'accueil">
+<div class="app-layout">
+
+  <!-- ═══════════════════════════════════════════════════════
+       ✅ SIDEBAR (Visible sur Desktop >= 1024px)
+       ═══════════════════════════════════════════════════════ -->
+  <aside class="sidebar" aria-label="Navigation principale">
+    
+    <!-- Logo -->
+    <a routerLink="/" class="sidebar-logo" aria-label="Charly Guitare - Accueil">
       <span class="logo-icon" aria-hidden="true">🎸</span>
+      <span class="logo-text">Charly Guitare</span>
     </a>
 
-    <!-- 2. Centre : Liens (Desktop uniquement) -->
-    <nav class="nav-links desktop-only-links" aria-label="Navigation principale">
-      <a routerLink="/game/play" routerLinkActive="active">Jeux</a>
-      <a routerLink="/user/noslives" routerLinkActive="active">
-        <span class="live-dot" aria-hidden="true"></span>Live
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+        <mat-icon>home</mat-icon>
+        <span>Accueil</span>
       </a>
-      <a routerLink="/user/studio" routerLinkActive="active">Studio</a>
-      <a routerLink="/academie" routerLinkActive="active">Académie</a>
-      <a routerLink="/offoland" routerLinkActive="active">Offoland</a>
-    </nav>
+      <a routerLink="/game/play" routerLinkActive="active" class="nav-item">
+        <mat-icon>sports_esports</mat-icon>
+        <span>Jeux</span>
+      </a>
+      <a routerLink="/academie" routerLinkActive="active" class="nav-item">
+        <mat-icon>school</mat-icon>
+        <span>Academie</span>
+      </a>
+      <a routerLink="/user/noslives" routerLinkActive="active" class="nav-item nav-item--live">
+        <mat-icon>sensors</mat-icon>
+        <span>Live</span>
+      </a>
+      <a routerLink="/academie/documents" routerLinkActive="active" class="nav-item">
+        <mat-icon>storefront</mat-icon>
+        <span>Boutique</span>
+      </a>
+      <a routerLink="/user/studio" routerLinkActive="active" class="nav-item">
+        <mat-icon>music_note</mat-icon>
+        <span>Studio</span>
+      </a>
+    </nav> 
+  </aside>
 
-    <!-- 3. Droite : Actions -->
-    <div class="header-actions">
+  <!-- ═══════════════════════════════════════════════════════
+       ✅ CONTENU PRINCIPAL
+       ═══════════════════════════════════════════════════════ -->
+  <div class="main-wrapper">
+    
+    <!-- EN-TÊTE DE NAVIGATION (Header) -->
+    <header class="navbar" [class.scrolled]="isScrolled()">
+      <div class="navbar-container">
 
-      <!-- ✅ Translate (visible sur desktop ET mobile) -->
-      <div class="translate-wrapper">
-        <app-translate />
-      </div>
+        <!-- 1. Gauche : Logo (Mobile uniquement) -->
+        <a routerLink="/" class="logo-link mobile-only" title="CHARLY GUITARE - Accueil" aria-label="Retour à l'accueil">
+          <span class="logo-icon" aria-hidden="true">🎸</span>
+        </a>      
 
-      @if (user(); as currentUser) {
-        <!-- Cloche notification -->
-        <a routerLink="/user/inbox" class="notification-bell-btn" title="Voir mes messages" aria-label="Voir mes messages">
-          <mat-icon aria-hidden="true">notifications</mat-icon>
-          @if (unreadCount() > 0) {
-            <span class="bell-badge" aria-label="messages non lus">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span>
+        <!-- 3. Droite : Actions -->
+        <div class="header-actions">
+          <!-- Translate -->
+          <div class="translate-wrapper">
+            <app-translate />
+          </div>
+
+          @if (user(); as currentUser) {
+            <!-- Cloche notification -->
+            <a routerLink="/user/inbox" class="notification-bell-btn" title="Voir mes messages" aria-label="Voir mes messages">
+              <mat-icon aria-hidden="true">notifications</mat-icon>
+              @if (unreadCount() > 0) {
+                <span class="bell-badge" aria-label="messages non lus">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span>
+              }
+            </a>
+
+            <!-- Avatar + menu -->
+            <button [matMenuTriggerFor]="userMenu" class="user-avatar-btn" aria-label="Menu profil" type="button">
+              <div class="avatar-ring">
+                <div class="avatar">
+                  @if (currentUser.photoURL) {
+                    <img [src]="currentUser.photoURL" [alt]="currentUser.displayName || 'Utilisateur'" />
+                  } @else {
+                    <span>{{ getInitials(currentUser.displayName) }}</span>
+                  }
+                </div>
+              </div>
+              <mat-icon class="arrow-icon" aria-hidden="true">expand_more</mat-icon>
+            </button>
+
+            <mat-menu #userMenu="matMenu" xPosition="before" class="custom-user-menu">
+              <div class="menu-header">
+                <div class="menu-avatar">
+                  @if (currentUser.photoURL) { <img [src]="currentUser.photoURL" /> } @else { <span>{{ getInitials(currentUser.displayName) }}</span> }
+                </div>
+                <div class="user-details"><p class="menu-user-name">{{ currentUser.displayName || 'Offolandais' }}</p></div>
+              </div>
+              <mat-divider></mat-divider>
+              <button mat-menu-item routerLink="/user/inbox"><mat-icon>mail_outline</mat-icon><span>Mes Messages</span></button>
+              <button mat-menu-item routerLink="/user/profil"><mat-icon>person_outline</mat-icon><span>Mon Profil</span></button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item (click)="onLogout()" class="logout-item"><mat-icon>logout</mat-icon><span>Déconnexion</span></button>
+            </mat-menu>
+
+          } @else {
+            <a routerLink="/login" class="btn-login-desktop">Connexion</a>
           }
-        </a>
+        </div>
+      </div>
+    </header>
 
-        <!-- Avatar + menu -->
-        <button [matMenuTriggerFor]="userMenu" class="user-avatar-btn" aria-label="Menu profil" type="button">
-          <div class="avatar-ring">
-            <div class="avatar">
-              @if (currentUser.photoURL) {
-                <img [src]="currentUser.photoURL" [alt]="currentUser.displayName || 'Utilisateur'" />
-              } @else {
-                <span>{{ getInitials(currentUser.displayName) }}</span>
-              }
-            </div>
-          </div>
-          <mat-icon class="arrow-icon" aria-hidden="true">expand_more</mat-icon>
-        </button>
-
-        <mat-menu #userMenu="matMenu" xPosition="before" class="custom-user-menu">
-          <div class="menu-header">
-            <div class="menu-avatar">
-              @if (currentUser.photoURL) {
-                <img [src]="currentUser.photoURL" />
-              } @else {
-                <span>{{ getInitials(currentUser.displayName) }}</span>
-              }
-            </div>
-            <div class="user-details">
-              <p class="menu-user-name">{{ currentUser.displayName || 'Offolandais' }}</p>
-            </div>
-          </div>
-          <mat-divider></mat-divider>
-          <button mat-menu-item routerLink="/user/inbox">
-            <mat-icon>mail_outline</mat-icon>
-            <span>Mes Messages</span>
-          </button>
-          <button mat-menu-item routerLink="/user/profil">
-            <mat-icon>person_outline</mat-icon>
-            <span>Mon Profil</span>
-          </button>
-          <mat-divider></mat-divider>
-          <button mat-menu-item (click)="onLogout()" class="logout-item">
-            <mat-icon>logout</mat-icon>
-            <span>Déconnexion</span>
-          </button>
-        </mat-menu>
-
-      } @else {
-        <a routerLink="/login" class="btn-login-desktop">Connexion</a>
-      }
-
-    </div>
+    <!-- CONTENU -->
+    <main class="main-content">
+      <app-install-prompt />
+      <router-outlet></router-outlet>
+    </main>
   </div>
-</header>
-
-<!-- ═══════════════════════════════════════════════════════
-     CONTENU PRINCIPAL
-     ═══════════════════════════════════════════════════════ -->
-<main class="main-content">
-  <app-install-prompt />
-  <router-outlet></router-outlet>
-</main>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════
      ✅ BOTTOM NAVIGATION (Mobile uniquement)
@@ -111,7 +129,6 @@
     <span>Académie</span>
   </a>
 
-  <!-- Bouton central "Jouer" mis en avant -->
   <a routerLink="/game/play" routerLinkActive="active" class="bottom-nav-item play-btn">
     <div class="play-icon-wrapper">
       <mat-icon>sports_esports</mat-icon>

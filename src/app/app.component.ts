@@ -81,7 +81,6 @@ export class AppComponent {
 
   readonly user = toSignal(this.auth.user$, { initialValue: null });
 
-  readonly isMobileMenuOpen = signal(false);
   readonly isScrolled = signal(false);
 
   readonly unreadCount = toSignal(this.watchUnreadMessages(), {
@@ -227,18 +226,7 @@ export class AppComponent {
     }, 300);
   }
 
-  toggleMobileMenu(): void {
-    this.isMobileMenuOpen.update((v) => !v);
-  }
-
-  closeMobileMenu(): void {
-    if (this.isMobileMenuOpen()) {
-      this.isMobileMenuOpen.set(false);
-    }
-  }
-
   onLogout(): void {
-    this.closeMobileMenu();
     void this.auth.logout();
     this.snackBar.open('Déconnexion réussie', 'Fermer', { duration: 3000 });
     void this.router.navigate(['/']);

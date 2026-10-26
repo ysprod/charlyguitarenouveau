@@ -30,15 +30,7 @@
           La musique est une école
           <span class="subtitle-accent">de vie.</span>
         </p>
-        <div class="hero-actions">
-          <a routerLink="/game/play" class="cta-button cta-primary">
-            <span>Jouer à Charly Guitare Hero</span>
-            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              aria-hidden="true">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </a>
+        <div class="hero-actions">         
 
           <a routerLink="/academie" class="cta-button cta-secondary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -50,8 +42,8 @@
       </div>
     </div>
   </section>
-  <br> <br>
-
+ 
+ <app-podcastvideo [randommode]="true" [affichebouton]="true" />
   <!-- ═══════════════════════════════════════════════════════
        SECTION FEATURES — RANGÉE 1
        ═══════════════════════════════════════════════════════ -->
@@ -223,7 +215,7 @@
       </div>
     </article>
   </section>
-  <app-podcastvideo [randommode]="true" [affichebouton]="true" />
+ 
 </div>
 
 <app-footer />

@@ -49,7 +49,7 @@ export class UserComponent {
   readonly pageTitle = computed(() => {
     const url = this.cleanUrl();
 
-    if (url === '/user' || url === '/user/amanda') return 'Bienvenue / Welcome';
+    if (url === '/user' || url === '/user/amanda') return 'Bienvenue';
     if (url === '/user/accueil') return 'Charly Guitare';
     if (url.startsWith('/user/profil')) return 'Mon Profil';
     if (url.startsWith('/user/inbox')) return 'Messages';
@@ -61,6 +61,6 @@ export class UserComponent {
     if (url.startsWith('/user/privacy')) return 'Confidentialité';
     if (url.startsWith('/user/mentions')) return 'Mentions Légales';
 
-    return 'Bienvenue / Welcome'; // Fallback
+    return 'Bienvenue'; // Fallback
   });
 }
