@@ -45,6 +45,7 @@ import { VoiceService } from './game/services/voice.service';
  
 import { getInitials } from './home/utils/string.utils';
 import { AnalyticsService } from './shared/services/analytics.service';
+import { TranslateComponent } from './shared/translate/translate.component';
 
 @Component({
   selector: 'app-root',
@@ -57,6 +58,7 @@ import { AnalyticsService } from './shared/services/analytics.service';
     MatDividerModule,
     MatSnackBarModule,
     InstallPromptComponent,
+    TranslateComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],

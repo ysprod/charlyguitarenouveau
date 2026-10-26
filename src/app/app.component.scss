@@ -553,3 +553,34 @@ button:focus-visible {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ TRANSLATE — Visible sur desktop ET mobile
+   ═════════════════════════════════════════════════════════════════════ */
+
+.translate-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Ajustement sur mobile : on réduit légèrement la taille */
+@media (max-width: 900px) {
+  .translate-wrapper {
+    /* Optionnel : réduire la taille du translate sur mobile */
+    ::ng-deep > * {
+      transform: scale(0.85);
+      transform-origin: center;
+    }
+  }
+}
+
+/* Très petits écrans : réduire encore */
+@media (max-width: 360px) {
+  .translate-wrapper {
+    ::ng-deep > * {
+      transform: scale(0.75);
+    }
+  }
+}
