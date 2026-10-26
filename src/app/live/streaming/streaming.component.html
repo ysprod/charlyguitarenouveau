@@ -1,0 +1,30 @@
+<!-- src/app/live/streaming/streaming.component.html -->
+
+<div class="streaming-container">
+
+  @if (activeVideo(); as video) {
+    <div class="video-card">
+      <div class="video-wrapper">
+        <iframe
+          [src]="safeEmbedUrl()"
+          title="Charly Guitare Live"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <div class="video-footer">
+        <h3 class="video-title">{{ video.title }}</h3>
+        <button type="button" class="btn-next" (click)="nextVideo()">
+          <span>Vidéo suivante</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  }
+
+</div>

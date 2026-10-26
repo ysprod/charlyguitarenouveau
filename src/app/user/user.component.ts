@@ -55,7 +55,7 @@ export class UserComponent {
     if (url.startsWith('/user/inbox')) return 'Messages';
     if (url.startsWith('/user/notifications')) return 'Notifications';
     if (url.startsWith('/user/studio')) return 'Studio Professionnel';
-    if (url.startsWith('/user/noslives')) return 'ShowCases';
+    if (url.startsWith('/user/noslives')) return 'STREAMING';
     if (url.startsWith('/user/contact')) return 'Contact';
     if (url.startsWith('/user/again')) return 'LA DREAM TEAM';
     if (url.startsWith('/user/privacy')) return 'Confidentialité';

@@ -1,43 +1,82 @@
+<!-- src/app/live/live.component.html -->
+
 <div class="live-hub-container">
+  
+  <!-- Effet de lumière d'ambiance en arrière-plan -->
+  <div class="ambient-glow" aria-hidden="true"></div>
 
-  <section class="grid-section" aria-label="Contenus live">
+  <div class="section-header main-header">
+    <h2 class="section-title">
+      <span class="live-indicator" aria-hidden="true"></span>
+      LIVE <span class="highlight-text">HUB</span>
+    </h2>
+  </div>
 
-    <!-- 🎥 CARTE VIDÉO ENRICHIE -->
-    <div class="video-card">
-       
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION STREAMING (Mise en avant)
+       ═══════════════════════════════════════════════════════ -->
+  <section class="streaming-section" aria-label="Streaming en boucle">
+    <div class="section-header">
+      <h2 class="section-title">
+        <svg class="icon-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        En Vogue
+      </h2>
+    </div>
 
-      <div class="video-wrapper">
-        <iframe [src]="safeEmbedUrl()" title="Vidéo de présentation Charly Guitare" loading="lazy"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <div class="streaming-wrapper">
+      <app-streaming />
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       GRILLE DE CONTENU
+       ═══════════════════════════════════════════════════════ -->
+  <section class="content-grid">
+
+    <!-- Colonne de gauche : Prochains lives -->
+    <div class="main-column">
+      <div class="section-header">
+        <h2 class="section-title">À l'affiche</h2>
       </div>
 
-      <div class="video-footer">
-        <a [href]="video.watchUrl" target="_blank" rel="noopener noreferrer" class="yt-link-btn">
-          <span class="icon" aria-hidden="true">▶</span>
-          <span>Regarder sur YouTube</span>
-        </a>
+      <div class="live-cards-grid">
+        @for (card of cards; track card.id) {
+        <article class="live-card">
+          <div class="live-card-image">
+            <img [src]="'/assets/live-' + card.id + '.jpg'" [alt]="card.title" loading="lazy" />
+            <div class="live-card-overlay"></div>
+            <span class="live-card-date-badge">{{ card.date }}</span>
+          </div>
+
+          <div class="live-card-body">
+            <h3 class="live-card-title">{{ card.title }}</h3>
+            <p class="live-card-description">{{ card.description }}</p>
+
+            <a [href]="card.actionUrl" target="_blank" rel="noopener noreferrer" class="live-card-action">
+              <span>{{ card.actionLabel }}</span>
+              <span class="arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </article>
+        }
       </div>
     </div>
 
-    <!-- 🎤 CARTES SECONDAIRES -->
-    @for (card of cards; track card.id) {
-    <article [class]="'live-card ' + card.cssClass">
-      <div class="card-content">
-        <div class="card-icon-wrap">
-          <span class="card-icon" aria-hidden="true">{{ card.icon }}</span>
+    <!-- Colonne de droite : Panneaux d'information -->
+    <aside class="sidebar-column">
+      <div class="promo-panel">
+        <div class="promo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         </div>
-        <h3>{{ card.title }}</h3>
-        <p>{{ card.description }}</p>
+        <h3 class="promo-title">Artistes, faites connaître votre musique !</h3>
+        <p class="promo-description">
+          Charly Guitare vous offre une vitrine pour promouvoir vos clips et albums.
+        </p>
+        <a href="/user/contact" class="promo-btn">Devenir partenaire</a>
       </div>
-
-      <a [href]="card.actionUrl" target="_blank" rel="noopener noreferrer" class="card-action">
-        <span>{{ card.actionLabel }}</span>
-        <span class="arrow" aria-hidden="true">→</span>
-      </a>
-    </article>
-    }
+    </aside>
 
   </section>
+
   <app-immersive-carousel />
 </div>

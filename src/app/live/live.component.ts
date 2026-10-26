@@ -1,52 +1,16 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-} from '@angular/core';
-
-import {
-  DomSanitizer,
-  SafeResourceUrl,
-} from '@angular/platform-browser';
-
-import { LiveCard, LiveVideo } from './models/live.model';
-import { LIVE_CARDS, LIVE_VIDEO } from './data/live.data';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ImmersiveCarouselComponent } from '../shared/immersive-carousel/immersive-carousel.component';
-
-/* ═════════════════════════════════════════════════════════════════════
-   LIVE — Hub des lives Charly Guitare
-   ═════════════════════════════════════════════════════════════════════ */
+import { LIVE_CARDS } from './data/live.data';
+import { LiveCard } from './models/live.model';
+import { StreamingComponent } from './streaming/streaming.component';
 
 @Component({
   selector: 'app-live',
-  imports:[ImmersiveCarouselComponent],
+  imports: [ImmersiveCarouselComponent, StreamingComponent],
   templateUrl: './live.component.html',
   styleUrls: ['./live.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LiveComponent {
-
-  /* ─── Injection ─── */
-  private readonly sanitizer = inject(DomSanitizer);
-
-  /* ═══════════════════════════════════════════════════════
-     DONNÉES — Immuables
-     ═══════════════════════════════════════════════════════ */
-
-  readonly video: LiveVideo = LIVE_VIDEO;
+export class LiveComponent { 
   readonly cards: readonly LiveCard[] = LIVE_CARDS;
-
-  /* ═══════════════════════════════════════════════════════
-     URL D'EMBED SÉCURISÉE
-     ═══════════════════════════════════════════════════════ */
-
-  /**
-   * Angular `sanitize` automatiquement les URLs d'iframe.
-   * Pour YouTube, il faut explicitement bypasser avec
-   * `bypassSecurityTrustResourceUrl`.
-   */
-  readonly safeEmbedUrl = computed<SafeResourceUrl>(() =>
-    this.sanitizer.bypassSecurityTrustResourceUrl(this.video.embedUrl)
-  );
-}
+ }

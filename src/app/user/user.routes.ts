@@ -76,7 +76,7 @@ export const userRoutes: Routes = [
         path: 'noslives',
         loadComponent: () =>
           import('../live/live.component').then((m) => m.LiveComponent),
-        title: 'ShowCases',
+        title: 'STREAMING',
       },
       {
         path: 'contact',

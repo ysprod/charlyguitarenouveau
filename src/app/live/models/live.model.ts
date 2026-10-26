@@ -1,42 +1,30 @@
-/* ═════════════════════════════════════════════════════════════════════
-   LIVE — MODÈLES
-   ═════════════════════════════════════════════════════════════════════ */
+// src/app/live/models/live.model.ts
 
-/** Carte vidéo mise en avant (YouTube embarqué). */
 export interface LiveVideo {
-  /** Titre affiché en haut de la carte. */
-  readonly title: string;
-
-  /** URL d'embed YouTube (iframe). */
-  readonly embedUrl: string;
-
-  /** URL publique YouTube (lien « Regarder sur YouTube »). */
-  readonly watchUrl: string;
-
-  /** Label du badge LIVE. */
-  readonly badge: string;
+  title: string;
+  embedUrl: string;
+  watchUrl: string;
+  badge: string;
 }
 
-/** Carte live secondaire (concerts, replay, etc.). */
 export interface LiveCard {
-  /** Identifiant unique (utilisé pour le track). */
-  readonly id: string;
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  date?: string;
+  actionLabel: string;
+  actionUrl: string;
+  cssClass: string;
+}
 
-  /** Emoji de la carte. */
-  readonly icon: string;
-
-  /** Titre (ex : CONCERTS). */
-  readonly title: string;
-
-  /** Description courte. */
-  readonly description: string;
-
-  /** Label du lien d'action. */
-  readonly actionLabel: string;
-
-  /** URL externe de la carte. */
-  readonly actionUrl: string;
-
-  /** Classe CSS additionnelle (ex : card-concerts). */
-  readonly cssClass: string;
+/** ✅ Nouveau modèle pour la section "À la une" */
+export interface FeaturedVideo {
+  id: string;
+  title: string;
+  artist: string;
+  duration: string;
+  thumbnailUrl: string;
+  youtubeUrl: string;
+  views: number; // Le nombre de vues (pour la sélection)
 }
