@@ -8,14 +8,14 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: "AIzaSyDP1HVLme_3smuwzaDCWax-Bjd-DK1AeSA",
-    authDomain: "charly-guitare.firebaseapp.com",
-    databaseURL: "https://charly-guitare-default-rtdb.firebaseio.com",
-    projectId: "charly-guitare",
-    storageBucket: "charly-guitare.appspot.com",
-    messagingSenderId: "799887580459",
-    appId: "1:799887580459:web:a998466f151d494ec6b96e",
-    measurementId: "G-4L50T9ZMWJ"
+    apiKey: "demo-api-key",
+    authDomain: "demo-charly-guitare.firebaseapp.com",
+    databaseURL: "https://demo-charly-guitare-default-rtdb.firebaseio.com",
+    projectId: "demo-charly-guitare",
+    storageBucket: "demo-charly-guitare.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:0000000000000000000000",
+    measurementId: ""
   },
   youtube: {
     apiKey: 'AIzaSyD19kbfxLHG365zkPZ7av8AxMcE4RttQj8-iZ1YGHPg_yU2X2SoCwtFAZI',

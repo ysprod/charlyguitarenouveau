@@ -18,7 +18,7 @@ export interface DocumentItem {
   /* ─── Fichiers ─── */
   readonly imageUrl?: string;
   readonly imageStoragePath?: string;
-  readonly downloadUrl: string;
+  readonly downloadUrl?: string;
   readonly storagePath?: string;
   readonly fileName?: string;
   readonly fileSize?: number;

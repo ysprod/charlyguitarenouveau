@@ -1,221 +1,157 @@
-// src/app/features/documents/documents.component.ts
-
 import {
   ChangeDetectionStrategy,
   Component,
-  EnvironmentInjector,
   afterNextRender,
   computed,
   inject,
-  runInInjectionContext,
-  signal
+  signal,
 } from '@angular/core';
-
+import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Auth } from '@angular/fire/auth';
+import { FunctionsError } from '@angular/fire/functions';
+import { catchError, from, of } from 'rxjs';
 
-import { Auth, user } from '@angular/fire/auth';
-import {
-  Database,
-  listVal,
-  objectVal,
-  ref,
-  runTransaction,
-} from '@angular/fire/database';
-
-import { catchError, of, switchMap } from 'rxjs';
-
+import { FILTER_ALL_LABEL } from '../constants/documents-ui.constants';
 import { DocumentItem } from '../models/document.model';
+import { SortOption } from '../models/documents-ui.model';
+import { FormatPricePipe } from '../pipes/format-price.pipe';
+import { ToastComponent } from '../toast/toast.component';
+import { ToastService } from '../services/toast.service';
 import {
-  PendingPurchase,
-  SortOption,
-} from '../models/documents-ui.model';
-
+  CheckoutProduct,
+  PaymentMethod,
+  PurchaseHistoryItem,
+  PurchaseService,
+} from '../services/purchase.service';
 import {
-  DOCUMENTS_DB_PATHS,
-  FILTER_ALL_LABEL
-} from '../constants/documents-ui.constants';
-
-import { FormatPricePipe } from 'src/app/academie/pipes/format-price.pipe';
-import { ToastService } from 'src/app/academie/services/toast.service';
-import { ToastComponent } from 'src/app/academie/toast/toast.component';
-import {
-  formatPrice,
   matchesCategory,
   sortDocuments,
-} from 'src/app/academie/utils/documents.utils';
-import { PromoCodeService } from 'src/app/shared/services/promo-code.service';
-import { PromoModalComponent } from '../../shared/promo-modal/promo-modal.component';
+} from '../utils/documents.utils';
 import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
 import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
 
-/* ═════════════════════════════════════════════════════════════════════
-   DOCUMENTS — Boutique numérique (optimisé)
-   ═════════════════════════════════════════════════════════════════════ */
+const PAYMENT_METHODS: readonly {
+  readonly value: PaymentMethod;
+  readonly label: string;
+}[] = [
+  { value: 'wave', label: 'Wave' },
+  { value: 'orange', label: 'Orange Money' },
+  { value: 'mtn', label: 'MTN MoMo' },
+  { value: 'moov', label: 'Moov Money' },
+  { value: 'djamo', label: 'Djamo' },
+  { value: 'jeko', label: 'Jèko' },
+];
 
 @Component({
   selector: 'app-documents',
   imports: [
-    PromoModalComponent, ToastComponent,
-    FormatPricePipe, PodcastvideoComponent,ImmersiveCarouselComponent
+    ToastComponent,
+    DatePipe,
+    FormatPricePipe,
+    PodcastvideoComponent,
+    ImmersiveCarouselComponent,
   ],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DocumentsComponent {
-
-  /* ─── Injection ─── */
-  private readonly db = inject(Database);
   private readonly auth = inject(Auth);
-  private readonly promoService = inject(PromoCodeService);
+  private readonly functions = inject(PurchaseService);
   private readonly toastService = inject(ToastService);
-  private readonly environmentInjector = inject(EnvironmentInjector);
-
-  /* ═══════════════════════════════════════════════════════
-     CONSTANTES EXPOSÉES AU TEMPLATE
-     ═══════════════════════════════════════════════════════ */
-
 
   readonly FILTER_ALL_LABEL = FILTER_ALL_LABEL;
-
-  /* ═══════════════════════════════════════════════════════
-     UTILISATEUR CONNECTÉ
-     ═══════════════════════════════════════════════════════ */
-
-  private readonly currentUser = toSignal(user(this.auth), {
-    initialValue: null,
-  });
-
-  readonly currentUserId = computed(() => this.currentUser()?.uid ?? null);
-
-  private readonly creditFromDb = toSignal(
-    user(this.auth).pipe(
-      switchMap((u) => {
-        if (!u) return of(null);
-
-        return runInInjectionContext(this.environmentInjector, () =>
-          objectVal<number>(
-            ref(
-              this.db,
-              `${DOCUMENTS_DB_PATHS.USERS}/${u.uid}/${DOCUMENTS_DB_PATHS.CREDIT}`,
-            ),
-          ),
-        );
-      }),
-    ),
-    { initialValue: null as number | null },
-  );
-
-  readonly userCredit = computed(() => this.creditFromDb() ?? 0);
-
-  /* ═══════════════════════════════════════════════════════
-     FILTRES, RECHERCHE, TRI
-     ═══════════════════════════════════════════════════════ */
+  readonly paymentMethods = PAYMENT_METHODS;
 
   readonly selectedFilter = signal(FILTER_ALL_LABEL);
   readonly searchTerm = signal('');
   readonly sortBy = signal<SortOption>('recent');
-
-  /* ═══════════════════════════════════════════════════════
-     MODALE ACHAT
-     ═══════════════════════════════════════════════════════ */
-
   readonly selectedDocForPurchase = signal<DocumentItem | null>(null);
-  readonly showRechargeInModal = signal(false);
+  readonly selectedPaymentMethod = signal<PaymentMethod>('wave');
   readonly isProcessing = signal(false);
+  readonly purchaseHistory = signal<readonly PurchaseHistoryItem[]>([]);
+  readonly isHistoryLoading = signal(false);
+  readonly historyError = signal('');
+  readonly catalogError = signal('');
 
-  /* ═══════════════════════════════════════════════════════
-     MODALE CODE PROMO
-     ═══════════════════════════════════════════════════════ */
-
-  readonly showPromoModal = signal(false);
-  readonly isSavingPromo = signal(false);
-  readonly promoError = signal('');
-  private readonly pendingPurchase = signal<PendingPurchase | null>(null);
-
-  /* ═══════════════════════════════════════════════════════
-     DOCUMENTS — chargement fiable
-     ═══════════════════════════════════════════════════════ */
-
-  /**
-   * ✅ `undefined` initial tant que Firebase n'a pas émis.
-   *    Dès la 1ère émission (même tableau vide), on considère chargé.
-   *    `listVal` émet toujours un tableau → pas besoin de timeout de secours.
-   */
-  private readonly allDocsRaw = toSignal(
-    runInInjectionContext(this.environmentInjector, () =>
-      listVal<DocumentItem>(
-        ref(this.db, DOCUMENTS_DB_PATHS.DOCUMENTS),
-        { keyField: 'key' },
-      ).pipe(
-        catchError((err) => {
-          console.error('Erreur Firebase (documents) :', err);
-          return of([] as DocumentItem[]);
-        }),
-      ),
+  private readonly productsFromServer = toSignal<
+    readonly CheckoutProduct[] | undefined
+  >(
+    from(this.functions.listProducts()).pipe(
+      catchError((error: unknown) => {
+        console.error('Erreur chargement du catalogue de paiement :', error);
+        this.catalogError.set(
+          'Le catalogue de vente est temporairement indisponible.',
+        );
+        return of([] as readonly CheckoutProduct[]);
+      }),
     ),
     { initialValue: undefined },
   );
 
-  /** ✅ Tableau stable (jamais `undefined`) pour le template */
-  readonly allDocs = computed(() => this.allDocsRaw() ?? []);
+  readonly allDocs = computed(() => {
+    return (this.productsFromServer() ?? []).map((product) => ({
+      key: product.id,
+      title: product.title,
+      description: product.description,
+      type: product.type,
+      typeClass: product.typeClass,
+      icon: product.icon,
+      format: product.format,
+      level: product.level,
+      price: product.priceXof,
+      imageUrl: product.imageUrl,
+      createdAt: product.createdAt,
+      views: product.views,
+      downloads: product.downloads,
+    }));
+  });
 
-  /** ✅ `true` uniquement tant qu'aucune émission Firebase n'est arrivée */
-  readonly isLoading = computed(() => this.allDocsRaw() === undefined);
+  readonly isLoading = computed(
+    () => this.productsFromServer() === undefined,
+  );
 
-  /** ✅ Boutique réellement vide (chargement terminé + 0 docs) */
   readonly isEmpty = computed(
     () => !this.isLoading() && this.allDocs().length === 0,
   );
 
-  /** ✅ Nombre de documents filtrés (évite 3 appels au computed dans le HTML) */
+  readonly visibleDocuments = computed(() => {
+    let documents = [...this.allDocs()];
+    const filter = this.selectedFilter();
+    if (filter !== FILTER_ALL_LABEL) {
+      documents = documents.filter((document) =>
+        matchesCategory(document, filter),
+      );
+    }
+
+    const term = this.searchTerm().toLowerCase().trim();
+    if (term) {
+      documents = documents.filter(
+        (document) =>
+          document.title?.toLowerCase().includes(term) ||
+          document.description?.toLowerCase().includes(term) ||
+          document.format?.toLowerCase().includes(term),
+      );
+    }
+
+    return sortDocuments(documents, this.sortBy());
+  });
+
   readonly documentCount = computed(() => this.visibleDocuments().length);
 
-  /** ✅ Filtres actifs ? */
   readonly hasActiveFilters = computed(
     () =>
       this.selectedFilter() !== FILTER_ALL_LABEL ||
       this.searchTerm() !== '',
   );
 
-  /* ═══════════════════════════════════════════════════════
-     DOCUMENTS FILTRÉS / TRIÉS
-     ═══════════════════════════════════════════════════════ */
-
-  readonly visibleDocuments = computed(() => {
-    let docs = [...this.allDocs()];
-
-    const filter = this.selectedFilter();
-    if (filter !== FILTER_ALL_LABEL) {
-      docs = docs.filter((d) => matchesCategory(d, filter));
-    }
-
-    const term = this.searchTerm().toLowerCase().trim();
-    if (term) {
-      docs = docs.filter(
-        (d) =>
-          d.title?.toLowerCase().includes(term) ||
-          d.description?.toLowerCase().includes(term) ||
-          d.format?.toLowerCase().includes(term),
-      );
-    }
-
-    return sortDocuments(docs, this.sortBy());
-  });
-
-  /* ═══════════════════════════════════════════════════════
-     CYCLE DE VIE
-     ═══════════════════════════════════════════════════════ */
-
   constructor() {
     afterNextRender(() => {
       window.scrollTo({ top: 0, behavior: 'auto' });
+      void this.refreshPurchaseHistory();
     });
   }
-
-  /* ═══════════════════════════════════════════════════════
-     FILTRAGE / TRI / RECHERCHE
-     ═══════════════════════════════════════════════════════ */
 
   filterBy(category: string): void {
     this.selectedFilter.set(category);
@@ -229,220 +165,120 @@ export class DocumentsComponent {
     this.sortBy.set((event.target as HTMLSelectElement).value as SortOption);
   }
 
+  onPaymentMethodChange(event: Event): void {
+    const method = (event.target as HTMLSelectElement).value;
+    if (PAYMENT_METHODS.some((option) => option.value === method)) {
+      this.selectedPaymentMethod.set(method as PaymentMethod);
+    }
+  }
+
   resetAll(): void {
     this.selectedFilter.set(FILTER_ALL_LABEL);
     this.searchTerm.set('');
     this.sortBy.set('recent');
   }
 
-  /* ═══════════════════════════════════════════════════════
-     PODCAST — ouverture du lien audio
-     ═══════════════════════════════════════════════════════ */
-
-  openPodcast(doc: DocumentItem, event?: Event): void {
+  initiatePurchase(doc: DocumentItem, event?: Event): void {
     event?.stopPropagation();
-
-    if (!doc.urlpodcast) {
-      this.toastService.error('Aucun podcast disponible pour ce document.');
+    if (!doc.key) {
+      this.toastService.error('Ce produit n’est pas encore disponible à la vente.');
       return;
     }
 
-    window.open(doc.urlpodcast, '_blank');
-    this.toastService.success(`Podcast de "${doc.title}" ouvert 🎧`);
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     ACHAT — Vérification code promo
-     ═══════════════════════════════════════════════════════ */
-
-  async initiatePurchase(doc: DocumentItem, event?: Event): Promise<void> {
-    event?.stopPropagation();
-
-    const promoResult = await this.promoService.checkPromoCode();
-
-    if (promoResult.status === 'missing') {
-      this.pendingPurchase.set({
-        doc,
-        reason: !doc.price || doc.price === 0 ? 'free' : 'paid',
-      });
-      this.promoError.set('');
-      this.showPromoModal.set(true);
-      return;
-    }
-
-    if (promoResult.status === 'error') {
-      this.toastService.error(promoResult.message);
-      return;
-    }
-
-    this.performPurchase(doc);
-  }
-
-  private performPurchase(doc: DocumentItem): void {
-    if (!doc.price || doc.price === 0) {
-      window.open(doc.downloadUrl, '_blank');
-      this.toastService.success(`Téléchargement de "${doc.title}" initié`);
-      return;
-    }
-
-    this.showRechargeInModal.set(false);
+    this.selectedPaymentMethod.set('wave');
     this.selectedDocForPurchase.set(doc);
   }
 
   cancelPurchase(): void {
-    this.selectedDocForPurchase.set(null);
-    this.showRechargeInModal.set(false);
-    this.isProcessing.set(false);
-  }
-
-  toggleRechargeView(show: boolean): void {
-    this.showRechargeInModal.set(show);
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     MODALE CODE PROMO
-     ═══════════════════════════════════════════════════════ */
-
-  onPromoCodeSubmitted(code: string): void {
-    if (this.isSavingPromo()) return;
-
-    this.isSavingPromo.set(true);
-    this.promoError.set('');
-
-    void this.promoService.validatePromoCode(code).then((result) => {
-      this.isSavingPromo.set(false);
-
-      if (!result.ok) {
-        this.promoError.set(result.message);
-        return;
-      }
-
-      this.showPromoModal.set(false);
-      this.toastService.success(
-        `Code « ${result.code} » validé ! Bon achat 🎸`,
-      );
-
-      const pending = this.pendingPurchase();
-      this.pendingPurchase.set(null);
-
-      if (pending) {
-        this.performPurchase(pending.doc);
-      }
-    });
-  }
-
-  closePromoModal(): void {
-    if (this.isSavingPromo()) return;
-    this.showPromoModal.set(false);
-    this.pendingPurchase.set(null);
-    this.promoError.set('');
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     RECHARGE — transaction atomique
-     ═══════════════════════════════════════════════════════ */
-
-  async processQuickRecharge(amount: number): Promise<void> {
-    const uid = this.currentUserId();
-    if (!uid) {
-      this.toastService.error('Veuillez vous connecter pour recharger.');
-      return;
-    }
-    if (this.isProcessing()) return;
-
-    this.isProcessing.set(true);
-
-    try {
-      await runInInjectionContext(this.environmentInjector, async () => {
-        const creditRef = ref(
-          this.db,
-          `${DOCUMENTS_DB_PATHS.USERS}/${uid}/${DOCUMENTS_DB_PATHS.CREDIT}`,
-        );
-
-        const result = await runTransaction(
-          creditRef,
-          (currentValue: number | null) => {
-            return (currentValue ?? 0) + amount;
-          },
-        );
-
-        if (!result.committed) {
-          throw new Error('Transaction refusée');
-        }
-      });
-
-      this.toastService.success(
-        `Compte rechargé de ${formatPrice(amount)} !`,
-      );
-      this.showRechargeInModal.set(false);
-    } catch (error) {
-      console.error('Erreur rechargement:', error);
-      this.toastService.error(
-        'Échec du rechargement. Vérifiez vos permissions ou contactez le support.',
-      );
-    } finally {
-      this.isProcessing.set(false);
+    if (!this.isProcessing()) {
+      this.selectedDocForPurchase.set(null);
     }
   }
-
-  /* ═══════════════════════════════════════════════════════
-     CONFIRMATION D'ACHAT — transaction atomique
-     ═══════════════════════════════════════════════════════ */
 
   async confirmPurchase(): Promise<void> {
-    const doc = this.selectedDocForPurchase();
-    const uid = this.currentUserId();
+    const product = this.selectedDocForPurchase();
+    if (!product?.key || this.isProcessing()) {
+      return;
+    }
 
-    if (!doc) return;
-    if (!uid) {
+    if (!this.auth.currentUser) {
       this.toastService.error('Veuillez vous connecter pour acheter.');
       return;
     }
-    if (this.isProcessing()) return;
 
-    const docPrice = doc.price || 0;
     this.isProcessing.set(true);
-
     try {
-      await runInInjectionContext(this.environmentInjector, async () => {
-        const creditRef = ref(
-          this.db,
-          `${DOCUMENTS_DB_PATHS.USERS}/${uid}/${DOCUMENTS_DB_PATHS.CREDIT}`,
-        );
-
-        const result = await runTransaction(
-          creditRef,
-          // ✅ Type correct : `undefined` annule la transaction
-          (currentValue: number | null): number | undefined => {
-            const balance = currentValue ?? 0;
-            if (balance < docPrice) {
-              return undefined;
-            }
-            return balance - docPrice;
-          },
-        );
-
-        if (!result.committed) {
-          throw new Error('INSUFFICIENT_FUNDS');
-        }
-      });
-
-      this.selectedDocForPurchase.set(null);
-      this.toastService.success(
-        `Achat réussi ! Téléchargement de "${doc.title}"...`,
+      const checkout = await this.functions.createCheckout(
+        product.key,
+        this.selectedPaymentMethod(),
       );
-      window.open(doc.downloadUrl, '_blank');
-
+      window.location.assign(checkout.redirectUrl);
     } catch (error) {
-      const msg =
-        error instanceof Error && error.message === 'INSUFFICIENT_FUNDS'
-          ? 'Crédit insuffisant. Veuillez recharger votre compte.'
-          : 'Une erreur est survenue lors du paiement.';
+      console.error('Erreur création commande :', error);
+      const message =
+        error instanceof FunctionsError &&
+        error.code === 'functions/failed-precondition'
+          ? error.message
+          : 'Impossible de créer la commande. Veuillez réessayer.';
+      this.toastService.error(message);
+      this.isProcessing.set(false);
+    }
+  }
 
-      console.error('Erreur transaction:', error);
-      this.toastService.error(msg);
+  async refreshPurchaseHistory(): Promise<void> {
+    if (!this.auth.currentUser || this.isHistoryLoading()) {
+      return;
+    }
+
+    this.isHistoryLoading.set(true);
+    this.historyError.set('');
+    try {
+      this.purchaseHistory.set(await this.functions.listPurchases());
+    } catch (error) {
+      console.error('Erreur chargement historique des achats :', error);
+      this.historyError.set(
+        'Impossible de charger votre historique d’achats.',
+      );
+    } finally {
+      this.isHistoryLoading.set(false);
+    }
+  }
+
+  async downloadPurchase(purchase: PurchaseHistoryItem): Promise<void> {
+    if (purchase.status !== 'paid' || this.isProcessing()) {
+      return;
+    }
+
+    this.isProcessing.set(true);
+    try {
+      const downloadUrl = await this.functions.getDownloadUrl(
+        purchase.orderId,
+      );
+      window.location.assign(downloadUrl);
+    } catch (error) {
+      console.error('Erreur téléchargement autorisé :', error);
+      this.toastService.error(
+        'Le téléchargement est indisponible ou cet achat ne vous appartient pas.',
+      );
     } finally {
       this.isProcessing.set(false);
     }
   }
+
+  purchaseStatusLabel(status: string): string {
+    switch (status) {
+      case 'paid':
+        return 'Payé — téléchargement disponible';
+      case 'payment_pending':
+      case 'creating_payment':
+      case 'payment_request_unknown':
+        return 'Paiement en attente de confirmation';
+      case 'payment_failed':
+      case 'payment_request_failed':
+        return 'Paiement échoué';
+      default:
+        return 'Statut indisponible';
+    }
+  }
+
 }

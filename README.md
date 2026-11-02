@@ -2,6 +2,60 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.5.
 
+## Firebase Functions
+
+The backend source is in `functions/` and is built with:
+
+```bash
+npm --prefix functions install
+npm run functions:build
+npm --prefix functions test
+```
+
+Run local Firebase emulators using the emulator-only configuration and rules:
+
+```bash
+firebase emulators:start --only auth,database,functions,storage --project demo-charly-guitare --config firebase.emulator.json
+```
+
+The Angular development environment (`ng serve`) uses the demo project with
+local Auth, Realtime Database, Storage and Functions emulators for development
+flows. The store catalogue is the exception: it reads the production
+`documents/` node directly, read-only, so current books published by the admin
+site are visible locally. Other application features remain on the emulators.
+The production environment remains configured for the production Firebase
+project.
+
+Check the callable checkout flow locally with:
+
+```bash
+npm --prefix functions run test:emulator
+```
+
+The emulator rules intentionally deny client reads and writes by default. They
+are separate from production rules; do not deploy them as production rules.
+The administration site is the source of truth for the store catalogue. The
+callable reads entries from the Realtime Database `documents/` node, validates
+their metadata and XOF price, and accepts only PDF Storage paths directly under
+`documents/`. New and updated entries therefore appear without changing this
+repository. Public download URLs from the database are never used for
+purchases; confirmed purchases receive short-lived signed URLs from the
+backend. Checkout remains blocked in the emulators and cannot create live
+Jèko payments.
+The webhook endpoint is `us-central1-jekoWebhook`. Configure
+`JEKO_API_KEY`, `JEKO_API_KEY_ID` and `JEKO_WEBHOOK_SECRET` as Firebase
+Functions secrets before enabling a real catalogue. Keep secret values out of
+source files, Angular configuration and logs. The emulator secret file contains
+test-only placeholders and is excluded from Git.
+
+The store displays products and presentation metadata returned by the
+server-side callable from the admin-managed Realtime Database catalogue.
+Old client-side prices, credit balances, promotion codes and direct file URLs
+are not trusted for purchases or downloads. Existing credit records are kept
+untouched; they are not converted into payment or entitlement records.
+Confirmed purchases and short-lived private-file download links are served
+through authenticated Functions callables.
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.

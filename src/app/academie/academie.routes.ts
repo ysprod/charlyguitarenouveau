@@ -8,10 +8,10 @@ export const academieRoutes: Routes = [
   {
     path: '',
     component: AcademieComponent, // ✅ Composant parent avec <router-outlet>
-    canActivate: [AuthGuard],
     children: [
       {
         path: '',
+        canActivate: [AuthGuard],
         loadComponent: () =>
           import('./academie-home/academie-home.component').then(
             (m) => m.AcademieHomeComponent,
@@ -20,12 +20,14 @@ export const academieRoutes: Routes = [
       },
       {
         path: 'live',
+        canActivate: [AuthGuard],
         loadComponent: () =>
           import('./live/live.component').then((m) => m.LiveComponent),
         title: 'Apprendre en Live — Charly Guitare',
       },
       {
         path: 'offres',
+        canActivate: [AuthGuard],
         loadComponent: () =>
           import('./offres/offres.component').then((m) => m.OffresComponent),
         title: 'Offres & Abonnements — Charly Guitare',

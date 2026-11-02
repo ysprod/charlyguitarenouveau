@@ -29,19 +29,28 @@ import {
 } from '@angular/fire/app';
 
 import {
+  connectAuthEmulator,
   getAuth,
   provideAuth,
 } from '@angular/fire/auth';
 
 import {
+  connectDatabaseEmulator,
   getDatabase,
   provideDatabase,
 } from '@angular/fire/database';
 
 import {
+  connectStorageEmulator,
   getStorage,
   provideStorage,
 } from '@angular/fire/storage';
+
+import {
+  connectFunctionsEmulator,
+  getFunctions,
+  provideFunctions,
+} from '@angular/fire/functions';
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -84,11 +93,39 @@ export const appConfig: ApplicationConfig = {
 
     provideFirebaseApp(() => initializeApp(environment.firebase)),
 
-    provideAuth(() => getAuth()),
+    provideAuth(() => {
+      const auth = getAuth();
+      if (!environment.production) {
+        connectAuthEmulator(auth, 'http://127.0.0.1:9099', {
+          disableWarnings: true,
+        });
+      }
+      return auth;
+    }),
 
-    provideDatabase(() => getDatabase()),
+    provideDatabase(() => {
+      const database = getDatabase();
+      if (!environment.production) {
+        connectDatabaseEmulator(database, '127.0.0.1', 9000);
+      }
+      return database;
+    }),
 
-    provideStorage(() => getStorage()),
+    provideStorage(() => {
+      const storage = getStorage();
+      if (!environment.production) {
+        connectStorageEmulator(storage, '127.0.0.1', 9199);
+      }
+      return storage;
+    }),
+
+    provideFunctions(() => {
+      const functions = getFunctions(undefined, 'us-central1');
+      if (!environment.production) {
+        connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+      }
+      return functions;
+    }),
 
     /* ─── PWA ─── */
     provideServiceWorker('ngsw-worker.js', {

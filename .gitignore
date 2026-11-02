@@ -9,6 +9,12 @@
 
 # dependencies
 /node_modules
+/functions/node_modules
+/functions/lib
+/functions/coverage
+/functions/.env.local
+/functions/.secret.local
+**/database-debug.log
 
 # profiling files
 chrome-profiler-events*.json
