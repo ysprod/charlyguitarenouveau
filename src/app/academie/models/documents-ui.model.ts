@@ -7,12 +7,7 @@ export interface ToastState {
   readonly show: boolean;
   readonly message: string;
   readonly type: ToastType;
-}
-
-export interface FilterOption {
-  readonly label: string;
-  readonly icon: string;
-}
+} 
 
 export interface PendingPurchase {
   readonly doc: DocumentItem;
