@@ -1,0 +1,152 @@
+<section class="purchase-history" aria-labelledby="purchase-history-title">
+  <header class="history-heading">
+    <div class="history-title">
+      <h2 id="purchase-history-title">Mes achats</h2>
+      <p>Les commandes apparaissent ici après leur confirmation par Jèko.</p>
+    </div>
+    <button
+      type="button"
+      class="history-refresh"
+      [disabled]="isLoading()"
+      [attr.aria-busy]="isLoading()"
+      (click)="refresh()"
+    >
+      <span class="history-refresh__icon" aria-hidden="true">↻</span>
+      {{ isLoading() ? 'Actualisation…' : 'Actualiser' }}
+    </button>
+  </header>
+
+  @if (historyError()) {
+    <p class="history-message history-message--error" role="alert">
+      {{ historyError() }}
+    </p>
+  } @else if (isLoading()) {
+    <ul class="purchase-list" aria-busy="true" aria-label="Chargement des achats">
+      @for (row of [1, 2, 3]; track row) {
+        <li class="purchase-item purchase-item--skeleton" aria-hidden="true">
+          <div class="skeleton-line skeleton-line--title"></div>
+          <div class="skeleton-line skeleton-line--meta"></div>
+          <div class="skeleton-line skeleton-line--meta short"></div>
+        </li>
+      }
+    </ul>
+  } @else if (purchases().length === 0) {
+    <div class="history-empty" role="status">
+      <p class="history-empty__title">Aucun achat confirmé pour le moment.</p>
+      <p class="history-empty__hint">
+        Vos commandes apparaîtront ici dès que Jèko aura confirmé le paiement.
+      </p>
+    </div>
+  } @else {
+    <ul class="purchase-list">
+      @for (purchase of paginatedPurchases(); track purchase.orderId) {
+        <li class="purchase-item">
+          <div class="purchase-main">
+            <div class="purchase-summary">
+              <strong class="purchase-title">{{ purchase.productTitle }}</strong>
+              <time
+                class="purchase-date"
+                [attr.datetime]="purchase.createdAt | date: 'yyyy-MM-ddTHH:mm:ss'"
+              >
+                {{ purchase.createdAt | date: 'mediumDate' }}
+              </time>
+            </div>
+
+            <div class="purchase-meta">
+              <span class="purchase-amount">
+                {{ purchase.amountXof | formatPrice }}
+              </span>
+              <span
+                class="badge"
+                [class]="'badge ' + statusClass(purchase)"
+              >
+                {{ statusLabel(purchase) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="purchase-actions">
+            @if (downloadError() && downloadingOrderId() === purchase.orderId) {
+              <p class="history-message history-message--error" role="alert">
+                {{ downloadError() }}
+              </p>
+            }
+            @if (isDownloadable(purchase)) {
+              <button
+                type="button"
+                class="history-download"
+                [disabled]="downloadingOrderId() !== null"
+                [attr.aria-label]="'Télécharger ' + purchase.productTitle"
+                (click)="download(purchase)"
+              >
+                <span class="history-download__icon" aria-hidden="true">↓</span>
+                {{
+                  downloadingOrderId() === purchase.orderId
+                    ? 'Préparation…'
+                    : 'Télécharger'
+                }}
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (totalPages() > 1) {
+      <nav
+        class="history-pagination"
+        aria-label="Pagination de l’historique des achats"
+      >
+        <p class="history-pagination__info" aria-live="polite">
+          {{ pageRange().from }}–{{ pageRange().to }}
+          sur {{ pageRange().total }} achats
+        </p>
+
+        <div class="history-pagination__controls">
+          <button
+            type="button"
+            class="pagination-btn pagination-btn--arrow"
+            [disabled]="!canGoPrevious()"
+            aria-label="Page précédente"
+            (click)="previousPage()"
+          >
+            ‹
+          </button>
+
+          @for (page of pageNumbers(); track $index) {
+            @if (page === 'ellipsis') {
+              <span class="pagination-ellipsis" aria-hidden="true">…</span>
+            } @else {
+              <button
+                type="button"
+                class="pagination-btn"
+                [class.pagination-btn--active]="page === currentPage()"
+                [attr.aria-current]="page === currentPage() ? 'page' : null"
+                [attr.aria-label]="'Aller à la page ' + page"
+                (click)="goToPage(page)"
+              >
+                {{ page }}
+              </button>
+            }
+          }
+
+          <button
+            type="button"
+            class="pagination-btn pagination-btn--arrow"
+            [disabled]="!canGoNext()"
+            aria-label="Page suivante"
+            (click)="nextPage()"
+          >
+            ›
+          </button>
+        </div>
+      </nav>
+    }
+  }
+
+  @if (downloadError() && !downloadingOrderId()) {
+    <p class="history-message history-message--error" role="alert">
+      {{ downloadError() }}
+    </p>
+  }
+</section>

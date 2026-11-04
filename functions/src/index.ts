@@ -22,6 +22,12 @@ import {
   isJekoPaymentRequestResponse,
   isPaymentMethod,
 } from './checkout.js';
+import { getCoursePack, isCoursePackOrder } from './course-packs.js';
+import {
+  addCalendarMonths,
+  getGameSubscriptionPlan,
+  isGameSubscriptionOrder,
+} from './game-subscriptions.js';
 import {
   matchesOrderPayment,
   parseJekoTransaction,
@@ -49,7 +55,15 @@ const jekoStoreId = defineString('JEKO_STORE_ID', { default: '' });
 
 interface CreateCheckoutInput {
   readonly productId?: unknown;
+  readonly coursePackId?: unknown;
+  readonly subscriptionPlanId?: unknown;
   readonly paymentMethod?: unknown;
+}
+
+interface GameSubscriptionStatus {
+  readonly active: boolean;
+  readonly expiresAt: number | null;
+  readonly planId: string | null;
 }
 
 interface DownloadPurchaseInput {
@@ -63,6 +77,7 @@ interface PurchaseHistoryItem {
   readonly amountXof: number;
   readonly currency: 'XOF';
   readonly status: string;
+  readonly orderType?: 'document' | 'game_subscription' | 'course_pack';
   readonly reference: string;
   readonly createdAt: number;
   readonly paidAt?: number;
@@ -103,8 +118,52 @@ export const createCheckout = onCall<CreateCheckoutInput>(
       );
     }
 
-    const product = await getProduct(request.data?.productId);
-    if (!product) {
+    const subscriptionPlanId = request.data?.subscriptionPlanId;
+    const productId = request.data?.productId;
+    const coursePackId = request.data?.coursePackId;
+    const hasSubscriptionPlan = subscriptionPlanId !== undefined;
+    const hasProduct = productId !== undefined;
+    const hasCoursePack = coursePackId !== undefined;
+    if (
+      Number(hasSubscriptionPlan) +
+        Number(hasProduct) +
+        Number(hasCoursePack) !==
+      1
+    ) {
+      throw new HttpsError(
+        'invalid-argument',
+        'Choisissez un document, un pack de cours ou une formule de jeux.',
+      );
+    }
+
+    const subscriptionPlan = hasSubscriptionPlan
+      ? getGameSubscriptionPlan(subscriptionPlanId)
+      : undefined;
+    if (hasSubscriptionPlan && !subscriptionPlan) {
+      throw new HttpsError(
+        'invalid-argument',
+        'La formule de jeux sélectionnée est invalide.',
+      );
+    }
+
+    const coursePack = hasCoursePack ? getCoursePack(coursePackId) : undefined;
+    if (hasCoursePack && !coursePack) {
+      throw new HttpsError(
+        'invalid-argument',
+        'Le pack de cours sélectionné est invalide.',
+      );
+    }
+
+    const product =
+      subscriptionPlan || coursePack ? undefined : await getProduct(productId);
+    if (!subscriptionPlan && !coursePack && !product) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Ce produit n’est pas disponible à la vente.',
+      );
+    }
+    const checkoutItem = subscriptionPlan ?? coursePack ?? product;
+    if (!checkoutItem) {
       throw new HttpsError(
         'failed-precondition',
         'Ce produit n’est pas disponible à la vente.',
@@ -135,11 +194,32 @@ export const createCheckout = onCall<CreateCheckoutInput>(
     const orderRef = database.ref(`orders/${orderId}`);
     const order = {
       userId: request.auth.uid,
-      productId: product.id,
-      productTitle: product.title,
-      amountXof: product.priceXof,
+      orderType: subscriptionPlan
+        ? 'game_subscription'
+        : coursePack
+          ? 'course_pack'
+          : 'document',
+      productId: subscriptionPlan
+        ? `games-${subscriptionPlan.id}`
+        : coursePack
+          ? `course-pack-${coursePack.id}`
+          : checkoutItem.id,
+      productTitle: subscriptionPlan
+        ? `Abonnement jeux — ${subscriptionPlan.title}`
+        : coursePack
+          ? `Pack de cours — ${coursePack.title} (1 mois)`
+          : checkoutItem.title,
+      amountXof: checkoutItem.priceXof,
       currency: 'XOF',
-      storagePath: product.storagePath,
+      ...(product && { storagePath: product.storagePath }),
+      ...(coursePack && {
+        coursePackId: coursePack.id,
+        coursePackDurationMonths: 1,
+      }),
+      ...(subscriptionPlan && {
+        subscriptionPlanId: subscriptionPlan.id,
+        subscriptionDurationMonths: subscriptionPlan.durationMonths,
+      }),
       status: 'creating_payment',
       paymentMethod: request.data.paymentMethod,
       reference,
@@ -154,10 +234,15 @@ export const createCheckout = onCall<CreateCheckoutInput>(
     });
 
     const paymentRequest = buildPaymentRequest(
-      product,
+      checkoutItem,
       orderId,
       request.data.paymentMethod,
       storeId,
+      subscriptionPlan
+        ? '/game/play'
+        : coursePack
+          ? '/academie/offres'
+          : '/academie/documents',
     );
 
     let response: Response;
@@ -455,13 +540,27 @@ export const jekoWebhook = onRequest(
       }
 
       if (transaction.status === 'success') {
-        await database.ref().update({
-          [`entitlements/${updatedOrder['userId']}/${orderId}`]: {
+        const entitlementUpdates: Record<string, unknown> = {};
+        if (isGameSubscriptionOrder(updatedOrder)) {
+          await grantGameSubscription(
+            database,
+            orderId,
+            updatedOrder,
+            transaction.id,
+          );
+        } else if (!isCoursePackOrder(updatedOrder)) {
+          entitlementUpdates[
+            `entitlements/${updatedOrder['userId']}/${orderId}`
+          ] = {
             productId: updatedOrder['productId'],
             storagePath: updatedOrder['storagePath'],
             transactionId: transaction.id,
             grantedAt: updatedOrder['paidAt'],
-          },
+          };
+        }
+
+        await database.ref().update({
+          ...entitlementUpdates,
           [`ordersByUser/${updatedOrder['userId']}/${createOrderHistoryKey(updatedOrder)}`]:
             toPurchaseHistoryItem(orderId, updatedOrder),
           [`processedJekoTransactions/${createTransactionKey(transaction.id)}`]:
@@ -498,6 +597,38 @@ export const listAvailableProducts = onCall(
   async (): Promise<{ products: PublicProduct[] }> => {
     return {
       products: await getAvailableProducts(),
+    };
+  },
+);
+
+export const getMyGameSubscription = onCall(
+  async (request): Promise<GameSubscriptionStatus> => {
+    if (!request.auth) {
+      throw new HttpsError(
+        'unauthenticated',
+        'Connectez-vous pour vérifier votre accès aux jeux.',
+      );
+    }
+
+    const snapshot = await getDatabase()
+      .ref(`gameSubscriptions/${request.auth.uid}`)
+      .get();
+    const value: unknown = snapshot.val();
+    const expiresAt =
+      isRecord(value) &&
+      typeof value['expiresAt'] === 'number' &&
+      Number.isSafeInteger(value['expiresAt'])
+        ? value['expiresAt']
+        : null;
+    const planId =
+      isRecord(value) && typeof value['planId'] === 'string'
+        ? value['planId']
+        : null;
+
+    return {
+      active: expiresAt !== null && expiresAt > Date.now(),
+      expiresAt,
+      planId,
     };
   },
 );
@@ -625,6 +756,61 @@ function isPendingOrderStatus(status: unknown): boolean {
   );
 }
 
+async function grantGameSubscription(
+  database: ReturnType<typeof getDatabase>,
+  orderId: string,
+  order: Record<string, unknown>,
+  transactionId: string,
+): Promise<void> {
+  if (
+    typeof order['userId'] !== 'string' ||
+    !isGameSubscriptionOrder(order)
+  ) {
+    throw new Error('Cannot grant an invalid game subscription order.');
+  }
+
+  const plan = getGameSubscriptionPlan(order['subscriptionPlanId']);
+  if (!plan) {
+    throw new Error('Cannot grant an unknown game subscription plan.');
+  }
+
+  const now = Date.now();
+  const subscriptionRef = database.ref(`gameSubscriptions/${order['userId']}`);
+  const result = await subscriptionRef.transaction((current: unknown) => {
+    const existing = isRecord(current) ? current : {};
+    const appliedOrders = isRecord(existing['appliedOrders'])
+      ? existing['appliedOrders']
+      : {};
+
+    if (appliedOrders[orderId] === transactionId) {
+      return existing;
+    }
+
+    const previousExpiry =
+      typeof existing['expiresAt'] === 'number' &&
+      Number.isSafeInteger(existing['expiresAt'])
+        ? existing['expiresAt']
+        : now;
+    const startsAt = Math.max(now, previousExpiry);
+
+    return {
+      planId: plan.id,
+      startedAt: previousExpiry > now ? existing['startedAt'] ?? now : now,
+      expiresAt: addCalendarMonths(startsAt, plan.durationMonths),
+      lastOrderId: orderId,
+      updatedAt: now,
+      appliedOrders: {
+        ...appliedOrders,
+        [orderId]: transactionId,
+      },
+    };
+  });
+
+  if (!result.committed) {
+    throw new Error('The game subscription could not be activated.');
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -655,6 +841,9 @@ function toPurchaseHistoryItem(
     amountXof: order['amountXof'],
     currency: 'XOF',
     status: order['status'],
+    ...(isPurchaseOrderType(order['orderType']) && {
+      orderType: order['orderType'],
+    }),
     reference: order['reference'],
     createdAt: order['createdAt'],
     ...(typeof order['paidAt'] === 'number' && {
@@ -677,6 +866,8 @@ function parsePurchaseHistoryItem(
     value['amountXof'] < 1 ||
     value['currency'] !== 'XOF' ||
     typeof value['status'] !== 'string' ||
+    (value['orderType'] !== undefined &&
+      !isPurchaseOrderType(value['orderType'])) ||
     typeof value['reference'] !== 'string' ||
     typeof value['createdAt'] !== 'number' ||
     !Number.isSafeInteger(value['createdAt'])
@@ -691,12 +882,25 @@ function parsePurchaseHistoryItem(
     amountXof: value['amountXof'],
     currency: 'XOF',
     status: value['status'],
+    ...(isPurchaseOrderType(value['orderType']) && {
+      orderType: value['orderType'],
+    }),
     reference: value['reference'],
     createdAt: value['createdAt'],
     ...(typeof value['paidAt'] === 'number' && {
       paidAt: value['paidAt'],
     }),
   };
+}
+
+function isPurchaseOrderType(
+  value: unknown,
+): value is 'document' | 'game_subscription' | 'course_pack' {
+  return (
+    value === 'document' ||
+    value === 'game_subscription' ||
+    value === 'course_pack'
+  );
 }
 
 async function getProduct(productId: unknown) {
@@ -850,10 +1054,20 @@ function orderMismatchReason(
   if (!isRecord(order)) {
     return 'order is missing or is not an object';
   }
+  const isGameSubscription = isGameSubscriptionOrder(order);
+  const isCoursePack = isCoursePackOrder(order);
   if (
     typeof order['userId'] !== 'string' ||
     typeof order['productId'] !== 'string' ||
-    typeof order['storagePath'] !== 'string'
+    (order['orderType'] !== undefined &&
+      order['orderType'] !== 'document' &&
+      order['orderType'] !== 'game_subscription' &&
+      order['orderType'] !== 'course_pack') ||
+    (order['orderType'] === 'game_subscription'
+      ? !isGameSubscription
+      : order['orderType'] === 'course_pack'
+        ? !isCoursePack
+        : typeof order['storagePath'] !== 'string')
   ) {
     return 'order identity or storage metadata is missing';
   }

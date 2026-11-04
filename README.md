@@ -50,11 +50,24 @@ test-only placeholders and is excluded from Git.
 
 The store displays products and presentation metadata returned by the
 server-side callable from the admin-managed Realtime Database catalogue.
-Old client-side prices, credit balances, promotion codes and direct file URLs
+Old client-side prices, credit balance   and direct file URLs
 are not trusted for purchases or downloads. Existing credit records are kept
 untouched; they are not converted into payment or entitlement records.
 Confirmed purchases and short-lived private-file download links are served
 through authenticated Functions callables.
+
+Game subscriptions use the same authenticated Jèko checkout. The fixed plans
+are 1 month (1,000 XOF), 3 months (2,500 XOF) and 12 months (10,000 XOF);
+successful webhook confirmation activates access. Real checkout is disabled
+when running with the local demo emulators. Deploy the updated Functions and
+production frontend, and configure the Jèko secrets and `JEKO_STORE_ID`, before
+expecting the subscription button to open a live payment.
+`JEKO_STORE_ID` must contain the UUID of the Jèko store.
+
+Academy course packs use the same authenticated Jèko checkout. The backend
+validates pack IDs and prices against its fixed catalogue; each payment covers
+one month at the price displayed on the offer and does not renew automatically.
+Jèko webhook confirmation records the paid pack in the user's purchase history.
 
 ## Development server
 

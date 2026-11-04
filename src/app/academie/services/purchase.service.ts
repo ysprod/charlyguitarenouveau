@@ -31,6 +31,7 @@ export interface PurchaseHistoryItem {
   readonly amountXof: number;
   readonly currency: 'XOF';
   readonly status: string;
+  readonly orderType?: 'document' | 'game_subscription' | 'course_pack';
   readonly reference: string;
   readonly createdAt: number;
   readonly paidAt?: number;
@@ -64,11 +65,30 @@ export class PurchaseService {
     productId: string,
     paymentMethod: PaymentMethod,
   ): Promise<CreateCheckoutResponse> {
+    return this.requestCheckout({ productId, paymentMethod });
+  }
+
+  async createCoursePackCheckout(
+    coursePackId: string,
+    paymentMethod: PaymentMethod,
+  ): Promise<CreateCheckoutResponse> {
+    return this.requestCheckout({ coursePackId, paymentMethod });
+  }
+
+  private async requestCheckout(input: {
+    readonly productId?: string;
+    readonly coursePackId?: string;
+    readonly paymentMethod: PaymentMethod;
+  }): Promise<CreateCheckoutResponse> {
     const call = httpsCallable<
-      { productId: string; paymentMethod: PaymentMethod },
+      {
+        productId?: string;
+        coursePackId?: string;
+        paymentMethod: PaymentMethod;
+      },
       CreateCheckoutResponse
     >(this.functions, 'createCheckout');
-    const result = await call({ productId, paymentMethod });
+    const result = await call(input);
     const redirectUrl = new URL(result.data.redirectUrl);
     if (redirectUrl.protocol !== 'https:') {
       throw new Error('L’URL de paiement reçue n’est pas sécurisée.');

@@ -3,21 +3,19 @@
 import { Routes } from '@angular/router';
 
 import { DimensionsComponent } from './dimensions.component';
-import { AuthGuard } from '../../guards/auth/auth.guard';
 
 /* ═════════════════════════════════════════════════════════════════════
    DIMENSIONS ROUTES — Les 7 dimensions + Charly Guitare Game
    ─────────────────────────────────────────────────────────────────────
    - Parent : DimensionsComponent (avec <router-outlet>)
    - Enfants : lazy-loadés, chacun dans son chunk
-   - AuthGuard appliqué UNE fois sur le parent
+   - AuthGuard appliqué sur la route /offoland parente
    ═════════════════════════════════════════════════════════════════════ */
 
 export const dimensionsRoutes: Routes = [
   {
     path: '',
     component: DimensionsComponent,
-    canActivate: [AuthGuard],
     children: [
       {
         path: '',

@@ -113,3 +113,69 @@ test('matches only the order reference, XOF amount and payment request ID', () =
     false,
   );
 });
+
+test('matches a valid subscription payment without document storage metadata', () => {
+  const transaction = parseJekoTransaction({
+    ...payment,
+    amount: { amount: 250_000, currency: 'XOF' },
+  });
+  assert.ok(transaction);
+
+  const order = {
+    orderType: 'game_subscription',
+    userId: 'authenticated-user',
+    productId: 'games-three-months',
+    productTitle: 'Abonnement jeux — 3 mois',
+    subscriptionPlanId: 'three-months',
+    subscriptionDurationMonths: 3,
+    amountXof: 2_500,
+    currency: 'XOF',
+    reference,
+    jekoPaymentRequestId: 'payment-request-123',
+  };
+
+  assert.equal(matchesOrderPayment(order, transaction), true);
+  assert.equal(
+    matchesOrderPayment({ ...order, amountXof: 1_000 }, transaction),
+    false,
+  );
+  assert.equal(
+    matchesOrderPayment({ ...order, subscriptionPlanId: 'unknown' }, transaction),
+    false,
+  );
+});
+
+test('matches a valid one-month course pack payment without document metadata', () => {
+  const transaction = parseJekoTransaction({
+    ...payment,
+    amount: { amount: 10_000_000, currency: 'XOF' },
+  });
+  assert.ok(transaction);
+
+  const order = {
+    orderType: 'course_pack',
+    userId: 'authenticated-user',
+    productId: 'course-pack-deb-jeune',
+    productTitle: 'Pack de cours — Jeunesse — Débutants (1 mois)',
+    coursePackId: 'deb-jeune',
+    coursePackDurationMonths: 1,
+    amountXof: 100_000,
+    currency: 'XOF',
+    reference,
+    jekoPaymentRequestId: 'payment-request-123',
+  };
+
+  assert.equal(matchesOrderPayment(order, transaction), true);
+  assert.equal(
+    matchesOrderPayment({ ...order, amountXof: 1 }, transaction),
+    false,
+  );
+  assert.equal(
+    matchesOrderPayment({ ...order, coursePackDurationMonths: 12 }, transaction),
+    false,
+  );
+  assert.equal(
+    matchesOrderPayment({ ...order, coursePackId: 'unknown' }, transaction),
+    false,
+  );
+});

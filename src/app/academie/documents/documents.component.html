@@ -64,55 +64,7 @@
     </div>
   </section>
 
-  <section class="purchase-history" aria-labelledby="purchase-history-title">
-    <div class="history-heading">
-      <div>
-        <h2 id="purchase-history-title">Mes achats</h2>
-        <p>Les commandes apparaissent ici après leur confirmation par Jèko.</p>
-      </div>
-      <button
-        type="button"
-        class="btn-reset-filters"
-        [disabled]="isHistoryLoading()"
-        (click)="refreshPurchaseHistory()"
-      >
-        {{ isHistoryLoading() ? 'Actualisation…' : 'Actualiser' }}
-      </button>
-    </div>
-
-    @if (historyError()) {
-      <p class="history-message error" role="alert">{{ historyError() }}</p>
-    } @else if (isHistoryLoading()) {
-      <p class="history-message" role="status">Chargement de vos achats…</p>
-    } @else if (purchaseHistory().length === 0) {
-      <p class="history-message">Aucun achat confirmé pour le moment.</p>
-    } @else {
-      <ul class="purchase-list">
-        @for (purchase of purchaseHistory(); track purchase.orderId) {
-          <li class="purchase-item">
-            <div class="purchase-summary">
-              <strong>{{ purchase.productTitle }}</strong>
-              <span>{{ purchase.amountXof | formatPrice }}</span>
-              <span>{{ purchaseStatusLabel(purchase.status) }}</span>
-              <time [attr.datetime]="purchase.createdAt | date: 'yyyy-MM-ddTHH:mm:ss'">
-                {{ purchase.createdAt | date: 'medium' }}
-              </time>
-            </div>
-            @if (purchase.status === 'paid') {
-              <button
-                type="button"
-                class="btn-primary"
-                [disabled]="isProcessing()"
-                (click)="downloadPurchase(purchase)"
-              >
-                Télécharger
-              </button>
-            }
-          </li>
-        }
-      </ul>
-    }
-  </section>
+  <app-purchase-history />
 
   <!-- ═══════════════════════════════════════════════════════
        GRILLE PRODUITS

@@ -6,12 +6,14 @@ import { HomeComponent } from './home/home.component';
 export const routes: Routes = [
   {
     path: 'login',
+    canActivate: [GuestGuard],
     loadComponent: () =>
       import('./home/login/login.component').then((m) => m.LoginComponent),
     title: 'Connexion — Charly Guitare',
   },
   {
     path: 'register',
+    canActivate: [GuestGuard],
     loadComponent: () =>
       import('./home/register/register.component').then((m) => m.RegisterComponent),
     title: 'Inscription — Charly Guitare',
@@ -19,28 +21,29 @@ export const routes: Routes = [
   {
     path: '',
     component: HomeComponent,
-    canActivate: [GuestGuard],
     title: 'Charly Guitare — Apprendre la guitare',
     pathMatch: 'full',
   },
   {
     path: 'home',
     component: HomeComponent,
-    canActivate: [GuestGuard],
     title: 'Charly Guitare — Accueil',
   },
   {
     path: 'game',
+    canActivate: [AuthGuard],
     loadChildren: () =>
       import('./game/game.routes').then((m) => m.gameRoutes),
   },
   {
     path: 'academie',
+    canActivate: [AuthGuard],
     loadChildren: () =>
       import('./academie/academie.routes').then((m) => m.academieRoutes),
   },
   {
     path: 'offoland',
+    canActivate: [AuthGuard],
     loadChildren: () =>
       import('./offoland/offoland.routes').then((m) => m.offolandRoutes),
   },

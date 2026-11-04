@@ -185,73 +185,7 @@
   }
 }
 
-/* ─── Carte promo (bas de sidebar) ─── */
-.sidebar-promo {
-  margin-top: auto; /* ✅ Pousse la carte tout en bas */
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 60%);
-    pointer-events: none;
-  }
-
-  .promo-image-wrapper {
-    width: 100%;
-    height: 140px; /* ✅ Un peu plus haut pour mieux voir l'image */
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-
-    .promo-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* ✅ L'image remplit bien sans se déformer */
-    }
-  }
-
-  .promo-text {
-    margin: 0 0 1rem;
-    font-size: .85rem;
-    color: #fff;
-    font-weight: 700;
-    line-height: 1.4;
-    position: relative;
-  }
-
-  .promo-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: .65rem 1rem;
-    background: linear-gradient(135deg, #fbbf24, #d97706);
-    color: #000;
-    text-decoration: none;
-    font-size: .8rem;
-    font-weight: 800;
-    border-radius: 999px;
-    position: relative;
-    transition: transform var(--t-base), box-shadow var(--t-base);
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(251, 191, 36, .35);
-    }
-  }
-}
+ 
 
 /* ═════════════════════════════════════════════════════════════════════
    ✅ MAIN WRAPPER (Contenu principal avec son propre scroll)

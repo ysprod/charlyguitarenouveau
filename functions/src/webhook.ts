@@ -1,4 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { isCoursePackOrder } from './course-packs.js';
+import { isGameSubscriptionOrder } from './game-subscriptions.js';
 
 export interface JekoTransaction {
   readonly id: string;
@@ -84,11 +86,21 @@ export function matchesOrderPayment(
   order: unknown,
   transaction: JekoTransaction,
 ): order is Record<string, unknown> {
+  const isGameSubscription = isGameSubscriptionOrder(order);
+  const isCoursePack = isCoursePackOrder(order);
   if (
     !isRecord(order) ||
     typeof order['userId'] !== 'string' ||
     typeof order['productId'] !== 'string' ||
-    typeof order['storagePath'] !== 'string' ||
+    (order['orderType'] !== undefined &&
+      order['orderType'] !== 'document' &&
+      order['orderType'] !== 'game_subscription' &&
+      order['orderType'] !== 'course_pack') ||
+    (order['orderType'] === 'game_subscription'
+      ? !isGameSubscription
+      : order['orderType'] === 'course_pack'
+        ? !isCoursePack
+        : typeof order['storagePath'] !== 'string') ||
     typeof order['amountXof'] !== 'number' ||
     !Number.isSafeInteger(order['amountXof']) ||
     order['amountXof'] < 1 ||

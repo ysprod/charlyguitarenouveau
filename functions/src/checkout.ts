@@ -63,10 +63,11 @@ export function isJekoPaymentRequestResponse(
 }
 
 export function buildPaymentRequest(
-  product: Product,
+  product: Pick<Product, 'priceXof'>,
   orderId: string,
   paymentMethod: PaymentMethod,
   storeId: string,
+  returnPath = '/academie/documents',
 ): JekoPaymentRequest {
   if (!Number.isSafeInteger(product.priceXof) || product.priceXof < 1) {
     throw new Error('The server-side product price is invalid.');
@@ -88,8 +89,8 @@ export function buildPaymentRequest(
       type: 'redirect',
       data: {
         paymentMethod,
-        successUrl: `https://www.charlyguitare.com/academie/documents?payment=success&reference=${encodeURIComponent(reference)}`,
-        errorUrl: `https://www.charlyguitare.com/academie/documents?payment=error&reference=${encodeURIComponent(reference)}`,
+        successUrl: `https://www.charlyguitare.com${returnPath}?payment=success&reference=${encodeURIComponent(reference)}`,
+        errorUrl: `https://www.charlyguitare.com${returnPath}?payment=error&reference=${encodeURIComponent(reference)}`,
       },
     },
   };

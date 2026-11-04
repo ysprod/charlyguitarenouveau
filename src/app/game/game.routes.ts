@@ -1,15 +1,13 @@
 // src/app/game/game.routes.ts
 
 import { Routes } from '@angular/router';
-
-import { AuthGuard } from '../guards/auth/auth.guard';
-
 import { GameComponent } from './game.component';
+import { gameSubscriptionGuard } from './guards/game-subscription.guard';
 
 /* ═════════════════════════════════════════════════════════════════════
    GAME ROUTES — Tous les jeux de Charly Guitare
    ─────────────────────────────────────────────────────────────────────
-   - Parent : GameComponent + AuthGuard (protection unique)
+   - Parent : GameComponent (protégé par la route /game)
    - Enfants : lazy loading par jeu (chaque jeu = 1 chunk)
    - Redirection par défaut : /game/play
    ═════════════════════════════════════════════════════════════════════ */
@@ -18,7 +16,7 @@ export const gameRoutes: Routes = [
   {
     path: '',
     component: GameComponent,
-    canActivate: [AuthGuard],
+    canActivateChild: [gameSubscriptionGuard],
     children: [
       /* ─── Redirection par défaut ─── */
       { path: '', redirectTo: 'play', pathMatch: 'full' },

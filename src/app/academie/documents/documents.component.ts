@@ -6,7 +6,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Auth } from '@angular/fire/auth';
 import { FunctionsError } from '@angular/fire/functions';
@@ -21,7 +20,6 @@ import { ToastService } from '../services/toast.service';
 import {
   CheckoutProduct,
   PaymentMethod,
-  PurchaseHistoryItem,
   PurchaseService,
 } from '../services/purchase.service';
 import {
@@ -30,6 +28,7 @@ import {
 } from '../utils/documents.utils';
 import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
 import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
+import { PurchaseHistoryComponent } from 'src/app/shared/purchase-history/purchase-history.component';
 
 const PAYMENT_METHODS: readonly {
   readonly value: PaymentMethod;
@@ -47,10 +46,10 @@ const PAYMENT_METHODS: readonly {
   selector: 'app-documents',
   imports: [
     ToastComponent,
-    DatePipe,
     FormatPricePipe,
     PodcastvideoComponent,
     ImmersiveCarouselComponent,
+    PurchaseHistoryComponent,
   ],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss'],
@@ -70,9 +69,6 @@ export class DocumentsComponent {
   readonly selectedDocForPurchase = signal<DocumentItem | null>(null);
   readonly selectedPaymentMethod = signal<PaymentMethod>('wave');
   readonly isProcessing = signal(false);
-  readonly purchaseHistory = signal<readonly PurchaseHistoryItem[]>([]);
-  readonly isHistoryLoading = signal(false);
-  readonly historyError = signal('');
   readonly catalogError = signal('');
 
   private readonly productsFromServer = toSignal<
@@ -149,7 +145,6 @@ export class DocumentsComponent {
   constructor() {
     afterNextRender(() => {
       window.scrollTo({ top: 0, behavior: 'auto' });
-      void this.refreshPurchaseHistory();
     });
   }
 
@@ -222,62 +217,6 @@ export class DocumentsComponent {
           : 'Impossible de créer la commande. Veuillez réessayer.';
       this.toastService.error(message);
       this.isProcessing.set(false);
-    }
-  }
-
-  async refreshPurchaseHistory(): Promise<void> {
-    if (!this.auth.currentUser || this.isHistoryLoading()) {
-      return;
-    }
-
-    this.isHistoryLoading.set(true);
-    this.historyError.set('');
-    try {
-      this.purchaseHistory.set(await this.functions.listPurchases());
-    } catch (error) {
-      console.error('Erreur chargement historique des achats :', error);
-      this.historyError.set(
-        'Impossible de charger votre historique d’achats.',
-      );
-    } finally {
-      this.isHistoryLoading.set(false);
-    }
-  }
-
-  async downloadPurchase(purchase: PurchaseHistoryItem): Promise<void> {
-    if (purchase.status !== 'paid' || this.isProcessing()) {
-      return;
-    }
-
-    this.isProcessing.set(true);
-    try {
-      const downloadUrl = await this.functions.getDownloadUrl(
-        purchase.orderId,
-      );
-      window.location.assign(downloadUrl);
-    } catch (error) {
-      console.error('Erreur téléchargement autorisé :', error);
-      this.toastService.error(
-        'Le téléchargement est indisponible ou cet achat ne vous appartient pas.',
-      );
-    } finally {
-      this.isProcessing.set(false);
-    }
-  }
-
-  purchaseStatusLabel(status: string): string {
-    switch (status) {
-      case 'paid':
-        return 'Payé — téléchargement disponible';
-      case 'payment_pending':
-      case 'creating_payment':
-      case 'payment_request_unknown':
-        return 'Paiement en attente de confirmation';
-      case 'payment_failed':
-      case 'payment_request_failed':
-        return 'Paiement échoué';
-      default:
-        return 'Statut indisponible';
     }
   }
 

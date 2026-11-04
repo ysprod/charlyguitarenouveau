@@ -1,7 +1,6 @@
 // src/app/academie/academie.routes.ts
 
 import { Routes } from '@angular/router';
-import { AuthGuard } from '../guards/auth/auth.guard';
 import { AcademieComponent } from './academie.component';
 
 export const academieRoutes: Routes = [
@@ -11,7 +10,6 @@ export const academieRoutes: Routes = [
     children: [
       {
         path: '',
-        canActivate: [AuthGuard],
         loadComponent: () =>
           import('./academie-home/academie-home.component').then(
             (m) => m.AcademieHomeComponent,
@@ -20,14 +18,12 @@ export const academieRoutes: Routes = [
       },
       {
         path: 'live',
-        canActivate: [AuthGuard],
         loadComponent: () =>
           import('./live/live.component').then((m) => m.LiveComponent),
         title: 'Apprendre en Live — Charly Guitare',
       },
       {
         path: 'offres',
-        canActivate: [AuthGuard],
         loadComponent: () =>
           import('./offres/offres.component').then((m) => m.OffresComponent),
         title: 'Offres & Abonnements — Charly Guitare',

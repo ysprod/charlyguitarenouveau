@@ -8,12 +8,11 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Auth, authState } from '@angular/fire/auth';
 import { Router, RouterLink } from '@angular/router';
-import { FooterComponent } from './footer/footer.component';
-import { PodcastvideoComponent } from './podcastvideo/podcastvideo.component';
+import { StreamingComponent } from '../live/streaming/streaming.component';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, FooterComponent,PodcastvideoComponent],
+  imports: [RouterLink,  StreamingComponent,  ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

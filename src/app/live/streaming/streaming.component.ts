@@ -27,6 +27,10 @@ export class StreamingComponent implements OnInit {
 
   /* ─── État ─── */
   readonly activeVideo = signal<FeaturedVideo | null>(null);
+  readonly canGoPrevious = computed(() => this.historyIndex() > 0);
+
+  private readonly videoHistory = signal<FeaturedVideo[]>([]);
+  private readonly historyIndex = signal(-1);
 
   /* ─── URL sécurisée (autoplay + son) ─── */
   readonly safeEmbedUrl = computed<SafeResourceUrl | null>(() => {
@@ -53,8 +57,13 @@ export class StreamingComponent implements OnInit {
   private loadVideo(): void {
     const storedViews = this.getViewsFromStorage();
     const poolWithTickets: FeaturedVideo[] = [];
+    const activeId = this.activeVideo()?.id;
+    const videos =
+      STREAMING_VIDEOS.length > 1
+        ? STREAMING_VIDEOS.filter((video) => video.id !== activeId)
+        : STREAMING_VIDEOS;
 
-    STREAMING_VIDEOS.forEach((video) => {
+    videos.forEach((video) => {
       const views = storedViews[video.id] ?? video.views;
       const weight = Math.max(1, Math.floor(1000 / (views + 10)));
       for (let i = 0; i < weight; i++) {
@@ -68,6 +77,12 @@ export class StreamingComponent implements OnInit {
     if (!selected) return;
 
     this.activeVideo.set(selected);
+    const nextHistory = [
+      ...this.videoHistory().slice(0, this.historyIndex() + 1),
+      selected,
+    ];
+    this.videoHistory.set(nextHistory);
+    this.historyIndex.set(nextHistory.length - 1);
 
     // Incrémenter les vues
     const updatedViews = { ...storedViews };
@@ -80,7 +95,23 @@ export class StreamingComponent implements OnInit {
      ═══════════════════════════════════════════════════════ */
 
   nextVideo(): void {
+    const nextIndex = this.historyIndex() + 1;
+    const nextVideo = this.videoHistory()[nextIndex];
+    if (nextVideo) {
+      this.historyIndex.set(nextIndex);
+      this.activeVideo.set(nextVideo);
+      return;
+    }
+
     this.loadVideo();
+  }
+
+  previousVideo(): void {
+    if (!this.canGoPrevious()) return;
+
+    const previousIndex = this.historyIndex() - 1;
+    this.historyIndex.set(previousIndex);
+    this.activeVideo.set(this.videoHistory()[previousIndex] ?? null);
   }
 
   /* ═══════════════════════════════════════════════════════

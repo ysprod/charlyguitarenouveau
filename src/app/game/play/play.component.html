@@ -5,17 +5,35 @@
   <div class="main-game-area">
 
     <!-- ═══════════════════════════════════════════════════════
-         TOAST
+         TOASTS EMPILÉS
          ═══════════════════════════════════════════════════════ -->
-    @if (toastMessage()) {
+    @if (toasts().length > 0) {
       <div
-        class="toast-banner"
-        [class.toast-success]="toastType() === 'success'"
-        [class.toast-error]="toastType() === 'error'"
-        role="status"
+        class="toast-stack"
+        role="region"
+        aria-label="Notifications"
         aria-live="polite"
       >
-        {{ toastMessage() }}
+        @for (toast of toasts(); track toast.id) {
+          <div
+            class="toast-banner"
+            [class.toast-success]="toast.type === 'success'"
+            [class.toast-error]="toast.type === 'error'"
+            [class.toast-info]="toast.type === 'info'"
+            role="status"
+          >
+            <span class="toast-icon" aria-hidden="true">{{ toast.icon }}</span>
+            <span class="toast-message">{{ toast.message }}</span>
+            <button
+              type="button"
+              class="toast-close"
+              (click)="dismissToast(toast.id)"
+              aria-label="Fermer la notification"
+            >
+              ✕
+            </button>
+          </div>
+        }
       </div>
     }
 
@@ -30,25 +48,18 @@
         rel="noopener noreferrer"
         aria-label="Voir la playlist de tutoriels des jeux sur YouTube"
       >
-        <!-- Halo décoratif -->
         <span class="tutorial-glow" aria-hidden="true"></span>
-
-        <!-- Icône -->
         <span class="tutorial-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
           </svg>
         </span>
-
-        <!-- Contenu -->
         <span class="tutorial-content">
           <span class="tutorial-title">🎓 Tutoriels des jeux</span>
           <span class="tutorial-subtitle">
             Apprenez à maîtriser chaque jeu grâce à nos vidéos explicatives
           </span>
         </span>
-
-        <!-- CTA -->
         <span class="tutorial-cta">
           <span class="tutorial-cta-text">Voir la playlist</span>
           <svg class="tutorial-arrow" viewBox="0 0 24 24" fill="none"
@@ -59,8 +70,6 @@
             <polyline points="12 5 19 12 12 19" />
           </svg>
         </span>
-
-        <!-- Coins décoratifs -->
         <span class="corner corner-tl" aria-hidden="true"></span>
         <span class="corner corner-tr" aria-hidden="true"></span>
         <span class="corner corner-bl" aria-hidden="true"></span>
@@ -68,11 +77,12 @@
       </a>
     </section>
 
+  
+
     <!-- ═══════════════════════════════════════════════════════
          GRILLE DES JEUX
          ═══════════════════════════════════════════════════════ -->
     <section class="games-selector-section" aria-label="Liste des jeux">
-
       @if (visibleGameCount() === 0) {
         <div class="empty-state">
           <span class="empty-icon" aria-hidden="true">🎸</span>
@@ -88,19 +98,12 @@
               (click)="tryLaunchGame(game)"
               [attr.aria-label]="'Lancer ' + game.title"
             >
-              <!-- Halo coloré -->
               <span class="btn-glow" aria-hidden="true"></span>
-
-              <!-- Icône -->
               <span class="btn-icon" aria-hidden="true">{{ game.icon }}</span>
-
-              <!-- Contenu -->
               <span class="btn-content">
                 <span class="btn-text">{{ game.title }}</span>
                 <span class="btn-sub">{{ game.subtitle }}</span>
               </span>
-
-              <!-- Flèche -->
               <svg class="btn-arrow" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2.5"
                    stroke-linecap="round" stroke-linejoin="round"
@@ -108,8 +111,6 @@
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
               </svg>
-
-              <!-- Coins décoratifs -->
               <span class="corner corner-tl" aria-hidden="true"></span>
               <span class="corner corner-tr" aria-hidden="true"></span>
               <span class="corner corner-bl" aria-hidden="true"></span>
@@ -119,21 +120,101 @@
         </div>
       }
     </section>
+    <br /> <br />
 
+      <!-- ═══════════════════════════════════════════════════════
+         SECTION ABONNEMENT
+         ═══════════════════════════════════════════════════════ -->
+    <section class="game-subscription" aria-labelledby="subscription-title">
+      <div class="subscription-heading">
+        <div>
+          <p class="subscription-eyebrow">Accès premium</p>
+          <h1 id="subscription-title">Tous les jeux, en illimité</h1>
+          <p>Choisissez votre durée et profitez de toute l’expérience.</p>
+        </div>
+        @if (subscriptionStatus()?.active) {
+          <div class="subscription-status" role="status">
+            <span class="status-indicator" aria-hidden="true"></span>
+            Accès actif jusqu’au
+            {{ formatActiveSubscriptionExpiry() }}
+          </div>
+        } @else if (subscriptionLoading()) {
+          <div class="subscription-status subscription-status--loading" role="status">
+            <span class="status-spinner" aria-hidden="true"></span>
+            Vérification de votre accès…
+          </div>
+        } @else if (subscriptionStatus()) {
+          <button
+            type="button"
+            class="subscription-refresh"
+            (click)="refreshGameSubscription()"
+          >
+            ↻ Actualiser mon accès
+          </button>
+        }
+      </div>
+
+      <div class="subscription-plans" aria-label="Formules d’abonnement">
+        @for (plan of subscriptionPlans; track plan.id) {
+          <button
+            type="button"
+            class="subscription-plan"
+            [class.selected]="selectedPlanId() === plan.id"
+            [attr.aria-pressed]="selectedPlanId() === plan.id"
+            (click)="selectPlan(plan.id)"
+          >
+            <span class="plan-duration">{{ plan.title }}</span>
+            <span class="plan-price">{{ formatPrice(plan.priceXof) }} FCFA</span>
+            @if (plan.id === 'three-months') {
+              <span class="plan-caption">Le plus choisi</span>
+            } @else if (plan.id === 'twelve-months') {
+              <span class="plan-caption">Meilleure valeur</span>
+            } @else {
+              <span class="plan-caption">Sans renouvellement automatique</span>
+            }
+          </button>
+        }
+      </div>
+
+      <div class="subscription-checkout">
+        <label for="gamePaymentMethod">Paiement</label>
+        <select
+          id="gamePaymentMethod"
+          [value]="selectedPaymentMethod()"
+          (change)="onPaymentMethodChange($event)"
+        >
+          @for (method of paymentMethods; track method.value) {
+            <option [value]="method.value">{{ method.label }}</option>
+          }
+        </select>
+        <button
+          type="button"
+          class="subscription-submit"
+          [disabled]="isCheckoutProcessing()"
+          (click)="subscribeToGames()"
+        >
+          {{ isCheckoutProcessing() ? 'Redirection…' : 'Choisir cette formule' }}
+        </button>
+      </div>
+
+      @if (subscriptionError()) {
+        <p class="subscription-error" role="alert">
+          {{ subscriptionError() }}
+          @if (!subscriptionStatus()) {
+            <button type="button" (click)="refreshGameSubscription()">
+              Réessayer
+            </button>
+          }
+        </p>
+      }
+      @if (checkoutStatus()) {
+        <p class="checkout-status" role="status" aria-live="polite">
+          {{ checkoutStatus() }}
+        </p>
+      }
+    </section>
+ <app-immersive-carousel />
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════
-       MODALE CODE PROMO
-       ═══════════════════════════════════════════════════════ -->
-  @if (showPromoModal()) {
-    <app-promo-modal
-      [isSaving]="isSavingPromo()"
-      [errorMessage]="promoError()"
-      title="Code Promo obligatoire"
-      message="Pour accéder, saisissez un code promo valide, puis cliquez sur Continuer."
-      (codeSubmitted)="onPromoCodeSubmitted($event)"
-      (closed)="closePromoModal()"
-    />
-  }
-   <app-immersive-carousel />
+ 
 </div>

@@ -1,6 +1,16 @@
 <!-- src/app/offres/offres.component.html -->
 
 <div class="nos-offres">
+  @if (paymentReturn() === 'success') {
+    <p class="payment-return" role="status">
+      Retour de paiement reçu. La confirmation définitive apparaîtra dans
+      « Mes achats » après validation par Jèko.
+    </p>
+  } @else if (paymentReturn() === 'error') {
+    <p class="payment-return payment-return--error" role="alert">
+      Le paiement n’a pas abouti. Vous pouvez réessayer en choisissant un pack.
+    </p>
+  }
 
   <!-- ═══════════════════════════════════════════════════════
        HERO — NOS OFFRES
@@ -126,12 +136,12 @@
             </ul>
 
             <footer class="pack-footer">
-              <a
+              <button
+                type="button"
                 class="pack-cta"
-                [routerLink]="['/user/contact']"
-                [queryParams]="{ pack: pack.id }"
+                (click)="selectPack(pack)"
               >
-                <span>Choisir ce pack</span>
+                <span>Payer ce mois</span>
                 <svg class="cta-arrow" viewBox="0 0 24 24" width="18" height="18"
                      fill="none" stroke="currentColor" stroke-width="2.5"
                      stroke-linecap="round" stroke-linejoin="round"
@@ -139,12 +149,74 @@
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
-              </a>
+              </button>
             </footer>
 
           </article>
         }
       </div>
+
+      @if (selectedPack(); as pack) {
+        <div class="pack-checkout-backdrop" (click)="closePackCheckout()">
+          <section
+            class="pack-checkout-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pack-checkout-title"
+            (click)="$event.stopPropagation()"
+          >
+            <button
+              type="button"
+              class="pack-checkout-close"
+              aria-label="Fermer"
+              [disabled]="isProcessing()"
+              (click)="closePackCheckout()"
+            >×</button>
+            <p class="pack-checkout-eyebrow">Paiement sécurisé avec Jèko</p>
+            <h2 id="pack-checkout-title">{{ pack.name }}</h2>
+            <p class="pack-checkout-price">
+              {{ pack.price | formatPrice }} <span>{{ pack.priceUnit }}</span>
+            </p>
+            <p class="pack-checkout-note">
+              Paiement ponctuel pour un mois. Le renouvellement n’est pas automatique.
+            </p>
+
+            <label class="pack-payment-label" for="pack-payment-method">
+              Moyen de paiement
+            </label>
+            <select
+              id="pack-payment-method"
+              class="pack-payment-select"
+              [value]="selectedPaymentMethod()"
+              [disabled]="isProcessing()"
+              (change)="onPaymentMethodChange($event)"
+            >
+              @for (method of paymentMethods; track method.value) {
+                <option [value]="method.value">{{ method.label }}</option>
+              }
+            </select>
+
+            @if (paymentError()) {
+              <p class="pack-payment-error" role="alert">{{ paymentError() }}</p>
+            }
+
+            <div class="pack-checkout-actions">
+              <button
+                type="button"
+                class="pack-checkout-cancel"
+                [disabled]="isProcessing()"
+                (click)="closePackCheckout()"
+              >Annuler</button>
+              <button
+                type="button"
+                class="pack-checkout-submit"
+                [disabled]="isProcessing()"
+                (click)="confirmPackPurchase()"
+              >{{ isProcessing() ? 'Redirection…' : 'Continuer vers le paiement' }}</button>
+            </div>
+          </section>
+        </div>
+      }
 
       <!-- Info de contact -->
       <div class="contact-info">
@@ -160,4 +232,5 @@
     </section>
   }
 
+  <app-purchase-history />
 </div>

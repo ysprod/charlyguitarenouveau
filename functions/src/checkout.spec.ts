@@ -97,6 +97,45 @@ test('builds a redirect checkout using only the server-side XOF price', () => {
   );
 });
 
+test('sends game subscription payments back to the game dashboard', () => {
+  const paymentRequest = buildPaymentRequest(
+    { priceXof: 1_000 },
+    'order-456',
+    'wave',
+    'store-123',
+    '/game/play',
+  );
+
+  assert.equal(
+    paymentRequest.paymentDetails.data.successUrl,
+    'https://www.charlyguitare.com/game/play?payment=success&reference=CG-order-456',
+  );
+  assert.equal(
+    paymentRequest.paymentDetails.data.errorUrl,
+    'https://www.charlyguitare.com/game/play?payment=error&reference=CG-order-456',
+  );
+});
+
+test('sends course pack payment results back to the offers page', () => {
+  const paymentRequest = buildPaymentRequest(
+    { priceXof: 100_000 },
+    'order-789',
+    'wave',
+    'store-123',
+    '/academie/offres',
+  );
+
+  assert.equal(paymentRequest.amountCents, 10_000_000);
+  assert.equal(
+    paymentRequest.paymentDetails.data.successUrl,
+    'https://www.charlyguitare.com/academie/offres?payment=success&reference=CG-order-789',
+  );
+  assert.equal(
+    paymentRequest.paymentDetails.data.errorUrl,
+    'https://www.charlyguitare.com/academie/offres?payment=error&reference=CG-order-789',
+  );
+});
+
 test('accepts only documented Jèko Checkout payment methods', () => {
   assert.deepEqual(PAYMENT_METHODS, [
     'orange',

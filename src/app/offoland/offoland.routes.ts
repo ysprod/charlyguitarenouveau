@@ -2,8 +2,6 @@
 
 import { Routes } from '@angular/router';
 
-import { AuthGuard } from '../guards/auth/auth.guard';
-
 /* ═════════════════════════════════════════════════════════════════════
    OFFOLAND ROUTES
    ─────────────────────────────────────────────────────────────────────
@@ -18,7 +16,6 @@ export const offolandRoutes: Routes = [
     path: '',
     loadComponent: () =>
       import('./offoland.component').then((m) => m.OffolandComponent),
-    canActivate: [AuthGuard],
     title: 'Offoland',
     pathMatch: 'full',
   },

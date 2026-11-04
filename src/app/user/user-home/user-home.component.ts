@@ -23,6 +23,7 @@ import { UserProfile } from 'src/app/home/models/user.model';
 import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
 import { getInitials } from 'src/app/home/utils/string.utils';
 import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
+import { PurchaseHistoryComponent } from 'src/app/shared/purchase-history/purchase-history.component';
  
 
 @Component({
@@ -33,6 +34,7 @@ import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/im
     FooterComponent,
     InboxPanelComponent,
     ImmersiveCarouselComponent,
+    PurchaseHistoryComponent,
   ],
   templateUrl: './user-home.component.html',
   styleUrls: ['./user-home.component.scss'],

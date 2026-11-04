@@ -7,5 +7,4 @@ export interface UserProfile {
   createdAt?: string | number;
   lastLogin?: string | number;
   disabled?: boolean;
-  codepromo?: string;
 }

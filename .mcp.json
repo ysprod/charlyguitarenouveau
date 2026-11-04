@@ -1,0 +1,8 @@
+{
+	"mcpServers": {
+		"jeko": {
+			"type": "http",
+			"url": "https://mcp.jeko.africa/mcp"
+		}
+	}
+}

@@ -82,6 +82,7 @@ import {
   ROLE_LABELS
 } from '../constants/profile.constants';
 import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
+import { PurchaseHistoryComponent } from 'src/app/shared/purchase-history/purchase-history.component';
 
 /* ═══════════════════════════════════════════════════════════
    COMPOSANT
@@ -94,6 +95,7 @@ import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/im
     MatSnackBarModule,
     AvatarCropDialogComponent,
     ImmersiveCarouselComponent,
+    PurchaseHistoryComponent,
   ],
   templateUrl: './profil.component.html',
   styleUrls: ['./profil.component.scss'],

@@ -3,7 +3,6 @@
 import { Routes } from '@angular/router';
 
 import { VieComponent } from './vie.component';
-import { AuthGuard } from '../../guards/auth/auth.guard';
 
 /* ═════════════════════════════════════════════════════════════════════
    VIE D'OFFOLAND ROUTES
@@ -17,7 +16,6 @@ export const vieRoutes: Routes = [
   {
     path: '',
     component: VieComponent,
-    canActivate: [AuthGuard],
     children: [
       /* ─── Page par défaut → hub des sections ─── */
       {
