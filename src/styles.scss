@@ -2,8 +2,8 @@
 // IMPORTS
 // ==========================================================================
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Playfair+Display:ital@1&display=swap');
-/* styles.scss (global) — à ajouter EN PREMIER */
- // ==========================================================================
+
+// ==========================================================================
 // VARIABLES GLOBALES (une seule source de vérité)
 // ==========================================================================
 // Couleurs principales
@@ -37,7 +37,7 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
   display: flex;
   align-items: center;
 
-  @if $gap !=0 {
+  @if $gap != 0 {
     gap: $gap;
   }
 }
@@ -57,11 +57,13 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
 }
 
 // ==========================================================================
-// HOST GLOBAL
+// BODY GLOBAL (remplace l'ancien :host)
+// ✅ Styles appliqués au body, pas au :host, pour ne PAS écraser les composants
 // ==========================================================================
-:host {
-  display: flex;
-  flex-direction: column;
+html,
+body {
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
   background-color: $bg-black;
   color: #ffffff;
@@ -69,10 +71,14 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
   overflow-x: hidden;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
 
-
-
-
+// ==========================================================================
+// HERO
+// ==========================================================================
 .hero-content {
   position: relative;
   z-index: 2;
@@ -88,7 +94,7 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
 }
 
 // ==========================================================================
-// NAVBAR (fusion des 3 versions)
+// NAVBAR
 // ==========================================================================
 .navbar {
   position: sticky;
@@ -137,7 +143,7 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
   }
 }
 
-// Liens de navigation (centrés)
+// Liens de navigation
 .nav-links {
   @include flex-center(2.25rem);
   justify-content: center;
@@ -178,7 +184,7 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
   }
 }
 
-// Actions header (droite)
+// Actions header
 .header-actions {
   justify-self: end;
   @include flex-center(1rem);
@@ -277,7 +283,6 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
   justify-content: space-between;
   padding-bottom: 80px;
 
-  // Header secondaire
   .top-header {
     @include flex-center;
     justify-content: space-between;
@@ -337,7 +342,6 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
     }
   }
 
-  // Contenu principal
   .main-content {
     flex: 1;
     max-width: 1000px;
@@ -350,7 +354,6 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
     background-color: $bg-black;
   }
 
-  // Hero
   .hero-section {
     display: flex;
     flex-direction: column;
@@ -434,7 +437,6 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
     }
   }
 
-  // Grilles de navigation
   .main-menu-grid,
   .quick-nav {
     display: grid;
@@ -535,24 +537,12 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
       opacity: 0.8;
     }
 
-    &.card-purple {
-      background: $purple-gradient;
-    }
-
-    &.card-blue {
-      background: $blue-gradient;
-    }
-
-    &.card-green {
-      background: $green-gradient;
-    }
-
-    &.card-amber {
-      background: $amber-gradient;
-    }
+    &.card-purple { background: $purple-gradient; }
+    &.card-blue   { background: $blue-gradient; }
+    &.card-green  { background: $green-gradient; }
+    &.card-amber  { background: $amber-gradient; }
   }
 
-  // Section Live
   .live-section .live-card {
     @include flex-center;
     justify-content: space-between;
@@ -585,7 +575,6 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
     }
   }
 
-  // Barre de navigation inférieure
   .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -625,14 +614,13 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
 
 // ==========================================================================
 // MAIN CONTENT (utilitaire global)
+// ⚠️ On garde uniquement min-height — le padding-top: 200px est RETIRÉ car il
+//    cassait toutes les pages (les composants gèrent leur propre padding).
 // ==========================================================================
 .main-content {
   min-height: calc(100vh - #{$navbar-height});
-}
-
-.hero-content {
-  max-width: 750px;
-  margin: 0 auto;
+  flex: 1;
+  width: 100%;
 }
 
 // ==========================================================================
@@ -647,27 +635,23 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
   color: #888888;
 }
 
+app-footer {
+  margin-top: auto;
+}
+
 // ==========================================================================
 // ANIMATIONS
 // ==========================================================================
 @keyframes blink {
-
   0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.3;
-  }
+  100% { opacity: 1; }
+  50%   { opacity: 0.3; }
 }
 
 // ==========================================================================
-// RESPONSIVE — Factorisé
+// RESPONSIVE
 // ==========================================================================
 @media (max-width: 900px) {
-
-  // Header passe en layout flex simple
   .navbar .navbar-container {
     display: flex;
     justify-content: space-between;
@@ -681,7 +665,6 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
     display: none;
   }
 
-  // Menu mobile
   .nav-links {
     position: fixed;
     top: $navbar-height;
@@ -730,7 +713,6 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
     }
   }
 
-  // Offoland app : content margin reset
   .offoland-app .main-content {
     margin-top: 0;
   }
@@ -785,32 +767,9 @@ $red-gradient: linear-gradient(135deg, #991b1b 0%, #ef4444 100%);
   }
 }
 
-/* Conteneur principal englobant */
-:host {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.navbar {
-  position: relative; /* Flux normal, pas de chevauchement */
-  width: 100%;
-}
-
-.main-content {
-  flex: 1; /* Prend tout l'espace disponible entre le header et le footer */
-  width: 100%;
-  padding-top: 200px;
-}
-
-app-footer {
-  margin-top: auto;
-}
-
-/* ═════════════════════════════════════════════════════════════════════
-   MODALE MATERIAL — Fond transparent pour modales custom
-   ═════════════════════════════════════════════════════════════════════ */
-
+// ==========================================================================
+// MODALE MATERIAL — Fond transparent pour modales custom
+// ==========================================================================
 .victory-dialog-container .mat-mdc-dialog-surface {
   background: transparent !important;
   border-radius: 0 !important;
@@ -818,19 +777,19 @@ app-footer {
   padding: 0 !important;
 }
 
-/* Backdrop sombre avec flou */
-.victory-dialog-container + .cdk-overlay-dark-backdrop,
 .cdk-overlay-dark-backdrop {
-  background: rgba(28, 25, 23, .45) !important;
+  background: rgba(28, 25, 23, 0.45) !important;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
 
+// ==========================================================================
+// REVEAL ANIMATION
+// ==========================================================================
 .reveal-init {
   opacity: 0;
-  transform: translateY(28px);
-  will-change: opacity, transform;
-  transition: opacity .7s ease, transform .7s cubic-bezier(.22, 1, .36, 1);
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .reveal-in {
@@ -838,10 +797,9 @@ app-footer {
   transform: translateY(0);
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   SNACKBAR GLOBAL (Angular Material)
-   ═════════════════════════════════════════════════════════════════════ */
-
+// ==========================================================================
+// SNACKBAR GLOBAL (Angular Material)
+// ==========================================================================
 .snack-success {
   background: linear-gradient(135deg, #16a34a, #15803d) !important;
   color: #fff !important;
@@ -852,18 +810,17 @@ app-footer {
   color: #fff !important;
 }
 
-.reveal-init {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity .5s ease, transform .5s ease;
+// ==========================================================================
+// GOOGLE TRANSLATE
+// ==========================================================================
+#google_translate_element .goog-te-gadget-simple {
+  background-color: transparent !important;
+  border: none !important;
 }
 
-.reveal-in {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* ✅ Respect de la préférence utilisateur */
+// ==========================================================================
+// ACCESSIBILITÉ
+// ==========================================================================
 @media (prefers-reduced-motion: reduce) {
   .reveal-init {
     opacity: 1;
@@ -871,7 +828,37 @@ app-footer {
     transition: none;
   }
 }
-#google_translate_element .goog-te-gadget-simple {
-  background-color: transparent !important;
-  border: none !important;
+
+// ==========================================================================
+// FIX GLOBAL — Contrainte SVG (évite les icônes géantes)
+// ⚠️ CRUCIAL : sans ça, les SVG dans les pastilles (section-icon, etc.)
+//    prennent 100% de la largeur et deviennent énormes.
+// ==========================================================================
+.section-icon svg,
+.icon-wrapper svg,
+.btn-icon svg,
+mat-icon svg,
+.feature-icon svg {
+  width: 24px !important;
+  height: 24px !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
+  display: block;
+}
+
+// Exception : SVG plus grands (bannières, hero)
+.tutorial-icon svg,
+.hero-icon svg {
+  width: 34px !important;
+  height: 34px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+}
+
+// Exception : les `<mat-icon>` (Angular Material) gardent leur taille native
+.mat-icon svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
 }

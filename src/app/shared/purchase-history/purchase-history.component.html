@@ -1,149 +1,505 @@
 <section class="purchase-history" aria-labelledby="purchase-history-title">
+  <!-- ═══════ HEADER ═══════ -->
   <header class="history-heading">
     <div class="history-title">
       <h2 id="purchase-history-title">Mes achats</h2>
-      <p>Les commandes apparaissent ici après leur confirmation par Jèko.</p>
+      <p>Retrouvez vos documents, abonnements et packs de cours.</p>
     </div>
     <button
       type="button"
       class="history-refresh"
-      [disabled]="isLoading()"
-      [attr.aria-busy]="isLoading()"
+      [disabled]="isLoading() || benefitsLoading()"
+      [attr.aria-busy]="isLoading() || benefitsLoading()"
       (click)="refresh()"
     >
       <span class="history-refresh__icon" aria-hidden="true">↻</span>
-      {{ isLoading() ? 'Actualisation…' : 'Actualiser' }}
+      {{
+        isLoading() || benefitsLoading()
+          ? 'Actualisation…'
+          : 'Actualiser'
+      }}
     </button>
   </header>
 
+  <!-- ═══════ TABS ═══════ -->
+  <div class="history-tabs" role="tablist" aria-label="Catégories d’achats">
+    @for (tab of tabs(); track tab.id) {
+      <button
+        type="button"
+        class="tab-btn"
+        role="tab"
+        [class.active]="activeTab() === tab.id"
+        [attr.aria-selected]="activeTab() === tab.id"
+        (click)="setTab(tab.id)"
+      >
+        <span class="tab-label">{{ tab.label }}</span>
+        <span class="tab-count">{{ tab.count }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- ═══════ ERREURS GLOBALES ═══════ -->
   @if (historyError()) {
     <p class="history-message history-message--error" role="alert">
       {{ historyError() }}
     </p>
-  } @else if (isLoading()) {
-    <ul class="purchase-list" aria-busy="true" aria-label="Chargement des achats">
-      @for (row of [1, 2, 3]; track row) {
-        <li class="purchase-item purchase-item--skeleton" aria-hidden="true">
-          <div class="skeleton-line skeleton-line--title"></div>
-          <div class="skeleton-line skeleton-line--meta"></div>
-          <div class="skeleton-line skeleton-line--meta short"></div>
-        </li>
-      }
-    </ul>
-  } @else if (purchases().length === 0) {
-    <div class="history-empty" role="status">
-      <p class="history-empty__title">Aucun achat confirmé pour le moment.</p>
-      <p class="history-empty__hint">
-        Vos commandes apparaîtront ici dès que Jèko aura confirmé le paiement.
-      </p>
-    </div>
-  } @else {
-    <ul class="purchase-list">
-      @for (purchase of paginatedPurchases(); track purchase.orderId) {
-        <li class="purchase-item">
-          <div class="purchase-main">
-            <div class="purchase-summary">
-              <strong class="purchase-title">{{ purchase.productTitle }}</strong>
-              <time
-                class="purchase-date"
-                [attr.datetime]="purchase.createdAt | date: 'yyyy-MM-ddTHH:mm:ss'"
-              >
-                {{ purchase.createdAt | date: 'mediumDate' }}
-              </time>
-            </div>
+  }
+  @if (benefitError()) {
+    <p class="history-message history-message--error" role="alert">
+      {{ benefitError() }}
+    </p>
+  }
 
-            <div class="purchase-meta">
-              <span class="purchase-amount">
-                {{ purchase.amountXof | formatPrice }}
-              </span>
-              <span
-                class="badge"
-                [class]="'badge ' + statusClass(purchase)"
-              >
-                {{ statusLabel(purchase) }}
-              </span>
-            </div>
-          </div>
-
-          <div class="purchase-actions">
-            @if (downloadError() && downloadingOrderId() === purchase.orderId) {
-              <p class="history-message history-message--error" role="alert">
-                {{ downloadError() }}
-              </p>
-            }
-            @if (isDownloadable(purchase)) {
-              <button
-                type="button"
-                class="history-download"
-                [disabled]="downloadingOrderId() !== null"
-                [attr.aria-label]="'Télécharger ' + purchase.productTitle"
-                (click)="download(purchase)"
-              >
-                <span class="history-download__icon" aria-hidden="true">↓</span>
-                {{
-                  downloadingOrderId() === purchase.orderId
-                    ? 'Préparation…'
-                    : 'Télécharger'
-                }}
-              </button>
-            }
-          </div>
-        </li>
-      }
-    </ul>
-
-    @if (totalPages() > 1) {
-      <nav
-        class="history-pagination"
-        aria-label="Pagination de l’historique des achats"
+  <!-- ═══════════════════════════════════════════════════
+       ONGLET 1 : ACHATS
+       ═══════════════════════════════════════════════════ -->
+  @if (activeTab() === 'achats') {
+    @if (isLoading()) {
+      <ul
+        class="purchase-list"
+        aria-busy="true"
+        aria-label="Chargement des achats"
       >
-        <p class="history-pagination__info" aria-live="polite">
-          {{ pageRange().from }}–{{ pageRange().to }}
-          sur {{ pageRange().total }} achats
+        @for (row of [1, 2, 3]; track row) {
+          <li
+            class="purchase-item purchase-item--skeleton"
+            aria-hidden="true"
+          >
+            <div class="skeleton-line skeleton-line--title"></div>
+            <div class="skeleton-line skeleton-line--meta"></div>
+            <div class="skeleton-line skeleton-line--meta short"></div>
+          </li>
+        }
+      </ul>
+    } @else if (purchases().length === 0) {
+      <div class="history-empty" role="status">
+        <div class="history-empty__icon" aria-hidden="true">🛍️</div>
+        <p class="history-empty__title">Aucun achat confirmé</p>
+        <p class="history-empty__hint">
+          Vos commandes apparaîtront ici dès que Jèko aura confirmé le
+          paiement.
         </p>
+      </div>
+    } @else {
+      <ul class="purchase-list">
+        @for (purchase of paginatedPurchases(); track purchase.orderId) {
+          <li class="purchase-item">
+            <div class="purchase-main">
+              <div class="purchase-summary">
+                <strong class="purchase-title">
+                  {{ purchase.productTitle }}
+                </strong>
+                <time
+                  class="purchase-date"
+                  [attr.datetime]="
+                    purchase.createdAt | date: 'yyyy-MM-ddTHH:mm:ss'
+                  "
+                >
+                  {{ purchase.createdAt | date: 'mediumDate' }}
+                </time>
+              </div>
 
-        <div class="history-pagination__controls">
-          <button
-            type="button"
-            class="pagination-btn pagination-btn--arrow"
-            [disabled]="!canGoPrevious()"
-            aria-label="Page précédente"
-            (click)="previousPage()"
-          >
-            ‹
-          </button>
+              <div class="purchase-meta">
+                <span class="purchase-amount">
+                  {{ purchase.amountXof | formatPrice }}
+                </span>
+                <span
+                  class="badge"
+                  [class]="'badge ' + statusClass(purchase)"
+                >
+                  {{ statusLabel(purchase) }}
+                </span>
+              </div>
+            </div>
 
-          @for (page of pageNumbers(); track $index) {
-            @if (page === 'ellipsis') {
-              <span class="pagination-ellipsis" aria-hidden="true">…</span>
-            } @else {
-              <button
-                type="button"
-                class="pagination-btn"
-                [class.pagination-btn--active]="page === currentPage()"
-                [attr.aria-current]="page === currentPage() ? 'page' : null"
-                [attr.aria-label]="'Aller à la page ' + page"
-                (click)="goToPage(page)"
-              >
-                {{ page }}
-              </button>
+            <div class="purchase-actions">
+              @if (
+                downloadError() && downloadingOrderId() === purchase.orderId
+              ) {
+                <p
+                  class="history-message history-message--error"
+                  role="alert"
+                >
+                  {{ downloadError() }}
+                </p>
+              }
+              @if (isDownloadable(purchase)) {
+                <button
+                  type="button"
+                  class="history-download"
+                  [disabled]="downloadingOrderId() !== null"
+                  [attr.aria-label]="'Télécharger ' + purchase.productTitle"
+                  (click)="download(purchase)"
+                >
+                  <span class="history-download__icon" aria-hidden="true"
+                    >↓</span
+                  >
+                  {{
+                    downloadingOrderId() === purchase.orderId
+                      ? 'Préparation…'
+                      : 'Télécharger'
+                  }}
+                </button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+
+      @if (totalPages() > 1) {
+        <nav
+          class="history-pagination"
+          aria-label="Pagination des achats"
+        >
+          <p class="history-pagination__info" aria-live="polite">
+            {{ pageRange().from }}–{{ pageRange().to }}
+            sur {{ pageRange().total }} achats
+          </p>
+
+          <div class="history-pagination__controls">
+            <button
+              type="button"
+              class="pagination-btn pagination-btn--arrow"
+              [disabled]="!canGoPrevious()"
+              aria-label="Page précédente"
+              (click)="previousPage()"
+            >
+              ‹
+            </button>
+
+            @for (page of pageNumbers(); track $index) {
+              @if (page === 'ellipsis') {
+                <span class="pagination-ellipsis" aria-hidden="true"
+                  >…</span
+                >
+              } @else {
+                <button
+                  type="button"
+                  class="pagination-btn"
+                  [class.pagination-btn--active]="page === currentPage()"
+                  [attr.aria-current]="
+                    page === currentPage() ? 'page' : null
+                  "
+                  [attr.aria-label]="'Aller à la page ' + page"
+                  (click)="goToPage(page)"
+                >
+                  {{ page }}
+                </button>
+              }
             }
-          }
 
-          <button
-            type="button"
-            class="pagination-btn pagination-btn--arrow"
-            [disabled]="!canGoNext()"
-            aria-label="Page suivante"
-            (click)="nextPage()"
-          >
-            ›
-          </button>
-        </div>
-      </nav>
+            <button
+              type="button"
+              class="pagination-btn pagination-btn--arrow"
+              [disabled]="!canGoNext()"
+              aria-label="Page suivante"
+              (click)="nextPage()"
+            >
+              ›
+            </button>
+          </div>
+        </nav>
+      }
     }
   }
 
+  <!-- ═══════════════════════════════════════════════════
+       ONGLET 2 : PACKS DE COURS
+       ═══════════════════════════════════════════════════ -->
+  @if (activeTab() === 'packs') {
+    @if (benefitsLoading()) {
+      <div class="history-empty" role="status">
+        <div class="loader-inline" aria-hidden="true"></div>
+        <p class="history-empty__title">Chargement des avantages…</p>
+      </div>
+    } @else if (coursePackBenefits().length === 0) {
+      <div class="history-empty" role="status">
+        <div class="history-empty__icon" aria-hidden="true">📚</div>
+        <p class="history-empty__title">
+          Aucun pack de cours pour le moment
+        </p>
+        <p class="history-empty__hint">
+          Découvrez nos offres pédagogiques et profitez de tous les
+          avantages inclus.
+        </p>
+      </div>
+    } @else {
+      <ul class="pack-list">
+        @for (benefit of paginatedPacks(); track benefit.orderId) {
+          <li class="pack-card">
+            <!-- En-tête -->
+            <header class="pack-card__header">
+              <div class="pack-card__title">
+                <span class="pack-card__icon" aria-hidden="true">📦</span>
+                <div>
+                  <h3 class="pack-card__name">{{ benefit.packTitle }}</h3>
+                  <time
+                    class="pack-card__date"
+                    [attr.datetime]="
+                      benefit.paidAt | date: 'yyyy-MM-ddTHH:mm:ss'
+                    "
+                  >
+                    Acheté le {{ benefit.paidAt | date: 'mediumDate' }}
+                  </time>
+                </div>
+              </div>
+              <span class="badge badge--success">Actif</span>
+            </header>
+
+            <!-- Résumé -->
+            <div class="pack-card__summary">
+              @if (benefit.documentCreditsGranted > 0) {
+                <div class="summary-item">
+                  <span class="summary-icon" aria-hidden="true">📄</span>
+                  <span class="summary-value">
+                    {{ benefit.documentCreditsRemaining }} /
+                    {{ benefit.documentCreditsGranted }}
+                  </span>
+                  <span class="summary-label">crédits docs</span>
+                </div>
+              }
+
+              @if (benefit.gameAccessMonths > 0) {
+                <div class="summary-item">
+                  <span class="summary-icon" aria-hidden="true">🎮</span>
+                  <span class="summary-value">
+                    {{ benefit.gameAccessMonths }} mois
+                  </span>
+                  <span class="summary-label">
+                    @if (benefit.gameAccessExpiresAt) {
+                      jusqu’au
+                      {{ benefit.gameAccessExpiresAt | date: 'dd/MM/yy' }}
+                    } @else {
+                      accès jeux
+                    }
+                  </span>
+                </div>
+              }
+
+              @if (benefit.manualBenefits.length > 0) {
+                <div class="summary-item">
+                  <span class="summary-icon" aria-hidden="true">🎁</span>
+                  <span class="summary-value">
+                    {{ fulfilledManualCount(benefit) }} /
+                    {{ benefit.manualBenefits.length }}
+                  </span>
+                  <span class="summary-label">avantages livrés</span>
+                </div>
+              }
+            </div>
+
+            <!-- Crédits documents -->
+            @if (benefit.documentCreditsGranted > 0) {
+              <div class="pack-card__credits">
+                @if (benefit.pendingRedemption) {
+                  <div class="credit-pending">
+                    <span class="credit-pending__icon" aria-hidden="true"
+                      >⏳</span
+                    >
+                    <div>
+                      <p class="credit-pending__title">
+                        Document en préparation
+                      </p>
+                      <p class="credit-pending__text">
+                        {{ benefit.pendingRedemption.productTitle }}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-credit"
+                      [disabled]="redeemingOrderId() !== null"
+                      (click)="redeemDocumentCredit(benefit)"
+                    >
+                      {{
+                        redeemingOrderId() === benefit.orderId
+                          ? '…'
+                          : 'Reprendre'
+                      }}
+                    </button>
+                  </div>
+                } @else if (
+                  benefit.documentCreditsRemaining > 0 &&
+                  documentProducts().length > 0
+                ) {
+                  <div class="credit-form">
+                    <label
+                      [for]="'doc-' + benefit.orderId"
+                      class="credit-form__label"
+                    >
+                      <span class="credit-form__label-icon" aria-hidden="true"
+                        >✨</span
+                      >
+                      Choisir un document ({{ benefit.documentCreditsRemaining }}
+                      crédit{{ benefit.documentCreditsRemaining > 1 ? 's' : ''
+                      }} restant{{ benefit.documentCreditsRemaining > 1 ? 's'
+                      : '' }})
+                    </label>
+                    <div class="credit-form__row">
+                      <select
+                        [id]="'doc-' + benefit.orderId"
+                        class="credit-form__select"
+                        [value]="selectedDocument(benefit.orderId)"
+                        [disabled]="redeemingOrderId() !== null"
+                        (change)="selectDocument(benefit.orderId, $event)"
+                      >
+                        @for (
+                          product of documentProducts();
+                          track product.id
+                        ) {
+                          <option [value]="product.id">
+                            {{ product.title }}
+                          </option>
+                        }
+                      </select>
+                      <button
+                        type="button"
+                        class="btn-credit btn-credit--primary"
+                        [disabled]="
+                          redeemingOrderId() !== null ||
+                          !selectedDocument(benefit.orderId)
+                        "
+                        (click)="redeemDocumentCredit(benefit)"
+                      >
+                        @if (redeemingOrderId() === benefit.orderId) {
+                          <span
+                            class="spinner-inline"
+                            aria-hidden="true"
+                          ></span>
+                          Préparation…
+                        } @else {
+                          Utiliser un crédit
+                        }
+                      </button>
+                    </div>
+                  </div>
+                } @else if (benefit.documentCreditsRemaining === 0) {
+                  <p class="credit-exhausted">
+                    ✓ Tous vos crédits documents ont été utilisés
+                  </p>
+                }
+              </div>
+            }
+
+            <!-- Avantages manuels -->
+            @if (benefit.manualBenefits.length > 0) {
+              <div class="pack-card__benefits">
+                <h4 class="benefits-title">Avantages inclus</h4>
+                <ul class="benefits-list">
+                  @for (
+                    manual of benefit.manualBenefits;
+                    track manual.id
+                  ) {
+                    <li
+                      class="benefit-item"
+                      [class]="manualBenefitStatusClass(manual.status)"
+                    >
+                      <span class="benefit-icon" aria-hidden="true">
+                        {{ manualBenefitStatusIcon(manual.status) }}
+                      </span>
+                      <span class="benefit-title">{{ manual.title }}</span>
+                      <span class="benefit-status">
+                        {{ manualBenefitStatusLabel(manual.status) }}
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (totalPackPages() > 1) {
+        <nav
+          class="history-pagination"
+          aria-label="Pagination des packs"
+        >
+          <p class="history-pagination__info" aria-live="polite">
+            {{ packRange().from }}–{{ packRange().to }}
+            sur {{ packRange().total }} pack{{
+              packRange().total > 1 ? 's' : ''
+            }}
+          </p>
+
+          <div class="history-pagination__controls">
+            <button
+              type="button"
+              class="pagination-btn pagination-btn--arrow"
+              [disabled]="!canPackGoPrevious()"
+              aria-label="Page précédente"
+              (click)="previousPackPage()"
+            >
+              ‹
+            </button>
+
+            @for (page of packPageNumbers(); track $index) {
+              @if (page === 'ellipsis') {
+                <span class="pagination-ellipsis" aria-hidden="true"
+                  >…</span
+                >
+              } @else {
+                <button
+                  type="button"
+                  class="pagination-btn"
+                  [class.pagination-btn--active]="
+                    page === currentPackPage()
+                  "
+                  [attr.aria-current]="
+                    page === currentPackPage() ? 'page' : null
+                  "
+                  [attr.aria-label]="'Aller à la page ' + page"
+                  (click)="goToPackPage(page)"
+                >
+                  {{ page }}
+                </button>
+              }
+            }
+
+            <button
+              type="button"
+              class="pagination-btn pagination-btn--arrow"
+              [disabled]="!canPackGoNext()"
+              aria-label="Page suivante"
+              (click)="nextPackPage()"
+            >
+              ›
+            </button>
+          </div>
+        </nav>
+      }
+    }
+
+    <!-- Section admin -->
+    @if (isAdministrator() && pendingFulfillments().length > 0) {
+      <div class="admin-fulfillments">
+        <h4 class="admin-fulfillments__title">
+          🛠️ Livraisons à effectuer ({{ pendingFulfillments().length }})
+        </h4>
+        <ul class="admin-fulfillments__list">
+          @for (task of pendingFulfillments(); track task.id) {
+            <li class="admin-task">
+              <div class="admin-task__info">
+                <strong>{{ task.title }}</strong>
+                <span>{{ task.packTitle }}</span>
+              </div>
+              <button
+                type="button"
+                class="btn-credit btn-credit--admin"
+                [disabled]="fulfillingBenefitId() !== null"
+                (click)="completeBenefit(task)"
+              >
+                {{
+                  fulfillingBenefitId() === task.id ? '…' : 'Marquer livré'
+                }}
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  }
+
+  <!-- ═══════ ERREUR TÉLÉCHARGEMENT (bas de page) ═══════ -->
   @if (downloadError() && !downloadingOrderId()) {
     <p class="history-message history-message--error" role="alert">
       {{ downloadError() }}

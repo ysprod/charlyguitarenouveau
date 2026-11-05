@@ -1,0 +1,64 @@
+<div class="legal-shell">
+
+  <!-- ═══════ HEADER PUBLIC ═══════ -->
+  <header class="legal-topbar">
+    <a routerLink="/" class="legal-brand">
+      <span class="brand-icon" aria-hidden="true">⚡</span>
+      <span class="brand-text">Charly Guitare</span>
+    </a>
+
+    <nav class="legal-nav" aria-label="Pages légales">
+      <a
+        routerLink="/legal/mentions"
+        routerLinkActive="active"
+        class="legal-nav-link"
+      >
+        Mentions légales
+      </a>
+      <a
+        routerLink="/legal/confidentialite"
+        routerLinkActive="active"
+        class="legal-nav-link"
+      >
+        Confidentialité
+      </a>
+      <a
+        routerLink="/legal/cgv"
+        routerLinkActive="active"
+        class="legal-nav-link"
+      >
+        CGV
+      </a>
+      <a
+        routerLink="/legal/aide"
+        routerLinkActive="active"
+        class="legal-nav-link"
+      >
+        Aide
+      </a>
+    </nav>
+
+    <a routerLink="/" class="legal-back" aria-label="Retour au site">
+      ← Retour au site
+    </a>
+  </header>
+
+  <!-- ═══════ CONTENU ═══════ -->
+  <main class="legal-content">
+    <router-outlet />
+  </main>
+
+  <!-- ═══════ FOOTER PUBLIC ═══════ -->
+  <footer class="legal-footer">
+    <div class="footer-links">
+      <a routerLink="/legal/mentions">Mentions légales</a>
+      <span class="footer-sep" aria-hidden="true">·</span>
+      <a routerLink="/legal/confidentialite">Confidentialité</a>
+      <span class="footer-sep" aria-hidden="true">·</span>
+      <a routerLink="/legal/cgv">CGV</a>
+      <span class="footer-sep" aria-hidden="true">·</span>
+      <a routerLink="/legal/aide">Aide</a>
+    </div>
+    <p class="footer-copy">© {{ currentYear }} Charly Guitare — Tous droits réservés.</p>
+  </footer>
+</div>

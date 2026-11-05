@@ -25,9 +25,12 @@
           <span class="logo-text accent">GUITARE</span>
         </div>
       </a>
-      
-      <p class="brand-description">
-        L'école de musique
+
+     
+
+      <!-- Mention site 100% payant -->
+      <p class="paid-badge">
+        🔒  Accès aux cours, jeux et contenus premium via abonnement.
       </p>
 
       <!-- Réseaux Sociaux -->
@@ -52,19 +55,21 @@
       <h4 class="column-title">Navigation</h4>
       <div class="footer-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
-        <a routerLink="/user/accueil" routerLinkActive="active">Qui est Charly ?</a>        
+        <a routerLink="/user/accueil" routerLinkActive="active">Qui est Charly ?</a>
         <a routerLink="/user/again" routerLinkActive="active">La Dream Team</a>
       </div>
-    </nav> 
+    </nav>
 
-    <!-- COLONNE 3 : LÉGAL (Nouvelle colonne pour équilibrer) -->
-    <nav class="footer-column" aria-label="Liens légaux">
+    <!-- COLONNE 3 : INFORMATIONS LÉGALES -->
+    <nav class="footer-column" aria-label="Informations légales">
       <h4 class="column-title">Informations</h4>
       <div class="footer-nav">
-        <a routerLink="/user/mentions" routerLinkActive="active">Mentions légales</a>
-        <a routerLink="/user/privacy" routerLinkActive="active">Confidentialité</a>
-        <a routerLink="/user/contact" routerLinkActive="active">Contactez-nous</a>
+        <a routerLink="/legal/mentions" routerLinkActive="active">Mentions légales</a>
+        <a routerLink="/legal/confidentialite" routerLinkActive="active">Confidentialité</a>
+        <a routerLink="/legal/cgv" routerLinkActive="active">Conditions Générales de Vente</a>
+        <a routerLink="/legal/aide" routerLinkActive="active">Aide & Contact</a>
       </div>
+ 
     </nav>
 
   </div>
@@ -77,16 +82,13 @@
 
       <p class="copyright">
         &copy; {{ currentYear }} <strong class="brand-highlight">CHARLY GUITARE</strong>. Tous droits réservés.
+     
       </p>
 
-      <button type="button" class="back-to-top" (click)="scrollToTop()" aria-label="Retour en haut de page">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <polyline points="18 15 12 9 6 15" />
-        </svg>
-        <span>Haut de page</span>
-      </button>
+      
 
     </div>
   </div>
 
 </footer>
+<br /><br /><br /><br /><br />

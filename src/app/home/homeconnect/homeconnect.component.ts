@@ -15,19 +15,17 @@ import { Database, objectVal, ref } from '@angular/fire/database';
 import { RouterLink } from '@angular/router';
 import { of, switchMap } from 'rxjs';
 import { QUICK_ACTIONS, WHY_PILLARS, } from 'src/app/home/constants/homeconnect.constants';
-import { FooterComponent } from 'src/app/home/footer/footer.component';
 import { UserProfile } from 'src/app/home/models/user.model';
-import { getInitials } from 'src/app/home/utils/string.utils';
-import { InboxPanelComponent } from './inbox-panel/inbox-panel.component';
 import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
+import { getInitials } from 'src/app/home/utils/string.utils';
 import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
+import { InboxPanelComponent } from './inbox-panel/inbox-panel.component';
 
 @Component({
   selector: 'app-homeconnect',
   imports: [
     RouterLink,
     PodcastvideoComponent,
-    FooterComponent,
     InboxPanelComponent,ImmersiveCarouselComponent
   ],
   templateUrl: './homeconnect.component.html',

@@ -146,14 +146,14 @@
 
       <div class="thread-body" #threadBody>
         @for (msg of thread.messages; track trackMessage($index, msg)) {
-        <div class="chat-bubble" [class.user-bubble]="isMine(msg)" [class.admin-bubble]="!isMine(msg)">
-          <div class="avatar" [class.avatar-user]="isMine(msg)" [class.avatar-admin]="!isMine(msg)">
-            {{ isMine(msg) ? userInitials() : msg.fromName.charAt(0).toUpperCase() }}
+        <div class="chat-bubble" [class.user-bubble]="isMine(msg)" [class.admin-bubble]="isTrustedSupport(msg)">
+          <div class="avatar" [class.avatar-user]="isMine(msg)" [class.avatar-admin]="isTrustedSupport(msg)">
+            {{ isMine(msg) ? userInitials() : isTrustedSupport(msg) ? 'C' : 'U' }}
           </div>
           <div class="bubble-content">
             <div class="bubble-header">
               <span class="author">
-                {{ isMine(msg) ? 'Vous' : msg.fromName }}
+                {{ senderLabel(msg) }}
               </span>
               <span class="time">{{ msg.createdAt | date: 'dd/MM · HH:mm' }}</span>
             </div>

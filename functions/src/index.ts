@@ -10,6 +10,8 @@ import { getStorage } from 'firebase-admin/storage';
 import { logger } from 'firebase-functions';
 import { defineSecret, defineString } from 'firebase-functions/params';
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https';
+/* ✅ NOUVEAU — Trigger RTDB */
+import { onValueUpdated } from 'firebase-functions/v2/database';
 
 import {
   isValidProduct,
@@ -22,7 +24,11 @@ import {
   isJekoPaymentRequestResponse,
   isPaymentMethod,
 } from './checkout.js';
-import { getCoursePack, isCoursePackOrder } from './course-packs.js';
+import {
+  getCoursePack,
+  getCoursePackManualBenefit,
+  isCoursePackOrder,
+} from './course-packs.js';
 import {
   addCalendarMonths,
   getGameSubscriptionPlan,
@@ -70,6 +76,15 @@ interface DownloadPurchaseInput {
   readonly orderId?: unknown;
 }
 
+interface RedeemCoursePackDocumentCreditInput {
+  readonly coursePackOrderId?: unknown;
+  readonly productId?: unknown;
+}
+
+interface CompleteCoursePackBenefitInput {
+  readonly fulfillmentId?: unknown;
+}
+
 interface PurchaseHistoryItem {
   readonly orderId: string;
   readonly productId: string;
@@ -77,10 +92,54 @@ interface PurchaseHistoryItem {
   readonly amountXof: number;
   readonly currency: 'XOF';
   readonly status: string;
-  readonly orderType?: 'document' | 'game_subscription' | 'course_pack';
+  readonly orderType?:
+    | 'document'
+    | 'document_credit'
+    | 'game_subscription'
+    | 'course_pack';
   readonly reference: string;
   readonly createdAt: number;
   readonly paidAt?: number;
+}
+
+interface CoursePackBenefitSummary {
+  readonly orderId: string;
+  readonly packTitle: string;
+  readonly paidAt: number;
+  readonly documentCreditsGranted: number;
+  readonly documentCreditsRemaining: number;
+  readonly gameAccessMonths: number;
+  readonly gameAccessExpiresAt?: number;
+  readonly manualBenefits: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly status: 'pending' | 'needs_definition' | 'fulfilled';
+    readonly fulfilledAt?: number;
+  }[];
+  readonly pendingRedemption?: {
+    readonly productId: string;
+    readonly productTitle: string;
+  };
+}
+
+/**
+ * ✅ ENRICHI — La tâche de livraison contient maintenant :
+ *   - les infos de base (id, orderId, userId, packTitle, benefitId, title, createdAt)
+ *   - les infos client enrichies (userName, userEmail)
+ *   - les infos commande enrichies (amountXof, orderProductTitle)
+ */
+interface CoursePackFulfillmentTask {
+  readonly id: string;
+  readonly orderId: string;
+  readonly userId: string;
+  readonly packTitle: string;
+  readonly benefitId: string;
+  readonly title: string;
+  readonly createdAt: number;
+  readonly userName?: string;
+  readonly userEmail?: string;
+  readonly amountXof?: number;
+  readonly orderProductTitle?: string;
 }
 
 interface PublicProduct {
@@ -548,7 +607,14 @@ export const jekoWebhook = onRequest(
             updatedOrder,
             transaction.id,
           );
-        } else if (!isCoursePackOrder(updatedOrder)) {
+        } else if (isCoursePackOrder(updatedOrder)) {
+          await grantCoursePackBenefits(
+            database,
+            orderId,
+            updatedOrder,
+            transaction.id,
+          );
+        } else {
           entitlementUpdates[
             `entitlements/${updatedOrder['userId']}/${orderId}`
           ] = {
@@ -661,6 +727,582 @@ export const listMyPurchases = onCall(
   },
 );
 
+/**
+ * ✅ CORRIGÉ + ENRICHI
+ *
+ * - Lecture pure (aucune livraison ici)
+ * - limitToLast(500) pour les admins
+ * - Enrichissement des tâches avec userName, userEmail, amountXof
+ * - Try/catch défensif pour ne jamais renvoyer 500
+ */
+export const listMyCoursePackBenefits = onCall(
+  async (
+    request,
+  ): Promise<{
+    benefits: CoursePackBenefitSummary[];
+    isAdministrator: boolean;
+    pendingFulfillments: CoursePackFulfillmentTask[];
+  }> => {
+    if (!request.auth) {
+      throw new HttpsError(
+        'unauthenticated',
+        'Connectez-vous pour consulter les avantages de vos packs.',
+      );
+    }
+
+    const database = getDatabase();
+
+    try {
+      /* 1. Lecture des entitlements de l'utilisateur */
+      const entitlementSnapshot = await database
+        .ref(`coursePackEntitlements/${request.auth.uid}`)
+        .get();
+
+      const benefits: CoursePackBenefitSummary[] = [];
+      entitlementSnapshot.forEach((child) => {
+        try {
+          const benefit = parseCoursePackBenefitSummary(child.key, child.val());
+          if (benefit) {
+            benefits.push(benefit);
+          }
+        } catch (e) {
+          logger.error('Failed to parse course pack benefit', {
+            key: child.key,
+            error: e instanceof Error ? e.message : 'Unknown error',
+          });
+        }
+      });
+      benefits.sort((a, b) => b.paidAt - a.paidAt);
+
+      /* 2. Vérification admin (tolérante aux erreurs) */
+      let isAdministrator = false;
+      try {
+        const adminSnap = await database
+          .ref(`administrators/${request.auth.uid}`)
+          .get();
+        isAdministrator = adminSnap.exists();
+      } catch (e) {
+        logger.warn('Failed to check administrator status', {
+          error: e instanceof Error ? e.message : 'Unknown error',
+        });
+      }
+
+      /* 3. Lecture des tâches pending (admin seulement) + enrichissement */
+      const pendingFulfillments: CoursePackFulfillmentTask[] = [];
+      if (isAdministrator) {
+        try {
+          const fulfillmentSnapshot = await database
+            .ref('coursePackFulfillments')
+            .orderByChild('status')
+            .equalTo('pending')
+            .limitToLast(500)
+            .get();
+
+          const rawTasks: Array<{
+            task: CoursePackFulfillmentTask;
+            userId: string;
+            orderId: string;
+          }> = [];
+
+          fulfillmentSnapshot.forEach((child) => {
+            try {
+              const task = parseCoursePackFulfillmentTask(
+                child.key,
+                child.val(),
+              );
+              if (task) {
+                rawTasks.push({
+                  task,
+                  userId: task.userId,
+                  orderId: task.orderId,
+                });
+              }
+            } catch (e) {
+              logger.error('Failed to parse fulfillment task', {
+                key: child.key,
+                error: e instanceof Error ? e.message : 'Unknown error',
+              });
+            }
+          });
+
+          /* 4. Enrichissement : nom/email du client + montant payé */
+          const uniqueUserIds = [...new Set(rawTasks.map((t) => t.userId))];
+          const uniqueOrderIds = [...new Set(rawTasks.map((t) => t.orderId))];
+
+          const [userSnapshots, orderSnapshots] = await Promise.all([
+            Promise.all(
+              uniqueUserIds.map((uid) =>
+                database
+                  .ref(`users/${uid}`)
+                  .get()
+                  .catch(() => null),
+              ),
+            ),
+            Promise.all(
+              uniqueOrderIds.map((orderId) =>
+                database
+                  .ref(`orders/${orderId}`)
+                  .get()
+                  .catch(() => null),
+              ),
+            ),
+          ]);
+
+          const userMap = new Map<
+            string,
+            { displayName: string; email: string }
+          >();
+          uniqueUserIds.forEach((uid, i) => {
+            const snap = userSnapshots[i];
+            if (snap && snap.exists()) {
+              const val = snap.val() as Record<string, unknown>;
+              userMap.set(uid, {
+                displayName:
+                  typeof val['displayName'] === 'string'
+                    ? val['displayName']
+                    : '',
+                email: typeof val['email'] === 'string' ? val['email'] : '',
+              });
+            }
+          });
+
+          const orderMap = new Map<
+            string,
+            { amountXof: number; productTitle: string }
+          >();
+          uniqueOrderIds.forEach((orderId, i) => {
+            const snap = orderSnapshots[i];
+            if (snap && snap.exists()) {
+              const val = snap.val() as Record<string, unknown>;
+              orderMap.set(orderId, {
+                amountXof:
+                  typeof val['amountXof'] === 'number'
+                    ? val['amountXof']
+                    : 0,
+                productTitle:
+                  typeof val['productTitle'] === 'string'
+                    ? val['productTitle']
+                    : '',
+              });
+            }
+          });
+
+          for (const { task, userId, orderId } of rawTasks) {
+            const userInfo = userMap.get(userId);
+            const orderInfo = orderMap.get(orderId);
+            pendingFulfillments.push({
+              ...task,
+              ...(userInfo && {
+                userName: userInfo.displayName,
+                userEmail: userInfo.email,
+              }),
+              ...(orderInfo && {
+                amountXof: orderInfo.amountXof,
+                orderProductTitle: orderInfo.productTitle,
+              }),
+            });
+          }
+
+          pendingFulfillments.sort((a, b) => a.createdAt - b.createdAt);
+        } catch (e) {
+          logger.warn('Failed to load pending fulfillments', {
+            error: e instanceof Error ? e.message : 'Unknown error',
+          });
+        }
+      }
+
+      return { benefits, isAdministrator, pendingFulfillments };
+    } catch (error) {
+      logger.error('listMyCoursePackBenefits failed completely', {
+        uid: request.auth.uid,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      return {
+        benefits: [],
+        isAdministrator: false,
+        pendingFulfillments: [],
+      };
+    }
+  },
+);
+
+export const redeemCoursePackDocumentCredit =
+  onCall<RedeemCoursePackDocumentCreditInput>(
+    async (request): Promise<{ orderId: string }> => {
+      if (!request.auth) {
+        throw new HttpsError(
+          'unauthenticated',
+          'Connectez-vous pour utiliser vos crédits document.',
+        );
+      }
+
+      const coursePackOrderId = request.data?.coursePackOrderId;
+      if (
+        typeof coursePackOrderId !== 'string' ||
+        !isOrderId(coursePackOrderId)
+      ) {
+        throw new HttpsError('invalid-argument', 'Commande de pack invalide.');
+      }
+      const requestedProductId = request.data?.productId;
+      if (!isValidProductId(requestedProductId)) {
+        throw new HttpsError('invalid-argument', 'Document invalide.');
+      }
+
+      const database = getDatabase();
+      const uid = request.auth.uid;
+      const coursePackRef = database.ref(
+        `coursePackEntitlements/${uid}/${coursePackOrderId}`,
+      );
+      const orderSnapshot = await database
+        .ref(`orders/${coursePackOrderId}`)
+        .get();
+      const coursePackOrder: unknown = orderSnapshot.val();
+      if (
+        !isRecord(coursePackOrder) ||
+        coursePackOrder['userId'] !== uid ||
+        coursePackOrder['status'] !== 'paid' ||
+        !isCoursePackOrder(coursePackOrder)
+      ) {
+        throw new HttpsError(
+          'permission-denied',
+          'Aucun avantage valide pour cette commande de pack.',
+        );
+      }
+
+      const existingBenefits: unknown = (await coursePackRef.get()).val();
+      const existingPending =
+        isRecord(existingBenefits) &&
+        isRecord(existingBenefits['pendingRedemption'])
+          ? existingBenefits['pendingRedemption']
+          : undefined;
+      let product:
+        | { id: string; title: string; storagePath: string }
+        | undefined;
+      if (
+        existingPending?.['productId'] === requestedProductId &&
+        typeof existingPending['productTitle'] === 'string' &&
+        isValidStoragePath(existingPending['storagePath'])
+      ) {
+        product = {
+          id: requestedProductId,
+          title: existingPending['productTitle'],
+          storagePath: existingPending['storagePath'],
+        };
+      } else {
+        const catalogProduct = await getProduct(requestedProductId);
+        if (catalogProduct) {
+          product = catalogProduct;
+        }
+      }
+      if (!product) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Ce document n’est pas disponible.',
+        );
+      }
+
+      const reservedOrderId = randomUUID();
+      const reservation = await coursePackRef.transaction(
+        (current: unknown) => {
+          if (!isRecord(current) || current['orderId'] !== coursePackOrderId) {
+            return;
+          }
+          const pending = current['pendingRedemption'];
+          if (isRecord(pending)) {
+            return pending['productId'] === product.id ? current : undefined;
+          }
+          const remaining = current['documentCreditsRemaining'];
+          if (
+            typeof remaining !== 'number' ||
+            !Number.isSafeInteger(remaining) ||
+            remaining < 1
+          ) {
+            return;
+          }
+          return {
+            ...current,
+            documentCreditsRemaining: remaining - 1,
+            pendingRedemption: {
+              orderId: reservedOrderId,
+              productId: product.id,
+              productTitle: product.title,
+              storagePath: product.storagePath,
+              createdAt: Date.now(),
+            },
+          };
+        },
+      );
+      if (!reservation.committed) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Aucun crédit document disponible, ou une autre utilisation est en cours.',
+        );
+      }
+
+      const reservedBenefits: unknown = reservation.snapshot.val();
+      const pending =
+        isRecord(reservedBenefits) &&
+        isRecord(reservedBenefits['pendingRedemption'])
+          ? reservedBenefits['pendingRedemption']
+          : undefined;
+      if (
+        !pending ||
+        pending['productId'] !== product.id ||
+        pending['productTitle'] !== product.title ||
+        !isValidStoragePath(pending['storagePath']) ||
+        typeof pending['orderId'] !== 'string' ||
+        !isOrderId(pending['orderId']) ||
+        typeof pending['createdAt'] !== 'number'
+      ) {
+        throw new HttpsError(
+          'failed-precondition',
+          'La réservation du crédit document est invalide.',
+        );
+      }
+
+      const redemptionOrderId = pending['orderId'];
+      const redemptionOrder = {
+        userId: uid,
+        orderType: 'document_credit',
+        productId: product.id,
+        productTitle: pending['productTitle'],
+        amountXof: 0,
+        currency: 'XOF',
+        storagePath: pending['storagePath'],
+        sourceCoursePackOrderId: coursePackOrderId,
+        status: 'paid',
+        reference: `CG-${redemptionOrderId}`,
+        createdAt: pending['createdAt'],
+        paidAt: pending['createdAt'],
+      };
+      await database.ref().update({
+        [`orders/${redemptionOrderId}`]: redemptionOrder,
+        [`entitlements/${uid}/${redemptionOrderId}`]: {
+          productId: product.id,
+          storagePath: pending['storagePath'],
+          sourceCoursePackOrderId: coursePackOrderId,
+          grantedAt: pending['createdAt'],
+        },
+        [`ordersByUser/${uid}/${createOrderHistoryKey(redemptionOrder)}`]:
+          toPurchaseHistoryItem(redemptionOrderId, redemptionOrder),
+      });
+
+      const finalized = await coursePackRef.transaction(
+        (current: unknown) => {
+          if (!isRecord(current)) {
+            return;
+          }
+          const redemptions = isRecord(current['redemptions'])
+            ? current['redemptions']
+            : {};
+          if (redemptions[redemptionOrderId] === true) {
+            return current;
+          }
+          const activeReservation = current['pendingRedemption'];
+          if (
+            !isRecord(activeReservation) ||
+            activeReservation['orderId'] !== redemptionOrderId
+          ) {
+            return;
+          }
+          return {
+            ...current,
+            pendingRedemption: null,
+            redemptions: {
+              ...redemptions,
+              [redemptionOrderId]: true,
+            },
+          };
+        },
+      );
+      if (!finalized.committed) {
+        throw new HttpsError(
+          'unavailable',
+          'Le document est prêt, mais la validation du crédit est en cours. Actualisez vos achats.',
+        );
+      }
+
+      return { orderId: redemptionOrderId };
+    },
+  );
+
+export const completeCoursePackBenefit =
+  onCall<CompleteCoursePackBenefitInput>(async (request): Promise<void> => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Connexion requise.');
+    }
+    if (typeof request.data?.fulfillmentId !== 'string') {
+      throw new HttpsError('invalid-argument', 'Avantage invalide.');
+    }
+
+    const database = getDatabase();
+    const administratorSnapshot = await database
+      .ref(`administrators/${request.auth.uid}`)
+      .get();
+    if (!administratorSnapshot.exists()) {
+      throw new HttpsError('permission-denied', 'Action réservée à l’équipe.');
+    }
+
+    const fulfillmentId = request.data.fulfillmentId;
+    if (!/^[0-9a-f-]{36}_[a-z0-9-]+$/i.test(fulfillmentId)) {
+      throw new HttpsError('invalid-argument', 'Avantage invalide.');
+    }
+    const taskSnapshot = await database
+      .ref(`coursePackFulfillments/${fulfillmentId}`)
+      .get();
+    const task = parseCoursePackFulfillmentTask(
+      taskSnapshot.key,
+      taskSnapshot.val(),
+    );
+    if (!task) {
+      throw new HttpsError('not-found', 'Avantage à livrer introuvable.');
+    }
+
+    const orderSnapshot = await database.ref(`orders/${task.orderId}`).get();
+    const order: unknown = orderSnapshot.val();
+    if (
+      !isRecord(order) ||
+      order['userId'] !== task.userId ||
+      order['status'] !== 'paid' ||
+      !isCoursePackOrder(order)
+    ) {
+      throw new HttpsError(
+        'failed-precondition',
+        'La commande ne correspond plus à cet avantage.',
+      );
+    }
+    const benefit = getCoursePackManualBenefit(
+      order['coursePackId'],
+      task.benefitId,
+    );
+    if (!benefit) {
+      throw new HttpsError(
+        'failed-precondition',
+        'La commande ne correspond plus à cet avantage.',
+      );
+    }
+
+    const entitlementPath = `coursePackEntitlements/${task.userId}/${task.orderId}`;
+    const entitlementSnapshot = await database.ref(entitlementPath).get();
+    const entitlement: unknown = entitlementSnapshot.val();
+    const manualBenefits =
+      isRecord(entitlement) && isRecord(entitlement['manualBenefits'])
+        ? entitlement['manualBenefits']
+        : undefined;
+    const manualBenefit = manualBenefits?.[task.benefitId];
+    if (
+      !manualBenefits ||
+      !isRecord(manualBenefit) ||
+      manualBenefit['status'] === 'needs_definition'
+    ) {
+      throw new HttpsError(
+        'failed-precondition',
+        'Cet avantage doit être précisé avant sa livraison.',
+      );
+    }
+
+    const fulfilledAt = Date.now();
+    await database.ref().update({
+      [`coursePackFulfillments/${fulfillmentId}/status`]: 'fulfilled',
+      [`coursePackFulfillments/${fulfillmentId}/fulfilledAt`]: fulfilledAt,
+      [`${entitlementPath}/manualBenefits/${task.benefitId}/status`]:
+        'fulfilled',
+      [`${entitlementPath}/manualBenefits/${task.benefitId}/fulfilledAt`]:
+        fulfilledAt,
+    });
+  });
+
+/* ═════════════════════════════════════════════════════════════════════
+   ✅ NOUVELLE CLOUD FUNCTION — Notification livraison avantage
+   ═════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Déclenchée quand un avantage de pack passe de `pending` → `fulfilled`.
+ * Écrit une notification dans `/notifications/{uid}`.
+ * Idempotent : ne recrée pas la notification si elle existe déjà.
+ */
+export const onCoursePackFulfillmentUpdated = onValueUpdated(
+  '/coursePackFulfillments/{fulfillmentId}',
+  async (event) => {
+    const before = event.data.before.val() as unknown;
+    const after = event.data.after.val() as unknown;
+
+    if (!isRecord(after) || !isRecord(before)) {
+      return;
+    }
+
+    const previousStatus =
+      typeof before['status'] === 'string' ? before['status'] : null;
+    const newStatus =
+      typeof after['status'] === 'string' ? after['status'] : null;
+
+    if (previousStatus !== 'pending' || newStatus !== 'fulfilled') {
+      return;
+    }
+
+    const userId = typeof after['userId'] === 'string' ? after['userId'] : null;
+    const orderId =
+      typeof after['orderId'] === 'string' ? after['orderId'] : null;
+    const benefitId =
+      typeof after['benefitId'] === 'string' ? after['benefitId'] : null;
+    const title = typeof after['title'] === 'string' ? after['title'] : null;
+    const packTitle =
+      typeof after['packTitle'] === 'string' ? after['packTitle'] : null;
+    const fulfillmentId = event.params.fulfillmentId;
+
+    if (!userId || !orderId || !benefitId || !title || !packTitle) {
+      logger.warn('Course pack fulfillment is missing required data', {
+        fulfillmentId,
+      });
+      return;
+    }
+
+    const database = getDatabase();
+    const notificationKey = `cp-fulfilled-${orderId}-${benefitId}`;
+    const notificationRef = database.ref(
+      `notifications/${userId}/${notificationKey}`,
+    );
+
+    try {
+      const existing = await notificationRef.get();
+      if (existing.exists()) {
+        logger.info('Notification already exists, skipping', {
+          fulfillmentId,
+          userId,
+        });
+        return;
+      }
+
+      const now = Date.now();
+
+      await notificationRef.set({
+        type: 'course_pack_benefit_fulfilled',
+        title: `Votre « ${title} » a été livré ✅`,
+        body: `L’avantage « ${title} » de votre pack « ${packTitle} » est maintenant disponible.`,
+        orderId,
+        benefitId,
+        packTitle,
+        read: false,
+        createdAt: now,
+      });
+
+      logger.info('Course pack fulfillment notification sent', {
+        fulfillmentId,
+        userId,
+        orderId,
+        benefitId,
+      });
+    } catch (error) {
+      logger.error('Failed to send course pack fulfillment notification', {
+        fulfillmentId,
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  },
+);
+
 export const downloadPurchase = onCall<DownloadPurchaseInput>(
   async (request): Promise<{ downloadUrl: string }> => {
     if (!request.auth) {
@@ -683,13 +1325,38 @@ export const downloadPurchase = onCall<DownloadPurchaseInput>(
     ]);
     const order: unknown = orderSnapshot.val();
     const entitlement: unknown = entitlementSnapshot.val();
+    const sourcePackOrderId =
+      isRecord(order) && typeof order['sourceCoursePackOrderId'] === 'string'
+        ? order['sourceCoursePackOrderId']
+        : undefined;
+    const sourcePackEntitlementSnapshot = sourcePackOrderId
+      ? await database
+          .ref(`coursePackEntitlements/${uid}/${sourcePackOrderId}`)
+          .get()
+      : undefined;
+    const sourcePackEntitlement: unknown =
+      sourcePackEntitlementSnapshot?.val();
+    const isPaidDocumentEntitlement =
+      isRecord(order) &&
+      order['orderType'] !== 'document_credit' &&
+      isRecord(entitlement) &&
+      typeof order['jekoTransactionId'] === 'string' &&
+      entitlement['transactionId'] === order['jekoTransactionId'];
+    const isCreditDocumentEntitlement =
+      isRecord(order) &&
+      order['orderType'] === 'document_credit' &&
+      isRecord(entitlement) &&
+      entitlement['sourceCoursePackOrderId'] === sourcePackOrderId &&
+      isRecord(sourcePackEntitlement) &&
+      isRecord(sourcePackEntitlement['redemptions']) &&
+      sourcePackEntitlement['redemptions'][orderId] === true;
 
     if (
       !isRecord(order) ||
       order['userId'] !== uid ||
       order['status'] !== 'paid' ||
       !isRecord(entitlement) ||
-      entitlement['transactionId'] !== order['jekoTransactionId']
+      (!isPaidDocumentEntitlement && !isCreditDocumentEntitlement)
     ) {
       throw new HttpsError(
         'permission-denied',
@@ -774,8 +1441,26 @@ async function grantGameSubscription(
     throw new Error('Cannot grant an unknown game subscription plan.');
   }
 
+  await extendGameSubscription(
+    database,
+    order['userId'],
+    orderId,
+    transactionId,
+    plan.id,
+    plan.durationMonths,
+  );
+}
+
+async function extendGameSubscription(
+  database: ReturnType<typeof getDatabase>,
+  uid: string,
+  orderId: string,
+  transactionId: string,
+  planId: string,
+  durationMonths: number,
+): Promise<number> {
   const now = Date.now();
-  const subscriptionRef = database.ref(`gameSubscriptions/${order['userId']}`);
+  const subscriptionRef = database.ref(`gameSubscriptions/${uid}`);
   const result = await subscriptionRef.transaction((current: unknown) => {
     const existing = isRecord(current) ? current : {};
     const appliedOrders = isRecord(existing['appliedOrders'])
@@ -794,9 +1479,9 @@ async function grantGameSubscription(
     const startsAt = Math.max(now, previousExpiry);
 
     return {
-      planId: plan.id,
+      planId,
       startedAt: previousExpiry > now ? existing['startedAt'] ?? now : now,
-      expiresAt: addCalendarMonths(startsAt, plan.durationMonths),
+      expiresAt: addCalendarMonths(startsAt, durationMonths),
       lastOrderId: orderId,
       updatedAt: now,
       appliedOrders: {
@@ -809,6 +1494,216 @@ async function grantGameSubscription(
   if (!result.committed) {
     throw new Error('The game subscription could not be activated.');
   }
+  const expiresAt: unknown = result.snapshot.child('expiresAt').val();
+  if (typeof expiresAt !== 'number' || !Number.isSafeInteger(expiresAt)) {
+    throw new Error('The game subscription expiry is invalid.');
+  }
+  return expiresAt;
+}
+
+async function grantCoursePackBenefits(
+  database: ReturnType<typeof getDatabase>,
+  orderId: string,
+  order: Record<string, unknown>,
+  transactionId: string,
+): Promise<void> {
+  if (typeof order['userId'] !== 'string' || !isCoursePackOrder(order)) {
+    throw new Error('Cannot grant benefits for an invalid course pack order.');
+  }
+  const pack = getCoursePack(order['coursePackId']);
+  if (!pack || typeof order['paidAt'] !== 'number') {
+    throw new Error('Cannot grant benefits for an unknown course pack.');
+  }
+
+  // ✅ GARANTIE : manualBenefits existe toujours (tableau vide si absent)
+  const packManualBenefits = pack.manualBenefits ?? [];
+
+  const entitlementRef = database.ref(
+    `coursePackEntitlements/${order['userId']}/${orderId}`,
+  );
+  const manualBenefits = Object.fromEntries(
+    packManualBenefits.map((benefit) => [
+      benefit.id,
+      {
+        title: benefit.title,
+        status:
+          benefit.id === 'platform-premium-duration'
+            ? 'needs_definition'
+            : 'pending',
+      },
+    ]),
+  );
+  const entitlementResult = await entitlementRef.transaction(
+    (current: unknown) => {
+      if (current !== null) {
+        return isRecord(current) &&
+          current['orderId'] === orderId &&
+          current['transactionId'] === transactionId
+          ? current
+          : undefined;
+      }
+      return {
+        orderId,
+        transactionId,
+        coursePackId: pack.id,
+        packTitle: order['productTitle'],
+        paidAt: order['paidAt'],
+        status: 'granted',
+        documentCreditsGranted: pack.documentCredits,
+        documentCreditsRemaining: pack.documentCredits,
+        gameAccessMonths: pack.gameAccessMonths,
+        manualBenefits,
+      };
+    },
+  );
+  if (!entitlementResult.committed) {
+    throw new Error('The course pack benefits could not be granted.');
+  }
+  const savedEntitlement: unknown = entitlementResult.snapshot.val();
+  if (
+    !isRecord(savedEntitlement) ||
+    savedEntitlement['orderId'] !== orderId ||
+    savedEntitlement['transactionId'] !== transactionId
+  ) {
+    throw new Error('Course pack entitlement does not match the paid order.');
+  }
+
+  for (const benefit of packManualBenefits) {
+    if (benefit.id === 'platform-premium-duration') {
+      continue;
+    }
+    const fulfillmentId = `${orderId}_${benefit.id}`;
+    const fulfillmentRef = database.ref(
+      `coursePackFulfillments/${fulfillmentId}`,
+    );
+    const result = await fulfillmentRef.transaction((current: unknown) => {
+      if (current !== null) {
+        return current;
+      }
+      return {
+        orderId,
+        userId: order['userId'],
+        coursePackId: pack.id,
+        packTitle: order['productTitle'],
+        benefitId: benefit.id,
+        title: benefit.title,
+        status: 'pending',
+        createdAt: order['paidAt'],
+      };
+    });
+    if (!result.committed) {
+      throw new Error('A course pack fulfillment task could not be created.');
+    }
+  }
+
+  if (pack.gameAccessMonths > 0) {
+    const expiresAt = await extendGameSubscription(
+      database,
+      order['userId'],
+      orderId,
+      transactionId,
+      `course-pack-${pack.id}`,
+      pack.gameAccessMonths,
+    );
+    await entitlementRef.update({ gameAccessExpiresAt: expiresAt });
+  }
+}
+
+function parseCoursePackBenefitSummary(
+  orderId: string | null,
+  value: unknown,
+): CoursePackBenefitSummary | undefined {
+  if (
+    typeof orderId !== 'string' ||
+    !isOrderId(orderId) ||
+    !isRecord(value) ||
+    value['orderId'] !== orderId ||
+    typeof value['packTitle'] !== 'string' ||
+    typeof value['paidAt'] !== 'number' ||
+    typeof value['documentCreditsGranted'] !== 'number' ||
+    typeof value['documentCreditsRemaining'] !== 'number' ||
+    typeof value['gameAccessMonths'] !== 'number' ||
+    !isRecord(value['manualBenefits'])
+  ) {
+    return undefined;
+  }
+
+  const manualBenefits: CoursePackBenefitSummary['manualBenefits'][number][] =
+    [];
+  for (const [id, rawBenefit] of Object.entries(value['manualBenefits'])) {
+    if (
+      !isRecord(rawBenefit) ||
+      typeof rawBenefit['title'] !== 'string' ||
+      (rawBenefit['status'] !== 'pending' &&
+        rawBenefit['status'] !== 'needs_definition' &&
+        rawBenefit['status'] !== 'fulfilled')
+    ) {
+      continue;
+    }
+    manualBenefits.push({
+      id,
+      title: rawBenefit['title'],
+      status: rawBenefit['status'],
+      ...(typeof rawBenefit['fulfilledAt'] === 'number' && {
+        fulfilledAt: rawBenefit['fulfilledAt'],
+      }),
+    });
+  }
+
+  const pendingRedemption = isRecord(value['pendingRedemption'])
+    ? value['pendingRedemption']
+    : undefined;
+  return {
+    orderId,
+    packTitle: value['packTitle'],
+    paidAt: value['paidAt'],
+    documentCreditsGranted: value['documentCreditsGranted'],
+    documentCreditsRemaining: value['documentCreditsRemaining'],
+    gameAccessMonths: value['gameAccessMonths'],
+    ...(typeof value['gameAccessExpiresAt'] === 'number' && {
+      gameAccessExpiresAt: value['gameAccessExpiresAt'],
+    }),
+    manualBenefits,
+    ...(pendingRedemption &&
+      typeof pendingRedemption['productId'] === 'string' &&
+      typeof pendingRedemption['productTitle'] === 'string' && {
+        pendingRedemption: {
+          productId: pendingRedemption['productId'],
+          productTitle: pendingRedemption['productTitle'],
+        },
+      }),
+  };
+}
+
+function parseCoursePackFulfillmentTask(
+  id: string | null,
+  value: unknown,
+): CoursePackFulfillmentTask | undefined {
+  if (
+    typeof id !== 'string' ||
+    !isRecord(value) ||
+    typeof value['orderId'] !== 'string' ||
+    !isOrderId(value['orderId']) ||
+    typeof value['userId'] !== 'string' ||
+    typeof value['coursePackId'] !== 'string' ||
+    typeof value['packTitle'] !== 'string' ||
+    typeof value['benefitId'] !== 'string' ||
+    typeof value['title'] !== 'string' ||
+    value['status'] !== 'pending' ||
+    typeof value['createdAt'] !== 'number' ||
+    id !== `${value['orderId']}_${value['benefitId']}`
+  ) {
+    return undefined;
+  }
+  return {
+    id,
+    orderId: value['orderId'],
+    userId: value['userId'],
+    packTitle: value['packTitle'],
+    benefitId: value['benefitId'],
+    title: value['title'],
+    createdAt: value['createdAt'],
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -870,7 +1765,9 @@ function parsePurchaseHistoryItem(
       !isPurchaseOrderType(value['orderType'])) ||
     typeof value['reference'] !== 'string' ||
     typeof value['createdAt'] !== 'number' ||
-    !Number.isSafeInteger(value['createdAt'])
+    !Number.isSafeInteger(value['createdAt']) ||
+    value['amountXof'] < 0 ||
+    (value['amountXof'] === 0 && value['orderType'] !== 'document_credit')
   ) {
     return undefined;
   }
@@ -895,9 +1792,14 @@ function parsePurchaseHistoryItem(
 
 function isPurchaseOrderType(
   value: unknown,
-): value is 'document' | 'game_subscription' | 'course_pack' {
+): value is
+  | 'document'
+  | 'document_credit'
+  | 'game_subscription'
+  | 'course_pack' {
   return (
     value === 'document' ||
+    value === 'document_credit' ||
     value === 'game_subscription' ||
     value === 'course_pack'
   );

@@ -18,6 +18,11 @@ Run local Firebase emulators using the emulator-only configuration and rules:
 firebase emulators:start --only auth,database,functions,storage --project demo-charly-guitare --config firebase.emulator.json
 ```
 
+Production Realtime Database rules are versioned in `database.rules.json` and
+configured in `firebase.json`. Review the target Firebase project before
+deploying them with `firebase deploy --only database`. The emulator config
+continues to use the separate deny-by-default local rules.
+
 The Angular development environment (`ng serve`) uses the demo project with
 local Auth, Realtime Database, Storage and Functions emulators for development
 flows. The store catalogue is the exception: it reads the production
@@ -67,7 +72,14 @@ expecting the subscription button to open a live payment.
 Academy course packs use the same authenticated Jèko checkout. The backend
 validates pack IDs and prices against its fixed catalogue; each payment covers
 one month at the price displayed on the offer and does not renew automatically.
-Jèko webhook confirmation records the paid pack in the user's purchase history.
+Jèko webhook confirmation idempotently grants the published document credits
+and explicit game-access durations. Customers can redeem document credits and
+track manual benefits from their purchase history; administrators can mark
+those benefits as delivered. The intermediate premium pack's platform-access
+duration is intentionally left pending until it is specified. Opening the
+purchase history also repairs entitlements for previously paid pack orders.
+Deploy the updated Functions, production frontend and Realtime Database rules
+before enabling the updated purchase flow.
 
 ## Development server
 

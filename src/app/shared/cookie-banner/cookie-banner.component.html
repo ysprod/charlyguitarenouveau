@@ -1,0 +1,33 @@
+<!-- src/app/shared/cookie-banner/cookie-banner.component.html -->
+
+@if (visible()) {
+  <div
+    class="cookie-banner"
+    role="dialog"
+    aria-label="Consentement cookies"
+    aria-live="polite"
+  >
+    <div class="cookie-content">
+      <div class="cookie-icon" aria-hidden="true">🍪</div>
+      <div class="cookie-text">
+        <p class="cookie-title">Nous utilisons des cookies essentiels</p>
+        <p class="cookie-description">
+          Ce site utilise uniquement des cookies <strong>strictement nécessaires</strong>
+          au fonctionnement : connexion, panier, préférences. Aucun cookie publicitaire
+          ou de tracking tiers n'est utilisé.
+          <a routerLink="/legal/confidentialite">En savoir plus</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="cookie-actions">
+      <button
+        type="button"
+        class="cookie-btn cookie-btn--primary"
+        (click)="accept()"
+      >
+        J'ai compris
+      </button>
+    </div>
+  </div>
+}

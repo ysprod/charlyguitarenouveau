@@ -407,3 +407,89 @@
     animation: none !important;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   BADGE « SITE 100 % PAYANT »
+   ═════════════════════════════════════════════════════════════════════ */
+
+.paid-badge {
+  margin: 0;
+  padding: 10px 14px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 10px;
+  color: var(--text-body);
+  font-size: 0.8rem;
+  line-height: 1.5;
+
+  strong {
+    color: var(--gold);
+    font-weight: 800;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   CONTACT DIRECT (dans la colonne Informations)
+   ═════════════════════════════════════════════════════════════════════ */
+
+.footer-contact {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+
+  .contact-label {
+    margin: 0 0 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .contact-email {
+    display: inline-block;
+    color: var(--gold);
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color var(--t-base);
+
+    &:hover {
+      color: var(--gold-bright);
+      text-decoration: underline;
+    }
+  }
+
+  .contact-hours {
+    margin: 4px 0 0;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   RESPONSIVE — Ajustements pour 4ᵉ colonne
+   ═════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .footer-container {
+    /* La grille 2fr 1fr 1fr devient 1fr 1fr en tablette */
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+    align-items: center;
+    text-align: center;
+  }
+
+  .paid-badge {
+    max-width: 400px;
+    text-align: center;
+  }
+
+  .footer-contact {
+    text-align: center;
+  }
+}

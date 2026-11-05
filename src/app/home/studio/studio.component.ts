@@ -13,6 +13,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 import { MessagerieService } from '../services/messagerie.service';
 import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
+import { ChordOfTheDayComponent } from 'src/app/academie/components/chord-of-the-day.component';
 
 /* ═════════════════════════════════════════════════════════════════════
    TYPES
@@ -42,7 +43,7 @@ interface Service {
 
 @Component({
   selector: 'app-studio',
-  imports: [ImmersiveCarouselComponent],
+  imports: [ImmersiveCarouselComponent, ChordOfTheDayComponent],
   templateUrl: './studio.component.html',
   styleUrl: './studio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

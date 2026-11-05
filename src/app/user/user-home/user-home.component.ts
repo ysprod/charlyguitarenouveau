@@ -17,24 +17,19 @@ import { Database, objectVal, ref } from '@angular/fire/database';
 import { RouterLink } from '@angular/router';
 import { of, switchMap } from 'rxjs';
 import { QUICK_ACTIONS, WHY_PILLARS } from 'src/app/home/constants/homeconnect.constants';
-import { FooterComponent } from 'src/app/home/footer/footer.component';
 import { InboxPanelComponent } from 'src/app/home/homeconnect/inbox-panel/inbox-panel.component';
 import { UserProfile } from 'src/app/home/models/user.model';
 import { PodcastvideoComponent } from 'src/app/home/podcastvideo/podcastvideo.component';
 import { getInitials } from 'src/app/home/utils/string.utils';
 import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
-import { PurchaseHistoryComponent } from 'src/app/shared/purchase-history/purchase-history.component';
- 
+
 
 @Component({
   selector: 'app-user-home',
   imports: [
     RouterLink,
     PodcastvideoComponent,
-    FooterComponent,
     InboxPanelComponent,
-    ImmersiveCarouselComponent,
-    PurchaseHistoryComponent,
   ],
   templateUrl: './user-home.component.html',
   styleUrls: ['./user-home.component.scss'],

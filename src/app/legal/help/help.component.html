@@ -1,0 +1,195 @@
+<div class="legal-page">
+  <header class="page-header">
+    <p class="page-eyebrow">Assistance</p>
+    <h1>Aide & Contact</h1>
+    <p class="page-subtitle">
+      Un problème avec votre compte, un achat ou un accès ? Consultez la FAQ ou
+      écrivez-nous directement — même sans être connecté.
+    </p>
+  </header>
+
+  <main class="page-body">
+
+    <!-- ═══════ FAQ ═══════ -->
+    <section class="legal-section">
+      <h2>Questions fréquentes</h2>
+
+      <div class="faq-list">
+        @for (item of faq; track item.q) {
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>{{ item.q }}</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </summary>
+            <p class="faq-answer">{{ item.a }}</p>
+          </details>
+        }
+      </div>
+    </section>
+
+    <!-- ═══════ FORMULAIRE PUBLIC ═══════ -->
+    <section class="legal-section">
+      <h2>Nous contacter</h2>
+      <p>
+        Vous pouvez nous écrire sans être connecté. Si votre demande concerne une
+        commande, indiquez sa référence (elle commence par « CG- ») pour un
+        traitement plus rapide.
+      </p>
+
+      @if (submitSuccess()) {
+        <div class="alert alert-success" role="status" aria-live="polite">
+          <strong>✓ Message envoyé</strong>
+          <p>Merci ! Nous répondons dans les 72 heures ouvrées.</p>
+        </div>
+      }
+
+      @if (submitError()) {
+        <div class="alert alert-error" role="alert" aria-live="assertive">
+          <strong>⚠ Erreur</strong>
+          <p>{{ submitError() }}</p>
+        </div>
+      }
+
+      <form
+        [formGroup]="helpForm"
+        (ngSubmit)="onSubmit()"
+        novalidate
+        class="help-form"
+        [attr.aria-busy]="isSubmitting()"
+      >
+        <div class="form-row">
+          <div class="form-group">
+            <label for="help-name">Votre nom</label>
+            <input
+              id="help-name"
+              type="text"
+              formControlName="name"
+              placeholder="Ex : Yao Joseph"
+              autocomplete="name"
+              [class.invalid]="isFieldInvalid('name')"
+              [attr.aria-invalid]="isFieldInvalid('name')"
+            />
+            @if (isFieldInvalid('name')) {
+              <small class="error-text">Nom requis (2 caractères min).</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="help-email">Votre e-mail</label>
+            <input
+              id="help-email"
+              type="email"
+              formControlName="email"
+              placeholder="vous@exemple.com"
+              autocomplete="email"
+              [class.invalid]="isFieldInvalid('email')"
+              [attr.aria-invalid]="isFieldInvalid('email')"
+            />
+            @if (isFieldInvalid('email')) {
+              <small class="error-text">Adresse e-mail valide requise.</small>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="help-order-ref">
+            Référence de commande
+            <span class="field-hint">(optionnel — commence par « CG- »)</span>
+          </label>
+          <input
+            id="help-order-ref"
+            type="text"
+            formControlName="orderReference"
+            placeholder="CG-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="help-subject">Sujet</label>
+          <input
+            id="help-subject"
+            type="text"
+            formControlName="subject"
+            placeholder="Ex : Problème d’accès après paiement"
+            [class.invalid]="isFieldInvalid('subject')"
+            [attr.aria-invalid]="isFieldInvalid('subject')"
+          />
+          @if (isFieldInvalid('subject')) {
+            <small class="error-text">Sujet requis (3 caractères min).</small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="help-message">Votre message</label>
+          <textarea
+            id="help-message"
+            rows="6"
+            formControlName="message"
+            placeholder="Décrivez votre problème le plus précisément possible…"
+            [class.invalid]="isFieldInvalid('message')"
+            [attr.aria-invalid]="isFieldInvalid('message')"
+          ></textarea>
+          <small class="field-hint">
+            {{ helpForm.get('message')?.value?.length || 0 }} / {{ messageMaxLength }}
+          </small>
+          @if (isFieldInvalid('message')) {
+            <small class="error-text">Message requis (10 caractères min).</small>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="isSubmitting()"
+            [attr.aria-busy]="isSubmitting()"
+          >
+            @if (!isSubmitting()) {
+              Envoyer le message
+            } @else {
+              <span class="spinner" aria-hidden="true"></span>
+              Envoi en cours…
+            }
+          </button>
+        </div>
+
+        <p class="form-note">
+          🔒 Vos données ne servent qu’à traiter votre demande, conformément à notre
+          <a href="/legal/confidentialite">politique de confidentialité</a>.
+        </p>
+      </form>
+    </section>
+
+    <!-- ═══════ CONTACT DIRECT ═══════ -->
+    <section class="legal-section">
+      <h2>Contact direct</h2>
+      <ul class="info-list">
+        <li>
+          <strong>E-mail :</strong>
+          <a href="mailto:contact@charlyguitare.com">contact@charlyguitare.com</a>
+        </li>
+        <li>
+          <strong>Délai de réponse :</strong> 72 heures ouvrées maximum
+        </li>
+        <li>
+          <strong>Horaires :</strong> du lundi au vendredi, 9h – 18h (GMT)
+        </li>
+      </ul>
+    </section>
+
+    <!-- ═══════ RENVOIS LÉGAUX ═══════ -->
+    <section class="legal-section">
+      <h2>Pour aller plus loin</h2>
+      <ul>
+        <li><a href="/legal/cgv">Conditions Générales de Vente</a> — prix, remboursement, rétractation</li>
+        <li><a href="/legal/confidentialite">Politique de confidentialité</a> — comment nous protégeons vos données</li>
+        <li><a href="/legal/mentions">Mentions légales</a> — qui nous sommes</li>
+      </ul>
+    </section>
+
+  </main>
+</div>

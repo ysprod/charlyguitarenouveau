@@ -3,10 +3,10 @@
 <div class="app-layout">
 
   <!-- ═══════════════════════════════════════════════════════
-       ✅ SIDEBAR (Visible sur Desktop >= 1024px)
+       SIDEBAR (Visible sur Desktop >= 1024px)
        ═══════════════════════════════════════════════════════ -->
   <aside class="sidebar" aria-label="Navigation principale">
-    
+
     <!-- Logo -->
     <a routerLink="/" class="sidebar-logo" aria-label="Charly Guitare - Accueil">
       <span class="logo-icon" aria-hidden="true">🎸</span>
@@ -39,24 +39,24 @@
         <mat-icon>music_note</mat-icon>
         <span>Studio</span>
       </a>
-    </nav> 
+    </nav>
   </aside>
 
   <!-- ═══════════════════════════════════════════════════════
-       ✅ CONTENU PRINCIPAL
+       CONTENU PRINCIPAL
        ═══════════════════════════════════════════════════════ -->
   <div class="main-wrapper">
-    
+
     <!-- EN-TÊTE DE NAVIGATION (Header) -->
     <header class="navbar" [class.scrolled]="isScrolled()">
       <div class="navbar-container">
 
-        <!-- 1. Gauche : Logo (Mobile uniquement) -->
+        <!-- Gauche : Logo (Mobile uniquement) -->
         <a routerLink="/" class="logo-link mobile-only" title="CHARLY GUITARE - Accueil" aria-label="Retour à l'accueil">
           <span class="logo-icon" aria-hidden="true">🎸</span>
-        </a>      
+        </a>
 
-        <!-- 3. Droite : Actions -->
+        <!-- Droite : Actions -->
         <div class="header-actions">
           <!-- Translate -->
           <div class="translate-wrapper">
@@ -112,18 +112,21 @@
       <app-install-prompt />
       <router-outlet></router-outlet>
     </main>
+
+    <!-- ✅ FOOTER (dans le layout protégé) -->
+    <app-footer />
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
-     ✅ BOTTOM NAVIGATION (Mobile uniquement)
+     BOTTOM NAVIGATION (Mobile uniquement)
      ═══════════════════════════════════════════════════════ -->
 <nav class="bottom-nav" aria-label="Navigation mobile">
   <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="bottom-nav-item">
     <mat-icon>home</mat-icon>
     <span>Accueil</span>
   </a>
-  
+
   <a routerLink="/academie" routerLinkActive="active" class="bottom-nav-item">
     <mat-icon>school</mat-icon>
     <span>Académie</span>
@@ -146,3 +149,6 @@
     <span>Streaming</span>
   </a>
 </nav>
+
+<!-- ✅ BANNIÈRE COOKIES (globale) -->
+<app-cookie-banner />

@@ -26,6 +26,7 @@ import type {
   GameSubscriptionStatus,
 } from '../services/game-subscription.service';
 import type { PaymentMethod } from '../../academie/services/purchase.service';
+import { PurchaseHistoryComponent } from 'src/app/shared/purchase-history/purchase-history.component';
 
 const PAYMENT_METHODS: readonly {
   readonly value: PaymentMethod;
@@ -50,7 +51,7 @@ export interface Toast {
 
 @Component({
   selector: 'app-play',
-  imports: [ImmersiveCarouselComponent],
+  imports: [ImmersiveCarouselComponent,PurchaseHistoryComponent],
   templateUrl: './play.component.html',
   styleUrls: ['./play.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

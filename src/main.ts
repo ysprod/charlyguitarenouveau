@@ -1,9 +1,11 @@
+// src/main.ts
+
 import { bootstrapApplication } from '@angular/platform-browser';
 
-import { AppComponent } from './app/app.component';
+import { AppRootComponent } from './app/app-root.component';
 import { appConfig } from './app/app.config';
 
-bootstrapApplication(AppComponent, appConfig).catch((error: unknown) => {
+bootstrapApplication(AppRootComponent, appConfig).catch((error: unknown) => {
   console.error(
     'Erreur lors du démarrage de l’application Angular :',
     error,

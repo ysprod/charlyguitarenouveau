@@ -31,10 +31,52 @@ export interface PurchaseHistoryItem {
   readonly amountXof: number;
   readonly currency: 'XOF';
   readonly status: string;
-  readonly orderType?: 'document' | 'game_subscription' | 'course_pack';
+  readonly orderType?:
+    | 'document'
+    | 'document_credit'
+    | 'game_subscription'
+    | 'course_pack';
   readonly reference: string;
   readonly createdAt: number;
   readonly paidAt?: number;
+}
+
+export interface CoursePackManualBenefit {
+  readonly id: string;
+  readonly title: string;
+  readonly status: 'pending' | 'needs_definition' | 'fulfilled';
+  readonly fulfilledAt?: number;
+}
+
+export interface CoursePackBenefitSummary {
+  readonly orderId: string;
+  readonly packTitle: string;
+  readonly paidAt: number;
+  readonly documentCreditsGranted: number;
+  readonly documentCreditsRemaining: number;
+  readonly gameAccessMonths: number;
+  readonly gameAccessExpiresAt?: number;
+  readonly manualBenefits: readonly CoursePackManualBenefit[];
+  readonly pendingRedemption?: {
+    readonly productId: string;
+    readonly productTitle: string;
+  };
+}
+
+export interface CoursePackFulfillmentTask {
+  readonly id: string;
+  readonly orderId: string;
+  readonly userId: string;
+  readonly packTitle: string;
+  readonly benefitId: string;
+  readonly title: string;
+  readonly createdAt: number;
+}
+
+export interface CoursePackBenefitsResponse {
+  readonly benefits: CoursePackBenefitSummary[];
+  readonly isAdministrator: boolean;
+  readonly pendingFulfillments: CoursePackFulfillmentTask[];
 }
 
 export type PaymentMethod = 'orange' | 'wave' | 'mtn' | 'moov' | 'djamo' | 'jeko';
@@ -104,6 +146,48 @@ export class PurchaseService {
     );
     const result = await call();
     return result.data.purchases;
+  }
+
+  async listMyCoursePackBenefits(): Promise<CoursePackBenefitsResponse> {
+    const call = httpsCallable<void, CoursePackBenefitsResponse>(
+      this.functions,
+      'listMyCoursePackBenefits',
+    );
+    try {
+      const result = await call();
+      return result.data;
+    } catch (error) {
+      console.error(
+        '[PurchaseService] listMyCoursePackBenefits a échoué :',
+        error,
+      );
+      // ✅ Retour gracieux : la page ne crash pas
+      return {
+        benefits: [],
+        isAdministrator: false,
+        pendingFulfillments: [],
+      };
+    }
+  }
+
+  async redeemCoursePackDocumentCredit(
+    coursePackOrderId: string,
+    productId: string,
+  ): Promise<{ orderId: string }> {
+    const call = httpsCallable<
+      { coursePackOrderId: string; productId: string },
+      { orderId: string }
+    >(this.functions, 'redeemCoursePackDocumentCredit');
+    const result = await call({ coursePackOrderId, productId });
+    return result.data;
+  }
+
+  async completeCoursePackBenefit(fulfillmentId: string): Promise<void> {
+    const call = httpsCallable<{ fulfillmentId: string }, void>(
+      this.functions,
+      'completeCoursePackBenefit',
+    );
+    await call({ fulfillmentId });
   }
 
   async getDownloadUrl(orderId: string): Promise<string> {

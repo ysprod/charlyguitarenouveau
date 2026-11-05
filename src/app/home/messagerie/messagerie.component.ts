@@ -35,6 +35,7 @@ import {
 } from 'src/app/home/constants/messagerie.constants';
 
 import { getInitials } from 'src/app/home/utils/string.utils';
+import { SUPPORT_NAME, SUPPORT_UID } from 'src/app/home/constants/contact.constants';
 import { MessagerieService } from '../services/messagerie.service';
 import { ImmersiveCarouselComponent } from 'src/app/shared/immersive-carousel/immersive-carousel.component';
 
@@ -404,6 +405,18 @@ export class MessagerieComponent {
 
   isMine(msg: MessagerieMessage): boolean {
     return msg._direction === 'out';
+  }
+
+  isTrustedSupport(msg: MessagerieMessage): boolean {
+    return msg.from === SUPPORT_UID;
+  }
+
+  senderLabel(msg: MessagerieMessage): string {
+    if (this.isMine(msg)) {
+      return 'Vous';
+    }
+
+    return this.isTrustedSupport(msg) ? SUPPORT_NAME : 'Utilisateur';
   }
 
   previewOf(msg: MessagerieMessage): string {

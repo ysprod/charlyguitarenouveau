@@ -37,12 +37,14 @@ import {
 } from 'rxjs/operators';
 
 import { InstallPromptComponent } from './home/install-prompt/install-prompt.component';
+import { FooterComponent } from './home/footer/footer.component';
+import { CookieBannerComponent } from './shared/cookie-banner/cookie-banner.component';
 
 import type { Message } from './home/models/message.model';
 
 import { AuthService } from './home/services/auth.service';
 import { VoiceService } from './game/services/voice.service';
- 
+
 import { getInitials } from './home/utils/string.utils';
 import { AnalyticsService } from './shared/services/analytics.service';
 import { TranslateComponent } from './shared/translate/translate.component';
@@ -59,13 +61,15 @@ import { TranslateComponent } from './shared/translate/translate.component';
     MatSnackBarModule,
     InstallPromptComponent,
     TranslateComponent,
+    /* ✅ NOUVEAU — footer + cookies */
+    FooterComponent,
+    CookieBannerComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly database = inject(Database);

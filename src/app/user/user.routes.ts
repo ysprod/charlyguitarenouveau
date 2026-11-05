@@ -6,7 +6,7 @@ import { UserComponent } from './user.component';
 export const userRoutes: Routes = [
   {
     path: '',
-    component: UserComponent, // ✅ Parent avec <router-outlet>
+    component: UserComponent,
     children: [
       {
         path: '',
@@ -79,36 +79,12 @@ export const userRoutes: Routes = [
         title: 'STREAMING',
       },
       {
-        path: 'contact',
-        loadComponent: () =>
-          import('../home/contact/contact.component').then(
-            (m) => m.ContactComponent,
-          ),
-        title: 'Contact',
-      },
-      {
         path: 'again',
         loadComponent: () =>
           import('../home/again/again.component').then(
             (m) => m.AgainComponent,
           ),
         title: 'Again',
-      },
-      {
-        path: 'privacy',
-        loadComponent: () =>
-          import('../home/privacy/privacy.component').then(
-            (m) => m.PrivacyComponent,
-          ),
-        title: 'Confidentialité',
-      },
-      {
-        path: 'mentions',
-        loadComponent: () =>
-          import('../home/mentions/mentions.component').then(
-            (m) => m.MentionsComponent,
-          ),
-        title: 'Mentions légales',
       },
       {
         path: '**',
